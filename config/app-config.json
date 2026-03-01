@@ -119,7 +119,11 @@
     "pointsSuffix": "pt",
     "buttons": {
       "clear": "Reset pronostici correnti",
-      "confirmResults": "Conferma risultati e assegna i punti"
+      "confirmResults": "Conferma risultati e assegna i punti",
+      "editRace": "Modifica",
+      "deleteRace": "Elimina",
+      "saveEditedRace": "Salva modifiche gara",
+      "cancelEdit": "Annulla modifica"
     },
     "headings": {
       "seasonTag": "Fanta Formula 1",
@@ -161,7 +165,8 @@
       "unknownDriver": "-",
       "liveHint": "Punteggio attuale piu' proiezione del weekend selezionato",
       "empty": "Nessuna gara registrata finora.",
-      "resultSummaryTemplate": "{actualLabel}: 1° {first} | 2° {second} | 3° {third} | Pole/Sprint {pole}"
+      "resultSummaryTemplate": "{actualLabel}: 1° {first} | 2° {second} | 3° {third} | Pole/Sprint {pole}",
+      "editingLabel": "Stai modificando una gara salvata. La classifica e' gia' stata ricalcolata senza questa gara."
     },
     "calendar": {
       "empty": "Calendario non disponibile.",
@@ -172,7 +177,10 @@
       "clearConfirm": "Vuoi azzerare i pronostici attuali per il weekend selezionato?",
       "missingRace": "Seleziona un weekend di gara.",
       "missingResults": "Inserisci tutti i risultati reali prima di assegnare i punti.",
-      "raceSaved": "Weekend {gpName} salvato correttamente. Classifica aggiornata."
+      "raceSaved": "Weekend {gpName} salvato correttamente. Classifica aggiornata.",
+      "deleteRaceConfirm": "Vuoi eliminare questa gara dallo storico? La classifica verra' ricalcolata automaticamente.",
+      "cancelEditConfirm": "Vuoi annullare la modifica in corso e ripristinare la gara originale nello storico?",
+      "editRaceLoaded": "Gara {gpName} caricata in modifica. Aggiorna i dati e salva di nuovo."
     },
     "footer": "Application created by Matteo Bernardini©",
     "backend": {

@@ -34,6 +34,7 @@ describe('storage sanitization', () => {
         history: [
           {
             gpName: 'Old GP',
+            meetingKey: 'legacy-meeting',
             date: 'yesterday',
             results: { first: 'nor' },
             userPredictions: {
@@ -76,6 +77,7 @@ describe('storage sanitization', () => {
       third: '',
       pole: '',
     });
+    expect(sanitized.history[0].meetingKey).toBe('legacy-meeting');
     expect(sanitized.history[0].userPredictions.Matteo.pointsEarned).toBe(2);
     expect(sanitized).not.toHaveProperty('drivers');
     expect(sanitized).not.toHaveProperty('calendar');

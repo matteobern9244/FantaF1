@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { buildRaceRecord, calculatePointsEarned, createEmptyPrediction } from '../src/utils/game';
+import {
+  buildRaceRecord,
+  calculatePointsEarned,
+  createEmptyPrediction,
+  rebuildUsersFromHistory,
+} from '../src/utils/game';
 
 describe('game utils', () => {
   it('calculates points with the shared scoring function', () => {
@@ -29,6 +34,7 @@ describe('game utils', () => {
   it('builds a race record and updates total points', () => {
     const { record, updatedUsers } = buildRaceRecord(
       'Chinese Grand Prix 2026',
+      '1280',
       {
         first: 'ver',
         second: 'nor',
@@ -57,6 +63,7 @@ describe('game utils', () => {
     );
 
     expect(record.gpName).toBe('Chinese Grand Prix 2026');
+    expect(record.meetingKey).toBe('1280');
     expect(record.results).toEqual({
       first: 'ver',
       second: 'nor',
@@ -80,5 +87,73 @@ describe('game utils', () => {
       third: '',
       pole: '',
     });
+  });
+
+  it('rebuilds total points from race history and resets current predictions', () => {
+    const rebuiltUsers = rebuildUsersFromHistory(
+      ['Adriano', 'Fabio', 'Matteo'],
+      [
+        {
+          gpName: 'Australian Grand Prix 2026',
+          meetingKey: '1279',
+          date: '01/03/2026',
+          results: {
+            first: 'nor',
+            second: 'ant',
+            third: 'alo',
+            pole: 'alb',
+          },
+          userPredictions: {
+            Adriano: {
+              prediction: {
+                first: 'nor',
+                second: 'ant',
+                third: 'bea',
+                pole: 'ham',
+              },
+              pointsEarned: 8,
+            },
+            Fabio: {
+              prediction: createEmptyPrediction(),
+              pointsEarned: 0,
+            },
+          },
+        },
+        {
+          gpName: 'Chinese Grand Prix 2026',
+          meetingKey: '1280',
+          date: '15/03/2026',
+          results: createEmptyPrediction(),
+          userPredictions: {
+            Adriano: {
+              prediction: createEmptyPrediction(),
+              pointsEarned: 2,
+            },
+            Matteo: {
+              prediction: createEmptyPrediction(),
+              pointsEarned: 5,
+            },
+          },
+        },
+      ],
+    );
+
+    expect(rebuiltUsers).toEqual([
+      {
+        name: 'Adriano',
+        predictions: createEmptyPrediction(),
+        points: 10,
+      },
+      {
+        name: 'Fabio',
+        predictions: createEmptyPrediction(),
+        points: 0,
+      },
+      {
+        name: 'Matteo',
+        predictions: createEmptyPrediction(),
+        points: 5,
+      },
+    ]);
   });
 });

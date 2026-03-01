@@ -74,6 +74,10 @@ function sanitizeRaceRecord(record) {
 
   return {
     gpName: typeof record?.gpName === 'string' ? record.gpName : '',
+    meetingKey:
+      typeof record?.meetingKey === 'string' && record.meetingKey.trim()
+        ? record.meetingKey.trim()
+        : undefined,
     date: typeof record?.date === 'string' ? record.date : '',
     results: sanitizePrediction(record?.results),
     userPredictions: safeUserPredictions,

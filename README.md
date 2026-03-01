@@ -31,6 +31,7 @@ L'interfaccia attuale:
 - usa un layout responsive a piena larghezza, senza colonne laterali che coprono il contenuto
 - usa il font Formula 1 vendorizzato localmente in tutta l'interfaccia, con pesi e spaziatura regolati per mantenere leggibilita'
 - mostra nella UI l'elenco dei piloti ordinato alfabeticamente per cognome e formattato come `Cognome Nome`
+- permette di modificare o eliminare una gara gia' salvata nello storico, ricalcolando automaticamente la classifica
 
 ## Persistenza e cache locali
 
@@ -40,7 +41,7 @@ La cartella `F1Result/` contiene tutti i dati locali dell'applicazione.
 - `F1Result/drivers.json` e' la cache locale del roster piloti
 - `F1Result/calendar.json` e' la cache locale del calendario stagionale
 
-Il frontend non salva dati in `localStorage` o in altre persistenze browser. I dati inseriti dall'utente vengono salvati solo tramite backend in `F1Result/data.json`.
+Il frontend non salva dati in `localStorage` o in altre persistenze browser. I dati inseriti dall'utente vengono salvati solo tramite backend in `F1Result/data.json`. Anche le operazioni di modifica o rimozione di una gara storica aggiornano solo `F1Result/data.json`, lasciando invariati i file di cache di piloti e calendario.
 
 ## Sorgenti esterne usate all'avvio
 

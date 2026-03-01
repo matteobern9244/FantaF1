@@ -18,6 +18,7 @@ export interface Prediction {
 
 export interface RaceRecord {
   gpName: string;
+  meetingKey?: string;
   date: string;
   results: Prediction;
   userPredictions: Record<

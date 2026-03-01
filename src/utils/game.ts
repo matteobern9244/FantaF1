@@ -17,6 +17,26 @@ export function createInitialUsers(participants: string[]): UserData[] {
   }));
 }
 
+export function rebuildUsersFromHistory(
+  participants: string[],
+  history: RaceRecord[],
+): UserData[] {
+  const users = createInitialUsers(participants);
+
+  history.forEach((record) => {
+    users.forEach((user) => {
+      const entry = record.userPredictions[user.name];
+      if (!entry) {
+        return;
+      }
+
+      user.points += entry.pointsEarned;
+    });
+  });
+
+  return users;
+}
+
 export function calculatePointsEarned(
   prediction: Prediction,
   raceResults: Prediction,
@@ -45,10 +65,12 @@ export function calculatePointsEarned(
 
 export function buildRaceRecord(
   gpName: string,
+  meetingKey: string,
   raceResults: Prediction,
   users: UserData[],
   pointsConfig: PointsConfig,
   formatter: () => string,
+  existingDate?: string,
 ): { record: RaceRecord; updatedUsers: UserData[] } {
   const userPredictions: RaceRecord['userPredictions'] = {};
 
@@ -69,7 +91,8 @@ export function buildRaceRecord(
   return {
     record: {
       gpName,
-      date: formatter(),
+      meetingKey,
+      date: existingDate?.trim() ? existingDate : formatter(),
       results: { ...raceResults },
       userPredictions,
     },
