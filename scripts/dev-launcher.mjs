@@ -159,29 +159,34 @@ function maximizeChromeAppWindow(url) {
   const escapedUrl = escapeAppleScriptString(url);
   const script = `
 set targetUrl to "${escapedUrl}"
+set screenBounds to {}
 tell application "Finder"
   set screenBounds to bounds of window of desktop
 end tell
-set leftEdge to item 1 of screenBounds
-set topEdge to item 2 of screenBounds
-set rightEdge to item 3 of screenBounds
-set bottomEdge to item 4 of screenBounds
 tell application "Google Chrome"
   activate
-  repeat 40 times
+  repeat 60 times
     repeat with currentWindow in windows
-      repeat with currentTab in tabs of currentWindow
-        try
-          set currentUrl to URL of currentTab
-          if currentUrl starts with targetUrl then
-            set index of currentWindow to 1
-            set bounds of currentWindow to {leftEdge, topEdge, rightEdge, bottomEdge}
-            return "maximized"
-          end if
-        end try
-      end repeat
+      try
+        set currentUrl to URL of active tab of currentWindow
+        if currentUrl starts with targetUrl then
+          set index of currentWindow to 1
+          try
+            set zoomed of currentWindow to false
+          end try
+          delay 0.05
+          try
+            set zoomed of currentWindow to true
+          end try
+          delay 0.05
+          try
+            set bounds of currentWindow to screenBounds
+          end try
+          return "maximized"
+        end if
+      end try
     end repeat
-    delay 0.2
+    delay 0.25
   end repeat
 end tell
 return "missing"
@@ -296,8 +301,13 @@ async function main() {
     return;
   }
 
-  maximizeChromeAppWindow(launcherConfig.frontendUrl);
-  await sleep(2500);
+  const initiallyMaximized = maximizeChromeAppWindow(launcherConfig.frontendUrl);
+  if (!initiallyMaximized) {
+    await sleep(1200);
+    maximizeChromeAppWindow(launcherConfig.frontendUrl);
+  }
+
+  await sleep(1800);
 
   while (!shuttingDown) {
     const chromeWindowOpen = isChromeAppWindowOpen(launcherConfig.frontendUrl);
