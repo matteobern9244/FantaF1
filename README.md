@@ -30,6 +30,7 @@ L'interfaccia attuale:
 - mostra calendario, pronostici, risultati e storico a piena larghezza subito dopo i riquadri dell'hero
 - usa un layout responsive a piena larghezza, senza colonne laterali che coprono il contenuto
 - usa il font Formula 1 vendorizzato localmente in tutta l'interfaccia, con pesi e spaziatura regolati per mantenere leggibilita'
+- mostra nella UI l'elenco dei piloti ordinato alfabeticamente per cognome e formattato come `Cognome Nome`
 
 ## Persistenza e cache locali
 

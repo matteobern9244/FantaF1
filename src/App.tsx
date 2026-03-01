@@ -27,7 +27,12 @@ import {
   createEmptyPrediction,
   createInitialUsers,
 } from './utils/game';
-import { getDriverById, getDriverNameById, sortDriversAlphabetically } from './utils/drivers';
+import {
+  formatDriverDisplayName,
+  getDriverById,
+  getDriverDisplayNameById,
+  sortDriversBySurname,
+} from './utils/drivers';
 
 const { app, driversSource, participants, points, uiText } = appConfig;
 
@@ -144,9 +149,7 @@ function App() {
       }
 
       const loadedDrivers =
-        driversResult.status === 'fulfilled'
-          ? sortDriversAlphabetically(driversResult.value, driversSource.sortLocale)
-          : [];
+        driversResult.status === 'fulfilled' ? driversResult.value : [];
       const loadedCalendar =
         calendarResult.status === 'fulfilled'
           ? sortCalendarByRound(calendarResult.value)
@@ -219,7 +222,7 @@ function App() {
     });
   }, [gpName, history, raceResults, readyToPersist, selectedMeetingKey, users]);
 
-  const sortedDrivers = sortDriversAlphabetically(drivers, driversSource.sortLocale);
+  const sortedDrivers = sortDriversBySurname(drivers, driversSource.sortLocale);
   const sortedCalendar = sortCalendarByRound(calendar);
   const selectedRace = resolveSelectedRace(sortedCalendar, selectedMeetingKey);
   const nextUpcomingRace = getNextUpcomingRace(sortedCalendar);
@@ -313,10 +316,10 @@ function App() {
   function renderHistoryResults(record: AppData['history'][number]) {
     return formatText(uiText.history.resultSummaryTemplate, {
       actualLabel: uiText.history.actualLabel,
-      first: getDriverNameById(drivers, record.results.first, uiText.history.unknownDriver),
-      second: getDriverNameById(drivers, record.results.second, uiText.history.unknownDriver),
-      third: getDriverNameById(drivers, record.results.third, uiText.history.unknownDriver),
-      pole: getDriverNameById(drivers, record.results.pole, uiText.history.unknownDriver),
+      first: getDriverDisplayNameById(drivers, record.results.first, uiText.history.unknownDriver),
+      second: getDriverDisplayNameById(drivers, record.results.second, uiText.history.unknownDriver),
+      third: getDriverDisplayNameById(drivers, record.results.third, uiText.history.unknownDriver),
+      pole: getDriverDisplayNameById(drivers, record.results.pole, uiText.history.unknownDriver),
     });
   }
 
@@ -429,7 +432,11 @@ function App() {
                   return (
                     <div key={`hero-spotlight-${field}`} className="spotlight-row">
                       <span>{resultLabels[field]}</span>
-                      <strong>{driver?.name ?? uiText.placeholders.emptyOption}</strong>
+                      <strong>
+                        {driver
+                          ? formatDriverDisplayName(driver.name)
+                          : uiText.placeholders.emptyOption}
+                      </strong>
                     </div>
                   );
                 })}
@@ -532,7 +539,7 @@ function App() {
                         <option value="">{uiText.placeholders.driverSelect}</option>
                         {sortedDrivers.map((driver) => (
                           <option key={driver.id} value={driver.id}>
-                            {driver.name} ({driver.team})
+                            {formatDriverDisplayName(driver.name)} ({driver.team})
                           </option>
                         ))}
                       </select>
@@ -580,7 +587,7 @@ function App() {
                     <option value="">{uiText.placeholders.emptyOption}</option>
                     {sortedDrivers.map((driver) => (
                       <option key={driver.id} value={driver.id}>
-                        {driver.name}
+                        {formatDriverDisplayName(driver.name)}
                       </option>
                     ))}
                   </select>
@@ -623,7 +630,9 @@ function App() {
                               {result.pointsEarned} {uiText.pointsSuffix}
                             </span>
                             <small>
-                              {winnerDriver?.name ?? uiText.history.unknownDriver}
+                              {winnerDriver
+                                ? formatDriverDisplayName(winnerDriver.name)
+                                : uiText.history.unknownDriver}
                             </small>
                           </div>
                         );
