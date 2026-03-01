@@ -1,56 +1,102 @@
-# Fanta Formula 1 🏎️
+# Fanta Formula 1
 
-Un'applicazione Full-Stack per gestire i pronostici della stagione di Formula 1 tra amici. L'app sincronizza automaticamente i piloti e il calendario ufficiale e permette di inserire pronostici, calcolare punteggi e visualizzare classifiche live.
+Applicazione locale per gestire un Fanta Formula 1 privato con tre giocatori. La configurazione attuale prevede sempre tre partecipanti totali, con un admin che inserisce manualmente pronostici e risultati per tutto il gruppo.
 
-## ✨ Caratteristiche
-- **Sincronizzazione Automatica:** Dati piloti e calendari aggiornati in tempo reale dalle fonti ufficiali F1.
-- **Cloud Storage:** Migrata da file JSON locali a **MongoDB Atlas** per persistenza dei dati garantita.
-- **Mobile Ready:** Interfaccia ottimizzata per smartphone (aggiungibile alla Home).
-- **Classifica Live:** Calcolo automatico dei punti basato sui risultati reali.
+## Regole di gioco
 
-## 🛠️ Stack Tecnologico
-- **Frontend:** React + TypeScript + Vite.
-- **Backend:** Node.js + Express 5 + Mongoose.
-- **Database:** MongoDB Atlas (Piano gratuito M0).
-- **Hosting consigliato:** Render.com (Web Service gratuito).
+Prima dell'inizio del weekend rilevante, l'admin registra per ogni giocatore quattro scelte:
 
-## 🚀 Guida al Deploy (Render.com)
+- vincitore della gara
+- secondo classificato
+- terzo classificato
+- pole position oppure vincitore della Sprint, se il weekend e' Sprint
 
-1. **Database:**
-   - Crea un cluster gratuito su [MongoDB Atlas](https://www.mongodb.com/cloud/atlas).
-   - In **Network Access**, consenti l'accesso da ovunque (`0.0.0.0/0`).
-   - In **Database Access**, crea un utente e copia la stringa di connessione.
+Il punteggio attuale e' quello definito in configurazione:
 
-2. **Render.com:**
-   - Crea un nuovo **Web Service** collegando il tuo repository GitHub.
-   - **Runtime:** `Node`
-   - **Build Command:** `npm install && npm run build`
-   - **Start Command:** `npm start`
-   - **Environment Variables:**
-     - `MONGODB_URI`: la tua stringa di connessione MongoDB Atlas (es. `mongodb+srv://...`).
-     - `PORT`: 3001 (Render la imposta automaticamente, ma l'app la rileva).
+- 5 punti per la prima posizione corretta
+- 3 punti per la seconda posizione corretta
+- 2 punti per la terza posizione corretta
+- 1 punto extra per pole position o vincitore Sprint
 
-## 💻 Sviluppo Locale
+## Implementazione attuale
 
-1. Crea un file `.env` nella root:
-   ```env
-   MONGODB_URI=mongodb+srv://...
-   PORT=3001
-   ```
-2. Installa le dipendenze:
-   ```bash
-   npm install
-   ```
-3. Avvia in modalità sviluppo:
-   ```bash
-   # Backend e Frontend insieme
-   npm run start:local
-   ```
+Il frontend e' una SPA React + TypeScript + Vite. Il backend e' un server Express che gestisce persistenza locale, sincronizzazione delle sorgenti esterne e API consumate dal frontend.
 
-## 👥 Partecipanti Configurati
-- **Matteo** (Admin)
-- **Fabio**
-- **Adriano**
+L'interfaccia attuale:
 
----
-Creato da Matteo Bernardini
+- carica automaticamente il calendario della stagione
+- seleziona un weekend dal calendario senza inserimento manuale del GP
+- centra il branding principale nell'hero e mostra i quattro riquadri di supporto subito sotto il titolo
+- mostra calendario, pronostici, risultati e storico a piena larghezza subito dopo i riquadri dell'hero
+- usa un layout responsive a piena larghezza, senza colonne laterali che coprono il contenuto
+- usa il font Formula 1 vendorizzato localmente in tutta l'interfaccia, con pesi e spaziatura regolati per mantenere leggibilita'
+- mostra nella UI l'elenco dei piloti ordinato alfabeticamente per cognome e formattato come `Cognome Nome`
+- permette di modificare o eliminare una gara gia' salvata nello storico, ricalcolando automaticamente la classifica
+
+## Persistenza e cache locali
+
+La cartella `F1Result/` contiene tutti i dati locali dell'applicazione.
+
+- `F1Result/data.json` contiene esclusivamente i dati di gioco inseriti dall'app: utenti, pronostici correnti, risultati, storico e weekend selezionato
+- `F1Result/drivers.json` e' la cache locale del roster piloti
+- `F1Result/calendar.json` e' la cache locale del calendario stagionale
+
+Il frontend non salva dati in `localStorage` o in altre persistenze browser. I dati inseriti dall'utente vengono salvati solo tramite backend in `F1Result/data.json`. Anche le operazioni di modifica o rimozione di una gara storica aggiornano solo `F1Result/data.json`, lasciando invariati i file di cache di piloti e calendario.
+
+## Sorgenti esterne usate all'avvio
+
+Ad ogni avvio del backend:
+
+- il roster piloti viene sincronizzato da StatsF1
+- il calendario ufficiale viene sincronizzato da Formula1.com
+- il backend usa le cache locali se una sorgente esterna non e' momentaneamente disponibile
+
+Il roster viene normalizzato e ordinato alfabeticamente prima di essere esposto al frontend.
+
+## API backend attuali
+
+Il backend espone queste API:
+
+- `GET /api/health`
+- `GET /api/data`
+- `POST /api/data`
+- `GET /api/drivers`
+- `GET /api/calendar`
+
+Il frontend consuma solo queste API del backend.
+
+## Avvio locale
+
+Installazione iniziale:
+
+- `npm install`
+
+Avvio separato per sviluppo:
+
+- `npm run dev:backend`
+- `npm run dev:frontend`
+
+Avvio locale integrato:
+
+- `npm run start:local`
+- `./start_fantaf1.command`
+
+Lo script macOS `start_fantaf1.command` avvia backend e frontend, apre l'app in Google Chrome in modalita' app, massimizza la finestra iniziale e termina entrambi i processi quando la finestra dell'app viene chiusa.
+
+## Configurazione locale del titolo
+
+Il titolo visibile dell'app puo' essere sovrascritto solo in locale tramite `.env.local`. Il repository include `.env.example` come riferimento e non versiona il valore locale effettivo.
+
+## Asset grafici locali
+
+I font Formula 1 usati nell'interfaccia sono salvati localmente nel repository sotto `public/fonts/formula1/` e vengono serviti direttamente dall'app, senza dipendere da CDN esterne per il caricamento tipografico. Il font viene applicato a tutta la UI, mentre dimensioni, pesi e spaziatura restano calibrati per mantenere leggibilita'.
+
+## Qualita' tecnica
+
+Sono disponibili questi controlli:
+
+- `npm run lint`
+- `npm run build`
+- `npm run test`
+
+I test coprono la logica di punteggio, la sanitizzazione dei dati applicativi, il parsing del roster piloti e il parsing del calendario.
