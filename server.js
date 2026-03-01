@@ -24,7 +24,7 @@ const HOST = '0.0.0.0'; // Bind to all interfaces for Render
 app.use(cors());
 app.use(express.json());
 
-// API Routes
+// 1. Health check route
 app.get(appConfig.api.healthPath, (req, res) => {
   res.json({
     status: 'ok',
@@ -33,6 +33,7 @@ app.get(appConfig.api.healthPath, (req, res) => {
   });
 });
 
+// 2. API Routes
 app.get(appConfig.api.dataPath, async (req, res) => {
   try {
     const data = await readAppData();
@@ -72,16 +73,18 @@ app.post(appConfig.api.dataPath, async (req, res) => {
   }
 });
 
-// Serve static files from 'dist' directory (Vite build)
+// 3. Serve static files from 'dist' directory (Vite build)
 const distPath = path.join(__dirname, 'dist');
 app.use(express.static(distPath));
 
-// Handle client-side routing by returning index.html for all non-API routes
-app.get('/:path*', (req, res) => {
-  // Check if it's an API call that wasn't matched (avoid returning HTML for API 404s)
+// 4. Catch-all middleware for client-side routing (SPA)
+// Using app.use instead of app.get('*') to bypass Express 5 path-to-regexp issues
+app.use((req, res) => {
+  // If it's an API call that wasn't matched above, return 404
   if (req.path.startsWith('/api')) {
-    return res.status(404).json({ error: 'Not Found' });
+    return res.status(404).json({ error: 'API Endpoint not found' });
   }
+  // Otherwise, serve index.html for any other route (SPA)
   res.sendFile(path.join(distPath, 'index.html'));
 });
 
