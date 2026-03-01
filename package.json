@@ -1,16 +1,19 @@
 {
-  "name": "fantaf1-2026",
+  "name": "fantaf1",
   "private": true,
   "version": "0.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:frontend": "vite --host 127.0.0.1 --port 5173 --strictPort",
+    "dev:backend": "node server.js",
+    "start:local": "node scripts/dev-launcher.mjs",
     "build": "tsc && vite build",
-    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
-    "preview": "vite preview"
+    "lint": "eslint . --report-unused-disable-directives --max-warnings 0",
+    "preview": "vite preview",
+    "test": "vitest run"
   },
   "dependencies": {
-    "body-parser": "^2.2.2",
     "cors": "^2.8.6",
     "express": "^5.2.1",
     "lucide-react": "^0.446.0",
@@ -26,7 +29,10 @@
     "eslint": "^9.11.1",
     "eslint-plugin-react-hooks": "^5.1.0-rc.0",
     "eslint-plugin-react-refresh": "^0.4.12",
+    "globals": "^15.15.0",
     "typescript": "^5.6.2",
-    "vite": "^5.4.8"
+    "typescript-eslint": "^8.56.1",
+    "vite": "^5.4.8",
+    "vitest": "^2.1.9"
   }
 }

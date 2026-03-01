@@ -1,69 +1,46 @@
-# FantaF1 2026
+# Fanta Formula 1
 
-Applicazione privata per gestire il Fanta Formula 1 2026 tra Fabio, Adriano e Matteo.
+Applicazione locale per gestire un Fanta Formula 1 privato con tre giocatori. L'assetto attuale prevede tre partecipanti totali, uno dei quali opera come admin e inserisce manualmente pronostici e risultati per tutto il gruppo.
 
-## Partecipanti
+## Come funziona
 
-- Matteo e' l'admin dell'applicazione.
-- Fabio e Adriano inviano i propri pronostici via WhatsApp.
-- Matteo inserisce manualmente nell'app i pronostici di tutti, compreso il proprio.
+Prima dell'inizio del weekend rilevante, l'admin registra per ciascun giocatore quattro scelte: vincitore della gara, secondo classificato, terzo classificato e pole position oppure vincitore della Sprint, se il weekend include la Sprint.
 
-## Flusso operativo
+Il punteggio applicato e' fisso:
 
-Prima che inizi il weekend rilevante, Matteo raccoglie e registra i pronostici.
+- 5 punti per la prima posizione corretta.
+- 3 punti per la seconda posizione corretta.
+- 2 punti per la terza posizione corretta.
+- 1 punto extra per pole position o vincitore Sprint.
 
-- I pronostici devono essere inseriti prima che partano qualifica, sprint o gara, in base al weekend.
-- Per ogni partecipante vengono registrate quattro preferenze:
-  - pilota vincitore della gara
-  - pilota al secondo posto
-  - pilota al terzo posto
-  - pole position oppure vincitore della sprint
+## Architettura dati
 
-## Regole di punteggio
+Il backend Express e' l'unico punto di persistenza e sincronizzazione. Il frontend React consuma solo le API backend.
 
-- 5 punti per il pilota corretto in prima posizione.
-- 3 punti per il pilota corretto in seconda posizione.
-- 2 punti per il pilota corretto in terza posizione.
-- 1 punto extra per la pole position.
-- Nei weekend con Sprint, il punto extra viene assegnato a chi indovina il vincitore della Sprint al posto della pole.
+- `F1Result/data.json` contiene esclusivamente i dati inseriti dall'app: utenti, pronostici correnti, storico, risultati e weekend selezionato.
+- `F1Result/drivers.json` e' la cache locale del roster piloti sincronizzato all'avvio.
+- `F1Result/calendar.json` e' la cache locale del calendario stagionale sincronizzato all'avvio.
 
-## Cosa fa l'app oggi
-
-- Gestisce la classifica cumulativa dei partecipanti.
-- Permette l'inserimento manuale dei pronostici per Fabio, Adriano e Matteo.
-- Permette l'inserimento dei risultati reali del Gran Premio.
-- Assegna automaticamente i punti in base al regolamento.
-- Mantiene uno storico delle gare gia' registrate.
-- Salva i dati localmente in `F1Result/data.json`.
-
-## Struttura del progetto
-
-- Frontend: React + TypeScript + Vite
-- Backend: Express
-- Persistenza locale: cartella `F1Result/`
-  - `data.json` per stato dell'app e storico
-  - `drivers.json` per la lista piloti disponibile localmente
+La lista piloti viene aggiornata ad ogni avvio dal backend usando StatsF1 come sorgente dati del roster e viene poi riordinata alfabeticamente prima di essere esposta al frontend. Il calendario stagionale e gli asset remoti del weekend arrivano da Formula1.com e vengono serviti al frontend tramite API backend.
 
 ## Avvio locale
 
-1. Installare le dipendenze:
+Per lo sviluppo puoi usare i comandi separati:
 
-```bash
-npm install
-```
+- `npm install`
+- `npm run dev:backend`
+- `npm run dev:frontend`
 
-2. Avviare il backend:
+Per l'avvio completo su macOS con controllo del ciclo di vita, usa:
 
-```bash
-node server.js
-```
+- `./start_fantaf1.command`
 
-3. Avviare il frontend in sviluppo:
+Questo launcher avvia prima il backend, poi il frontend, apre l'app in Google Chrome in modalita' app e ferma entrambi i processi quando la finestra dell'app viene chiusa.
 
-```bash
-npm run dev
-```
+## Titolo locale
 
-## Nota
+Il titolo visibile dell'app puo' essere sovrascritto solo in locale tramite `.env.local`. Il repository include solo `.env.example` come riferimento e non versiona il valore locale effettivo.
 
-Questo repository e' pensato per uso personale e privato, con gestione manuale da parte dell'admin.
+## Qualita' tecnica
+
+Sono inclusi lint, build e test automatici per proteggere la logica di punteggio, la sanitizzazione dei dati, il parsing del roster piloti e il parsing del calendario.

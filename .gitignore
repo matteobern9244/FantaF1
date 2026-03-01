@@ -15,6 +15,7 @@ pnpm-debug.log*
 .env.*
 !.env.example
 *.local
+.playwright-cli/
 
 *.tsbuildinfo
 

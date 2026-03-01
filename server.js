@@ -1,66 +1,75 @@
-import express from 'express';
 import cors from 'cors';
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const DATA_FILE = path.join(__dirname, 'F1Result', 'data.json');
-const DRIVERS_FILE = path.join(__dirname, 'F1Result', 'drivers.json');
-
-// Function to sync drivers from a "Master" source
-async function syncDrivers() {
-  console.log('Scanning for official F1 2026 driver updates...');
-  try {
-    // Attempting to fetch from a reliable F1 data source (simulated for 2026)
-    // In a real scenario, this would be an API like api.openf1.org or similar
-    const response = await fetch('https://raw.githubusercontent.com/f1-data/grids/main/2026_drivers.json');
-    if (response.ok) {
-      const remoteDrivers = await response.json();
-      fs.writeFileSync(DRIVERS_FILE, JSON.stringify(remoteDrivers, null, 2));
-      console.log('Driver list updated successfully from official source.');
-    } else {
-      console.log('Remote source not reachable, using local drivers.json cache.');
-    }
-  } catch (err) {
-    console.log('Offline or source unavailable. Driver list loaded from F1Result/drivers.json.');
-  }
-}
+import express from 'express';
+import { syncCalendarFromOfficialSource, sortCalendarByRound } from './backend/calendar.js';
+import { appConfig, currentYear, formatConfigText } from './backend/config.js';
+import { sortDriversAlphabetically, syncDriversFromOfficialSource } from './backend/drivers.js';
+import {
+  readAppData,
+  readCalendarCache,
+  readDriversCache,
+  writeAppData,
+} from './backend/storage.js';
 
 const app = express();
+
 app.use(cors());
 app.use(express.json());
 
-// Sync drivers at startup
-syncDrivers();
+app.get(appConfig.api.healthPath, (req, res) => {
+  res.json({
+    status: 'ok',
+    year: currentYear,
+  });
+});
 
-// Get all data
-app.get('/api/data', (req, res) => {
-  if (!fs.existsSync(DATA_FILE)) {
-    return res.json({ users: [], history: [], gpName: "", raceResults: { first: "", second: "", third: "", pole: "" } });
+app.get(appConfig.api.dataPath, (req, res) => {
+  res.json(readAppData(readCalendarCache()));
+});
+
+app.get(appConfig.api.driversPath, (req, res) => {
+  const cachedDrivers = sortDriversAlphabetically(readDriversCache());
+  res.json(cachedDrivers);
+});
+
+app.get(appConfig.api.calendarPath, (req, res) => {
+  const cachedCalendar = sortCalendarByRound(readCalendarCache());
+  res.json(cachedCalendar);
+});
+
+app.post(appConfig.api.dataPath, (req, res) => {
+  try {
+    writeAppData(req.body, readCalendarCache());
+    res.json({ message: appConfig.uiText.backend.messages.saveSuccess });
+  } catch (error) {
+    res.status(500).json({
+      error: appConfig.uiText.backend.errors.saveFailed,
+      details: error instanceof Error ? error.message : String(error),
+    });
   }
-  const data = fs.readFileSync(DATA_FILE, 'utf8');
-  res.json(JSON.parse(data));
 });
 
-// Get drivers
-app.get('/api/drivers', (req, res) => {
-  if (!fs.existsSync(DRIVERS_FILE)) {
-    return res.status(404).json({ error: 'Drivers not found' });
+async function startServer() {
+  const syncedDrivers = await syncDriversFromOfficialSource();
+  const syncedCalendar = await syncCalendarFromOfficialSource();
+
+  if (syncedDrivers.length === 0) {
+    throw new Error(appConfig.uiText.backend.errors.driversUnavailable);
   }
-  const data = fs.readFileSync(DRIVERS_FILE, 'utf8');
-  res.json(JSON.parse(data));
-});
 
-// Save data
-app.post('/api/data', (req, res) => {
-  const data = JSON.stringify(req.body, null, 2);
-  fs.writeFileSync(DATA_FILE, data);
-  res.json({ message: 'Saved successfully!' });
-});
+  if (syncedCalendar.length === 0) {
+    throw new Error(appConfig.uiText.backend.errors.calendarUnavailable);
+  }
 
-const PORT = 3001;
-app.listen(PORT, () => {
-  console.log(`Backend server running on http://localhost:${PORT}`);
+  app.listen(appConfig.server.port, appConfig.server.host, () => {
+    console.log(
+      formatConfigText(appConfig.uiText.backend.logs.serverStarted, {
+        origin: appConfig.api.backendOrigin,
+      }),
+    );
+  });
+}
+
+startServer().catch((error) => {
+  console.error(error);
+  process.exit(1);
 });

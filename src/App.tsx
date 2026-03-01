@@ -1,300 +1,667 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { PARTICIPANTS, DRIVERS_2026, Driver } from './data';
-import { Trophy, User, ListChecks, RotateCw, Trash2 } from 'lucide-react';
+import { startTransition, useEffect, useState } from 'react';
+import {
+  CalendarDays,
+  Flag,
+  ListChecks,
+  RotateCw,
+  ShieldCheck,
+  Trash2,
+  Trophy,
+  User,
+} from 'lucide-react';
 import './App.css';
+import {
+  appConfig,
+  calendarApiUrl,
+  currentYear,
+  dataApiUrl,
+  driversApiUrl,
+  predictionFieldOrder,
+  visibleAppTitle,
+} from './constants';
+import type { AppData, Driver, Prediction, PredictionKey, RaceWeekend, UserData } from './types';
+import { getNextUpcomingRace, getRaceByMeetingKey, sortCalendarByRound } from './utils/calendar';
+import {
+  buildRaceRecord,
+  calculatePointsEarned,
+  createEmptyPrediction,
+  createInitialUsers,
+} from './utils/game';
+import { getDriverById, getDriverNameById, sortDriversAlphabetically } from './utils/drivers';
 
-const API_URL = 'http://localhost:3001/api/data';
+const { app, driversSource, participants, points, uiText } = appConfig;
 
-interface Prediction {
-  first: string;
-  second: string;
-  third: string;
-  pole: string;
+const predictionLabels: Record<PredictionKey, string> = {
+  first: uiText.labels.winner,
+  second: uiText.labels.second,
+  third: uiText.labels.third,
+  pole: uiText.labels.pole,
+};
+
+const resultLabels: Record<PredictionKey, string> = {
+  first: uiText.labels.resultFirst,
+  second: uiText.labels.resultSecond,
+  third: uiText.labels.resultThird,
+  pole: uiText.labels.resultPole,
+};
+
+function formatText(template: string, replacements: Record<string, string | number>) {
+  return Object.entries(replacements).reduce((value, [key, replacement]) => {
+    return value.split(`{${key}}`).join(String(replacement));
+  }, template);
 }
 
-interface RaceRecord {
-  gpName: string;
-  date: string;
-  results: Prediction;
-  userPredictions: {
-    [userName: string]: {
-      prediction: Prediction;
-      pointsEarned: number;
-    }
+async function fetchJson<T>(url: string): Promise<T> {
+  const response = await fetch(url);
+
+  if (!response.ok) {
+    throw new Error(`${response.status}`);
+  }
+
+  return response.json() as Promise<T>;
+}
+
+function buildEmptyAppData(calendar: RaceWeekend[]): AppData {
+  const fallbackRace = getNextUpcomingRace(calendar);
+
+  return {
+    users: createInitialUsers(participants),
+    history: [],
+    gpName: fallbackRace?.grandPrixTitle ?? fallbackRace?.meetingName ?? '',
+    raceResults: createEmptyPrediction(),
+    selectedMeetingKey: fallbackRace?.meetingKey ?? '',
   };
 }
 
-interface UserData {
-  name: string;
-  predictions: Prediction;
-  points: number;
+function resolveSelectedRace(calendar: RaceWeekend[], selectedMeetingKey: string): RaceWeekend | null {
+  return getRaceByMeetingKey(calendar, selectedMeetingKey) ?? getNextUpcomingRace(calendar);
 }
 
-const App: React.FC = () => {
+function getNextRaceAfter(calendar: RaceWeekend[], currentRace: RaceWeekend | null): RaceWeekend | null {
+  const sortedCalendar = sortCalendarByRound(calendar);
+
+  if (!currentRace) {
+    return getNextUpcomingRace(sortedCalendar);
+  }
+
+  const currentIndex = sortedCalendar.findIndex(
+    (weekend) => weekend.meetingKey === currentRace.meetingKey,
+  );
+
+  if (currentIndex >= 0 && currentIndex < sortedCalendar.length - 1) {
+    return sortedCalendar[currentIndex + 1];
+  }
+
+  return currentRace;
+}
+
+function AppLogo() {
+  return (
+    <svg
+      aria-hidden="true"
+      className="app-logo"
+      viewBox="0 0 220 96"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <defs>
+        <linearGradient id="logo-red" x1="0%" y1="50%" x2="100%" y2="50%">
+          <stop offset="0%" stopColor="#ffffff" />
+          <stop offset="100%" stopColor="#e10600" />
+        </linearGradient>
+      </defs>
+      <path d="M10 62L96 18H150L62 62H10Z" fill="url(#logo-red)" />
+      <path d="M74 62L162 18H210L122 62H74Z" fill="#e10600" opacity="0.92" />
+      <path d="M18 74H120L98 88H0L18 74Z" fill="#ffd166" />
+      <path d="M132 74H220L198 88H110L132 74Z" fill="#ffffff" opacity="0.9" />
+    </svg>
+  );
+}
+
+function App() {
   const [users, setUsers] = useState<UserData[]>([]);
-  const [history, setHistory] = useState<RaceRecord[]>([]);
+  const [history, setHistory] = useState<AppData['history']>([]);
   const [gpName, setGpName] = useState('');
-  const [raceResults, setRaceResults] = useState<Prediction>({
-    first: '', second: '', third: '', pole: ''
-  });
+  const [raceResults, setRaceResults] = useState<Prediction>(createEmptyPrediction());
+  const [selectedMeetingKey, setSelectedMeetingKey] = useState('');
+  const [drivers, setDrivers] = useState<Driver[]>([]);
+  const [calendar, setCalendar] = useState<RaceWeekend[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
+  const [readyToPersist, setReadyToPersist] = useState(false);
 
-  // Load data from Backend
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const dataRes = await fetch(API_URL);
-        const data = await dataRes.json();
-        
-        if (data.users && data.users.length > 0) {
-          setUsers(data.users);
-        } else {
-          setUsers(PARTICIPANTS.map(name => ({
-            name,
-            predictions: { first: '', second: '', third: '', pole: '' },
-            points: 0
-          })));
-        }
-        setHistory(data.history || []);
-        setGpName(data.gpName || '');
-        setRaceResults(data.raceResults || { first: '', second: '', third: '', pole: '' });
-      } catch (err) {
-        console.error('Error loading data:', err);
-        // Fallback initialization
-        setUsers(PARTICIPANTS.map(name => ({
-          name,
-          predictions: { first: '', second: '', third: '', pole: '' },
-          points: 0
-        })));
-      } finally {
-        setLoading(false);
-      }
-    };
+    let isCancelled = false;
 
-    fetchData();
+    async function loadAppState() {
+      const [dataResult, driversResult, calendarResult] = await Promise.allSettled([
+        fetchJson<AppData>(dataApiUrl),
+        fetchJson<Driver[]>(driversApiUrl),
+        fetchJson<RaceWeekend[]>(calendarApiUrl),
+      ]);
+
+      if (isCancelled) {
+        return;
+      }
+
+      const loadedDrivers =
+        driversResult.status === 'fulfilled'
+          ? sortDriversAlphabetically(driversResult.value, driversSource.sortLocale)
+          : [];
+      const loadedCalendar =
+        calendarResult.status === 'fulfilled'
+          ? sortCalendarByRound(calendarResult.value)
+          : [];
+      const fallbackData = buildEmptyAppData(loadedCalendar);
+      const incomingData = dataResult.status === 'fulfilled' ? dataResult.value : fallbackData;
+      const selectedRace =
+        resolveSelectedRace(loadedCalendar, incomingData.selectedMeetingKey) ??
+        getNextUpcomingRace(loadedCalendar);
+
+      startTransition(() => {
+        setDrivers(loadedDrivers);
+        setCalendar(loadedCalendar);
+        setUsers(incomingData.users);
+        setHistory(incomingData.history);
+        setRaceResults(incomingData.raceResults);
+        setSelectedMeetingKey(selectedRace?.meetingKey ?? fallbackData.selectedMeetingKey);
+        setGpName(selectedRace?.grandPrixTitle ?? fallbackData.gpName);
+
+        if (driversResult.status === 'rejected' || calendarResult.status === 'rejected') {
+          setLoadError(uiText.loadError);
+          if (driversResult.status === 'rejected') {
+            console.error(driversResult.reason);
+          }
+
+          if (calendarResult.status === 'rejected') {
+            console.error(calendarResult.reason);
+          }
+        } else {
+          setLoadError('');
+        }
+
+        if (dataResult.status === 'rejected') {
+          console.error(dataResult.reason);
+        }
+
+        setLoading(false);
+        setReadyToPersist(
+          driversResult.status === 'fulfilled' && calendarResult.status === 'fulfilled',
+        );
+      });
+    }
+
+    void loadAppState();
+
+    return () => {
+      isCancelled = true;
+    };
   }, []);
 
-  // Global Save Function
-  const syncWithBackend = useCallback((data: any) => {
-    fetch(API_URL, {
+  useEffect(() => {
+    if (!readyToPersist) {
+      return;
+    }
+
+    const payload: AppData = {
+      users,
+      history,
+      gpName,
+      raceResults,
+      selectedMeetingKey,
+    };
+
+    void fetch(dataApiUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data)
-    }).catch(err => console.error('Error saving data:', err));
-  }, []);
-
-  // Save when users, history, gpName, or raceResults change
-  useEffect(() => {
-    if (!loading) {
-      syncWithBackend({ users, history, gpName, raceResults });
-    }
-  }, [users, history, gpName, raceResults, loading, syncWithBackend]);
-
-  const calculatePotentialPoints = (userPred: Prediction) => {
-    let pts = 0;
-    if (userPred.first === raceResults.first && raceResults.first !== '') pts += 5;
-    if (userPred.second === raceResults.second && raceResults.second !== '') pts += 3;
-    if (userPred.third === raceResults.third && raceResults.third !== '') pts += 2;
-    if (userPred.pole === raceResults.pole && raceResults.pole !== '') pts += 1;
-    return pts;
-  };
-
-  const updatePrediction = (userName: string, field: keyof Prediction, value: string) => {
-    setUsers(prev => prev.map(u => 
-      u.name === userName ? { ...u, predictions: { ...u.predictions, [field]: value } } : u
-    ));
-  };
-
-  const clearAllPredictions = () => {
-    if (window.confirm('Vuoi pulire tutti i pronostici attuali?')) {
-      setUsers(prev => prev.map(u => ({
-        ...u,
-        predictions: { first: '', second: '', third: '', pole: '' }
-      })));
-      setRaceResults({ first: '', second: '', third: '', pole: '' });
-      setGpName('');
-    }
-  };
-
-  const calculatePoints = () => {
-    if (!gpName) return alert('Inserisci il nome del Gran Premio!');
-    if (!raceResults.first || !raceResults.second || !raceResults.third || !raceResults.pole) {
-      return alert('Inserisci tutti i risultati reali!');
-    }
-
-    const newRaceRecord: RaceRecord = {
-      gpName,
-      date: new Date().toLocaleDateString(),
-      results: { ...raceResults },
-      userPredictions: {}
-    };
-
-    const updatedUsers = users.map(user => {
-      let pts = 0;
-      if (user.predictions.first === raceResults.first) pts += 5;
-      if (user.predictions.second === raceResults.second) pts += 3;
-      if (user.predictions.third === raceResults.third) pts += 2;
-      if (user.predictions.pole === raceResults.pole) pts += 1;
-
-      newRaceRecord.userPredictions[user.name] = {
-        prediction: { ...user.predictions },
-        pointsEarned: pts
-      };
-
-      return { ...user, points: user.points + pts };
+      body: JSON.stringify(payload),
+    }).catch((error) => {
+      console.error(error);
     });
+  }, [gpName, history, raceResults, readyToPersist, selectedMeetingKey, users]);
 
-    setUsers(updatedUsers);
-    setHistory(prev => [newRaceRecord, ...prev]);
-    alert(`Gara ${gpName} salvata! Punti assegnati: Fabio, Adriano e Matteo aggiornati.`);
-    
-    // Auto-clear for next GP
-    setGpName('');
-    setRaceResults({ first: '', second: '', third: '', pole: '' });
-  };
+  const sortedDrivers = sortDriversAlphabetically(drivers, driversSource.sortLocale);
+  const sortedCalendar = sortCalendarByRound(calendar);
+  const selectedRace = resolveSelectedRace(sortedCalendar, selectedMeetingKey);
+  const nextUpcomingRace = getNextUpcomingRace(sortedCalendar);
+  const leaderboardUsers = [...users].sort((firstUser, secondUser) => secondUser.points - firstUser.points);
+  const liveLeaderboardUsers = [...users].sort(
+    (firstUser, secondUser) =>
+      secondUser.points +
+      calculatePointsEarned(secondUser.predictions, raceResults, points) -
+      (firstUser.points + calculatePointsEarned(firstUser.predictions, raceResults, points)),
+  );
 
-  const getDriverName = (id: string) => DRIVERS_2026.find(d => d.id === id)?.name || '-';
-  const sortedDrivers = [...DRIVERS_2026].sort((a, b) => a.name.localeCompare(b.name));
+  function calculatePotentialPoints(userPrediction: Prediction) {
+    return calculatePointsEarned(userPrediction, raceResults, points);
+  }
 
-  if (loading) return <div className="loading"><RotateCw className="spin" size={48} /> <span>Caricamento Fanta F1...</span></div>;
+  function handleRaceSelection(nextMeetingKey: string) {
+    const nextRace = getRaceByMeetingKey(sortedCalendar, nextMeetingKey);
+    setSelectedMeetingKey(nextRace?.meetingKey ?? '');
+    setGpName(nextRace?.grandPrixTitle ?? nextRace?.meetingName ?? '');
+    setRaceResults(createEmptyPrediction());
+  }
+
+  function updatePrediction(userName: string, field: PredictionKey, value: string) {
+    setUsers((currentUsers) =>
+      currentUsers.map((user) =>
+        user.name === userName
+          ? { ...user, predictions: { ...user.predictions, [field]: value } }
+          : user,
+      ),
+    );
+  }
+
+  function updateRaceResult(field: PredictionKey, value: string) {
+    setRaceResults((currentResults) => ({
+      ...currentResults,
+      [field]: value,
+    }));
+  }
+
+  function clearAllPredictions() {
+    if (!window.confirm(uiText.alerts.clearConfirm)) {
+      return;
+    }
+
+    setUsers((currentUsers) =>
+      currentUsers.map((user) => ({
+        ...user,
+        predictions: createEmptyPrediction(),
+      })),
+    );
+    setRaceResults(createEmptyPrediction());
+  }
+
+  function calculateAndApplyPoints() {
+    if (!selectedRace) {
+      window.alert(uiText.alerts.missingRace);
+      return;
+    }
+
+    const hasAllResults = predictionFieldOrder.every((field) => Boolean(raceResults[field]));
+    if (!hasAllResults) {
+      window.alert(uiText.alerts.missingResults);
+      return;
+    }
+
+    const { record, updatedUsers } = buildRaceRecord(
+      selectedRace.grandPrixTitle || selectedRace.meetingName,
+      raceResults,
+      users,
+      points,
+      () => new Date().toLocaleDateString(),
+    );
+
+    const clearedUsers = updatedUsers.map((user) => ({
+      ...user,
+      predictions: createEmptyPrediction(),
+    }));
+    const nextRace = getNextRaceAfter(sortedCalendar, selectedRace);
+
+    setUsers(clearedUsers);
+    setHistory((currentHistory) => [record, ...currentHistory]);
+    setSelectedMeetingKey(nextRace?.meetingKey ?? selectedRace.meetingKey);
+    setGpName(nextRace?.grandPrixTitle ?? nextRace?.meetingName ?? '');
+    setRaceResults(createEmptyPrediction());
+    window.alert(
+      formatText(uiText.alerts.raceSaved, {
+        gpName: record.gpName,
+      }),
+    );
+  }
+
+  function renderHistoryResults(record: AppData['history'][number]) {
+    return formatText(uiText.history.resultSummaryTemplate, {
+      actualLabel: uiText.history.actualLabel,
+      first: getDriverNameById(drivers, record.results.first, uiText.history.unknownDriver),
+      second: getDriverNameById(drivers, record.results.second, uiText.history.unknownDriver),
+      third: getDriverNameById(drivers, record.results.third, uiText.history.unknownDriver),
+      pole: getDriverNameById(drivers, record.results.pole, uiText.history.unknownDriver),
+    });
+  }
+
+  if (loading) {
+    return (
+      <div className="loading-shell">
+        <RotateCw className="spin" size={44} />
+        <span>{uiText.loading}</span>
+      </div>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <div className="loading-shell">
+        <ShieldCheck size={44} />
+        <span>{loadError}</span>
+      </div>
+    );
+  }
 
   return (
-    <div className="container">
-      <header>
-        <h1><Trophy className="icon-gold" /> FANTA F1 2026</h1>
-        <div className="leaderboard">
-          {[...users].sort((a, b) => b.points - a.points).map(u => (
-            <div key={u.name} className="leader-card">
-              <span className="name">{u.name}</span>
-              <span className="points">{u.points} pts</span>
+    <div className="app-shell">
+      <header
+        className="hero-panel"
+        style={
+          selectedRace?.heroImageUrl
+            ? {
+                backgroundImage: `linear-gradient(145deg, rgba(10, 11, 19, 0.95), rgba(10, 11, 19, 0.55)), url(${selectedRace.heroImageUrl})`,
+              }
+            : undefined
+        }
+      >
+        <div className="hero-brand">
+          <AppLogo />
+          <p className="eyebrow">{uiText.headings.seasonTag}</p>
+          <h1>{visibleAppTitle}</h1>
+          <p className="subtitle">{currentYear}</p>
+        </div>
+
+        <div className="hero-summary-grid">
+          <section className="hero-card next-race-card">
+            <div className="card-heading">
+              <CalendarDays size={18} />
+              <span>{uiText.headings.nextRace}</span>
             </div>
-          ))}
+            {nextUpcomingRace ? (
+              <>
+                <strong>{nextUpcomingRace.grandPrixTitle}</strong>
+                <span>{nextUpcomingRace.dateRangeLabel}</span>
+                <span>
+                  {uiText.labels.calendarRound} {nextUpcomingRace.roundNumber}
+                </span>
+                <span className={`race-badge ${nextUpcomingRace.isSprintWeekend ? 'sprint' : ''}`}>
+                  {nextUpcomingRace.isSprintWeekend
+                    ? uiText.calendar.sprintBadge
+                    : uiText.calendar.raceBadge}
+                </span>
+              </>
+            ) : (
+              <span>{uiText.calendar.empty}</span>
+            )}
+          </section>
+
+          <section className="hero-card">
+            <div className="card-heading">
+              <Trophy size={18} />
+              <span>{uiText.headings.live}</span>
+            </div>
+            <div className="leaderboard compact">
+              {leaderboardUsers.map((user) => (
+                <div key={user.name} className="leader-card">
+                  <span className="name">{user.name}</span>
+                  <span className="points">
+                    {user.points} {uiText.pointsSuffix}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </section>
         </div>
       </header>
 
-      <div className="layout-grid">
-        <main className="content-area">
-          <section className="admin-header">
-            <h2><User size={28} /> INSERIMENTO PRONOSTICI (Admin: Matteo)</h2>
-            <button className="btn-secondary" onClick={clearAllPredictions}>
-              <Trash2 size={18} /> PULISCI TUTTO PER NUOVO GP
+      <main className="page-grid">
+        <section className="main-column">
+          <section className="calendar-panel">
+            <div className="section-title">
+              <Flag size={20} />
+              <h2>{uiText.headings.calendar}</h2>
+            </div>
+            {sortedCalendar.length === 0 ? (
+              <p className="empty-copy">{uiText.calendar.empty}</p>
+            ) : (
+              <>
+                <div className="race-selector">
+                  <label htmlFor="meeting-selector">{uiText.labels.selectedRace}</label>
+                  <select
+                    id="meeting-selector"
+                    value={selectedRace?.meetingKey ?? ''}
+                    onChange={(event) => handleRaceSelection(event.target.value)}
+                  >
+                    {sortedCalendar.map((weekend) => (
+                      <option key={weekend.meetingKey} value={weekend.meetingKey}>
+                        {weekend.roundNumber}. {weekend.grandPrixTitle}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="calendar-strip">
+                  {sortedCalendar.map((weekend) => (
+                    <button
+                      key={weekend.meetingKey}
+                      className={`calendar-card ${
+                        weekend.meetingKey === selectedRace?.meetingKey ? 'selected' : ''
+                      }`}
+                      onClick={() => handleRaceSelection(weekend.meetingKey)}
+                      type="button"
+                    >
+                      <span className="calendar-round">
+                        {uiText.labels.calendarRound} {weekend.roundNumber}
+                      </span>
+                      <strong>{weekend.meetingName}</strong>
+                      <span>{weekend.dateRangeLabel}</span>
+                      <span className={`calendar-badge ${weekend.isSprintWeekend ? 'sprint' : ''}`}>
+                        {weekend.isSprintWeekend
+                          ? uiText.labels.calendarSprint
+                          : uiText.calendar.raceBadge}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
+          </section>
+
+          <section className="panel">
+            <div className="panel-head">
+              <div className="section-title">
+                <User size={20} />
+                <h2>
+                  {uiText.headings.predictionEntry} ({uiText.labels.adminPrefix}: {app.adminName})
+                </h2>
+              </div>
+              <button className="secondary-button" onClick={clearAllPredictions} type="button">
+                <Trash2 size={16} />
+                {uiText.buttons.clear}
+              </button>
+            </div>
+
+            <div className="predictions-grid">
+              {users.map((user) => (
+                <article key={user.name} className="user-card">
+                  <div className="user-card-head">
+                    <h3>{user.name}</h3>
+                    <span className="points-preview">
+                      {uiText.labels.potential}: {calculatePotentialPoints(user.predictions)}{' '}
+                      {uiText.pointsSuffix}
+                    </span>
+                  </div>
+
+                  {predictionFieldOrder.map((field) => (
+                    <div key={`${user.name}-${field}`} className="field-row">
+                      <label htmlFor={`${user.name}-${field}`}>
+                        {predictionLabels[field]} ({points[field]} {uiText.pointsSuffix})
+                      </label>
+                      <select
+                        id={`${user.name}-${field}`}
+                        value={user.predictions[field]}
+                        onChange={(event) => updatePrediction(user.name, field, event.target.value)}
+                      >
+                        <option value="">{uiText.placeholders.driverSelect}</option>
+                        {sortedDrivers.map((driver) => (
+                          <option key={driver.id} value={driver.id}>
+                            {driver.name} ({driver.team})
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  ))}
+                </article>
+              ))}
+            </div>
+          </section>
+
+          <section className="panel accent-panel">
+            <div className="section-title">
+              <ListChecks size={20} />
+              <h2>{uiText.headings.results}</h2>
+            </div>
+
+            {selectedRace ? (
+              <div className="selected-race-banner">
+                <div>
+                  <span className="eyebrow">{uiText.labels.selectedRace}</span>
+                  <strong>{selectedRace.grandPrixTitle}</strong>
+                  <span>{selectedRace.dateRangeLabel}</span>
+                </div>
+                {selectedRace.trackOutlineUrl ? (
+                  <img
+                    alt={selectedRace.meetingName}
+                    className="track-map"
+                    src={selectedRace.trackOutlineUrl}
+                  />
+                ) : null}
+              </div>
+            ) : (
+              <p className="empty-copy">{uiText.calendar.empty}</p>
+            )}
+
+            <div className="results-grid">
+              {predictionFieldOrder.map((field) => (
+                <div key={field} className="field-row">
+                  <label htmlFor={`result-${field}`}>{resultLabels[field]}</label>
+                  <select
+                    id={`result-${field}`}
+                    value={raceResults[field]}
+                    onChange={(event) => updateRaceResult(field, event.target.value)}
+                  >
+                    <option value="">{uiText.placeholders.emptyOption}</option>
+                    {sortedDrivers.map((driver) => (
+                      <option key={driver.id} value={driver.id}>
+                        {driver.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              ))}
+            </div>
+
+            <button className="primary-button" onClick={calculateAndApplyPoints} type="button">
+              {uiText.buttons.confirmResults}
             </button>
           </section>
 
-          <section className="predictions-grid">
-            {users.map(user => (
-              <div key={user.name} className="user-section">
-                <h3>{user.name}</h3>
-                <div className="input-group">
-                  <label>Vincitore (1°) - 5pt</label>
-                  <select value={user.predictions.first} onChange={(e) => updatePrediction(user.name, 'first', e.target.value)}>
-                    <option value="">Seleziona Pilota...</option>
-                    {sortedDrivers.map(d => <option key={d.id} value={d.id}>{d.name} ({d.team})</option>)}
-                  </select>
-                </div>
-                <div className="input-group">
-                  <label>Secondo Posto (2°) - 3pt</label>
-                  <select value={user.predictions.second} onChange={(e) => updatePrediction(user.name, 'second', e.target.value)}>
-                    <option value="">Seleziona Pilota...</option>
-                    {sortedDrivers.map(d => <option key={d.id} value={d.id}>{d.name} ({d.team})</option>)}
-                  </select>
-                </div>
-                <div className="input-group">
-                  <label>Terzo Posto (3°) - 2pt</label>
-                  <select value={user.predictions.third} onChange={(e) => updatePrediction(user.name, 'third', e.target.value)}>
-                    <option value="">Seleziona Pilota...</option>
-                    {sortedDrivers.map(d => <option key={d.id} value={d.id}>{d.name} ({d.team})</option>)}
-                  </select>
-                </div>
-                <div className="input-group">
-                  <label>Pole Position / Sprint - 1pt</label>
-                  <select value={user.predictions.pole} onChange={(e) => updatePrediction(user.name, 'pole', e.target.value)}>
-                    <option value="">Seleziona Pilota...</option>
-                    {sortedDrivers.map(d => <option key={d.id} value={d.id}>{d.name} ({d.team})</option>)}
-                  </select>
-                </div>
-              </div>
-            ))}
-          </section>
-
-          <section className="results-admin">
-            <h2><ListChecks size={28} /> RISULTATI REALI GARA</h2>
-            <div className="gp-input">
-              <label>Nome Gran Premio</label>
-              <input type="text" value={gpName} onChange={(e) => setGpName(e.target.value)} placeholder="es. Monza, Silverstone..." />
+          <section className="panel">
+            <div className="section-title">
+              <Trophy size={20} />
+              <h2>{uiText.headings.history}</h2>
             </div>
-            <div className="admin-grid">
-              <div className="input-group"><label>1° Classificato</label><select value={raceResults.first} onChange={(e) => setRaceResults({...raceResults, first: e.target.value})}><option value="">-</option>{sortedDrivers.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}</select></div>
-              <div className="input-group"><label>2° Classificato</label><select value={raceResults.second} onChange={(e) => setRaceResults({...raceResults, second: e.target.value})}><option value="">-</option>{sortedDrivers.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}</select></div>
-              <div className="input-group"><label>3° Classificato</label><select value={raceResults.third} onChange={(e) => setRaceResults({...raceResults, third: e.target.value})}><option value="">-</option>{sortedDrivers.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}</select></div>
-              <div className="input-group"><label>Pole / Vincitore Sprint</label><select value={raceResults.pole} onChange={(e) => setRaceResults({...raceResults, pole: e.target.value})}><option value="">-</option>{sortedDrivers.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}</select></div>
-            </div>
-            <button className="btn-primary" onClick={calculatePoints}>CONFERMA RISULTATI E ASSEGNA PUNTI</button>
-          </section>
-
-          {history.length > 0 && (
-            <section className="history-section">
-              <h2><Trophy size={28} /> STORICO CAMPIONATO</h2>
-              {history.map((record, i) => (
-                <div key={i} className="history-card">
-                  <div className="history-header">
-                    <strong>{record.gpName}</strong> <span>{record.date}</span>
-                  </div>
-                  <div className="history-results">
-                    Reale: 1° {getDriverName(record.results.first)} | 2° {getDriverName(record.results.second)} | 3° {getDriverName(record.results.third)} | Pole/Sprint: {getDriverName(record.results.pole)}
-                  </div>
-                  <div className="history-users">
-                    {Object.entries(record.userPredictions).map(([name, data]) => (
-                      <div key={name} className="user-history-row">
-                        <strong>{name}:</strong> {data.pointsEarned} pt 
+            {history.length === 0 ? (
+              <p className="empty-copy">{uiText.history.empty}</p>
+            ) : (
+              <div className="history-stack">
+                {history.map((record, index) => (
+                  <article key={`${record.gpName}-${record.date}-${index}`} className="history-card">
+                    <div className="history-top">
+                      <div>
+                        <strong>{record.gpName}</strong>
+                        <span>{record.date}</span>
                       </div>
-                    ))}
-                  </div>
+                      <span className="history-summary">{renderHistoryResults(record)}</span>
+                    </div>
+
+                    <div className="history-grid">
+                      {Object.entries(record.userPredictions).map(([name, result]) => {
+                        const winnerDriver = getDriverById(drivers, result.prediction.first);
+
+                        return (
+                          <div key={name} className="history-user-card">
+                            <strong>{name}</strong>
+                            <span>
+                              {result.pointsEarned} {uiText.pointsSuffix}
+                            </span>
+                            <small>
+                              {winnerDriver?.name ?? uiText.history.unknownDriver}
+                            </small>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </article>
+                ))}
+              </div>
+            )}
+          </section>
+        </section>
+
+        <aside className="sidebar-column">
+          <section className="sidebar-panel">
+            <div className="section-title">
+              <ShieldCheck size={20} />
+              <h2>{uiText.headings.rules}</h2>
+            </div>
+            <div className="rules-list">
+              {predictionFieldOrder.map((field) => (
+                <div key={field} className="rule-row">
+                  <span className="rule-points">
+                    +{points[field]} {uiText.pointsSuffix}
+                  </span>
+                  <span>{uiText.rules[field]}</span>
                 </div>
               ))}
-            </section>
-          )}
-        </main>
+            </div>
+          </section>
 
-        <aside className="rules-sidebar">
-          <h3>📜 REGOLE F1 2026</h3>
-          <div className="rules-content">
-            <div className="rule-item">
-              <span className="rule-points">+5</span>
-              <p>Chi indovina la <strong>1ª posizione</strong></p>
+          <section className="sidebar-panel">
+            <div className="section-title">
+              <Trophy size={20} />
+              <h2>{uiText.headings.live}</h2>
             </div>
-            <div className="rule-item">
-              <span className="rule-points">+3</span>
-              <p>Chi indovina la <strong>2ª posizione</strong></p>
+            <div className="live-list">
+              {liveLeaderboardUsers.map((user) => (
+                <div key={user.name} className="live-row">
+                  <span>{user.name}</span>
+                  <strong>
+                    {user.points + calculatePotentialPoints(user.predictions)} {uiText.pointsSuffix}
+                  </strong>
+                </div>
+              ))}
             </div>
-            <div className="rule-item">
-              <span className="rule-points">+2</span>
-              <p>Chi indovina la <strong>3ª posizione</strong></p>
-            </div>
-            <div className="rule-item">
-              <span className="rule-points">+1</span>
-              <p>Chi indovina la <strong>Pole Position</strong> (o vincitore Sprint se presente)</p>
-            </div>
-          </div>
+            <p className="sidebar-note">{uiText.history.liveHint}</p>
+          </section>
 
-          <div className="live-leaderboard">
-            <h3>🏁 CLASSIFICA LIVE GARA</h3>
-            {[...users].sort((a, b) => (b.points + calculatePotentialPoints(b.predictions)) - (a.points + calculatePotentialPoints(a.predictions))).map(u => (
-              <div key={u.name} className="live-row">
-                <span>{u.name}</span>
-                <strong>{u.points + calculatePotentialPoints(u.predictions)} pt</strong>
+          <section className="sidebar-panel">
+            <div className="section-title">
+              <Flag size={20} />
+              <h2>{selectedRace?.meetingName ?? uiText.labels.selectedRace}</h2>
+            </div>
+            {selectedRace ? (
+              <div className="driver-spotlight">
+                {predictionFieldOrder.map((field) => {
+                  const driver = getDriverById(drivers, raceResults[field]);
+
+                  return (
+                    <div key={`spotlight-${field}`} className="spotlight-row">
+                      <span>{resultLabels[field]}</span>
+                      <strong>{driver?.name ?? uiText.placeholders.emptyOption}</strong>
+                    </div>
+                  );
+                })}
               </div>
-            ))}
-            <small className="live-hint">(Punteggio totale inclusa proiezione gara)</small>
-          </div>
+            ) : (
+              <p className="empty-copy">{uiText.calendar.empty}</p>
+            )}
+          </section>
         </aside>
-      </div>
+      </main>
 
-      <footer>
-        <p>© 2026 FantaF1 - Admin: Matteo | Partecipanti: Adriano, Fabio, Matteo</p>
+      <footer className="app-footer">
+        <p>{uiText.footer}</p>
       </footer>
     </div>
   );
-};
+}
 
 export default App;

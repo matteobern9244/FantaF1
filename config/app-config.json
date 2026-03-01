@@ -1,0 +1,202 @@
+{
+  "app": {
+    "title": "Fanta Formula 1",
+    "adminName": "Matteo"
+  },
+  "server": {
+    "host": "127.0.0.1",
+    "port": 3001
+  },
+  "frontend": {
+    "host": "127.0.0.1",
+    "port": 5173
+  },
+  "participants": ["Adriano", "Fabio", "Matteo"],
+  "points": {
+    "first": 5,
+    "second": 3,
+    "third": 2,
+    "pole": 1
+  },
+  "api": {
+    "dataPath": "/api/data",
+    "driversPath": "/api/drivers",
+    "calendarPath": "/api/calendar",
+    "healthPath": "/api/health"
+  },
+  "storage": {
+    "directory": "F1Result",
+    "dataFile": "data.json",
+    "driversFile": "drivers.json",
+    "calendarFile": "calendar.json"
+  },
+  "driversSource": {
+    "statsBaseUrl": "https://www.statsf1.com/it",
+    "formulaOneDriversUrl": "https://www.formula1.com/en/drivers",
+    "sortLocale": "it",
+    "expectedCount": 22,
+    "requestHeaders": {
+      "userAgent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+      "acceptLanguage": "it-IT,it;q=0.9,en;q=0.8"
+    }
+  },
+  "calendarSource": {
+    "baseUrl": "https://www.formula1.com/en/racing",
+    "referenceArticleUrl": "https://www.formula1.com/en/latest/article/formula-1-reveals-calendar-for-2026-season.YctbMZWqBvrgyddrnauo8.YctbMZWqBvrgyddrnauo8/",
+    "sortLocale": "it",
+    "expectedMinimumWeekends": 20
+  },
+  "driverAliases": {
+    "Alex Albon": "Alexander Albon",
+    "Ollie Bearman": "Oliver Bearman"
+  },
+  "driverIdOverrides": {
+    "Max Verstappen": "ver",
+    "Isack Hadjar": "had",
+    "George Russell": "rus",
+    "Kimi Antonelli": "ant",
+    "Charles Leclerc": "lec",
+    "Lewis Hamilton": "ham",
+    "Lando Norris": "nor",
+    "Oscar Piastri": "pia",
+    "Fernando Alonso": "alo",
+    "Lance Stroll": "str",
+    "Pierre Gasly": "gas",
+    "Franco Colapinto": "col",
+    "Alexander Albon": "alb",
+    "Alex Albon": "alb",
+    "Carlos Sainz": "sai",
+    "Liam Lawson": "law",
+    "Arvid Lindblad": "lin",
+    "Esteban Ocon": "oco",
+    "Oliver Bearman": "bea",
+    "Ollie Bearman": "bea",
+    "Nico Hulkenberg": "hul",
+    "Gabriel Bortoleto": "bor",
+    "Sergio Perez": "per",
+    "Valtteri Bottas": "bot"
+  },
+  "teamAliases": {
+    "Red Bull Racing": "Red Bull",
+    "Visa Cash App Racing Bulls": "Racing Bulls",
+    "Cadillac F1 Team": "Cadillac"
+  },
+  "teamSlugNames": {
+    "mclaren": "McLaren",
+    "mercedes": "Mercedes",
+    "red-bull-racing": "Red Bull",
+    "redbullracing": "Red Bull",
+    "ferrari": "Ferrari",
+    "williams": "Williams",
+    "rb": "Racing Bulls",
+    "racing-bulls": "Racing Bulls",
+    "racingbulls": "Racing Bulls",
+    "aston-martin": "Aston Martin",
+    "astonmartin": "Aston Martin",
+    "haas": "Haas",
+    "haasf1team": "Haas",
+    "audi": "Audi",
+    "alpine": "Alpine",
+    "cadillac": "Cadillac"
+  },
+  "teamColors": {
+    "McLaren": "#FF8700",
+    "Mercedes": "#00D2BE",
+    "Red Bull": "#0600EF",
+    "Ferrari": "#EF1A2D",
+    "Williams": "#005AFF",
+    "Racing Bulls": "#6692FF",
+    "Aston Martin": "#006F62",
+    "Haas": "#FFFFFF",
+    "Audi": "#000000",
+    "Alpine": "#0090FF",
+    "Cadillac": "#C5A66A",
+    "default": "#5F6673"
+  },
+  "uiText": {
+    "loading": "Caricamento dati Fanta Formula 1...",
+    "loadError": "Impossibile caricare i dati necessari. Verifica che il backend sia attivo.",
+    "pointsSuffix": "pt",
+    "buttons": {
+      "clear": "Reset pronostici correnti",
+      "confirmResults": "Conferma risultati e assegna i punti"
+    },
+    "headings": {
+      "seasonTag": "Fanta Formula 1",
+      "predictionEntry": "Pronostici dei giocatori",
+      "results": "Risultati del weekend",
+      "history": "Storico gare",
+      "rules": "Regole del gioco",
+      "live": "Classifica live",
+      "calendar": "Calendario stagione",
+      "nextRace": "Prossimo weekend"
+    },
+    "labels": {
+      "adminPrefix": "Admin",
+      "selectedRace": "Weekend selezionato",
+      "winner": "Vincitore gara",
+      "second": "Seconda posizione",
+      "third": "Terza posizione",
+      "pole": "Pole / vincitore Sprint",
+      "resultFirst": "Risultato 1°",
+      "resultSecond": "Risultato 2°",
+      "resultThird": "Risultato 3°",
+      "resultPole": "Pole / Sprint reale",
+      "potential": "Proiezione gara",
+      "calendarRound": "Round",
+      "calendarSprint": "Sprint"
+    },
+    "placeholders": {
+      "driverSelect": "Seleziona un pilota",
+      "emptyOption": "-"
+    },
+    "rules": {
+      "first": "Pilota corretto in prima posizione",
+      "second": "Pilota corretto in seconda posizione",
+      "third": "Pilota corretto in terza posizione",
+      "pole": "Pole position o vincitore Sprint"
+    },
+    "history": {
+      "actualLabel": "Risultato reale",
+      "unknownDriver": "-",
+      "liveHint": "Punteggio attuale piu' proiezione del weekend selezionato",
+      "empty": "Nessuna gara registrata finora.",
+      "resultSummaryTemplate": "{actualLabel}: 1° {first} | 2° {second} | 3° {third} | Pole/Sprint {pole}"
+    },
+    "calendar": {
+      "empty": "Calendario non disponibile.",
+      "sprintBadge": "Weekend Sprint",
+      "raceBadge": "Weekend standard"
+    },
+    "alerts": {
+      "clearConfirm": "Vuoi azzerare i pronostici attuali per il weekend selezionato?",
+      "missingRace": "Seleziona un weekend di gara.",
+      "missingResults": "Inserisci tutti i risultati reali prima di assegnare i punti.",
+      "raceSaved": "Weekend {gpName} salvato correttamente. Classifica aggiornata."
+    },
+    "footer": "Dati di gioco salvati in locale. Il titolo visibile dell'app puo' essere sovrascritto tramite .env.local.",
+    "backend": {
+      "logs": {
+        "driverSyncStart": "Sincronizzazione roster piloti in corso...",
+        "driverSyncSuccess": "Roster piloti aggiornato con {count} piloti.",
+        "driverSyncFallback": "Sync roster non disponibile. Uso la cache locale con {count} piloti.",
+        "driverSyncNoCache": "Sync roster non disponibile e nessuna cache piloti trovata.",
+        "calendarSyncStart": "Sincronizzazione calendario ufficiale in corso...",
+        "calendarSyncSuccess": "Calendario ufficiale aggiornato con {count} weekend.",
+        "calendarSyncFallback": "Sync calendario non disponibile. Uso la cache locale con {count} weekend.",
+        "calendarSyncNoCache": "Sync calendario non disponibile e nessuna cache trovata.",
+        "serverStarted": "Backend server attivo su {origin}."
+      },
+      "messages": {
+        "saveSuccess": "Dati salvati correttamente."
+      },
+      "errors": {
+        "saveFailed": "Impossibile salvare i dati.",
+        "driversUnavailable": "Lista piloti non disponibile.",
+        "calendarUnavailable": "Calendario non disponibile.",
+        "invalidDriverSource": "La fonte roster non contiene abbastanza piloti validi.",
+        "invalidCalendarSource": "La fonte calendario non contiene abbastanza weekend validi."
+      }
+    }
+  }
+}
