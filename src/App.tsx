@@ -223,7 +223,6 @@ function App() {
   const sortedCalendar = sortCalendarByRound(calendar);
   const selectedRace = resolveSelectedRace(sortedCalendar, selectedMeetingKey);
   const nextUpcomingRace = getNextUpcomingRace(sortedCalendar);
-  const leaderboardUsers = [...users].sort((firstUser, secondUser) => secondUser.points - firstUser.points);
   const liveLeaderboardUsers = [...users].sort(
     (firstUser, secondUser) =>
       secondUser.points +
@@ -359,6 +358,23 @@ function App() {
         </div>
 
         <div className="hero-summary-grid">
+          <section className="hero-card rules-panel">
+            <div className="card-heading">
+              <ShieldCheck size={18} />
+              <span>{uiText.headings.rules}</span>
+            </div>
+            <div className="rules-list">
+              {predictionFieldOrder.map((field) => (
+                <div key={`hero-rule-${field}`} className="rule-row">
+                  <span className="rule-points">
+                    +{points[field]} {uiText.pointsSuffix}
+                  </span>
+                  <span>{uiText.rules[field]}</span>
+                </div>
+              ))}
+            </div>
+          </section>
+
           <section className="hero-card next-race-card">
             <div className="card-heading">
               <CalendarDays size={18} />
@@ -387,22 +403,46 @@ function App() {
               <Trophy size={18} />
               <span>{uiText.headings.live}</span>
             </div>
-            <div className="leaderboard compact">
-              {leaderboardUsers.map((user) => (
-                <div key={user.name} className="leader-card">
-                  <span className="name">{user.name}</span>
-                  <span className="points">
-                    {user.points} {uiText.pointsSuffix}
-                  </span>
+            <div className="live-list">
+              {liveLeaderboardUsers.map((user) => (
+                <div key={`hero-live-${user.name}`} className="live-row">
+                  <span>{user.name}</span>
+                  <strong>
+                    {user.points + calculatePotentialPoints(user.predictions)} {uiText.pointsSuffix}
+                  </strong>
                 </div>
               ))}
             </div>
+            <p className="sidebar-note">{uiText.history.liveHint}</p>
+          </section>
+
+          <section className="hero-card">
+            <div className="card-heading">
+              <Flag size={18} />
+              <span>{selectedRace?.meetingName ?? uiText.labels.selectedRace}</span>
+            </div>
+            {selectedRace ? (
+              <div className="driver-spotlight">
+                {predictionFieldOrder.map((field) => {
+                  const driver = getDriverById(drivers, raceResults[field]);
+
+                  return (
+                    <div key={`hero-spotlight-${field}`} className="spotlight-row">
+                      <span>{resultLabels[field]}</span>
+                      <strong>{driver?.name ?? uiText.placeholders.emptyOption}</strong>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <p className="empty-copy">{uiText.calendar.empty}</p>
+            )}
           </section>
         </div>
       </header>
 
-      <main className="page-grid">
-        <section className="main-column">
+      <main className="dashboard-grid">
+        <section className="content-column">
           <section className="calendar-panel">
             <div className="section-title">
               <Flag size={20} />
@@ -595,66 +635,6 @@ function App() {
             )}
           </section>
         </section>
-
-        <aside className="sidebar-column">
-          <section className="sidebar-panel">
-            <div className="section-title">
-              <ShieldCheck size={20} />
-              <h2>{uiText.headings.rules}</h2>
-            </div>
-            <div className="rules-list">
-              {predictionFieldOrder.map((field) => (
-                <div key={field} className="rule-row">
-                  <span className="rule-points">
-                    +{points[field]} {uiText.pointsSuffix}
-                  </span>
-                  <span>{uiText.rules[field]}</span>
-                </div>
-              ))}
-            </div>
-          </section>
-
-          <section className="sidebar-panel">
-            <div className="section-title">
-              <Trophy size={20} />
-              <h2>{uiText.headings.live}</h2>
-            </div>
-            <div className="live-list">
-              {liveLeaderboardUsers.map((user) => (
-                <div key={user.name} className="live-row">
-                  <span>{user.name}</span>
-                  <strong>
-                    {user.points + calculatePotentialPoints(user.predictions)} {uiText.pointsSuffix}
-                  </strong>
-                </div>
-              ))}
-            </div>
-            <p className="sidebar-note">{uiText.history.liveHint}</p>
-          </section>
-
-          <section className="sidebar-panel">
-            <div className="section-title">
-              <Flag size={20} />
-              <h2>{selectedRace?.meetingName ?? uiText.labels.selectedRace}</h2>
-            </div>
-            {selectedRace ? (
-              <div className="driver-spotlight">
-                {predictionFieldOrder.map((field) => {
-                  const driver = getDriverById(drivers, raceResults[field]);
-
-                  return (
-                    <div key={`spotlight-${field}`} className="spotlight-row">
-                      <span>{resultLabels[field]}</span>
-                      <strong>{driver?.name ?? uiText.placeholders.emptyOption}</strong>
-                    </div>
-                  );
-                })}
-              </div>
-            ) : (
-              <p className="empty-copy">{uiText.calendar.empty}</p>
-            )}
-          </section>
-        </aside>
       </main>
 
       <footer className="app-footer">
