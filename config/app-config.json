@@ -166,7 +166,7 @@
     "calendar": {
       "empty": "Calendario non disponibile.",
       "sprintBadge": "Weekend Sprint",
-      "raceBadge": "Weekend standard"
+      "raceBadge": "Weekend Standard"
     },
     "alerts": {
       "clearConfirm": "Vuoi azzerare i pronostici attuali per il weekend selezionato?",
@@ -174,7 +174,7 @@
       "missingResults": "Inserisci tutti i risultati reali prima di assegnare i punti.",
       "raceSaved": "Weekend {gpName} salvato correttamente. Classifica aggiornata."
     },
-    "footer": "Dati di gioco salvati in locale. Il titolo visibile dell'app puo' essere sovrascritto tramite .env.local.",
+    "footer": "Application created by Matteo Bernardini©",
     "backend": {
       "logs": {
         "driverSyncStart": "Sincronizzazione roster piloti in corso...",
