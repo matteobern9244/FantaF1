@@ -1,11 +1,5 @@
-import fs from 'fs';
-import path from 'path';
-import { appConfig, projectRoot } from './config.js';
-
-const storageDirectoryPath = path.join(projectRoot, appConfig.storage.directory);
-const dataFilePath = path.join(storageDirectoryPath, appConfig.storage.dataFile);
-const driversFilePath = path.join(storageDirectoryPath, appConfig.storage.driversFile);
-const calendarFilePath = path.join(storageDirectoryPath, appConfig.storage.calendarFile);
+import { AppData, Driver, Weekend } from './models.js';
+import { appConfig } from './config.js';
 
 function createEmptyPrediction() {
   return {
@@ -22,23 +16,6 @@ function createInitialUsers() {
     predictions: createEmptyPrediction(),
     points: 0,
   }));
-}
-
-function ensureDataDirectory() {
-  fs.mkdirSync(storageDirectoryPath, { recursive: true });
-}
-
-function readJsonFile(filePath) {
-  if (!fs.existsSync(filePath)) {
-    return null;
-  }
-
-  try {
-    const content = fs.readFileSync(filePath, 'utf8');
-    return JSON.parse(content);
-  } catch {
-    return null;
-  }
 }
 
 function sanitizePrediction(value) {
@@ -62,8 +39,13 @@ function sanitizeUser(user, fallbackName) {
 }
 
 function sanitizeRaceRecord(record) {
+  // Convert Mongoose Map to Object if needed, though simple access works
+  const userPredictionsObj = record?.userPredictions instanceof Map 
+    ? Object.fromEntries(record.userPredictions) 
+    : (record?.userPredictions || {});
+
   const safeUserPredictions = Object.fromEntries(
-    Object.entries(record?.userPredictions ?? {}).map(([name, value]) => [
+    Object.entries(userPredictionsObj).map(([name, value]) => [
       name,
       {
         prediction: sanitizePrediction(value?.prediction),
@@ -203,42 +185,83 @@ function sanitizeAppData(value, calendar = []) {
   };
 }
 
-function readAppData(calendar = readCalendarCache()) {
-  ensureDataDirectory();
-  const storedData = readJsonFile(dataFilePath);
-  return storedData ? sanitizeAppData(storedData, calendar) : createDefaultAppData(calendar);
+async function readAppData(calendarPromise) {
+  // Wait for calendar if it's a promise (handling the parallel fetch in server.js)
+  const calendar = await (calendarPromise || readCalendarCache());
+  
+  try {
+    const storedData = await AppData.findOne().sort({ createdAt: -1 });
+    // Convert Mongoose document to plain object
+    const plainData = storedData ? storedData.toObject() : null;
+    return plainData ? sanitizeAppData(plainData, calendar) : createDefaultAppData(calendar);
+  } catch (error) {
+    console.error('Error reading app data from DB:', error);
+    return createDefaultAppData(calendar);
+  }
 }
 
-function writeAppData(appData, calendar = readCalendarCache()) {
-  ensureDataDirectory();
+async function writeAppData(appData, calendarPromise) {
+  const calendar = await (calendarPromise || readCalendarCache());
   const sanitizedData = sanitizeAppData(appData, calendar);
-  fs.writeFileSync(dataFilePath, JSON.stringify(sanitizedData, null, 2));
-  return sanitizedData;
+  
+  try {
+    // Upsert the single document
+    await AppData.findOneAndUpdate({}, sanitizedData, { upsert: true, new: true });
+    return sanitizedData;
+  } catch (error) {
+    console.error('Error writing app data to DB:', error);
+    throw error;
+  }
 }
 
-function readDriversCache() {
-  ensureDataDirectory();
-  const storedDrivers = readJsonFile(driversFilePath);
-  return Array.isArray(storedDrivers) ? storedDrivers : [];
+async function readDriversCache() {
+  try {
+    const drivers = await Driver.find().sort({ name: 1 });
+    return drivers.map(d => d.toObject());
+  } catch (error) {
+    console.error('Error reading drivers from DB:', error);
+    return [];
+  }
 }
 
-function writeDriversCache(drivers) {
-  ensureDataDirectory();
-  fs.writeFileSync(driversFilePath, JSON.stringify(drivers, null, 2));
-  return drivers;
+async function writeDriversCache(drivers) {
+  try {
+    // Delete all and rewrite to ensure cache is fresh and consistent with source
+    // Alternatively, could use bulkWrite for upserts to be more efficient, 
+    // but for < 30 drivers, this is fine and safer for data integrity.
+    await Driver.deleteMany({});
+    await Driver.insertMany(drivers);
+    return drivers;
+  } catch (error) {
+    console.error('Error writing drivers to DB:', error);
+    return drivers;
+  }
 }
 
-function readCalendarCache() {
-  ensureDataDirectory();
-  const storedCalendar = readJsonFile(calendarFilePath);
-  return Array.isArray(storedCalendar) ? storedCalendar : [];
+async function readCalendarCache() {
+  try {
+    const calendar = await Weekend.find().sort({ roundNumber: 1 });
+    return calendar.map(w => w.toObject());
+  } catch (error) {
+    console.error('Error reading calendar from DB:', error);
+    return [];
+  }
 }
 
-function writeCalendarCache(calendar) {
-  ensureDataDirectory();
-  fs.writeFileSync(calendarFilePath, JSON.stringify(calendar, null, 2));
-  return calendar;
+async function writeCalendarCache(calendar) {
+  try {
+    await Weekend.deleteMany({});
+    await Weekend.insertMany(calendar);
+    return calendar;
+  } catch (error) {
+    console.error('Error writing calendar to DB:', error);
+    return calendar;
+  }
 }
+
+// Keep ensureDataDirectory for backward compatibility if imported elsewhere, 
+// but it does nothing now.
+function ensureDataDirectory() {}
 
 export {
   createDefaultAppData,

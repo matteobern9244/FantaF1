@@ -246,7 +246,7 @@ async function syncCalendarFromOfficialSource({
 
     const normalizedCalendar = sortCalendarByRound(enrichedCalendar);
 
-    writeCache(normalizedCalendar);
+    await writeCache(normalizedCalendar);
     console.log(
       formatConfigText(backendText.logs.calendarSyncSuccess, {
         count: normalizedCalendar.length,
@@ -255,7 +255,7 @@ async function syncCalendarFromOfficialSource({
 
     return normalizedCalendar;
   } catch (error) {
-    const cachedCalendar = sortCalendarByRound(readCache());
+    const cachedCalendar = sortCalendarByRound(await readCache());
 
     if (cachedCalendar.length > 0) {
       console.warn(

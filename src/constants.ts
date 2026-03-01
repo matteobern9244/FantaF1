@@ -2,8 +2,8 @@ import rawConfig from '../config/app-config.json';
 import type { PredictionKey } from './types';
 
 const currentYear = new Date().getFullYear();
-const backendOrigin = `http://${rawConfig.server.host}:${rawConfig.server.port}`;
-const frontendOrigin = `http://${rawConfig.frontend.host}:${rawConfig.frontend.port}`;
+const backendOrigin = ''; // Use relative path for production compatibility
+const frontendOrigin = ''; // Use relative path for production compatibility
 const visibleAppTitle = (import.meta.env.VITE_APP_LOCAL_NAME ?? '').trim() || rawConfig.app.title;
 const genericAppTitle = rawConfig.app.title;
 

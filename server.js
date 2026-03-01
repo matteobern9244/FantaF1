@@ -1,5 +1,9 @@
+import 'dotenv/config'; // Load env vars
 import cors from 'cors';
 import express from 'express';
+import mongoose from 'mongoose';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import { syncCalendarFromOfficialSource, sortCalendarByRound } from './backend/calendar.js';
 import { appConfig, currentYear, formatConfigText } from './backend/config.js';
 import { sortDriversAlphabetically, syncDriversFromOfficialSource } from './backend/drivers.js';
@@ -10,35 +14,55 @@ import {
   writeAppData,
 } from './backend/storage.js';
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 const app = express();
+const PORT = process.env.PORT || appConfig.server.port;
+const HOST = '0.0.0.0'; // Bind to all interfaces for Render
 
 app.use(cors());
 app.use(express.json());
 
+// API Routes
 app.get(appConfig.api.healthPath, (req, res) => {
   res.json({
     status: 'ok',
     year: currentYear,
+    dbState: mongoose.connection.readyState,
   });
 });
 
-app.get(appConfig.api.dataPath, (req, res) => {
-  res.json(readAppData(readCalendarCache()));
-});
-
-app.get(appConfig.api.driversPath, (req, res) => {
-  const cachedDrivers = sortDriversAlphabetically(readDriversCache());
-  res.json(cachedDrivers);
-});
-
-app.get(appConfig.api.calendarPath, (req, res) => {
-  const cachedCalendar = sortCalendarByRound(readCalendarCache());
-  res.json(cachedCalendar);
-});
-
-app.post(appConfig.api.dataPath, (req, res) => {
+app.get(appConfig.api.dataPath, async (req, res) => {
   try {
-    writeAppData(req.body, readCalendarCache());
+    const data = await readAppData();
+    res.json(data);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to read app data' });
+  }
+});
+
+app.get(appConfig.api.driversPath, async (req, res) => {
+  try {
+    const cachedDrivers = sortDriversAlphabetically(await readDriversCache());
+    res.json(cachedDrivers);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to read drivers' });
+  }
+});
+
+app.get(appConfig.api.calendarPath, async (req, res) => {
+  try {
+    const cachedCalendar = sortCalendarByRound(await readCalendarCache());
+    res.json(cachedCalendar);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to read calendar' });
+  }
+});
+
+app.post(appConfig.api.dataPath, async (req, res) => {
+  try {
+    await writeAppData(req.body);
     res.json({ message: appConfig.uiText.backend.messages.saveSuccess });
   } catch (error) {
     res.status(500).json({
@@ -48,22 +72,59 @@ app.post(appConfig.api.dataPath, (req, res) => {
   }
 });
 
+// Serve static files from 'dist' directory (Vite build)
+const distPath = path.join(__dirname, 'dist');
+app.use(express.static(distPath));
+
+// Handle client-side routing by returning index.html for all non-API routes
+app.get('*', (req, res) => {
+  // Check if it's an API call that wasn't matched (avoid returning HTML for API 404s)
+  if (req.path.startsWith('/api')) {
+    return res.status(404).json({ error: 'Not Found' });
+  }
+  res.sendFile(path.join(distPath, 'index.html'));
+});
+
+async function connectToDatabase() {
+  const uri = process.env.MONGODB_URI;
+  if (!uri) {
+    throw new Error('MONGODB_URI environment variable is not defined');
+  }
+  
+  try {
+    await mongoose.connect(uri);
+    console.log('Connected to MongoDB Atlas');
+  } catch (error) {
+    console.error('MongoDB connection error:', error);
+    process.exit(1);
+  }
+}
+
 async function startServer() {
-  const syncedDrivers = await syncDriversFromOfficialSource();
-  const syncedCalendar = await syncCalendarFromOfficialSource();
+  await connectToDatabase();
 
-  if (syncedDrivers.length === 0) {
-    throw new Error(appConfig.uiText.backend.errors.driversUnavailable);
+  try {
+    const syncedDrivers = await syncDriversFromOfficialSource();
+    if (syncedDrivers.length === 0) {
+      console.warn(appConfig.uiText.backend.errors.driversUnavailable);
+    }
+  } catch (e) {
+    console.warn('Driver sync warning:', e.message);
   }
 
-  if (syncedCalendar.length === 0) {
-    throw new Error(appConfig.uiText.backend.errors.calendarUnavailable);
+  try {
+    const syncedCalendar = await syncCalendarFromOfficialSource();
+    if (syncedCalendar.length === 0) {
+      console.warn(appConfig.uiText.backend.errors.calendarUnavailable);
+    }
+  } catch (e) {
+    console.warn('Calendar sync warning:', e.message);
   }
 
-  app.listen(appConfig.server.port, appConfig.server.host, () => {
+  app.listen(PORT, HOST, () => {
     console.log(
       formatConfigText(appConfig.uiText.backend.logs.serverStarted, {
-        origin: appConfig.api.backendOrigin,
+        origin: `http://${HOST}:${PORT}`,
       }),
     );
   });

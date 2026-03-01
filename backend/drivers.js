@@ -213,7 +213,7 @@ async function syncDriversFromOfficialSource() {
       throw new Error(backendText.errors.invalidDriverSource);
     }
 
-    writeDriversCache(normalizedDrivers);
+    await writeDriversCache(normalizedDrivers);
     console.log(
       formatConfigText(backendText.logs.driverSyncSuccess, {
         count: normalizedDrivers.length,
@@ -222,7 +222,7 @@ async function syncDriversFromOfficialSource() {
 
     return normalizedDrivers;
   } catch (error) {
-    const cachedDrivers = sortDriversAlphabetically(readDriversCache());
+    const cachedDrivers = sortDriversAlphabetically(await readDriversCache());
 
     if (cachedDrivers.length > 0) {
       console.warn(
@@ -240,7 +240,7 @@ async function syncDriversFromOfficialSource() {
     if (formulaOneDriversHtml) {
       const fallbackDrivers = buildFormulaOneFallbackDrivers(formulaOneDriversHtml);
       if (fallbackDrivers.length >= appConfig.driversSource.expectedCount) {
-        writeDriversCache(fallbackDrivers);
+        await writeDriversCache(fallbackDrivers);
         console.warn(
           formatConfigText(backendText.logs.driverSyncFallback, {
             count: fallbackDrivers.length,
