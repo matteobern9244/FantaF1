@@ -26,9 +26,10 @@ L'interfaccia attuale:
 
 - carica automaticamente il calendario della stagione
 - seleziona un weekend dal calendario senza inserimento manuale del GP
-- raccoglie su desktop i pannelli di supporto in alto a destra: regole, prossimo weekend, classifica live e riepilogo della gara attuale
-- mostra calendario, pronostici, risultati e storico a piena larghezza sotto l'header
+- centra il branding principale nell'hero e mostra i quattro riquadri di supporto subito sotto il titolo
+- mostra calendario, pronostici, risultati e storico a piena larghezza subito dopo i riquadri dell'hero
 - usa un layout responsive a piena larghezza, senza colonne laterali che coprono il contenuto
+- usa il font Formula 1 vendorizzato localmente nel repository per i titoli dei componenti, mantenendo un font UI leggibile per il contenuto
 
 ## Persistenza e cache locali
 
@@ -83,6 +84,10 @@ Lo script macOS `start_fantaf1.command` avvia backend e frontend, apre l'app in 
 ## Configurazione locale del titolo
 
 Il titolo visibile dell'app puo' essere sovrascritto solo in locale tramite `.env.local`. Il repository include `.env.example` come riferimento e non versiona il valore locale effettivo.
+
+## Asset grafici locali
+
+I font Formula 1 usati nell'interfaccia sono salvati localmente nel repository sotto `public/fonts/formula1/` e vengono serviti direttamente dall'app, senza dipendere da CDN esterne per il caricamento tipografico.
 
 ## Qualita' tecnica
 

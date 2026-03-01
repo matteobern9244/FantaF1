@@ -1,3 +1,35 @@
+@font-face {
+  font-family: 'Formula1';
+  src: url('/fonts/formula1/Formula1-Regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Formula1';
+  src: url('/fonts/formula1/Formula1-Bold.woff2') format('woff2');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Formula1Wide';
+  src: url('/fonts/formula1/Formula1-Wide.woff2') format('woff2');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Formula1Digits';
+  src: url('/fonts/formula1/Formula1-Year.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
 :root {
   color: #f5f7fb;
   background-color: #090b13;
