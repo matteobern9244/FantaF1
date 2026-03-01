@@ -77,7 +77,7 @@ const distPath = path.join(__dirname, 'dist');
 app.use(express.static(distPath));
 
 // Handle client-side routing by returning index.html for all non-API routes
-app.get('/:splat*', (req, res) => {
+app.get('/:path*', (req, res) => {
   // Check if it's an API call that wasn't matched (avoid returning HTML for API 404s)
   if (req.path.startsWith('/api')) {
     return res.status(404).json({ error: 'Not Found' });
