@@ -151,6 +151,49 @@ function openChromeApp(url) {
   return true;
 }
 
+function escapeAppleScriptString(value) {
+  return String(value).replaceAll('\\', '\\\\').replaceAll('"', '\\"');
+}
+
+function maximizeChromeAppWindow(url) {
+  const escapedUrl = escapeAppleScriptString(url);
+  const script = `
+set targetUrl to "${escapedUrl}"
+tell application "Finder"
+  set screenBounds to bounds of window of desktop
+end tell
+set leftEdge to item 1 of screenBounds
+set topEdge to item 2 of screenBounds
+set rightEdge to item 3 of screenBounds
+set bottomEdge to item 4 of screenBounds
+tell application "Google Chrome"
+  activate
+  repeat 40 times
+    repeat with currentWindow in windows
+      repeat with currentTab in tabs of currentWindow
+        try
+          set currentUrl to URL of currentTab
+          if currentUrl starts with targetUrl then
+            set index of currentWindow to 1
+            set bounds of currentWindow to {leftEdge, topEdge, rightEdge, bottomEdge}
+            return "maximized"
+          end if
+        end try
+      end repeat
+    end repeat
+    delay 0.2
+  end repeat
+end tell
+return "missing"
+`;
+
+  const result = spawnSync('osascript', ['-e', script], {
+    encoding: 'utf8',
+  });
+
+  return result.stdout.trim() === 'maximized';
+}
+
 function isChromeAppWindowOpen(url) {
   const script = `
 set targetUrl to "${url}"
@@ -253,6 +296,7 @@ async function main() {
     return;
   }
 
+  maximizeChromeAppWindow(launcherConfig.frontendUrl);
   await sleep(2500);
 
   while (!shuttingDown) {

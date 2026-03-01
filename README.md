@@ -1,46 +1,100 @@
 # Fanta Formula 1
 
-Applicazione locale per gestire un Fanta Formula 1 privato con tre giocatori. L'assetto attuale prevede tre partecipanti totali, uno dei quali opera come admin e inserisce manualmente pronostici e risultati per tutto il gruppo.
+Applicazione locale per gestire un Fanta Formula 1 privato con tre giocatori. La configurazione attuale prevede sempre tre partecipanti totali, con un admin che inserisce manualmente pronostici e risultati per tutto il gruppo.
 
-## Come funziona
+## Regole di gioco
 
-Prima dell'inizio del weekend rilevante, l'admin registra per ciascun giocatore quattro scelte: vincitore della gara, secondo classificato, terzo classificato e pole position oppure vincitore della Sprint, se il weekend include la Sprint.
+Prima dell'inizio del weekend rilevante, l'admin registra per ogni giocatore quattro scelte:
 
-Il punteggio applicato e' fisso:
+- vincitore della gara
+- secondo classificato
+- terzo classificato
+- pole position oppure vincitore della Sprint, se il weekend e' Sprint
 
-- 5 punti per la prima posizione corretta.
-- 3 punti per la seconda posizione corretta.
-- 2 punti per la terza posizione corretta.
-- 1 punto extra per pole position o vincitore Sprint.
+Il punteggio attuale e' quello definito in configurazione:
 
-## Architettura dati
+- 5 punti per la prima posizione corretta
+- 3 punti per la seconda posizione corretta
+- 2 punti per la terza posizione corretta
+- 1 punto extra per pole position o vincitore Sprint
 
-Il backend Express e' l'unico punto di persistenza e sincronizzazione. Il frontend React consuma solo le API backend.
+## Implementazione attuale
 
-- `F1Result/data.json` contiene esclusivamente i dati inseriti dall'app: utenti, pronostici correnti, storico, risultati e weekend selezionato.
-- `F1Result/drivers.json` e' la cache locale del roster piloti sincronizzato all'avvio.
-- `F1Result/calendar.json` e' la cache locale del calendario stagionale sincronizzato all'avvio.
+Il frontend e' una SPA React + TypeScript + Vite. Il backend e' un server Express che gestisce persistenza locale, sincronizzazione delle sorgenti esterne e API consumate dal frontend.
 
-La lista piloti viene aggiornata ad ogni avvio dal backend usando StatsF1 come sorgente dati del roster e viene poi riordinata alfabeticamente prima di essere esposta al frontend. Il calendario stagionale e gli asset remoti del weekend arrivano da Formula1.com e vengono serviti al frontend tramite API backend.
+L'interfaccia attuale:
+
+- carica automaticamente il calendario della stagione
+- seleziona un weekend dal calendario senza inserimento manuale del GP
+- centra il branding principale nell'hero e mostra i quattro riquadri di supporto subito sotto il titolo
+- mostra calendario, pronostici, risultati e storico a piena larghezza subito dopo i riquadri dell'hero
+- usa un layout responsive a piena larghezza, senza colonne laterali che coprono il contenuto
+- usa il font Formula 1 vendorizzato localmente in tutta l'interfaccia, con pesi e spaziatura regolati per mantenere leggibilita'
+
+## Persistenza e cache locali
+
+La cartella `F1Result/` contiene tutti i dati locali dell'applicazione.
+
+- `F1Result/data.json` contiene esclusivamente i dati di gioco inseriti dall'app: utenti, pronostici correnti, risultati, storico e weekend selezionato
+- `F1Result/drivers.json` e' la cache locale del roster piloti
+- `F1Result/calendar.json` e' la cache locale del calendario stagionale
+
+Il frontend non salva dati in `localStorage` o in altre persistenze browser. I dati inseriti dall'utente vengono salvati solo tramite backend in `F1Result/data.json`.
+
+## Sorgenti esterne usate all'avvio
+
+Ad ogni avvio del backend:
+
+- il roster piloti viene sincronizzato da StatsF1
+- il calendario ufficiale viene sincronizzato da Formula1.com
+- il backend usa le cache locali se una sorgente esterna non e' momentaneamente disponibile
+
+Il roster viene normalizzato e ordinato alfabeticamente prima di essere esposto al frontend.
+
+## API backend attuali
+
+Il backend espone queste API:
+
+- `GET /api/health`
+- `GET /api/data`
+- `POST /api/data`
+- `GET /api/drivers`
+- `GET /api/calendar`
+
+Il frontend consuma solo queste API del backend.
 
 ## Avvio locale
 
-Per lo sviluppo puoi usare i comandi separati:
+Installazione iniziale:
 
 - `npm install`
+
+Avvio separato per sviluppo:
+
 - `npm run dev:backend`
 - `npm run dev:frontend`
 
-Per l'avvio completo su macOS con controllo del ciclo di vita, usa:
+Avvio locale integrato:
 
+- `npm run start:local`
 - `./start_fantaf1.command`
 
-Questo launcher avvia prima il backend, poi il frontend, apre l'app in Google Chrome in modalita' app e ferma entrambi i processi quando la finestra dell'app viene chiusa.
+Lo script macOS `start_fantaf1.command` avvia backend e frontend, apre l'app in Google Chrome in modalita' app, massimizza la finestra iniziale e termina entrambi i processi quando la finestra dell'app viene chiusa.
 
-## Titolo locale
+## Configurazione locale del titolo
 
-Il titolo visibile dell'app puo' essere sovrascritto solo in locale tramite `.env.local`. Il repository include solo `.env.example` come riferimento e non versiona il valore locale effettivo.
+Il titolo visibile dell'app puo' essere sovrascritto solo in locale tramite `.env.local`. Il repository include `.env.example` come riferimento e non versiona il valore locale effettivo.
+
+## Asset grafici locali
+
+I font Formula 1 usati nell'interfaccia sono salvati localmente nel repository sotto `public/fonts/formula1/` e vengono serviti direttamente dall'app, senza dipendere da CDN esterne per il caricamento tipografico. Il font viene applicato a tutta la UI, mentre dimensioni, pesi e spaziatura restano calibrati per mantenere leggibilita'.
 
 ## Qualita' tecnica
 
-Sono inclusi lint, build e test automatici per proteggere la logica di punteggio, la sanitizzazione dei dati, il parsing del roster piloti e il parsing del calendario.
+Sono disponibili questi controlli:
+
+- `npm run lint`
+- `npm run build`
+- `npm run test`
+
+I test coprono la logica di punteggio, la sanitizzazione dei dati applicativi, il parsing del roster piloti e il parsing del calendario.

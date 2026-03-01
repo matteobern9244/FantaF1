@@ -3,12 +3,17 @@
   --panel: rgba(18, 22, 34, 0.92);
   --panel-soft: rgba(255, 255, 255, 0.04);
   --panel-border: rgba(255, 255, 255, 0.08);
+  --panel-border-strong: rgba(225, 6, 0, 0.2);
   --ink: #f5f7fb;
   --muted: #a9b2c7;
   --red: #e10600;
   --gold: #ffd166;
   --line: rgba(255, 255, 255, 0.1);
+  --line-strong: rgba(255, 255, 255, 0.16);
   --shadow: 0 22px 70px rgba(0, 0, 0, 0.42);
+  --panel-radius: clamp(18px, 1.8vw, 28px);
+  --panel-padding: clamp(16px, 1.6vw, 26px);
+  --panel-gap: clamp(16px, 1.6vw, 24px);
 }
 
 * {
@@ -19,12 +24,16 @@ body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
+  overflow-x: hidden;
   background:
     radial-gradient(circle at top right, rgba(225, 6, 0, 0.14), transparent 34%),
     radial-gradient(circle at top left, rgba(255, 209, 102, 0.1), transparent 28%),
     linear-gradient(180deg, #0c0f18 0%, #090b13 100%);
   color: var(--ink);
-  font-family: 'Titillium Web', 'Segoe UI', sans-serif;
+  font-family: 'Formula1', 'Titillium Web', 'Segoe UI', sans-serif;
+  font-weight: 400;
+  line-height: 1.35;
+  letter-spacing: 0.01em;
 }
 
 #root {
@@ -34,10 +43,21 @@ body {
 button,
 select {
   font: inherit;
+  letter-spacing: inherit;
 }
 
 button {
   cursor: pointer;
+}
+
+button,
+select,
+.calendar-card {
+  transition:
+    border-color 0.2s ease,
+    background-color 0.2s ease,
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 .loading-shell {
@@ -55,86 +75,104 @@ button {
 }
 
 .app-shell {
-  max-width: 1440px;
-  margin: 0 auto;
-  padding: 24px;
+  width: 100%;
+  min-height: 100vh;
+  padding: clamp(14px, 1.8vw, 28px);
+  display: grid;
+  gap: clamp(12px, 1.4vw, 18px);
+  align-content: start;
 }
 
 .hero-panel {
+  width: 100%;
   border: 1px solid var(--panel-border);
-  border-radius: 28px;
-  padding: 32px;
-  min-height: 360px;
+  border-radius: clamp(22px, 2vw, 32px);
+  padding: clamp(18px, 1.8vw, 26px);
+  min-height: auto;
   background-color: #111525;
   background-size: cover;
   background-position: center;
   box-shadow: var(--shadow);
   display: grid;
-  grid-template-columns: minmax(280px, 1.3fr) minmax(280px, 1fr);
-  gap: 24px;
-  align-items: stretch;
+  grid-template-columns: minmax(0, 1fr);
+  gap: clamp(14px, 1.5vw, 20px);
+  justify-items: center;
+  align-content: start;
   overflow: hidden;
 }
 
 .hero-brand {
+  width: min(100%, 1220px);
+  min-width: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
   text-align: center;
-  gap: 8px;
-  padding: 18px;
+  gap: 6px;
+  padding: clamp(4px, 0.7vw, 10px) 0;
   backdrop-filter: blur(3px);
 }
 
 .app-logo {
-  width: min(220px, 50vw);
+  width: min(240px, 52vw);
   height: auto;
   margin-bottom: 8px;
 }
 
 .eyebrow {
   margin: 0;
-  font-size: 0.88rem;
-  letter-spacing: 0.22em;
+  font-size: 0.82rem;
+  font-family: 'Formula1', 'Titillium Web', 'Segoe UI', sans-serif;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--gold);
 }
 
 .hero-brand h1 {
   margin: 0;
-  font-size: clamp(2rem, 5vw, 4rem);
-  line-height: 0.95;
+  font-family: 'Formula1Wide', 'Formula1', 'Titillium Web', 'Segoe UI', sans-serif;
+  font-size: clamp(2rem, 4.2vw, 4.4rem);
+  line-height: 1;
+  letter-spacing: 0.01em;
   text-transform: uppercase;
 }
 
 .subtitle {
   margin: 0;
+  font-family: 'Formula1Digits', 'Formula1', 'Titillium Web', 'Segoe UI', sans-serif;
   font-size: 1rem;
   color: var(--muted);
 }
 
 .hero-summary-grid {
+  width: min(100%, 1320px);
+  min-width: 0;
   display: grid;
-  grid-template-columns: 1fr;
-  gap: 18px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  align-content: start;
 }
 
 .hero-card,
 .panel,
-.sidebar-panel,
 .calendar-panel {
+  min-width: 0;
   background: var(--panel);
   border: 1px solid var(--panel-border);
-  border-radius: 24px;
+  border-radius: var(--panel-radius);
   box-shadow: var(--shadow);
+  padding: var(--panel-padding);
 }
 
-.hero-card,
-.panel,
-.sidebar-panel,
+.rules-panel {
+  border-color: var(--panel-border-strong);
+  background:
+    linear-gradient(160deg, rgba(225, 6, 0, 0.08), rgba(255, 255, 255, 0.03)),
+    var(--panel);
+}
+
 .calendar-panel {
-  padding: 22px;
+  overflow: hidden;
 }
 
 .card-heading,
@@ -148,8 +186,26 @@ button {
 .card-heading span,
 .section-title h2 {
   margin: 0;
-  font-size: 1.02rem;
-  font-weight: 700;
+  font-family: 'Formula1', 'Titillium Web', 'Segoe UI', sans-serif;
+  font-size: clamp(1rem, 1vw, 1.08rem);
+  font-weight: 500;
+  line-height: 1.2;
+  letter-spacing: 0;
+}
+
+.hero-summary-grid .hero-card {
+  width: 100%;
+  padding: clamp(14px, 1.2vw, 18px);
+}
+
+.hero-summary-grid .card-heading {
+  margin-bottom: 10px;
+}
+
+.hero-summary-grid .rules-list,
+.hero-summary-grid .live-list,
+.hero-summary-grid .driver-spotlight {
+  gap: 10px;
 }
 
 .next-race-card strong,
@@ -158,7 +214,8 @@ button {
 }
 
 .next-race-card strong {
-  font-size: 1.15rem;
+  font-size: clamp(1.08rem, 1.6vw, 1.32rem);
+  line-height: 1.15;
   margin-bottom: 8px;
 }
 
@@ -172,6 +229,7 @@ button {
   align-items: center;
   justify-content: center;
   width: fit-content;
+  max-width: 100%;
   padding: 6px 10px;
   border-radius: 999px;
   font-size: 0.76rem;
@@ -188,46 +246,18 @@ button {
   color: #ffd1ce;
 }
 
-.leaderboard {
+.dashboard-grid {
+  width: 100%;
   display: grid;
-  gap: 12px;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--panel-gap);
 }
 
-.leaderboard.compact {
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-}
-
-.leader-card {
-  background: var(--panel-soft);
-  border: 1px solid var(--line);
-  border-radius: 18px;
-  padding: 14px;
+.content-column {
+  min-width: 0;
   display: grid;
-  gap: 6px;
-}
-
-.leader-card .name {
-  font-size: 0.95rem;
-}
-
-.leader-card .points {
-  font-size: 1.35rem;
-  font-weight: 800;
-  color: var(--gold);
-}
-
-.page-grid {
-  margin-top: 24px;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 320px;
-  gap: 24px;
-  align-items: start;
-}
-
-.main-column,
-.sidebar-column {
-  display: grid;
-  gap: 24px;
+  gap: var(--panel-gap);
+  align-content: start;
 }
 
 .race-selector {
@@ -244,12 +274,17 @@ button {
 
 select {
   width: 100%;
+  min-width: 0;
   min-height: 48px;
   padding: 12px 14px;
   border-radius: 16px;
   border: 1px solid var(--line);
   color: var(--ink);
   background: rgba(255, 255, 255, 0.06);
+}
+
+select:hover {
+  border-color: var(--line-strong);
 }
 
 select:focus {
@@ -264,10 +299,26 @@ select:focus {
   grid-auto-columns: minmax(180px, 220px);
   gap: 14px;
   overflow-x: auto;
-  padding-bottom: 4px;
+  overflow-y: hidden;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+  padding: 4px 2px 8px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.24) transparent;
+}
+
+.calendar-strip::-webkit-scrollbar {
+  height: 8px;
+}
+
+.calendar-strip::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.22);
+  border-radius: 999px;
 }
 
 .calendar-card {
+  min-width: 0;
+  min-height: 148px;
   text-align: left;
   padding: 16px;
   border-radius: 20px;
@@ -278,7 +329,12 @@ select:focus {
   color: var(--ink);
   display: grid;
   gap: 8px;
-  min-height: 154px;
+  scroll-snap-align: start;
+}
+
+.calendar-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--line-strong);
 }
 
 .calendar-card.selected {
@@ -295,9 +351,10 @@ select:focus {
 
 .panel-head {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
-  gap: 12px;
+  flex-wrap: wrap;
+  gap: 14px;
   margin-bottom: 18px;
 }
 
@@ -318,11 +375,29 @@ select:focus {
   color: var(--ink);
 }
 
+.secondary-button:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
 .primary-button {
   width: 100%;
-  background: linear-gradient(135deg, #c70000, #ff3b2f);
-  color: #fff;
-  font-weight: 700;
+  min-height: 56px;
+  margin-top: 20px;
+  padding-inline: 20px;
+  background: linear-gradient(135deg, #c70000, #ff2e1f);
+  color: #ffffff;
+  font-size: 1rem;
+  line-height: 1.2;
+  font-weight: 800;
+  text-align: center;
+  letter-spacing: 0.01em;
+  white-space: normal;
+  box-shadow: 0 12px 28px rgba(225, 6, 0, 0.25);
+}
+
+.primary-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 14px 32px rgba(225, 6, 0, 0.3);
 }
 
 .predictions-grid,
@@ -332,18 +407,19 @@ select:focus {
 }
 
 .predictions-grid {
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .results-grid {
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
 .user-card {
+  min-width: 0;
   background: rgba(255, 255, 255, 0.03);
   border: 1px solid var(--line);
   border-radius: 22px;
-  padding: 18px;
+  padding: clamp(16px, 1.4vw, 22px);
   display: grid;
   gap: 14px;
 }
@@ -352,12 +428,13 @@ select:focus {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-wrap: wrap;
   gap: 12px;
 }
 
 .user-card h3 {
   margin: 0;
-  font-size: 1.1rem;
+  font-size: 1.08rem;
 }
 
 .points-preview {
@@ -370,6 +447,7 @@ select:focus {
 }
 
 .field-row {
+  min-width: 0;
   display: grid;
   gap: 8px;
 }
@@ -382,13 +460,14 @@ select:focus {
 
 .selected-race-banner {
   margin-bottom: 18px;
-  padding: 18px;
+  padding: clamp(16px, 1.4vw, 20px);
   border-radius: 20px;
   border: 1px solid var(--line);
   background: rgba(255, 255, 255, 0.03);
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-wrap: wrap;
   gap: 18px;
 }
 
@@ -398,7 +477,8 @@ select:focus {
 }
 
 .track-map {
-  width: min(220px, 36vw);
+  width: min(220px, 26vw);
+  max-width: 100%;
   max-height: 88px;
   object-fit: contain;
   filter: drop-shadow(0 8px 18px rgba(0, 0, 0, 0.35));
@@ -410,7 +490,7 @@ select:focus {
 }
 
 .history-card {
-  padding: 18px;
+  padding: clamp(16px, 1.4vw, 22px);
   border-radius: 20px;
   border: 1px solid var(--line);
   background: rgba(255, 255, 255, 0.03);
@@ -430,15 +510,17 @@ select:focus {
 .history-summary {
   color: var(--muted);
   font-size: 0.92rem;
+  overflow-wrap: anywhere;
 }
 
 .history-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: 12px;
 }
 
 .history-user-card {
+  min-width: 0;
   padding: 14px;
   border-radius: 16px;
   background: rgba(255, 255, 255, 0.04);
@@ -449,6 +531,7 @@ select:focus {
 
 .history-user-card small {
   color: var(--muted);
+  overflow-wrap: anywhere;
 }
 
 .rules-list,
@@ -461,6 +544,7 @@ select:focus {
 .rule-row,
 .live-row,
 .spotlight-row {
+  min-width: 0;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -470,6 +554,26 @@ select:focus {
 .rule-row {
   padding-bottom: 12px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.rule-row span:last-child,
+.live-row span:first-child,
+.live-row strong,
+.spotlight-row span:first-child {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.rule-row span:last-child,
+.live-row span:first-child,
+.spotlight-row span:first-child {
+  flex: 1 1 auto;
+}
+
+.live-row strong,
+.spotlight-row strong {
+  min-width: 0;
+  text-align: right;
 }
 
 .rule-points {
@@ -490,7 +594,7 @@ select:focus {
 }
 
 .app-footer {
-  margin-top: 24px;
+  margin-top: 4px;
   display: grid;
   gap: 6px;
   text-align: center;
@@ -508,38 +612,85 @@ select:focus {
   }
 }
 
-@media (max-width: 1080px) {
-  .hero-panel,
-  .page-grid {
-    grid-template-columns: 1fr;
+@media (min-width: 1600px) {
+  .hero-summary-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 
-  .sidebar-column {
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  .predictions-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 
-@media (max-width: 760px) {
+@media (min-width: 1200px) and (max-width: 1599px) {
+  .predictions-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .predictions-grid > .user-card:last-child:nth-child(odd) {
+    grid-column: 1 / -1;
+    width: min(100%, 760px);
+    justify-self: center;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1199px) {
+  .predictions-grid,
+  .results-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .calendar-strip {
+    grid-auto-columns: minmax(170px, 210px);
+  }
+
+  .track-map {
+    width: min(240px, 40vw);
+  }
+}
+
+@media (max-width: 767px) {
   .app-shell {
-    padding: 16px;
+    padding: 12px;
+    gap: 14px;
   }
 
   .hero-panel,
+  .hero-card,
   .panel,
-  .sidebar-panel,
   .calendar-panel {
-    padding: 18px;
-    border-radius: 20px;
+    padding: 16px;
+    border-radius: 18px;
+  }
+
+  .hero-summary-grid,
+  .predictions-grid,
+  .results-grid,
+  .history-grid {
+    grid-template-columns: 1fr;
   }
 
   .panel-head,
   .selected-race-banner,
-  .user-card-head {
+  .user-card-head,
+  .rule-row,
+  .spotlight-row,
+  .live-row {
     align-items: flex-start;
     flex-direction: column;
   }
 
+  .secondary-button,
+  .primary-button {
+    width: 100%;
+  }
+
   .calendar-strip {
-    grid-auto-columns: minmax(160px, 1fr);
+    grid-auto-columns: minmax(150px, 72vw);
+    gap: 12px;
+  }
+
+  .track-map {
+    width: 100%;
   }
 }
