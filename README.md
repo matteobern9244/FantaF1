@@ -34,7 +34,7 @@ Il punteggio attuale e' quello definito in configurazione:
 
 ## Implementazione attuale
 
-Il frontend e' una SPA React + TypeScript + Vite. Il backend e' un server Express che gestisce la persistenza su MongoDB, la sincronizzazione delle sorgenti esterne, il recupero automatico dei risultati e le API consumate dal frontend. L'applicazione e' progettata per essere pubblicata su **Render.com** con database **MongoDB Atlas**.
+Il frontend e' una SPA React + TypeScript + Vite. Il backend e' un server Express che gestisce la persistenza su MongoDB, la sincronizzazione delle sorgenti esterne, il recupero automatico dei risultati e le API consumate dal frontend. L'applicazione e' progettata per essere progettata per essere pubblicata su **Render.com** con database **MongoDB Atlas**.
 
 L'interfaccia attuale:
 
@@ -119,14 +119,17 @@ I test coprono la logica di punteggio, la sanitizzazione dei dati, il parsing de
 
 ---
 
-### Ultime Modifiche (v1.2.0)
+### Ultime Modifiche (v1.2.1)
+- **Miglioramenti Layout**: Centratura del footer e riposizionamento strategico dei pulsanti di azione per una migliore usabilita'.
+- **UI & UX Details**: Utilizzo del font Arial per il numero di versione nel footer per una chiara distinzione visiva.
+
+### Modifiche Precedenti (v1.2.0)
 - **Migrazione MongoDB Atlas**: Transizione completa dai file JSON locali alla persistenza cloud-ready per produzione e sviluppo (`fanta1_dev`).
 - **Integrazione Visuale**: Aggiunta di nuovi asset grafici (`pitstop.png`, `tire.png`, `flag.png`) per migliorare l'estetica dell'interfaccia.
 - **Validazione Server-Side**: Rafforzata la logica di salvataggio con controlli rigorosi sui partecipanti e sul blocco temporale delle gare.
 - **Process Management**: Migliorato lo script di avvio locale per una gestione piu' robusta dei processi e dell'apertura del browser.
 - **Supporto Express 5**: Aggiornato il backend per la piena compatibilita' con Express 5, risolvendo bug critici di routing.
-- **UI & UX Versioning**: Inserimento del numero di versione (v1.2.0) nel footer dell'applicazione, centrato e formattato con font Arial.
-- **Miglioramenti Layout**: Centratura del footer e riposizionamento strategico dei pulsanti di azione per una migliore usabilita'.
+- **UI & UX Versioning**: Inserimento del numero di versione nel footer dell'applicazione.
 
 ### Modifiche Precedenti (v1.1.0)
 - **Classifica Live & Proiezioni**: Introdotta una sezione nell'hero che mostra i punti potenziali in tempo reale durante il weekend di gara.
