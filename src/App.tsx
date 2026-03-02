@@ -630,7 +630,7 @@ function App() {
                       key={weekend.meetingKey}
                       className={`calendar-card ${
                         weekend.meetingKey === selectedRace?.meetingKey ? 'selected' : ''
-                      }`}
+                      } ${weekend.isSprintWeekend ? 'sprint' : ''}`}
                       onClick={() => handleRaceSelection(weekend.meetingKey)}
                       disabled={Boolean(editingSession)}
                       type="button"

@@ -1,6 +1,6 @@
 # Fanta Formula 1
 
-Applicazione locale per gestire un Fanta Formula 1 privato con tre giocatori. La configurazione attuale prevede sempre tre partecipanti totali, con un admin che inserisce manualmente pronostici e risultati per tutto il gruppo.
+Applicazione locale e cloud per gestire un Fanta Formula 1 privato con tre giocatori. La configurazione attuale prevede sempre tre partecipanti totali, con un admin che inserisce manualmente pronostici e risultati per tutto il gruppo.
 
 ## Regole di gioco
 
@@ -20,7 +20,7 @@ Il punteggio attuale e' quello definito in configurazione:
 
 ## Implementazione attuale
 
-Il frontend e' una SPA React + TypeScript + Vite. Il backend e' un server Express che gestisce persistenza locale, sincronizzazione delle sorgenti esterne e API consumate dal frontend.
+Il frontend e' una SPA React + TypeScript + Vite. Il backend e' un server Express che gestisce la persistenza su MongoDB, la sincronizzazione delle sorgenti esterne e le API consumate dal frontend. L'applicazione e' progettata per essere pubblicata su **Render.com** con database **MongoDB Atlas**.
 
 L'interfaccia attuale:
 
@@ -33,43 +33,40 @@ L'interfaccia attuale:
 - mostra nella UI l'elenco dei piloti ordinato alfabeticamente per cognome e formattato come `Cognome Nome`
 - permette di modificare o eliminare una gara gia' salvata nello storico, ricalcolando automaticamente la classifica
 
-## Persistenza e cache locali
+## Persistenza e database (MongoDB)
 
-La cartella `F1Result/` contiene tutti i dati locali dell'applicazione.
+L'applicazione utilizza **MongoDB Atlas** per la persistenza dei dati, sostituendo i file JSON locali.
 
-- `F1Result/data.json` contiene esclusivamente i dati di gioco inseriti dall'app: utenti, pronostici correnti, risultati, storico e weekend selezionato
-- `F1Result/drivers.json` e' la cache locale del roster piloti
-- `F1Result/calendar.json` e' la cache locale del calendario stagionale
+- La collezione `appdata` contiene i dati di gioco: utenti, pronostici correnti, risultati, storico e weekend selezionato.
+- La collezione `drivers` funge da cache per il roster piloti sincronizzato.
+- La collezione `weekends` funge da cache per il calendario stagionale.
 
-Il frontend non salva dati in `localStorage` o in altre persistenze browser. I dati inseriti dall'utente vengono salvati solo tramite backend in `F1Result/data.json`. Anche le operazioni di modifica o rimozione di una gara storica aggiornano solo `F1Result/data.json`, lasciando invariati i file di cache di piloti e calendario.
+Il frontend non salva dati in `localStorage`. Tutte le operazioni di salvataggio, modifica o rimozione aggiornano il database tramite le API del backend.
 
-## Sorgenti esterne usate all'avvio
+## Sorgenti esterne e sincronizzazione
 
-Ad ogni avvio del backend:
+Ad ogni avvio del backend (sia in locale che su Render):
 
-- il roster piloti viene sincronizzato da StatsF1
-- il calendario ufficiale viene sincronizzato da Formula1.com
-- il backend usa le cache locali se una sorgente esterna non e' momentaneamente disponibile
+- Il roster piloti viene sincronizzato da StatsF1 e salvato su MongoDB.
+- Il calendario ufficiale viene sincronizzato da Formula1.com e salvato su MongoDB.
+- Il backend usa i dati presenti nel database se una sorgente esterna non e' disponibile.
 
-Il roster viene normalizzato e ordinato alfabeticamente prima di essere esposto al frontend.
+## Deploy su Render.com
 
-## API backend attuali
+L'applicazione e' pronta per il deploy su Render come "Web Service":
 
-Il backend espone queste API:
-
-- `GET /api/health`
-- `GET /api/data`
-- `POST /api/data`
-- `GET /api/drivers`
-- `GET /api/calendar`
-
-Il frontend consuma solo queste API del backend.
+1. Collegare il repository GitHub a Render.
+2. Configurare il comando di build: `npm install && npm run build`.
+3. Configurare il comando di avvio: `npm start`.
+4. Aggiungere la variabile d'ambiente `MONGODB_URI` con la stringa di connessione di MongoDB Atlas.
 
 ## Avvio locale
 
 Installazione iniziale:
 
 - `npm install`
+
+Per l'avvio locale e' necessario un file `.env` o `.env.local` con la variabile `MONGODB_URI`.
 
 Avvio separato per sviluppo:
 
@@ -81,7 +78,7 @@ Avvio locale integrato:
 - `npm run start:local`
 - `./start_fantaf1.command`
 
-Lo script macOS `start_fantaf1.command` avvia backend e frontend, apre l'app in Google Chrome in modalita' app, massimizza la finestra iniziale e termina entrambi i processi quando la finestra dell'app viene chiusa.
+Lo script macOS `start_fantaf1.command` avvia backend (porta 3001) e frontend (porta 5173 con proxy configurato), apre l'app in Google Chrome in modalita' app e gestisce il ciclo di vita dei processi.
 
 ## Configurazione locale del titolo
 
@@ -95,8 +92,8 @@ I font Formula 1 usati nell'interfaccia sono salvati localmente nel repository s
 
 Sono disponibili questi controlli:
 
-- `npm run lint`
-- `npm run build`
-- `npm run test`
+- `npm run lint` (ESLint)
+- `npm run build` (TypeScript + Vite build)
+- `npm run test` (Vitest)
 
-I test coprono la logica di punteggio, la sanitizzazione dei dati applicativi, il parsing del roster piloti e il parsing del calendario.
+I test coprono la logica di punteggio, la sanitizzazione dei dati, il parsing dei piloti e del calendario.

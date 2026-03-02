@@ -248,8 +248,30 @@ select,
 
 .race-badge.sprint,
 .calendar-badge.sprint {
-  background: rgba(225, 6, 0, 0.2);
-  color: #ffd1ce;
+  background: rgba(225, 6, 0, 0.3);
+  color: #ffffff;
+  border: 1px solid rgba(225, 6, 0, 0.4);
+  box-shadow: 0 0 12px rgba(225, 6, 0, 0.15);
+}
+
+.spotlight-badge-row {
+  margin-top: 12px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.calendar-card.sprint {
+  border-color: rgba(225, 6, 0, 0.15);
+  background:
+    linear-gradient(180deg, rgba(225, 6, 0, 0.04), rgba(255, 255, 255, 0.01)),
+    rgba(14, 16, 26, 0.94);
+}
+
+.calendar-card.sprint.selected {
+  border-color: rgba(225, 6, 0, 0.6);
+  background:
+    linear-gradient(180deg, rgba(225, 6, 0, 0.08), rgba(255, 255, 255, 0.02)),
+    rgba(18, 20, 32, 0.96);
 }
 
 .dashboard-grid {

@@ -38,7 +38,7 @@ app.get(appConfig.api.dataPath, async (req, res) => {
   try {
     const data = await readAppData();
     res.json(data);
-  } catch (error) {
+  } catch {
     res.status(500).json({ error: 'Failed to read app data' });
   }
 });
@@ -47,7 +47,7 @@ app.get(appConfig.api.driversPath, async (req, res) => {
   try {
     const cachedDrivers = sortDriversAlphabetically(await readDriversCache());
     res.json(cachedDrivers);
-  } catch (error) {
+  } catch {
     res.status(500).json({ error: 'Failed to read drivers' });
   }
 });
@@ -56,7 +56,7 @@ app.get(appConfig.api.calendarPath, async (req, res) => {
   try {
     const cachedCalendar = sortCalendarByRound(await readCalendarCache());
     res.json(cachedCalendar);
-  } catch (error) {
+  } catch {
     res.status(500).json({ error: 'Failed to read calendar' });
   }
 });

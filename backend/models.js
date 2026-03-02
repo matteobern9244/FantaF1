@@ -29,24 +29,26 @@ const RaceResultSchema = new mongoose.Schema({
 });
 
 const DriverSchema = new mongoose.Schema({
-  id: String,
-  name: String,
-  team: String,
-  color: String,
-  countryCode: String,
-  imageUrl: String,
+  id: { type: String, required: true, unique: true },
+  name: { type: String, required: true },
+  team: { type: String },
+  color: { type: String },
+  avatarUrl: { type: String },
+  teamSlug: { type: String },
 });
 
 const WeekendSchema = new mongoose.Schema({
-  roundNumber: Number,
-  countryName: String,
-  location: String,
-  grandPrixTitle: String,
-  meetingName: String,
-  meetingKey: String,
-  startDate: String,
-  endDate: String,
-  isSprint: Boolean,
+  meetingKey: { type: String, required: true, unique: true },
+  meetingName: { type: String },
+  grandPrixTitle: { type: String },
+  roundNumber: { type: Number },
+  dateRangeLabel: { type: String },
+  detailUrl: { type: String },
+  heroImageUrl: { type: String },
+  trackOutlineUrl: { type: String },
+  isSprintWeekend: { type: Boolean, default: false },
+  startDate: { type: String },
+  endDate: { type: String },
 });
 
 const AppDataSchema = new mongoose.Schema({
