@@ -1,7 +1,7 @@
 {
   "app": {
     "title": "Fanta Formula 1",
-    "adminName": "Matteo"
+    "adminName": "Admin"
   },
   "server": {
     "host": "127.0.0.1",
@@ -11,7 +11,7 @@
     "host": "127.0.0.1",
     "port": 5173
   },
-  "participants": ["Adriano", "Fabio", "Matteo"],
+  "participants": ["Player 1", "Player 2", "Player 3"],
   "points": {
     "first": 5,
     "second": 3,
@@ -186,6 +186,11 @@
       "editRaceLoaded": "Gara {gpName} caricata in modifica. Aggiorna i dati e salva di nuovo."
     },
     "footer": "Application created by Matteo Bernardini©",
+    "tooltips": {
+      "raceNotStarted": "La gara non e' ancora iniziata.",
+      "raceInProgress": "La gara e' in corso... stay tuned !!",
+      "missingResults": "Inserisci tutti i risultati reali per continuare."
+    },
     "backend": {
       "logs": {
         "driverSyncStart": "Sincronizzazione roster piloti in corso...",

@@ -44,7 +44,7 @@ describe('game utils', () => {
       },
       [
         {
-          name: 'Matteo',
+          name: 'Player 1',
           predictions: {
             first: 'ver',
             second: 'nor',
@@ -71,9 +71,9 @@ describe('game utils', () => {
       third: 'lec',
       pole: 'pia',
     });
-    expect(record.userPredictions.Matteo.pointsEarned).toBe(11);
+    expect(record.userPredictions['Player 1'].pointsEarned).toBe(11);
     expect(updatedUsers[0]).toEqual({
-      name: 'Matteo',
+      name: 'Player 1',
       predictions: {
         first: 'ver',
         second: 'nor',
@@ -92,7 +92,7 @@ describe('game utils', () => {
 
   it('rebuilds total points from race history and resets current predictions', () => {
     const rebuiltUsers = rebuildUsersFromHistory(
-      ['Adriano', 'Fabio', 'Matteo'],
+      ['Player 3', 'Player 2', 'Player 1'],
       [
         {
           gpName: 'Australian Grand Prix 2026',
@@ -105,7 +105,7 @@ describe('game utils', () => {
             pole: 'alb',
           },
           userPredictions: {
-            Adriano: {
+            'Player 3': {
               prediction: {
                 first: 'nor',
                 second: 'ant',
@@ -114,7 +114,7 @@ describe('game utils', () => {
               },
               pointsEarned: 8,
             },
-            Fabio: {
+            'Player 2': {
               prediction: createEmptyPrediction(),
               pointsEarned: 0,
             },
@@ -126,11 +126,11 @@ describe('game utils', () => {
           date: '15/03/2026',
           results: createEmptyPrediction(),
           userPredictions: {
-            Adriano: {
+            'Player 3': {
               prediction: createEmptyPrediction(),
               pointsEarned: 2,
             },
-            Matteo: {
+            'Player 1': {
               prediction: createEmptyPrediction(),
               pointsEarned: 5,
             },
@@ -141,17 +141,17 @@ describe('game utils', () => {
 
     expect(rebuiltUsers).toEqual([
       {
-        name: 'Adriano',
+        name: 'Player 3',
         predictions: createEmptyPrediction(),
         points: 10,
       },
       {
-        name: 'Fabio',
+        name: 'Player 2',
         predictions: createEmptyPrediction(),
         points: 0,
       },
       {
-        name: 'Matteo',
+        name: 'Player 1',
         predictions: createEmptyPrediction(),
         points: 5,
       },

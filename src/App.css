@@ -782,12 +782,21 @@ select:focus {
 }
 
 .app-footer {
-  margin-top: 4px;
-  display: grid;
-  gap: 6px;
-  text-align: center;
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
   color: var(--muted);
-  font-size: 0.85rem;
+  font-size: 0.82rem;
+  padding-bottom: 20px;
+}
+
+.app-version {
+  margin: 0;
+  opacity: 0.7;
+  font-family: Arial, sans-serif;
+  font-size: 0.76rem;
 }
 
 @keyframes spin {
@@ -886,4 +895,53 @@ select:focus {
   .track-map {
     width: 100%;
   }
+}
+
+.tooltip-wrapper {
+  position: relative;
+  display: flex;
+  width: 100%;
+}
+
+.tooltip-wrapper .tooltip-text {
+  visibility: hidden;
+  background-color: var(--panel);
+  color: var(--ink);
+  border: 1px solid var(--panel-border);
+  text-align: center;
+  border-radius: 8px;
+  padding: 8px 12px;
+  position: absolute;
+  z-index: 100;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  opacity: 0;
+  transition: opacity 0.2s ease-in-out, visibility 0.2s ease-in-out;
+  white-space: nowrap;
+  font-size: 0.85rem;
+  font-family: 'Formula1', 'Titillium Web', 'Segoe UI', sans-serif;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+  pointer-events: none;
+}
+
+@media (max-width: 768px) {
+  .tooltip-wrapper .tooltip-text {
+    white-space: normal;
+    width: max-content;
+    max-width: 250px;
+  }
+}
+
+.tooltip-wrapper.show-tooltip .tooltip-text {
+  visibility: visible;
+  opacity: 1;
+}
+
+.tooltip-wrapper.disabled-wrapper {
+  cursor: not-allowed;
+}
+
+.tooltip-wrapper.disabled-wrapper button {
+  pointer-events: none;
 }

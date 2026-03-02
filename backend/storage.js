@@ -1,5 +1,4 @@
 import { AppData, Driver, Weekend } from './models.js';
-import { appConfig } from './config.js';
 
 function createEmptyPrediction() {
   return {
@@ -11,7 +10,9 @@ function createEmptyPrediction() {
 }
 
 function createInitialUsers() {
-  return appConfig.participants.map((name) => ({
+  // Real names must be managed directly in the DB.
+  // We initialize with generic players only as a last resort.
+  return ['Player 1', 'Player 2', 'Player 3'].map((name) => ({
     name,
     predictions: createEmptyPrediction(),
     points: 0,
@@ -156,13 +157,20 @@ function createDefaultAppData(calendar = []) {
 function sanitizeAppData(value, calendar = []) {
   const defaultData = createDefaultAppData(calendar);
   const incomingUsers = Array.isArray(value?.users) ? value.users : [];
-  const normalizedUsers =
-    incomingUsers.length > 0
-      ? appConfig.participants.map((fallbackName) => {
-          const matchingUser = incomingUsers.find((user) => user?.name === fallbackName);
-          return sanitizeUser(matchingUser, fallbackName);
-        })
-      : defaultData.users;
+  
+  // Rule: We must always have exactly 3 players as per PROJECT.md.
+  // If we have data in DB, we keep those names.
+  let normalizedUsers;
+  if (incomingUsers.length >= 3) {
+    normalizedUsers = incomingUsers.slice(0, 3).map(user => sanitizeUser(user, user.name || 'Unknown'));
+  } else if (incomingUsers.length > 0) {
+    normalizedUsers = [
+      ...incomingUsers.map(user => sanitizeUser(user, user.name || 'Unknown')),
+      ...createInitialUsers().slice(incomingUsers.length)
+    ];
+  } else {
+    normalizedUsers = defaultData.users;
+  }
 
   const history = Array.isArray(value?.history) ? value.history.map(sanitizeRaceRecord) : [];
   const selectedMeeting = resolveSelectedMeeting(

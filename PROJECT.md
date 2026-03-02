@@ -32,7 +32,7 @@ API contracts must remain consistent.
 
 ## 2. Core Functional Constraints
 
-- Always exactly 3 players.
+- Always exactly 3 players: Adriano, Fabio, Matteo.
 - Admin-controlled data entry.
 - Predictions locked at official race start time.
 - Results auto-fetched from official F1 sources.
@@ -76,6 +76,8 @@ Must work in:
 Environment variables must not be hardcoded.
 No secrets in repository.
 
+**Operational Rule:** When starting the application in local development, the targeted database must always be explicitly stated and verified to ensure correct environment separation.
+
 ---
 
 ## 6. UI Constraints
@@ -85,6 +87,7 @@ No secrets in repository.
 - No introduction of utility-first CSS frameworks.
 - Maintain existing aesthetic consistency.
 - Maintain alphabetical ordering of drivers (LastName FirstName).
+- **Exception**: The footer must display "Application created by Matteo Bernardini©". This is the only allowed explicit name reference in the repository.
 
 ---
 

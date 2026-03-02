@@ -14,6 +14,7 @@ import {
 import './App.css';
 import {
   appConfig,
+  appVersion,
   calendarApiUrl,
   currentYear,
   dataApiUrl,
@@ -166,6 +167,7 @@ function App() {
   } | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
+  const [showTooltip, setShowTooltip] = useState(false);
 
   // Derived state (declared before effects to avoid TS errors)
   const sortedDrivers = sortDriversBySurname(drivers, driversSource.sortLocale);
@@ -598,8 +600,20 @@ function App() {
   }
 
   const raceLocked = isRaceStarted(selectedRace);
-  const canAssignPoints = isRaceFinished(selectedRace) && 
-    predictionFieldOrder.every(field => Boolean(raceResults[field]));
+  const isFinished = isRaceFinished(selectedRace);
+  const allResultsFilled = predictionFieldOrder.every(field => Boolean(raceResults[field]));
+  const canAssignPoints = isFinished && allResultsFilled;
+
+  let disabledReason = '';
+  if (!canAssignPoints) {
+    if (!raceLocked) {
+      disabledReason = uiText.tooltips.raceNotStarted;
+    } else if (!isFinished) {
+      disabledReason = uiText.tooltips.raceInProgress;
+    } else {
+      disabledReason = uiText.tooltips.missingResults;
+    }
+  }
 
   return (
     <div className="app-shell">
@@ -874,9 +888,24 @@ function App() {
                   {uiText.buttons.cancelEdit}
                 </button>
               ) : null}
-              <button className="primary-button" onClick={calculateAndApplyPoints} type="button" disabled={!canAssignPoints}>
-                {editingSession ? uiText.buttons.saveEditedRace : uiText.buttons.confirmResults}
-              </button>
+              <div 
+                className={`tooltip-wrapper ${!canAssignPoints ? 'disabled-wrapper' : ''} ${showTooltip && !canAssignPoints ? 'show-tooltip' : ''}`}
+                onMouseEnter={() => setShowTooltip(true)}
+                onMouseLeave={() => setShowTooltip(false)}
+                onClick={() => {
+                  if (!canAssignPoints) {
+                    setShowTooltip(!showTooltip);
+                    setTimeout(() => setShowTooltip(false), 3000);
+                  }
+                }}
+              >
+                {!canAssignPoints && (
+                  <div className="tooltip-text">{disabledReason}</div>
+                )}
+                <button className="primary-button" onClick={calculateAndApplyPoints} type="button" disabled={!canAssignPoints}>
+                  {editingSession ? uiText.buttons.saveEditedRace : uiText.buttons.confirmResults}
+                </button>
+              </div>
             </div>
           </section>
 
@@ -948,6 +977,7 @@ function App() {
 
       <footer className="app-footer">
         <p>{uiText.footer}</p>
+        <p className="app-version">v{appVersion}</p>
       </footer>
     </div>
   );

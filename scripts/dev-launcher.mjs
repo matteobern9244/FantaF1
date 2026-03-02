@@ -32,7 +32,8 @@ const launcherText = {
 
 const env = {
   ...process.env,
-  ...loadEnvFile(path.join(projectRoot, '.env.local')),
+  ...loadEnvFile(path.join(projectRoot, '.env')), // Load base .env to override system vars
+  ...loadEnvFile(path.join(projectRoot, '.env.local')), // Local overrides take final precedence
 };
 
 let backendProcess = null;

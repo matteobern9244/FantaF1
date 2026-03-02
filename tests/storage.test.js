@@ -7,7 +7,7 @@ describe('storage sanitization', () => {
       {
         users: [
           {
-            name: 'Matteo',
+            name: 'TestUser 3',
             predictions: {
               first: 'ver',
               second: 'nor',
@@ -18,12 +18,17 @@ describe('storage sanitization', () => {
             points: '7',
           },
           {
-            name: 'Fabio',
+            name: 'TestUser 2',
             predictions: {
               first: 'ham',
             },
             points: 3,
             customField: 'remove-me',
+          },
+          {
+            name: 'TestUser 1',
+            predictions: {},
+            points: 0,
           },
         ],
         gpName: 'China',
@@ -38,7 +43,7 @@ describe('storage sanitization', () => {
             date: 'yesterday',
             results: { first: 'nor' },
             userPredictions: {
-              Matteo: {
+              'TestUser 3': {
                 prediction: { first: 'nor' },
                 pointsEarned: '2',
               },
@@ -65,10 +70,10 @@ describe('storage sanitization', () => {
       ],
     );
 
-    expect(sanitized.users.map((user) => user.name)).toEqual(['Adriano', 'Fabio', 'Matteo']);
-    expect(sanitized.users[0].points).toBe(0);
+    expect(sanitized.users.map((user) => user.name)).toEqual(['TestUser 3', 'TestUser 2', 'TestUser 1']);
+    expect(sanitized.users[0].points).toBe(7);
     expect(sanitized.users[1].predictions.first).toBe('ham');
-    expect(sanitized.users[2].points).toBe(7);
+    expect(sanitized.users[2].points).toBe(0);
     expect(sanitized.selectedMeetingKey).toBe('1280');
     expect(sanitized.gpName).toBe('Chinese Grand Prix 2026');
     expect(sanitized.raceResults).toEqual({
@@ -78,7 +83,7 @@ describe('storage sanitization', () => {
       pole: '',
     });
     expect(sanitized.history[0].meetingKey).toBe('legacy-meeting');
-    expect(sanitized.history[0].userPredictions.Matteo.pointsEarned).toBe(2);
+    expect(sanitized.history[0].userPredictions['TestUser 3'].pointsEarned).toBe(2);
     expect(sanitized).not.toHaveProperty('drivers');
     expect(sanitized).not.toHaveProperty('calendar');
   });

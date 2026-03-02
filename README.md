@@ -47,6 +47,7 @@ L'interfaccia attuale:
 - mostra nella UI l'elenco dei piloti ordinato alfabeticamente per cognome e formattato come `Cognome Nome`
 - permette di modificare o eliminare una gara gia' salvata nello storico, ricalcolando automaticamente la classifica
 - recupera automaticamente i risultati reali al termine della sessione per facilitare l'inserimento e l'assegnazione dei punti
+- include schermate di caricamento tematiche (Pit Stop) e icone personalizzate (Pneumatici, Bandiere)
 
 ## Persistenza e database (MongoDB)
 
@@ -64,15 +65,15 @@ Ad ogni avvio del backend (sia in locale che su Render):
 
 - Il roster piloti viene sincronizzato da StatsF1 e salvato su MongoDB.
 - Il calendario ufficiale viene sincronizzato da Formula1.com e salvato su MongoDB.
-- Il backend usa i dati presenti nel database se una sorgente esterna non e' disponibile.
+- Il backend usa i dati presenti nel database se una sorgente esterna non e' disponibile, con meccanismi di retry automatici.
 
 ## API backend attuali
 
 Il backend espone queste API utilizzate dal frontend:
 
-- `GET /api/health`: Stato del server.
+- `GET /api/health`: Stato del server e connessione database.
 - `GET /api/data`: Recupero dello stato globale del gioco.
-- `POST /api/data`: Salvataggio pronostici e risultati.
+- `POST /api/data`: Salvataggio pronostici e risultati (con validazione server-side).
 - `GET /api/drivers`: Lista dei piloti (cache o sincronizzati).
 - `GET /api/calendar`: Calendario stagionale (cache o sincronizzato).
 - `GET /api/results/:meetingKey`: Recupero automatico dei risultati reali per un weekend specifico.
@@ -92,31 +93,23 @@ Installazione iniziale:
 
 - `npm install`
 
-Per l'avvio locale e' necessario un file `.env` o `.env.local` con la variabile `MONGODB_URI`.
+Per l'avvio locale e' necessario un file `.env` o `.env.local` con la variabile `MONGODB_URI` (es. puntando al database `fanta1_dev`).
 
 Avvio separato per sviluppo:
 
 - `npm run dev:backend`
 - `npm run dev:frontend`
 
-Avvio locale integrato:
+Avvio locale integrato (Consigliato):
 
-- `npm run start:local`
-- `./start_fantaf1.command`
+- `npm run start:local` (Script JS cross-platform)
+- `./start_fantaf1.command` (Script macOS legacy)
 
-Lo script macOS `start_fantaf1.command` avvia backend (porta 3001) e frontend (porta 5173 con proxy configurato), apre l'app in Google Chrome in modalita' app e gestisce il ciclo di vita dei processi.
-
-## Configurazione locale del titolo
-
-Il titolo visibile dell'app puo' essere sovrascritto solo in locale tramite `.env.local`. Il repository include `.env.example` come riferimento e non versiona il valore locale effettivo.
-
-## Asset grafici locali
-
-I font Formula 1 usati nell'interfaccia sono salvati localmente nel repository sotto `public/fonts/formula1/` e vengono serviti direttamente dall'app, senza dipendere da CDN esterne per il caricamento tipografico. Il font viene applicato a tutta la UI, mentre dimensioni, pesi e spaziatura restano calibrati per mantenere leggibilita'.
+Lo script `start:local` gestisce automaticamente il ciclo di vita dei processi, avvia il backend (porta 3001) e il frontend (porta 5173), ed apre l'applicazione in Google Chrome in modalita' app con finestra massimizzata.
 
 ## Qualita' tecnica
 
-Sono disponibili questi controlli:
+Sono disponibili questi controlli obbligatori prima di ogni rilascio:
 
 - `npm run lint` (ESLint)
 - `npm run build` (TypeScript + Vite build)
@@ -126,7 +119,15 @@ I test coprono la logica di punteggio, la sanitizzazione dei dati, il parsing de
 
 ---
 
-### Ultime Modifiche (v1.1.0)
+### Ultime Modifiche (v1.2.0)
+- **Migrazione MongoDB Atlas**: Transizione completa dai file JSON locali alla persistenza cloud-ready per produzione e sviluppo (`fanta1_dev`).
+- **Integrazione Visuale**: Aggiunta di nuovi asset grafici (`pitstop.png`, `tire.png`, `flag.png`) per migliorare l'estetica dell'interfaccia.
+- **Validazione Server-Side**: Rafforzata la logica di salvataggio con controlli rigorosi sui partecipanti e sul blocco temporale delle gare.
+- **Process Management**: Migliorato lo script di avvio locale per una gestione piu' robusta dei processi e dell'apertura del browser.
+- **Supporto Express 5**: Aggiornato il backend per la piena compatibilita' con Express 5, risolvendo bug critici di routing.
+- **UI & UX Versioning**: Inserimento del numero di versione (v1.2.0) nel footer dell'applicazione, centrato e formattato con font Arial.
+
+### Modifiche Precedenti (v1.1.0)
 - **Classifica Live & Proiezioni**: Introdotta una sezione nell'hero che mostra i punti potenziali in tempo reale durante il weekend di gara.
 - **Blocco Automatico Gara**: I pronostici vengono ora bloccati automaticamente all'orario di inizio ufficiale della sessione.
 - **Recupero Automatico Risultati**: Implementata l'integrazione con le API ufficiali F1 per popolare i risultati reali a fine gara.

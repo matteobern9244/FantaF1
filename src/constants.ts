@@ -1,6 +1,8 @@
 import rawConfig from '../config/app-config.json';
+import pkg from '../package.json';
 import type { PredictionKey } from './types';
 
+const appVersion = pkg.version;
 const currentYear = new Date().getFullYear();
 const backendOrigin = ''; // Use relative path for production compatibility
 const frontendOrigin = ''; // Use relative path for production compatibility
@@ -40,6 +42,7 @@ const predictionFieldOrder: PredictionKey[] = ['first', 'second', 'third', 'pole
 
 export {
   appConfig,
+  appVersion,
   backendOrigin,
   calendarApiUrl,
   currentYear,
