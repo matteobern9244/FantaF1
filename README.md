@@ -126,6 +126,7 @@ I test coprono la logica di punteggio, la sanitizzazione dei dati, il parsing de
 - **Process Management**: Migliorato lo script di avvio locale per una gestione piu' robusta dei processi e dell'apertura del browser.
 - **Supporto Express 5**: Aggiornato il backend per la piena compatibilita' con Express 5, risolvendo bug critici di routing.
 - **UI & UX Versioning**: Inserimento del numero di versione (v1.2.0) nel footer dell'applicazione, centrato e formattato con font Arial.
+- **Miglioramenti Layout**: Centratura del footer e riposizionamento strategico dei pulsanti di azione per una migliore usabilita'.
 
 ### Modifiche Precedenti (v1.1.0)
 - **Classifica Live & Proiezioni**: Introdotta una sezione nell'hero che mostra i punti potenziali in tempo reale durante il weekend di gara.
