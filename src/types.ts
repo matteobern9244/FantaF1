@@ -42,6 +42,7 @@ export interface RaceWeekend {
   isSprintWeekend: boolean;
   startDate?: string;
   endDate?: string;
+  raceStartTime?: string;
 }
 
 export interface UserData {

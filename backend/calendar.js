@@ -156,7 +156,7 @@ function parseSeasonCalendarPage(rawContent, year = currentYear) {
   return sortCalendarByRound([...seasonRaceMap.values()]);
 }
 
-function parseRaceDetailPage(rawContent, fallbackMeetingName = '', fallbackSlug = '') {
+function parseRaceDetailPage(rawContent, fallbackMeetingName = '', fallbackSlug = '', fallbackDate = '') {
   const titleMatch = rawContent.match(/<title>([^<]+?) - F1 Race<\/title>/i);
   const escapedSlug = String(fallbackSlug).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
   const meetingKeyPattern = new RegExp(
@@ -176,12 +176,23 @@ function parseRaceDetailPage(rawContent, fallbackMeetingName = '', fallbackSlug 
 
   const normalizedTitle = normalizeText(titleMatch?.[1] ?? '');
 
+  // Try to find a JSON-LD or script with race timing.
+  // F1 site often uses ISO strings for session starts.
+  const isoTimeMatch = rawContent.match(/"startDate"\s*:\s*"(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}[^"]*)"/i);
+  let raceStartTime = isoTimeMatch?.[1] || '';
+
+  // Fallback: Use the end date at 14:00 UTC if we couldn't find a specific time
+  if (!raceStartTime && fallbackDate) {
+    raceStartTime = `${fallbackDate}T14:00:00Z`;
+  }
+
   return {
     meetingKey: meetingKeyMatch?.[1] ?? fallbackSlug,
     grandPrixTitle: normalizedTitle || `${fallbackMeetingName} Grand Prix ${currentYear}`,
     heroImageUrl: heroMatch?.[1] ?? '',
     trackOutlineUrl: trackMatch?.[0] ?? '',
     isSprintWeekend,
+    raceStartTime,
   };
 }
 
@@ -226,6 +237,7 @@ async function syncCalendarFromOfficialSource({
             detailHtml,
             weekend.meetingName,
             weekend.meetingKey,
+            weekend.endDate || weekend.startDate,
           );
 
           return {
@@ -235,6 +247,7 @@ async function syncCalendarFromOfficialSource({
             heroImageUrl: detailData.heroImageUrl || weekend.heroImageUrl,
             trackOutlineUrl: detailData.trackOutlineUrl || weekend.trackOutlineUrl,
             isSprintWeekend: detailData.isSprintWeekend,
+            raceStartTime: detailData.raceStartTime,
           };
         } catch {
           return {
@@ -271,7 +284,61 @@ async function syncCalendarFromOfficialSource({
   }
 }
 
+async function fetchRaceResults(meetingKey) {
+  // official results URL pattern: https://www.formula1.com/en/results/2026/races/<meetingKey>/<slug>/race-result
+  // meetingKey might be the numeric ID or the slug depending on how it's stored.
+  // We'll search for the weekend in cache to get the detailUrl.
+  const calendar = await readCalendarCache();
+  const race = calendar.find(r => r.meetingKey === meetingKey);
+  
+  if (!race || !race.detailUrl) {
+    throw new Error('Race not found in calendar');
+  }
+
+  const resultsUrl = race.detailUrl.replace(/\/racing\/\d{4}\//, (match) => match.replace('racing', 'results')) + '/race-result';
+  const poleUrl = race.isSprintWeekend 
+    ? race.detailUrl.replace(/\/racing\/\d{4}\//, (match) => match.replace('racing', 'results')) + '/sprint-results'
+    : race.detailUrl.replace(/\/racing\/\d{4}\//, (match) => match.replace('racing', 'results')) + '/qualifying';
+
+  try {
+    const [raceHtml, poleHtml] = await Promise.all([
+      fetchHtml(resultsUrl, getBrowserHeaders()).catch(() => ''),
+      fetchHtml(poleUrl, getBrowserHeaders()).catch(() => '')
+    ]);
+
+    const results = {
+      first: '',
+      second: '',
+      third: '',
+      pole: ''
+    };
+
+    if (raceHtml) {
+      // Find drivers in result table. F1 site uses data-driver-id or short codes in cells.
+      const driverMatches = [...raceHtml.matchAll(/data-driver-id="([^"]+)"/gi)].map(m => m[1].toLowerCase());
+      if (driverMatches.length >= 3) {
+        results.first = driverMatches[0];
+        results.second = driverMatches[1];
+        results.third = driverMatches[2];
+      }
+    }
+
+    if (poleHtml) {
+      const poleMatch = poleHtml.match(/data-driver-id="([^"]+)"/i);
+      if (poleMatch) {
+        results.pole = poleMatch[1].toLowerCase();
+      }
+    }
+
+    return results;
+  } catch (error) {
+    console.error('Error fetching race results:', error);
+    throw error;
+  }
+}
+
 export {
+  fetchRaceResults,
   parseDateRangeLabel,
   parseRaceDetailPage,
   parseSeasonCalendarPage,

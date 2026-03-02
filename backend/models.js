@@ -49,6 +49,7 @@ const WeekendSchema = new mongoose.Schema({
   isSprintWeekend: { type: Boolean, default: false },
   startDate: { type: String },
   endDate: { type: String },
+  raceStartTime: { type: String },
 });
 
 const AppDataSchema = new mongoose.Schema({

@@ -4,7 +4,7 @@ import express from 'express';
 import mongoose from 'mongoose';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { syncCalendarFromOfficialSource, sortCalendarByRound } from './backend/calendar.js';
+import { syncCalendarFromOfficialSource, sortCalendarByRound, fetchRaceResults } from './backend/calendar.js';
 import { appConfig, currentYear, formatConfigText } from './backend/config.js';
 import { sortDriversAlphabetically, syncDriversFromOfficialSource } from './backend/drivers.js';
 import {
@@ -58,6 +58,15 @@ app.get(appConfig.api.calendarPath, async (req, res) => {
     res.json(cachedCalendar);
   } catch {
     res.status(500).json({ error: 'Failed to read calendar' });
+  }
+});
+
+app.get('/api/results/:meetingKey', async (req, res) => {
+  try {
+    const results = await fetchRaceResults(req.params.meetingKey);
+    res.json(results);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch results', details: error.message });
   }
 });
 

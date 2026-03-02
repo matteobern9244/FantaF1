@@ -5,9 +5,16 @@ These instructions are for coding agents working in this repository.
 ## Goals
 
 - Prioritize correctness, maintainability, and functional robustness.
+- **Mandatory Testing**: Every implementation MUST include:
+  1. Creation of new unit tests for the added logic.
+  2. Execution of the full unit test suite.
+  3. Immediate fixing of any regressions or failures before completing the task.
+- **Total Anti-Regression Gate**: Before declaring ANY task finished, a full system check MUST be performed to ensure compatibility with:
+  - Local environment (Mac/Windows).
+  - Production environment (Render.com).
+  - Database connectivity (MongoDB Atlas).
 - Keep changes minimal and scoped to the user request.
-- Preserve existing architecture (React/Vite frontend + Express/MongoDB backend) and conventions.
-- Prefer completing one validated step at a time instead of mixing multiple unfinished changes.
+- Preserve existing architecture and conventions.
 
 ## Repository Scope
 
@@ -40,28 +47,24 @@ These instructions are for coding agents working in this repository.
 - Maintain the visual aesthetic: use established CSS variables (colors, fonts, panels) defined in `src/App.css`.
 - Ensure the backend safely handles data syncs with the official Formula 1 sources and properly persists them to MongoDB.
 
-## Testing & Validation
+## Testing & Validation (Mandatory Final Check)
 
-- Run the smallest relevant tests first.
-- Do not lower coverage standards; when practical, add tests in the same change that introduces new logic.
-- For running the test suite (Vitest), use:
-  - `npm test`
-- For checking build integrity (TypeScript compilation and Vite bundling), use:
-  - `npm run build`
-- For launcher and end-to-end local validation on macOS, use the dedicated script (which handles both frontend and backend):
-  - `./start_fantaf1.command`
-- Report any tests not run and why.
+Before completing any request, the following sequence MUST be successful:
+
+1. **Linting**: `npm run lint` must pass with zero errors.
+2. **Unit Tests**: `npm test` must pass all tests.
+3. **Build Integrity**: `npm run build` must complete without TypeScript or Vite errors.
+4. **Environment Check**: Verify that `server.js`, `vite.config.ts`, and `src/constants.ts` maintain the required configuration for local proxying and Render/MongoDB production hosting.
+5. **Local Launch**: Verify the app starts correctly via `./start_fantaf1.command`.
 
 ## Pre-Commit Workflow
 
 For every change that is going to be committed and pushed, always execute this sequence:
 
 1. Update `README.md` if repository state, workflow, setup, or operational documentation changed.
-2. Run linting to ensure code quality:
-   - `npm run lint`
-3. Ensure the project builds without errors (`npm run build`) and all tests pass (`npm test`).
-4. Only then proceed with `git commit`.
-5. Only after the commit succeeds proceed with `git push`.
+2. Run the **Mandatory Final Check** (Lint, Test, Build).
+3. Only then proceed with `git commit`.
+4. Only after the commit succeeds proceed with `git push`.
 
 ## Communication
 

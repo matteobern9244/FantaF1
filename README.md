@@ -4,12 +4,22 @@ Applicazione locale e cloud per gestire un Fanta Formula 1 privato con tre gioca
 
 ## Regole di gioco
 
-Prima dell'inizio del weekend rilevante, l'admin registra per ogni giocatore quattro scelte:
+Prima dell'inizio della gara della domenica, l'admin registra per ogni giocatore quattro scelte:
 
 - vincitore della gara
 - secondo classificato
 - terzo classificato
 - pole position oppure vincitore della Sprint, se il weekend e' Sprint
+
+I pronostici possono essere inseriti e modificati liberamente fino all'orario ufficiale di inizio della gara. Al termine dell'inserimento, l'admin deve cliccare su **"Salva dati inseriti"** per persistere i dati su MongoDB. Il sistema impedisce il salvataggio se i campi non sono completi per tutti i partecipanti.
+
+Non appena la gara ha inizio, la sezione dei pronostici viene automaticamente bloccata per impedire modifiche tardive.
+
+## Risultati e Punteggi
+
+Al termine della gara (circa 2.5 ore dopo l'orario di inizio), l'applicazione recupera automaticamente i risultati ufficiali dalla Formula 1 e popola la sezione "Risultati del weekend".
+
+Il pulsante per la conferma dei risultati e l'assegnazione dei punti rimane disabilitato fino alla conclusione effettiva della gara e alla presenza di dati validi.
 
 Il punteggio attuale e' quello definito in configurazione:
 
@@ -20,7 +30,7 @@ Il punteggio attuale e' quello definito in configurazione:
 
 ## Implementazione attuale
 
-Il frontend e' una SPA React + TypeScript + Vite. Il backend e' un server Express che gestisce la persistenza su MongoDB, la sincronizzazione delle sorgenti esterne e le API consumate dal frontend. L'applicazione e' progettata per essere pubblicata su **Render.com** con database **MongoDB Atlas**.
+Il frontend e' una SPA React + TypeScript + Vite. Il backend e' un server Express che gestisce la persistenza su MongoDB, la sincronizzazione delle sorgenti esterne, il recupero automatico dei risultati e le API consumate dal frontend. L'applicazione e' progettata per essere pubblicata su **Render.com** con database **MongoDB Atlas**.
 
 L'interfaccia attuale:
 

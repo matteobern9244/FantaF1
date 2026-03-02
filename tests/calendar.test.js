@@ -41,6 +41,21 @@ describe('calendar parsing and fallback', () => {
     expect(chinaDetail.trackOutlineUrl).toContain('2026trackshanghaidetailed.webp');
   });
 
+  it('handles raceStartTime parsing and fallback', () => {
+    const htmlWithTime = `
+      <title>Test GP - F1 Race</title>
+      <script>
+        { "startDate": "2026-05-10T15:00:00+02:00" }
+      </script>
+    `;
+    const detailWithTime = parseRaceDetailPage(htmlWithTime, 'Test', 'test', '2026-05-10');
+    expect(detailWithTime.raceStartTime).toBe('2026-05-10T15:00:00+02:00');
+
+    const htmlWithoutTime = `<title>Test GP - F1 Race</title>`;
+    const detailFallback = parseRaceDetailPage(htmlWithoutTime, 'Test', 'test', '2026-05-10');
+    expect(detailFallback.raceStartTime).toBe('2026-05-10T14:00:00Z');
+  });
+
   it('falls back to the cached calendar when the live fetch fails', async () => {
     const cachedCalendar = [
       {

@@ -123,7 +123,8 @@
       "editRace": "Modifica",
       "deleteRace": "Elimina",
       "saveEditedRace": "Salva modifiche gara",
-      "cancelEdit": "Annulla modifica"
+      "cancelEdit": "Annulla modifica",
+      "savePredictions": "Salva dati inseriti"
     },
     "headings": {
       "seasonTag": "Fanta Formula 1",
@@ -171,12 +172,14 @@
     "calendar": {
       "empty": "Calendario non disponibile.",
       "sprintBadge": "Weekend Sprint",
-      "raceBadge": "Weekend Standard"
+      "raceBadge": "Weekend Standard",
+      "raceLocked": "Gara iniziata: i pronostici sono bloccati."
     },
     "alerts": {
       "clearConfirm": "Vuoi azzerare i pronostici attuali per il weekend selezionato?",
       "missingRace": "Seleziona un weekend di gara.",
       "missingResults": "Inserisci tutti i risultati reali prima di assegnare i punti.",
+      "missingPredictions": "Inserisci tutti i pronostici dei giocatori prima di salvare.",
       "raceSaved": "Weekend {gpName} salvato correttamente. Classifica aggiornata.",
       "deleteRaceConfirm": "Vuoi eliminare questa gara dallo storico? La classifica verra' ricalcolata automaticamente.",
       "cancelEditConfirm": "Vuoi annullare la modifica in corso e ripristinare la gara originale nello storico?",

@@ -5,6 +5,7 @@ import {
   ListChecks,
   RotateCw,
   ShieldCheck,
+  Save,
   Trash2,
   Trophy,
   User,
@@ -146,7 +147,28 @@ function App() {
   } | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
-  const [readyToPersist, setReadyToPersist] = useState(false);
+
+  // Derived state (declared before effects to avoid TS errors)
+  const sortedDrivers = sortDriversBySurname(drivers, driversSource.sortLocale);
+  const sortedCalendar = sortCalendarByRound(calendar);
+  const selectedRace = resolveSelectedRace(sortedCalendar, selectedMeetingKey);
+  const nextUpcomingRace = getNextUpcomingRace(sortedCalendar);
+
+  function isRaceStarted(race: RaceWeekend | null) {
+    if (!race?.raceStartTime) {
+      return false;
+    }
+    return new Date() >= new Date(race.raceStartTime);
+  }
+
+  function isRaceFinished(race: RaceWeekend | null) {
+    if (!race?.raceStartTime) {
+      return false;
+    }
+    // Assume race finishes after 2.5 hours
+    const finishTime = new Date(new Date(race.raceStartTime).getTime() + 2.5 * 60 * 60 * 1000);
+    return new Date() >= finishTime;
+  }
 
   useEffect(() => {
     let isCancelled = false;
@@ -170,7 +192,7 @@ function App() {
           : [];
       const fallbackData = buildEmptyAppData(loadedCalendar);
       const incomingData = dataResult.status === 'fulfilled' ? dataResult.value : fallbackData;
-      const selectedRace =
+      const resolvedRace =
         resolveSelectedRace(loadedCalendar, incomingData.selectedMeetingKey) ??
         getNextUpcomingRace(loadedCalendar);
 
@@ -180,8 +202,8 @@ function App() {
         setUsers(incomingData.users);
         setHistory(incomingData.history);
         setRaceResults(incomingData.raceResults);
-        setSelectedMeetingKey(selectedRace?.meetingKey ?? fallbackData.selectedMeetingKey);
-        setGpName(selectedRace?.grandPrixTitle ?? fallbackData.gpName);
+        setSelectedMeetingKey(resolvedRace?.meetingKey ?? fallbackData.selectedMeetingKey);
+        setGpName(resolvedRace?.grandPrixTitle ?? fallbackData.gpName);
 
         if (driversResult.status === 'rejected' || calendarResult.status === 'rejected') {
           setLoadError(uiText.loadError);
@@ -201,9 +223,6 @@ function App() {
         }
 
         setLoading(false);
-        setReadyToPersist(
-          driversResult.status === 'fulfilled' && calendarResult.status === 'fulfilled',
-        );
       });
     }
 
@@ -215,31 +234,33 @@ function App() {
   }, []);
 
   useEffect(() => {
-    if (!readyToPersist || editingSession) {
+    if (!selectedRace || !isRaceFinished(selectedRace)) {
       return;
     }
 
-    const payload: AppData = {
-      users,
-      history,
-      gpName,
-      raceResults,
-      selectedMeetingKey,
-    };
+    const hasResults = predictionFieldOrder.every((field) => Boolean(raceResults[field]));
+    if (hasResults || editingSession) {
+      return;
+    }
 
-    void fetch(dataApiUrl, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    }).catch((error) => {
-      console.error(error);
-    });
-  }, [editingSession, gpName, history, raceResults, readyToPersist, selectedMeetingKey, users]);
+    async function autoFetchResults() {
+      try {
+        const response = await fetch(`/api/results/${selectedRace?.meetingKey}`);
+        if (!response.ok) {
+          return;
+        }
+        const results = await response.json() as Prediction;
+        if (results.first || results.second || results.third || results.pole) {
+          setRaceResults(results);
+        }
+      } catch (error) {
+        console.error('Failed to auto-fetch results:', error);
+      }
+    }
 
-  const sortedDrivers = sortDriversBySurname(drivers, driversSource.sortLocale);
-  const sortedCalendar = sortCalendarByRound(calendar);
-  const selectedRace = resolveSelectedRace(sortedCalendar, selectedMeetingKey);
-  const nextUpcomingRace = getNextUpcomingRace(sortedCalendar);
+    void autoFetchResults();
+  }, [selectedRace, raceResults, editingSession]);
+
   const liveLeaderboardUsers = [...users].sort(
     (firstUser, secondUser) =>
       secondUser.points +
@@ -287,6 +308,45 @@ function App() {
     }
 
     return selectedRace ?? getNextUpcomingRace(sortedCalendar);
+  }
+
+  async function persistAppData(updatedState?: Partial<AppData>) {
+    const payload: AppData = {
+      users,
+      history,
+      gpName,
+      raceResults,
+      selectedMeetingKey,
+      ...updatedState,
+    };
+
+    try {
+      const response = await fetch(dataApiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      if (!response.ok) {
+        throw new Error('Save failed');
+      }
+    } catch (error) {
+      console.error(error);
+      window.alert(uiText.backend.errors.saveFailed);
+    }
+  }
+
+  async function handleSavePredictions() {
+    const allPredictionsSet = users.every((user) =>
+      predictionFieldOrder.every((field) => Boolean(user.predictions[field])),
+    );
+
+    if (!allPredictionsSet) {
+      window.alert(uiText.alerts.missingPredictions);
+      return;
+    }
+
+    await persistAppData();
+    window.alert(appConfig.uiText.backend.messages.saveSuccess);
   }
 
   function handleRaceSelection(nextMeetingKey: string) {
@@ -345,6 +405,11 @@ function App() {
 
     setHistory(updatedHistory);
     setUsers((currentUsers) => mergePredictionsIntoUsers(rebuiltUsers, currentUsers));
+    
+    void persistAppData({
+      history: updatedHistory,
+      users: rebuiltUsers,
+    });
   }
 
   function handleEditHistoryRace(historyIndex: number) {
@@ -409,7 +474,7 @@ function App() {
     setEditingSession(null);
   }
 
-  function calculateAndApplyPoints() {
+  async function calculateAndApplyPoints() {
     if (!selectedRace) {
       window.alert(uiText.alerts.missingRace);
       return;
@@ -436,10 +501,14 @@ function App() {
       predictions: createEmptyPrediction(),
     }));
 
+    let nextHistory = history;
+    let nextMeetingKey = selectedMeetingKey;
+    let nextGpName = gpName;
+
     if (editingSession) {
       const updatedHistory = [...history];
       updatedHistory.splice(editingSession.historyIndex, 0, record);
-
+      nextHistory = updatedHistory;
       setUsers(clearedUsers);
       setHistory(updatedHistory);
       setSelectedMeetingKey(selectedRace.meetingKey);
@@ -447,14 +516,26 @@ function App() {
       setEditingSession(null);
     } else {
       const nextRace = getNextRaceAfter(sortedCalendar, selectedRace);
-
+      nextHistory = [record, ...history];
+      nextMeetingKey = nextRace?.meetingKey ?? selectedRace.meetingKey;
+      nextGpName = nextRace?.grandPrixTitle ?? nextRace?.meetingName ?? '';
+      
       setUsers(clearedUsers);
       setHistory((currentHistory) => [record, ...currentHistory]);
-      setSelectedMeetingKey(nextRace?.meetingKey ?? selectedRace.meetingKey);
-      setGpName(nextRace?.grandPrixTitle ?? nextRace?.meetingName ?? '');
+      setSelectedMeetingKey(nextMeetingKey);
+      setGpName(nextGpName);
     }
 
     setRaceResults(createEmptyPrediction());
+    
+    await persistAppData({
+      users: clearedUsers,
+      history: nextHistory,
+      selectedMeetingKey: nextMeetingKey,
+      gpName: nextGpName,
+      raceResults: createEmptyPrediction(),
+    });
+
     window.alert(
       formatText(uiText.alerts.raceSaved, {
         gpName: record.gpName,
@@ -489,6 +570,10 @@ function App() {
       </div>
     );
   }
+
+  const raceLocked = isRaceStarted(selectedRace);
+  const canAssignPoints = isRaceFinished(selectedRace) && 
+    predictionFieldOrder.every(field => Boolean(raceResults[field]));
 
   return (
     <div className="app-shell">
@@ -660,11 +745,19 @@ function App() {
                   {uiText.headings.predictionEntry} ({uiText.labels.adminPrefix}: {app.adminName})
                 </h2>
               </div>
-              <button className="secondary-button" onClick={clearAllPredictions} type="button">
-                <Trash2 size={16} />
-                {uiText.buttons.clear}
-              </button>
+              <div className="panel-actions">
+                <button className="secondary-button" onClick={clearAllPredictions} type="button" disabled={raceLocked}>
+                  <Trash2 size={16} />
+                  {uiText.buttons.clear}
+                </button>
+                <button className="primary-button compact-button" onClick={handleSavePredictions} type="button" disabled={raceLocked}>
+                  <Save size={16} />
+                  {uiText.buttons.savePredictions}
+                </button>
+              </div>
             </div>
+
+            {raceLocked && <p className="locked-banner">{uiText.calendar.raceLocked}</p>}
 
             <div className="predictions-grid">
               {users.map((user) => (
@@ -686,6 +779,7 @@ function App() {
                         id={`${user.name}-${field}`}
                         value={user.predictions[field]}
                         onChange={(event) => updatePrediction(user.name, field, event.target.value)}
+                        disabled={raceLocked}
                       >
                         <option value="">{uiText.placeholders.driverSelect}</option>
                         {sortedDrivers.map((driver) => (
@@ -754,7 +848,7 @@ function App() {
                   {uiText.buttons.cancelEdit}
                 </button>
               ) : null}
-              <button className="primary-button" onClick={calculateAndApplyPoints} type="button">
+              <button className="primary-button" onClick={calculateAndApplyPoints} type="button" disabled={!canAssignPoints}>
                 {editingSession ? uiText.buttons.saveEditedRace : uiText.buttons.confirmResults}
               </button>
             </div>
