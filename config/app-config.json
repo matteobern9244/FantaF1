@@ -179,7 +179,7 @@
       "clearConfirm": "Vuoi azzerare i pronostici attuali per il weekend selezionato?",
       "missingRace": "Seleziona un weekend di gara.",
       "missingResults": "Inserisci tutti i risultati reali prima di assegnare i punti.",
-      "missingPredictions": "Inserisci tutti i pronostici dei giocatori prima di salvare.",
+      "missingPredictions": "Inserisci tutti i pronostici dei giocatori oppure lasciali tutti vuoti prima di salvare.",
       "raceSaved": "Weekend {gpName} salvato correttamente. Classifica aggiornata.",
       "deleteRaceConfirm": "Vuoi eliminare questa gara dallo storico? La classifica verra' ricalcolata automaticamente.",
       "cancelEditConfirm": "Vuoi annullare la modifica in corso e ripristinare la gara originale nello storico?",

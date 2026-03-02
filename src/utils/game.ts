@@ -99,3 +99,25 @@ export function buildRaceRecord(
     updatedUsers,
   };
 }
+
+export function validatePredictions(
+  users: UserData[],
+  predictionFieldOrder: (keyof Prediction)[],
+): boolean {
+  let filledCount = 0;
+  let totalCount = 0;
+
+  users.forEach((user) => {
+    predictionFieldOrder.forEach((field) => {
+      totalCount++;
+      if (user.predictions[field]) {
+        filledCount++;
+      }
+    });
+  });
+
+  const isAllEmpty = filledCount === 0;
+  const isAllFilled = filledCount === totalCount;
+
+  return isAllEmpty || isAllFilled;
+}

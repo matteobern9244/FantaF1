@@ -1,9 +1,10 @@
+import pitstopIcon from './assets/pitstop.png';
+import tireIcon from './assets/tire.png';
 import { startTransition, useEffect, useState } from 'react';
 import {
   CalendarDays,
   Flag,
   ListChecks,
-  RotateCw,
   ShieldCheck,
   Save,
   Trash2,
@@ -28,6 +29,7 @@ import {
   createEmptyPrediction,
   createInitialUsers,
   rebuildUsersFromHistory,
+  validatePredictions,
 } from './utils/game';
 import {
   formatDriverDisplayName,
@@ -75,6 +77,23 @@ async function fetchJson<T>(url: string): Promise<T> {
   }
 
   return response.json() as Promise<T>;
+}
+
+async function fetchWithRetry<T>(url: string, maxAttempts = 3): Promise<T> {
+  let attempt = 0;
+  while (attempt < maxAttempts) {
+    try {
+      return await fetchJson<T>(url);
+    } catch (error) {
+      attempt++;
+      if (attempt < maxAttempts) {
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+      } else {
+        throw error;
+      }
+    }
+  }
+  throw new Error(`Failed to fetch ${url} after ${maxAttempts} attempts`);
 }
 
 function buildEmptyAppData(calendar: RaceWeekend[]): AppData {
@@ -155,18 +174,20 @@ function App() {
   const nextUpcomingRace = getNextUpcomingRace(sortedCalendar);
 
   function isRaceStarted(race: RaceWeekend | null) {
-    if (!race?.raceStartTime) {
+    const startTime = race?.raceStartTime || (race?.endDate ? `${race.endDate}T14:00:00Z` : null);
+    if (!startTime) {
       return false;
     }
-    return new Date() >= new Date(race.raceStartTime);
+    return new Date() >= new Date(startTime);
   }
 
   function isRaceFinished(race: RaceWeekend | null) {
-    if (!race?.raceStartTime) {
+    const startTime = race?.raceStartTime || (race?.endDate ? `${race.endDate}T14:00:00Z` : null);
+    if (!startTime) {
       return false;
     }
     // Assume race finishes after 2.5 hours
-    const finishTime = new Date(new Date(race.raceStartTime).getTime() + 2.5 * 60 * 60 * 1000);
+    const finishTime = new Date(new Date(startTime).getTime() + 2.5 * 60 * 60 * 1000);
     return new Date() >= finishTime;
   }
 
@@ -175,9 +196,9 @@ function App() {
 
     async function loadAppState() {
       const [dataResult, driversResult, calendarResult] = await Promise.allSettled([
-        fetchJson<AppData>(dataApiUrl),
-        fetchJson<Driver[]>(driversApiUrl),
-        fetchJson<RaceWeekend[]>(calendarApiUrl),
+        fetchWithRetry<AppData>(dataApiUrl),
+        fetchWithRetry<Driver[]>(driversApiUrl),
+        fetchWithRetry<RaceWeekend[]>(calendarApiUrl),
       ]);
 
       if (isCancelled) {
@@ -336,11 +357,9 @@ function App() {
   }
 
   async function handleSavePredictions() {
-    const allPredictionsSet = users.every((user) =>
-      predictionFieldOrder.every((field) => Boolean(user.predictions[field])),
-    );
+    const isValid = validatePredictions(users, predictionFieldOrder);
 
-    if (!allPredictionsSet) {
+    if (!isValid) {
       window.alert(uiText.alerts.missingPredictions);
       return;
     }
@@ -556,8 +575,15 @@ function App() {
   if (loading) {
     return (
       <div className="loading-shell">
-        <RotateCw className="spin" size={44} />
-        <span>{uiText.loading}</span>
+        <div className="pitstop-loader">
+          <div className="speech-bubble">
+            Sto tentanto di caricare il calendario delle gare...
+          </div>
+          <div className="mechanic-container">
+            <img src={pitstopIcon} alt="Pitstop mechanic" className="mechanic-icon" />
+            <img src={tireIcon} alt="Spinning tire" className="tire-icon spin" />
+          </div>
+        </div>
       </div>
     );
   }

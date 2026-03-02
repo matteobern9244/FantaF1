@@ -80,6 +80,84 @@ select,
   animation: spin 1s linear infinite;
 }
 
+.pitstop-loader {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+.speech-bubble {
+  position: relative;
+  background: var(--surface-float);
+  color: var(--ink);
+  padding: 16px 24px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  font-weight: 500;
+  font-size: 1.1rem;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  text-align: center;
+  max-width: 320px;
+  animation: pulse-bubble 2s infinite ease-in-out;
+}
+
+.speech-bubble::after {
+  content: '';
+  position: absolute;
+  bottom: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  border-width: 10px 10px 0;
+  border-style: solid;
+  border-color: var(--surface-float) transparent transparent transparent;
+  z-index: 1;
+}
+
+.speech-bubble::before {
+  content: '';
+  position: absolute;
+  bottom: -12px;
+  left: 50%;
+  transform: translateX(-50%);
+  border-width: 11px 11px 0;
+  border-style: solid;
+  border-color: var(--border) transparent transparent transparent;
+  z-index: 0;
+}
+
+.mechanic-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mechanic-icon {
+  width: 120px;
+  height: 120px;
+  object-fit: contain;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.4));
+}
+
+.tire-icon {
+  position: absolute;
+  width: 60px;
+  height: 60px;
+  bottom: 0;
+  right: -10px;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+}
+
+@keyframes pulse-bubble {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
 .app-shell {
   width: 100%;
   min-height: 100vh;

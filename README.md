@@ -17,9 +17,13 @@ Non appena la gara ha inizio, la sezione dei pronostici viene automaticamente bl
 
 ## Risultati e Punteggi
 
-Al termine della gara (circa 2.5 ore dopo l'orario di inizio), l'applicazione recupera automaticamente i risultati ufficiali dalla Formula 1 e popola la sezione "Risultati del weekend".
+Al termine della gara (circa 2.5 ore dopo l'orario di inizio), l'applicazione recupera automaticamente i risultati ufficiali dalla Formula 1 e popola la sezione "Risultati del weekend". 
 
-Il pulsante per la conferma dei risultati e l'assegnazione dei punti rimane disabilitato fino alla conclusione effettiva della gara e alla presenza di dati validi.
+L'interfaccia include una **Classifica Live** nell'hero che mostra in tempo reale:
+- I punti totali già consolidati nello storico gare.
+- I **punti potenziali** (proiezioni) calcolati confrontando i pronostici attuali con i risultati del weekend selezionato.
+
+Il pulsante per la conferma dei risultati e l'assegnazione definitiva dei punti rimane disabilitato fino alla conclusione effettiva della gara e alla presenza di dati validi.
 
 Il punteggio attuale e' quello definito in configurazione:
 
@@ -42,6 +46,7 @@ L'interfaccia attuale:
 - usa il font Formula 1 vendorizzato localmente in tutta l'interfaccia, con pesi e spaziatura regolati per mantenere leggibilita'
 - mostra nella UI l'elenco dei piloti ordinato alfabeticamente per cognome e formattato come `Cognome Nome`
 - permette di modificare o eliminare una gara gia' salvata nello storico, ricalcolando automaticamente la classifica
+- recupera automaticamente i risultati reali al termine della sessione per facilitare l'inserimento e l'assegnazione dei punti
 
 ## Persistenza e database (MongoDB)
 
@@ -60,6 +65,17 @@ Ad ogni avvio del backend (sia in locale che su Render):
 - Il roster piloti viene sincronizzato da StatsF1 e salvato su MongoDB.
 - Il calendario ufficiale viene sincronizzato da Formula1.com e salvato su MongoDB.
 - Il backend usa i dati presenti nel database se una sorgente esterna non e' disponibile.
+
+## API backend attuali
+
+Il backend espone queste API utilizzate dal frontend:
+
+- `GET /api/health`: Stato del server.
+- `GET /api/data`: Recupero dello stato globale del gioco.
+- `POST /api/data`: Salvataggio pronostici e risultati.
+- `GET /api/drivers`: Lista dei piloti (cache o sincronizzati).
+- `GET /api/calendar`: Calendario stagionale (cache o sincronizzato).
+- `GET /api/results/:meetingKey`: Recupero automatico dei risultati reali per un weekend specifico.
 
 ## Deploy su Render.com
 
@@ -107,3 +123,13 @@ Sono disponibili questi controlli:
 - `npm run test` (Vitest)
 
 I test coprono la logica di punteggio, la sanitizzazione dei dati, il parsing dei piloti e del calendario.
+
+---
+
+### Ultime Modifiche (v1.1.0)
+- **Classifica Live & Proiezioni**: Introdotta una sezione nell'hero che mostra i punti potenziali in tempo reale durante il weekend di gara.
+- **Blocco Automatico Gara**: I pronostici vengono ora bloccati automaticamente all'orario di inizio ufficiale della sessione.
+- **Recupero Automatico Risultati**: Implementata l'integrazione con le API ufficiali F1 per popolare i risultati reali a fine gara.
+- **Validazione Avanzata**: Nuovo sistema di salvataggio manuale dei pronostici con controllo di completezza per tutti i partecipanti.
+- **Ottimizzazione Backend**: Aggiunti meccanismi di retry per la sincronizzazione del calendario e del roster piloti.
+- **UI & UX**: Nuova schermata di caricamento tematica (Pit Stop) e integrazione dei font ufficiali F1 in tutta l'applicazione.

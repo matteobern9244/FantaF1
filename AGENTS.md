@@ -1,74 +1,131 @@
 # AGENTS.md
 
-These instructions are for coding agents working in this repository.
+These instructions are mandatory for any coding agent working in this repository.
 
-## Goals
+This file defines GENERAL engineering principles.
+Project-specific rules are defined in PROJECT.md and have equal priority.
 
-- Prioritize correctness, maintainability, and functional robustness.
-- **Mandatory Testing**: Every implementation MUST include:
-  1. Creation of new unit tests for the added logic.
-  2. Execution of the full unit test suite.
-  3. Immediate fixing of any regressions or failures before completing the task.
-- **Total Anti-Regression Gate**: Before declaring ANY task finished, a full system check MUST be performed to ensure compatibility with:
-  - Local environment (Mac/Windows).
-  - Production environment (Render.com).
-  - Database connectivity (MongoDB Atlas).
-- Keep changes minimal and scoped to the user request.
-- Preserve existing architecture and conventions.
+---
 
-## Repository Scope
+## 1. Prime Directive
 
-- This repository is a full-stack JavaScript/TypeScript application:
-  - Frontend: React with TypeScript, bundled with Vite (`src/`).
-  - Backend: Node.js with Express and MongoDB Atlas (`server.js`, `backend/`).
-  - Config & Data: `config/`, `F1Result/`.
-- Treat both frontend and backend as tightly coupled; changes to backend models or APIs must be reflected in the frontend types and logic.
+Every change must be:
+- Correct
+- Deterministic
+- Tested
+- Non-regressive
+- Minimal in scope
 
-## Working Style
+Never trade long-term maintainability for short-term speed.
 
-- Explain planned changes briefly before editing.
-- Prefer concrete fixes over speculative refactors.
-- Do not change unrelated files.
-- When implementing large plans, work in small verifiable slices and validate each slice before moving on.
-- Keep user-facing summaries concise and include touched file paths.
+---
 
-## Editing Rules
+## 2. Mandatory Workflow
 
-- Prefer custom search tools (`glob`, `grep_search`) for file discovery and text search.
-- Use ASCII unless the target file already uses Unicode or Unicode is required.
-- Add comments only when logic is not obvious.
-- Never use destructive git commands unless explicitly requested.
-- Do not revert user changes that are unrelated to the current task.
+For every task:
 
-## Codebase Rules
+1. Restate the goal in 1–2 lines.
+2. Identify impacted files.
+3. Define acceptance criteria.
+4. Implement in small verifiable slices.
+5. Run the full validation pipeline.
+6. Provide summary with touched file paths.
 
-- Keep UI text and application configuration centralized in `config/app-config.json` and loaded via `src/constants.ts` or `backend/config.js`.
-- Always respect the established vanilla CSS approach. Avoid adding utility-first frameworks (like Tailwind) unless explicitly requested.
-- Maintain the visual aesthetic: use established CSS variables (colors, fonts, panels) defined in `src/App.css`.
-- Ensure the backend safely handles data syncs with the official Formula 1 sources and properly persists them to MongoDB.
+No step may be skipped.
 
-## Testing & Validation (Mandatory Final Check)
+---
 
-Before completing any request, the following sequence MUST be successful:
+## 3. Code Quality Standards
 
-1. **Linting**: `npm run lint` must pass with zero errors.
-2. **Unit Tests**: `npm test` must pass all tests.
-3. **Build Integrity**: `npm run build` must complete without TypeScript or Vite errors.
-4. **Environment Check**: Verify that `server.js`, `vite.config.ts`, and `src/constants.ts` maintain the required configuration for local proxying and Render/MongoDB production hosting.
-5. **Local Launch**: Verify the app starts correctly via `./start_fantaf1.command`.
+- Prefer clarity over cleverness.
+- Functions must be small and single-purpose.
+- Avoid deep nesting.
+- Avoid premature abstraction.
+- Do not introduce new architectural patterns unless explicitly required.
+- Preserve naming conventions and folder structure.
 
-## Pre-Commit Workflow
+---
 
-For every change that is going to be committed and pushed, always execute this sequence:
+## 4. Error Handling
 
-1. Update `README.md` if repository state, workflow, setup, or operational documentation changed.
-2. Run the **Mandatory Final Check** (Lint, Test, Build).
-3. Only then proceed with `git commit`.
-4. Only after the commit succeeds proceed with `git push`.
+- Never swallow errors.
+- All async operations must handle failure paths.
+- External data must be validated before use.
+- Fail fast on programmer errors.
 
-## Communication
+---
 
-- Be concise and direct.
-- Include touched file paths in summaries.
-- If blocked, state the blocker and the next best option.
-- When a plan is partially complete, state clearly what is done and what remains.
+## 5. Determinism & Stability
+
+- Avoid time-based logic without explicit guards.
+- Avoid randomness unless explicitly required.
+- Tests must be deterministic.
+- No hidden state side effects.
+
+---
+
+## 6. Security
+
+- Treat all external input as untrusted.
+- Never expose secrets.
+- Never log sensitive data.
+- Do not introduce new dependencies without clear justification.
+
+---
+
+## 7. Testing Policy (Mandatory)
+
+Any behavioral change MUST:
+
+- Add or update unit tests.
+- Cover edge cases.
+- Prevent regressions.
+
+Full test suite must pass before completion.
+
+---
+
+## 8. Definition of Done
+
+Before declaring completion:
+
+1. Lint passes.
+2. Tests pass.
+3. Build passes.
+4. Application starts successfully.
+5. No regression introduced.
+
+If any step cannot be executed, clearly state what was not executed and why.
+
+---
+
+## 9. Git Discipline
+
+- Never use destructive git commands.
+- Never push directly to production branches unless explicitly instructed.
+- Keep commits focused.
+- Update documentation if behavior changes.
+
+---
+
+## 10. Communication Protocol
+
+Before editing:
+- Short plan.
+
+After editing:
+- Summary
+- Touched files
+- Validation commands
+
+If blocked:
+- State blocker + best next action.
+
+---
+
+## 11. Do Not
+
+- Do not refactor unrelated code.
+- Do not change APIs silently.
+- Do not fabricate test results.
+- Do not introduce new frameworks.

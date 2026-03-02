@@ -221,67 +221,85 @@ async function syncCalendarFromOfficialSource({
 
   console.log(backendText.logs.calendarSyncStart);
 
-  try {
-    const seasonHtml = await fetchHtmlImpl(appConfig.calendarSource.seasonUrl, getBrowserHeaders());
-    const baseCalendar = parseSeasonCalendarPage(seasonHtml, currentYear);
+  let attempt = 0;
+  const maxAttempts = 3;
 
-    if (baseCalendar.length < appConfig.calendarSource.expectedMinimumWeekends) {
-      throw new Error(backendText.errors.invalidCalendarSource);
-    }
+  while (attempt < maxAttempts) {
+    try {
+      if (attempt > 0) {
+        console.log(`[Backend] Retry attempt ${attempt}/${maxAttempts - 1} per scaricare il calendario in corso...`);
+      }
 
-    const enrichedCalendar = await Promise.all(
-      baseCalendar.map(async (weekend) => {
-        try {
-          const detailHtml = await fetchHtmlImpl(weekend.detailUrl, getBrowserHeaders());
-          const detailData = parseRaceDetailPage(
-            detailHtml,
-            weekend.meetingName,
-            weekend.meetingKey,
-            weekend.endDate || weekend.startDate,
-          );
+      const seasonHtml = await fetchHtmlImpl(appConfig.calendarSource.seasonUrl, getBrowserHeaders());
+      const baseCalendar = parseSeasonCalendarPage(seasonHtml, currentYear);
 
-          return {
-            ...weekend,
-            meetingKey: detailData.meetingKey || weekend.meetingKey,
-            grandPrixTitle: detailData.grandPrixTitle || weekend.grandPrixTitle,
-            heroImageUrl: detailData.heroImageUrl || weekend.heroImageUrl,
-            trackOutlineUrl: detailData.trackOutlineUrl || weekend.trackOutlineUrl,
-            isSprintWeekend: detailData.isSprintWeekend,
-            raceStartTime: detailData.raceStartTime,
-          };
-        } catch {
-          return {
-            ...weekend,
-          };
-        }
-      }),
-    );
+      if (baseCalendar.length < appConfig.calendarSource.expectedMinimumWeekends) {
+        throw new Error(backendText.errors.invalidCalendarSource);
+      }
 
-    const normalizedCalendar = sortCalendarByRound(enrichedCalendar);
+      const enrichedCalendar = await Promise.all(
+        baseCalendar.map(async (weekend) => {
+          try {
+            const detailHtml = await fetchHtmlImpl(weekend.detailUrl, getBrowserHeaders());
+            const detailData = parseRaceDetailPage(
+              detailHtml,
+              weekend.meetingName,
+              weekend.meetingKey,
+              weekend.endDate || weekend.startDate,
+            );
 
-    await writeCache(normalizedCalendar);
-    console.log(
-      formatConfigText(backendText.logs.calendarSyncSuccess, {
-        count: normalizedCalendar.length,
-      }),
-    );
-
-    return normalizedCalendar;
-  } catch (error) {
-    const cachedCalendar = sortCalendarByRound(await readCache());
-
-    if (cachedCalendar.length > 0) {
-      console.warn(
-        formatConfigText(backendText.logs.calendarSyncFallback, {
-          count: cachedCalendar.length,
+            return {
+              ...weekend,
+              meetingKey: detailData.meetingKey || weekend.meetingKey,
+              grandPrixTitle: detailData.grandPrixTitle || weekend.grandPrixTitle,
+              heroImageUrl: detailData.heroImageUrl || weekend.heroImageUrl,
+              trackOutlineUrl: detailData.trackOutlineUrl || weekend.trackOutlineUrl,
+              isSprintWeekend: detailData.isSprintWeekend,
+              raceStartTime: detailData.raceStartTime,
+            };
+          } catch {
+            return {
+              ...weekend,
+            };
+          }
         }),
       );
-      return cachedCalendar;
-    }
 
-    console.error(backendText.logs.calendarSyncNoCache, error);
-    return [];
+      const normalizedCalendar = sortCalendarByRound(enrichedCalendar);
+
+      await writeCache(normalizedCalendar);
+      console.log(
+        formatConfigText(backendText.logs.calendarSyncSuccess, {
+          count: normalizedCalendar.length,
+        }),
+      );
+
+      return normalizedCalendar;
+    } catch {
+      attempt++;
+      if (attempt < maxAttempts) {
+        // Wait 2 seconds before retrying
+        await new Promise((resolve) => setTimeout(resolve, 2000));
+      } else {
+        console.error(`[Avviso Backend] Fallito il caricamento del calendario dopo ${maxAttempts} tentativi.`);
+      }
+    }
   }
+
+  // Fallback se tutti i tentativi falliscono
+  const cachedCalendar = sortCalendarByRound(await readCache());
+
+  if (cachedCalendar.length > 0) {
+    console.warn(
+      formatConfigText(backendText.logs.calendarSyncFallback, {
+        count: cachedCalendar.length,
+      }),
+    );
+    return cachedCalendar;
+  }
+
+  console.error(backendText.logs.calendarSyncNoCache);
+  return [];
 }
 
 async function fetchRaceResults(meetingKey) {
