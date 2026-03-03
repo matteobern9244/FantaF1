@@ -115,11 +115,22 @@ Sono disponibili questi controlli obbligatori prima di ogni rilascio:
 - `npm run build` (TypeScript + Vite build)
 - `npm run test` (Vitest)
 
-I test coprono la logica di punteggio, la sanitizzazione dei dati, il parsing dei piloti e del calendario.
+L'applicazione include una suite di **54 unit test** strutturali che coprono:
+- **Validazione Backend**: Logica di blocco gare (Race Lock), verifica partecipanti e completezza pronostici.
+- **Sanitizzazione Dati**: Pulizia e integrità dei dati in ingresso al database (Storage Sanitization).
+- **Logica di Gioco**: Calcolo dei punteggi, ricostruzione dello storico e gestione dei record di gara.
+- **Calendario e Piloti**: Parsing dei dati ufficiali F1 e gestione dei casi limite (es. eventi di un solo giorno).
+- **UI & UX**: Verifica dei componenti critici del frontend.
 
 ---
 
-### Ultime Modifiche (v1.2.1)
+### Ultime Modifiche (v1.3.0)
+- **Robustezza dei Salvataggi**: Risolta una race condition logica nel frontend che mostrava messaggi di successo prematuri. Ora i popup di conferma attendono l'effettiva risposta del server.
+- **Salvataggio Automatico al Reset**: L'azione "Reset pronostici correnti" ora azzera i dati e li salva automaticamente nel database, migliorando il flusso di lavoro dell'admin.
+- **Modulo di Validazione Backend**: Introdotto un nuovo sistema di validazione (`backend/validation.js`) per garantire l'integrita' dei dati e la coerenza delle regole di gioco (es. blocco dei pronostici a inizio gara).
+- **Potenziamento Test Suite**: Espansione massiccia dei test automatizzati (da 14 a 54 test passanti) per garantire la stabilita' a lungo termine e prevenire regressioni.
+- **Miglioramento Parsing Calendario**: Corretto il supporto per gli eventi di un solo giorno e migliorata la resilienza del recupero dati dalle sorgenti ufficiali.
+- **Observability**: Implementati log di errore dettagliati lato server (stack trace e payload) per facilitare la diagnosi di problemi su dispositivi mobili o in produzione.
 - **Miglioramenti Layout**: Centratura del footer e riposizionamento strategico dei pulsanti di azione per una migliore usabilita'.
 - **UI & UX Details**: Utilizzo del font Arial per il numero di versione nel footer per una chiara distinzione visiva.
 

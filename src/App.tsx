@@ -343,18 +343,15 @@ function App() {
       ...updatedState,
     };
 
-    try {
-      const response = await fetch(dataApiUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-      if (!response.ok) {
-        throw new Error('Save failed');
-      }
-    } catch (error) {
-      console.error(error);
-      window.alert(uiText.backend.errors.saveFailed);
+    const response = await fetch(dataApiUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || 'Save failed');
     }
   }
 
@@ -366,8 +363,13 @@ function App() {
       return;
     }
 
-    await persistAppData();
-    window.alert(appConfig.uiText.backend.messages.saveSuccess);
+    try {
+      await persistAppData();
+      window.alert(appConfig.uiText.backend.messages.saveSuccess);
+    } catch (error) {
+      console.error('Save error:', error);
+      window.alert(uiText.backend.errors.saveFailed);
+    }
   }
 
   function handleRaceSelection(nextMeetingKey: string) {
@@ -398,21 +400,32 @@ function App() {
     }));
   }
 
-  function clearAllPredictions() {
+  async function clearAllPredictions() {
     if (!window.confirm(uiText.alerts.clearConfirm)) {
       return;
     }
 
-    setUsers((currentUsers) =>
-      currentUsers.map((user) => ({
-        ...user,
-        predictions: createEmptyPrediction(),
-      })),
-    );
+    const clearedUsers = users.map((user) => ({
+      ...user,
+      predictions: createEmptyPrediction(),
+    }));
+
+    setUsers(clearedUsers);
     setRaceResults(createEmptyPrediction());
+
+    try {
+      await persistAppData({
+        users: clearedUsers,
+        raceResults: createEmptyPrediction(),
+      });
+      window.alert(appConfig.uiText.backend.messages.saveSuccess);
+    } catch (error) {
+      console.error('Clear and save error:', error);
+      window.alert(uiText.backend.errors.saveFailed);
+    }
   }
 
-  function handleDeleteHistoryRace(historyIndex: number) {
+  async function handleDeleteHistoryRace(historyIndex: number) {
     if (editingSession) {
       return;
     }
@@ -427,10 +440,15 @@ function App() {
     setHistory(updatedHistory);
     setUsers((currentUsers) => mergePredictionsIntoUsers(rebuiltUsers, currentUsers));
     
-    void persistAppData({
-      history: updatedHistory,
-      users: rebuiltUsers,
-    });
+    try {
+      await persistAppData({
+        history: updatedHistory,
+        users: rebuiltUsers,
+      });
+    } catch (error) {
+      console.error('Delete error:', error);
+      window.alert(uiText.backend.errors.saveFailed);
+    }
   }
 
   function handleEditHistoryRace(historyIndex: number) {
@@ -549,19 +567,24 @@ function App() {
 
     setRaceResults(createEmptyPrediction());
     
-    await persistAppData({
-      users: clearedUsers,
-      history: nextHistory,
-      selectedMeetingKey: nextMeetingKey,
-      gpName: nextGpName,
-      raceResults: createEmptyPrediction(),
-    });
+    try {
+      await persistAppData({
+        users: clearedUsers,
+        history: nextHistory,
+        selectedMeetingKey: nextMeetingKey,
+        gpName: nextGpName,
+        raceResults: createEmptyPrediction(),
+      });
 
-    window.alert(
-      formatText(uiText.alerts.raceSaved, {
-        gpName: record.gpName,
-      }),
-    );
+      window.alert(
+        formatText(uiText.alerts.raceSaved, {
+          gpName: record.gpName,
+        }),
+      );
+    } catch (error) {
+      console.error('Save race error:', error);
+      window.alert(uiText.backend.errors.saveFailed);
+    }
   }
 
   function renderHistoryResults(record: AppData['history'][number]) {

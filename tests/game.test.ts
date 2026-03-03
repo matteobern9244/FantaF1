@@ -193,4 +193,66 @@ describe('game utils', () => {
     // Partially filled overall (1 completely filled user + 1 empty user) should be invalid (returns false)
     expect(validatePredictions([user1AllFilled, user2AllEmpty], predictionFields)).toBe(false);
   });
+
+  describe('calculatePointsEarned detailed', () => {
+    const config = { first: 5, second: 3, third: 2, pole: 1 };
+    const results = { first: 'A', second: 'B', third: 'C', pole: 'D' };
+
+    it('returns 0 for no matches', () => {
+      expect(calculatePointsEarned({ first: 'X', second: 'Y', third: 'Z', pole: 'W' }, results, config)).toBe(0);
+    });
+
+    it('returns points for only first', () => {
+      expect(calculatePointsEarned({ first: 'A', second: 'Y', third: 'Z', pole: 'W' }, results, config)).toBe(5);
+    });
+
+    it('returns points for only second', () => {
+      expect(calculatePointsEarned({ first: 'X', second: 'B', third: 'Z', pole: 'W' }, results, config)).toBe(3);
+    });
+
+    it('returns points for only third', () => {
+      expect(calculatePointsEarned({ first: 'X', second: 'Y', third: 'C', pole: 'W' }, results, config)).toBe(2);
+    });
+
+    it('returns points for only pole', () => {
+      expect(calculatePointsEarned({ first: 'X', second: 'Y', third: 'Z', pole: 'D' }, results, config)).toBe(1);
+    });
+
+    it('returns maximum points for all matches', () => {
+      expect(calculatePointsEarned(results, results, config)).toBe(11);
+    });
+  });
+
+  describe('rebuildUsersFromHistory edge cases', () => {
+    it('handles empty history', () => {
+      const users = rebuildUsersFromHistory(['A', 'B'], []);
+      expect(users).toHaveLength(2);
+      expect(users[0].points).toBe(0);
+    });
+
+    it('handles history with missing user entries', () => {
+      const history: RaceRecord[] = [{
+        gpName: 'GP',
+        meetingKey: 'key',
+        date: 'now',
+        results: createEmptyPrediction(),
+        userPredictions: { 'A': { prediction: createEmptyPrediction(), pointsEarned: 10 } }
+      }];
+      const users = rebuildUsersFromHistory(['A', 'B'], history);
+      expect(users.find(u => u.name === 'A')?.points).toBe(10);
+      expect(users.find(u => u.name === 'B')?.points).toBe(0);
+    });
+  });
+
+  describe('buildRaceRecord edge cases', () => {
+    it('uses existing date if provided', () => {
+      const { record } = buildRaceRecord('GP', 'key', createEmptyPrediction(), [], { first: 0, second: 0, third: 0, pole: 0 }, () => 'now', 'yesterday');
+      expect(record.date).toBe('yesterday');
+    });
+
+    it('uses formatter if existing date is empty', () => {
+      const { record } = buildRaceRecord('GP', 'key', createEmptyPrediction(), [], { first: 0, second: 0, third: 0, pole: 0 }, () => 'now', ' ');
+      expect(record.date).toBe('now');
+    });
+  });
 });
