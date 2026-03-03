@@ -5,18 +5,18 @@ describe('Validation Logic', () => {
   describe('validateParticipants', () => {
     const required = ['A', 'B', 'C'];
     
-    it('should return true for correct participants', () => {
+    it('should return true for correct number of participants', () => {
       const users = [{ name: 'A' }, { name: 'B' }, { name: 'C' }];
       expect(validateParticipants(users, required)).toBe(true);
     });
 
-    it('should return false if a participant is missing', () => {
-      const users = [{ name: 'A' }, { name: 'B' }];
-      expect(validateParticipants(users, required)).toBe(false);
+    it('should return true even if names are different but count is the same', () => {
+      const users = [{ name: 'X' }, { name: 'Y' }, { name: 'Z' }];
+      expect(validateParticipants(users, required)).toBe(true);
     });
 
-    it('should return false if participants are different', () => {
-      const users = [{ name: 'A' }, { name: 'B' }, { name: 'D' }];
+    it('should return false if the number of participants is incorrect', () => {
+      const users = [{ name: 'A' }, { name: 'B' }];
       expect(validateParticipants(users, required)).toBe(false);
     });
 

@@ -1,10 +1,7 @@
 export function validateParticipants(incomingUsers, requiredParticipants) {
   if (!Array.isArray(incomingUsers)) return false;
-  const incomingNames = incomingUsers.map((u) => u.name);
-  return (
-    requiredParticipants.length === incomingNames.length &&
-    requiredParticipants.every((p) => incomingNames.includes(p))
-  );
+  // We only enforce the total number of participants (exactly 3)
+  return incomingUsers.length === requiredParticipants.length;
 }
 
 export function isRaceLocked(selectedRace, newData, currentData, now = new Date()) {
@@ -15,7 +12,12 @@ export function isRaceLocked(selectedRace, newData, currentData, now = new Date(
   
   if (!startTimeStr) return false;
 
-  const startTime = new Date(startTimeStr);
+  // Robust parsing: handle potential space instead of T
+  const normalizedTime = startTimeStr.replace(' ', 'T');
+  const startTime = new Date(normalizedTime);
+  
+  if (isNaN(startTime.getTime())) return false;
+
   if (now >= startTime) {
     // Only block if trying to change CURRENT predictions
     const predictionsChanged =

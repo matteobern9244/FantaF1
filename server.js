@@ -126,51 +126,70 @@ async function connectToDatabase() {
   }
   
   try {
-    // Definitive extraction for Atlas SRV strings:
+    // Robust extraction for Atlas SRV strings or standard URIs:
     // 1. Remove query string (?...)
-    // 2. Split by /
-    // 3. The last part IS the database name
-    const baseUri = uri.split('?')[0];
+    // 2. Remove trailing slash if present
+    // 3. Split by /
+    // 4. The last non-empty part is likely the database name
+    const baseUri = uri.split('?')[0].replace(/\/$/, '');
     const parts = baseUri.split('/');
-    const dbName = parts[parts.length - 1];
+    let dbName = parts[parts.length - 1];
+
+    // If dbName looks like a host (e.g. cluster.mongodb.net) or is empty, 
+    // it means it's missing from the URI.
+    if (!dbName || dbName.includes('.') || dbName.includes(':')) {
+      dbName = undefined; // Let Mongoose use default or what's in the string
+    }
 
     await mongoose.connect(uri, {
       dbName: dbName,
     });
-    console.log(`Connected to MongoDB Atlas - Database: ${mongoose.connection.db.databaseName}`);
+    console.log(`[Database] Connected to MongoDB Atlas - Target: ${mongoose.connection.db.databaseName}`);
   } catch (error) {
-    console.error('MongoDB connection error:', error);
+    console.error('[Database] MongoDB connection error:', error);
     process.exit(1);
   }
 }
 
 async function startServer() {
+  // 1. Connect to DB first (mandatory)
   await connectToDatabase();
 
-  try {
-    const syncedDrivers = await syncDriversFromOfficialSource();
-    if (syncedDrivers.length === 0) {
-      console.warn(appConfig.uiText.backend.errors.driversUnavailable);
-    }
-  } catch (e) {
-    console.warn('Driver sync warning:', e.message);
-  }
-
-  try {
-    const syncedCalendar = await syncCalendarFromOfficialSource();
-    if (syncedCalendar.length === 0) {
-      console.warn(appConfig.uiText.backend.errors.calendarUnavailable);
-    }
-  } catch (e) {
-    console.warn('Calendar sync warning:', e.message);
-  }
-
+  // 2. Start listening immediately to satisfy platform (Render) health checks
   app.listen(PORT, HOST, () => {
     console.log(
       formatConfigText(appConfig.uiText.backend.logs.serverStarted, {
         origin: `http://${HOST}:${PORT}`,
       }),
     );
+
+    // 3. Perform external sync in the background
+    // This prevents slow external sources from blocking startup
+    console.log('[Sync] Starting background synchronization...');
+    
+    void (async () => {
+      try {
+        const syncedDrivers = await syncDriversFromOfficialSource();
+        if (syncedDrivers.length === 0) {
+          console.warn(appConfig.uiText.backend.errors.driversUnavailable);
+        } else {
+          console.log(`[Sync] Drivers synchronized: ${syncedDrivers.length}`);
+        }
+      } catch (e) {
+        console.warn('[Sync] Driver sync warning:', e.message);
+      }
+
+      try {
+        const syncedCalendar = await syncCalendarFromOfficialSource();
+        if (syncedCalendar.length === 0) {
+          console.warn(appConfig.uiText.backend.errors.calendarUnavailable);
+        } else {
+          console.log(`[Sync] Calendar synchronized: ${syncedCalendar.length}`);
+        }
+      } catch (e) {
+        console.warn('[Sync] Calendar sync warning:', e.message);
+      }
+    })();
   });
 }
 

@@ -1,4 +1,5 @@
 import { AppData, Driver, Weekend } from './models.js';
+import { appConfig } from './config.js';
 
 function createEmptyPrediction() {
   return {
@@ -10,9 +11,7 @@ function createEmptyPrediction() {
 }
 
 function createInitialUsers() {
-  // Real names must be managed directly in the DB.
-  // We initialize with generic players only as a last resort.
-  return ['Player 1', 'Player 2', 'Player 3'].map((name) => ({
+  return appConfig.participants.map((name) => ({
     name,
     predictions: createEmptyPrediction(),
     points: 0,
@@ -159,7 +158,7 @@ function sanitizeAppData(value, calendar = []) {
   const incomingUsers = Array.isArray(value?.users) ? value.users : [];
   
   // Rule: We must always have exactly 3 players as per PROJECT.md.
-  // If we have data in DB, we keep those names.
+  // We keep the names from the DB if present, otherwise fallback to defaults.
   let normalizedUsers;
   if (incomingUsers.length >= 3) {
     normalizedUsers = incomingUsers.slice(0, 3).map(user => sanitizeUser(user, user.name || 'Unknown'));

@@ -1,6 +1,6 @@
 import pitstopIcon from './assets/pitstop.png';
 import tireIcon from './assets/tire.png';
-import { startTransition, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   CalendarDays,
   Flag,
@@ -176,20 +176,28 @@ function App() {
   const nextUpcomingRace = getNextUpcomingRace(sortedCalendar);
 
   function isRaceStarted(race: RaceWeekend | null) {
-    const startTime = race?.raceStartTime || (race?.endDate ? `${race.endDate}T14:00:00Z` : null);
-    if (!startTime) {
+    const startTimeStr = race?.raceStartTime || (race?.endDate ? `${race.endDate}T14:00:00Z` : null);
+    if (!startTimeStr) {
       return false;
     }
-    return new Date() >= new Date(startTime);
+    // Safari compatibility: Ensure 'T' and 'Z' or proper ISO format
+    const normalizedTime = startTimeStr.replace(' ', 'T');
+    const startTime = new Date(normalizedTime);
+    return !isNaN(startTime.getTime()) && new Date() >= startTime;
   }
 
   function isRaceFinished(race: RaceWeekend | null) {
-    const startTime = race?.raceStartTime || (race?.endDate ? `${race.endDate}T14:00:00Z` : null);
-    if (!startTime) {
+    const startTimeStr = race?.raceStartTime || (race?.endDate ? `${race.endDate}T14:00:00Z` : null);
+    if (!startTimeStr) {
       return false;
     }
+    // Safari compatibility
+    const normalizedTime = startTimeStr.replace(' ', 'T');
+    const startTime = new Date(normalizedTime);
+    if (isNaN(startTime.getTime())) return false;
+
     // Assume race finishes after 2.5 hours
-    const finishTime = new Date(new Date(startTime).getTime() + 2.5 * 60 * 60 * 1000);
+    const finishTime = new Date(startTime.getTime() + 2.5 * 60 * 60 * 1000);
     return new Date() >= finishTime;
   }
 
@@ -219,34 +227,32 @@ function App() {
         resolveSelectedRace(loadedCalendar, incomingData.selectedMeetingKey) ??
         getNextUpcomingRace(loadedCalendar);
 
-      startTransition(() => {
-        setDrivers(loadedDrivers);
-        setCalendar(loadedCalendar);
-        setUsers(incomingData.users);
-        setHistory(incomingData.history);
-        setRaceResults(incomingData.raceResults);
-        setSelectedMeetingKey(resolvedRace?.meetingKey ?? fallbackData.selectedMeetingKey);
-        setGpName(resolvedRace?.grandPrixTitle ?? fallbackData.gpName);
+      setDrivers(loadedDrivers);
+      setCalendar(loadedCalendar);
+      setUsers(incomingData.users);
+      setHistory(incomingData.history);
+      setRaceResults(incomingData.raceResults);
+      setSelectedMeetingKey(resolvedRace?.meetingKey ?? fallbackData.selectedMeetingKey);
+      setGpName(resolvedRace?.grandPrixTitle ?? fallbackData.gpName);
 
-        if (driversResult.status === 'rejected' || calendarResult.status === 'rejected') {
-          setLoadError(uiText.loadError);
-          if (driversResult.status === 'rejected') {
-            console.error(driversResult.reason);
-          }
-
-          if (calendarResult.status === 'rejected') {
-            console.error(calendarResult.reason);
-          }
-        } else {
-          setLoadError('');
+      if (driversResult.status === 'rejected' || calendarResult.status === 'rejected') {
+        setLoadError(uiText.loadError);
+        if (driversResult.status === 'rejected') {
+          console.error(driversResult.reason);
         }
 
-        if (dataResult.status === 'rejected') {
-          console.error(dataResult.reason);
+        if (calendarResult.status === 'rejected') {
+          console.error(calendarResult.reason);
         }
+      } else {
+        setLoadError('');
+      }
 
-        setLoading(false);
-      });
+      if (dataResult.status === 'rejected') {
+        console.error(dataResult.reason);
+      }
+
+      setLoading(false);
     }
 
     void loadAppState();
@@ -435,7 +441,9 @@ function App() {
     }
 
     const updatedHistory = history.filter((_, index) => index !== historyIndex);
-    const rebuiltUsers = rebuildUsersFromHistory(participants, updatedHistory);
+    // Preserviamo i nomi correnti degli utenti
+    const currentNames = users.map(u => u.name);
+    const rebuiltUsers = rebuildUsersFromHistory(currentNames, updatedHistory);
 
     setHistory(updatedHistory);
     setUsers((currentUsers) => mergePredictionsIntoUsers(rebuiltUsers, currentUsers));
@@ -462,7 +470,9 @@ function App() {
     }
 
     const updatedHistory = history.filter((_, index) => index !== historyIndex);
-    const rebuiltUsers = rebuildUsersFromHistory(participants, updatedHistory).map((user) => {
+    // Preserviamo i nomi correnti degli utenti
+    const currentNames = users.map(u => u.name);
+    const rebuiltUsers = rebuildUsersFromHistory(currentNames, updatedHistory).map((user) => {
       const storedPrediction = record.userPredictions[user.name]?.prediction;
 
       return {
@@ -499,7 +509,9 @@ function App() {
 
     const restoredHistory = [...history];
     restoredHistory.splice(editingSession.historyIndex, 0, editingSession.record);
-    const restoredUsers = rebuildUsersFromHistory(participants, restoredHistory);
+    // Preserviamo i nomi correnti degli utenti
+    const currentNames = users.map(u => u.name);
+    const restoredUsers = rebuildUsersFromHistory(currentNames, restoredHistory);
     const restoredRace =
       resolveRaceFromRecord(editingSession.record) ?? getNextUpcomingRace(sortedCalendar);
 

@@ -124,15 +124,19 @@ L'applicazione include una suite di **54 unit test** strutturali che coprono:
 
 ---
 
-### Ultime Modifiche (v1.3.0)
-- **Robustezza dei Salvataggi**: Risolta una race condition logica nel frontend che mostrava messaggi di successo prematuri. Ora i popup di conferma attendono l'effettiva risposta del server.
-- **Salvataggio Automatico al Reset**: L'azione "Reset pronostici correnti" ora azzera i dati e li salva automaticamente nel database, migliorando il flusso di lavoro dell'admin.
-- **Modulo di Validazione Backend**: Introdotto un nuovo sistema di validazione (`backend/validation.js`) per garantire l'integrita' dei dati e la coerenza delle regole di gioco (es. blocco dei pronostici a inizio gara).
-- **Potenziamento Test Suite**: Espansione massiccia dei test automatizzati (da 14 a 54 test passanti) per garantire la stabilita' a lungo termine e prevenire regressioni.
-- **Miglioramento Parsing Calendario**: Corretto il supporto per gli eventi di un solo giorno e migliorata la resilienza del recupero dati dalle sorgenti ufficiali.
-- **Observability**: Implementati log di errore dettagliati lato server (stack trace e payload) per facilitare la diagnosi di problemi su dispositivi mobili o in produzione.
-- **Miglioramenti Layout**: Centratura del footer e riposizionamento strategico dei pulsanti di azione per una migliore usabilita'.
-- **UI & UX Details**: Utilizzo del font Arial per il numero di versione nel footer per una chiara distinzione visiva.
+### Ultime Modifiche (v1.3.1)
+- **Fix Pulsanti Reset e Salva (Render)**: Risolto il problema che impediva il salvataggio dei dati in produzione su Render. La validazione lato server è stata resa più flessibile per accettare nomi partecipanti personalizzati nel database, evitando errori di blocco (400 Bad Request).
+- **Ottimizzazione Deploy**: Spostata la sincronizzazione dei dati (piloti e calendario) in background all'avvio del server. Questo elimina i timeout durante il deploy su Render, garantendo che l'applicazione sia immediatamente disponibile.
+- **Risoluzione Problemi Mobile & Safari**: Corretto il parsing delle date per garantire piena compatibilità con Safari su iOS. Ora il blocco automatico delle gare e la gestione dei weekend funzionano correttamente su tutti i dispositivi.
+- **Integrità Nomi Partecipanti**: Corretta una regressione che riportava i nomi dei giocatori ai valori di default dopo l'eliminazione o la modifica di una gara dallo storico. Ora i nomi personalizzati vengono preservati in ogni operazione di ricalcolo.
+- **Robustezza Connessione DB**: Migliorata l'estrazione del nome del database dall'URI di MongoDB Atlas per una connessione più stabile in ambienti cloud.
+
+### Modifiche Precedenti (v1.3.0 - Produzione Attuale)
+- **Robustezza dei Salvataggi**: Risolta una race condition logica nel frontend che mostrava messaggi di successo prematuri.
+- **Salvataggio Automatico al Reset**: L'azione "Reset pronostici correnti" ora azzera i dati e li salva automaticamente nel database.
+- **Modulo di Validazione Backend**: Introdotto un nuovo sistema di validazione (`backend/validation.js`) per garantire l'integrita' dei dati.
+- **Potenziamento Test Suite**: Espansione massiccia dei test automatizzati (54 test passanti).
+- **Miglioramento Parsing Calendario**: Corretto il supporto per gli eventi di un solo giorno e migliorata la resilienza del recupero dati.
 
 ### Modifiche Precedenti (v1.2.0)
 - **Migrazione MongoDB Atlas**: Transizione completa dai file JSON locali alla persistenza cloud-ready per produzione e sviluppo (`fanta1_dev`).
