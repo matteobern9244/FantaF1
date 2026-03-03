@@ -85,4 +85,41 @@ describe('calendar parsing and fallback', () => {
 
     expect(result).toEqual(cachedCalendar);
   });
+
+  describe('parseDateRangeLabel edge cases', () => {
+    it('handles single day events', () => {
+      expect(parseDateRangeLabel('20 MAR', 2026)).toEqual({
+        startDate: '2026-03-20',
+        endDate: '2026-03-20',
+      });
+    });
+
+    it('handles multi-day events in same month', () => {
+      expect(parseDateRangeLabel('01-03 MAR', 2026)).toEqual({
+        startDate: '2026-03-01',
+        endDate: '2026-03-03',
+      });
+    });
+
+    it('returns empty for invalid format', () => {
+      expect(parseDateRangeLabel('invalid', 2026)).toEqual({
+        startDate: '',
+        endDate: '',
+      });
+    });
+  });
+
+  describe('parseRaceDetailPage edge cases', () => {
+    it('handles missing script tag', () => {
+      const html = '<html><body>no script</body></html>';
+      const result = parseRaceDetailPage(html, 'Test', 'test', '2026-01-01');
+      expect(result.raceStartTime).toBe('2026-01-01T14:00:00Z');
+    });
+
+    it('handles invalid JSON in script tag', () => {
+      const html = '<html><script>{ invalid json }</script></html>';
+      const result = parseRaceDetailPage(html, 'Test', 'test', '2026-01-01');
+      expect(result.raceStartTime).toBe('2026-01-01T14:00:00Z');
+    });
+  });
 });

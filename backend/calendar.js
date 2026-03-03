@@ -78,6 +78,16 @@ function parseDateRangeLabel(dateRangeLabel, year) {
     };
   }
 
+  const singleDayMatch = normalizedLabel.match(/^(\d{2}) ([A-Z]{3})$/);
+  if (singleDayMatch) {
+    const [, day, monthLabel] = singleDayMatch;
+    const date = buildIsoDate(year, monthLabel, day);
+    return {
+      startDate: date,
+      endDate: date,
+    };
+  }
+
   return {
     startDate: '',
     endDate: '',

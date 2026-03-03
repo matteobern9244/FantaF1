@@ -217,7 +217,8 @@ async function writeAppData(appData, calendarPromise) {
     await AppData.findOneAndUpdate({}, sanitizedData, { upsert: true, new: true });
     return sanitizedData;
   } catch (error) {
-    console.error('Error writing app data to DB:', error);
+    console.error('[Storage Error] Error writing app data to DB:', error);
+    console.error('[Storage Error] Data being written:', JSON.stringify(sanitizedData, null, 2));
     throw error;
   }
 }

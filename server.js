@@ -13,6 +13,7 @@ import {
   readDriversCache,
   writeAppData,
 } from './backend/storage.js';
+import { isRaceLocked, validateParticipants } from './backend/validation.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -75,14 +76,10 @@ app.post(appConfig.api.dataPath, async (req, res) => {
     const newData = req.body;
 
     // Server-side validation: Exact participants
-    const requiredParticipants = appConfig.participants;
-    const incomingParticipants = newData.users.map(u => u.name);
-    
-    const hasCorrectParticipants = requiredParticipants.length === incomingParticipants.length &&
-      requiredParticipants.every(p => incomingParticipants.includes(p));
-
-    if (!hasCorrectParticipants) {
-      return res.status(400).json({ error: `Invalid participants list. Expected ${requiredParticipants.length} participants.` });
+    if (!validateParticipants(newData.users, appConfig.participants)) {
+      return res.status(400).json({ 
+        error: `Invalid participants list. Expected ${appConfig.participants.length} participants.` 
+      });
     }
 
     // Server-side validation: Race Lock
@@ -90,27 +87,19 @@ app.post(appConfig.api.dataPath, async (req, res) => {
     const selectedRace = calendar.find(r => r.meetingKey === newData.selectedMeetingKey);
     
     if (selectedRace) {
-      const startTime = selectedRace.raceStartTime || (selectedRace.endDate ? `${selectedRace.endDate}T14:00:00Z` : null);
-      if (startTime && new Date() >= new Date(startTime)) {
-        // Only block if trying to change CURRENT predictions, not history or results confirmation
-        // But the current API merges everything. PROJECT.md says "Predictions locked at official race start time"
-        // We check if predictions are being modified for the locked race.
-        const currentData = await readAppData();
-        const predictionsChanged = JSON.stringify(currentData.users.map(u => u.predictions)) !== 
-                                 JSON.stringify(newData.users.map(u => u.predictions));
-        
-        if (predictionsChanged) {
-          return res.status(403).json({ error: appConfig.uiText.calendar.raceLocked });
-        }
+      const currentData = await readAppData();
+      if (isRaceLocked(selectedRace, newData, currentData)) {
+        return res.status(403).json({ error: appConfig.uiText.calendar.raceLocked });
       }
     }
 
     await writeAppData(newData);
     res.json({ message: appConfig.uiText.backend.messages.saveSuccess });
   } catch (error) {
+    console.error('[Error Backend] POST /api/data fallito:', error);
     res.status(500).json({
       error: appConfig.uiText.backend.errors.saveFailed,
-      details: error instanceof Error ? error.message : String(error),
+      details: error instanceof Error ? error.stack || error.message : String(error),
     });
   }
 });
