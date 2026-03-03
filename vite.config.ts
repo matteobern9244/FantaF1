@@ -12,4 +12,17 @@ export default defineConfig({
       },
     },
   },
+  test: {
+    coverage: {
+      provider: 'v8',
+      include: ['backend/**/*.js', 'src/utils/**/*.ts'],
+      exclude: ['backend/config.js', 'backend/models.js'],
+      thresholds: {
+        lines: 100,
+        functions: 100,
+        branches: 100,
+        statements: 100
+      }
+    }
+  }
 })

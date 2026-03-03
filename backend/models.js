@@ -37,6 +37,11 @@ const DriverSchema = new mongoose.Schema({
   teamSlug: { type: String },
 });
 
+const SessionSchema = new mongoose.Schema({
+  name: { type: String },
+  startTime: { type: String },
+}, { _id: false });
+
 const WeekendSchema = new mongoose.Schema({
   meetingKey: { type: String, required: true, unique: true },
   meetingName: { type: String },
@@ -50,6 +55,7 @@ const WeekendSchema = new mongoose.Schema({
   startDate: { type: String },
   endDate: { type: String },
   raceStartTime: { type: String },
+  sessions: [SessionSchema],
 });
 
 const AppDataSchema = new mongoose.Schema({

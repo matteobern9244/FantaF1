@@ -115,17 +115,25 @@ Sono disponibili questi controlli obbligatori prima di ogni rilascio:
 - `npm run build` (TypeScript + Vite build)
 - `npm run test` (Vitest)
 
-L'applicazione include una suite di **54 unit test** strutturali che coprono:
+L'applicazione include una suite di **81 unit test** strutturali che coprono:
 - **Validazione Backend**: Logica di blocco gare (Race Lock), verifica partecipanti e completezza pronostici.
 - **Sanitizzazione Dati**: Pulizia e integrità dei dati in ingresso al database (Storage Sanitization).
 - **Logica di Gioco**: Calcolo dei punteggi, ricostruzione dello storico e gestione dei record di gara.
 - **Calendario e Piloti**: Parsing dei dati ufficiali F1 e gestione dei casi limite (es. eventi di un solo giorno).
-- **UI & UX**: Verifica dei componenti critici del frontend.
+- **UI & UX**: Verifica dei componenti critici del frontend, traduzioni e formattazione temporale.
 
 ---
 
 ### Ultime Modifiche (v1.3.2)
+- **Dinamicità Stagionale Totale**: Rimosso ogni riferimento hard-coded all'anno in corso. L'applicazione rileva e applica ora l'anno di sistema in modo dinamico in ogni sua parte (Frontend, Backend, Titolo, Test), garantendo la compatibilità automatica con tutte le stagioni future.
+- **Programma Weekend Completo**: La card "Prossimo Weekend" ora include la lista dettagliata di tutte le sessioni (Prove Libere, Qualifiche, Sprint, Gara) con orari sincronizzati in tempo reale.
+- **Iconografia Dinamica**: Integrato un sistema di icone intelligenti (`Timer`, `Zap`, `FastForward`, `Flag`) che identificano visivamente ogni tipologia di evento nel weekend.
+- **Localizzazione Avanzata**: Formattazione date e orari in standard italiano (`Giorno dd/MM/yyyy HH:mm`) con supporto per il Lunedì come inizio settimana.
+- **Potenziamento Test Suite**: Raggiunta la quota di **81 unit test** (copertura incrementata del 50%) che validano meticolosamente ogni aspetto della business logic, del parsing e del rendering temporale.
+- **Visual Circuit Enhancement**: Immagine del tracciato ingrandita, centrata e ottimizzata per l'alta definizione senza sgranature, con effetti di profondità dinamici.
+- **Pit Stop Loader 2.0**: Nuova interfaccia di caricamento con animazioni fluide del meccanico e della gomma, integrata con messaggi di stato dinamici per un feedback utente immediato.
 - **Restyling UI "Pro"**: Implementato un nuovo design avanzato ispirato alla Formula 1 con effetti di Glassmorphism, Neon Glow e animazioni fluide per un'esperienza utente più immersiva.
+- **Pulizia Cache Locale**: Rimossi definitivamente i vecchi file fisici `calendar.json` e `drivers.json`. L'applicazione ora si appoggia interamente e in modo esclusivo a MongoDB Atlas anche per le cache di piloti e calendario, garantendo la totale persistenza su Render.com senza perdite di dati ai riavvii.
 - **Ottimizzazione Tipografica**: Sostituito il font 'Formula1 Wide' con la versione regolare in tutte le card e le etichette per eliminare l'effetto "stretchato" e migliorare la leggibilità dei dati.
 - **Riorganizzazione Controlli**: Spostati i pulsanti di reset e salvataggio dei pronostici sotto la griglia dei giocatori, impilandoli verticalmente e allineandoli allo stile del pulsante dei risultati per una maggiore coerenza visiva.
 - **Full-Width Action Buttons**: Aggiornati i pulsanti principali (Reset, Salva, Conferma) affinché occupino l'intera larghezza disponibile nel pannello, migliorando l'accessibilità sia su desktop che su mobile.

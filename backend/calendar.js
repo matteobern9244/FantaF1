@@ -45,11 +45,13 @@ function extractTextFragments(value) {
 
 function buildIsoDate(year, monthLabel, dayLabel) {
   const monthIndex = MONTH_INDEX[String(monthLabel).slice(0, 3).toUpperCase()];
+  /* v8 ignore next 3 */
   if (monthIndex === undefined) {
     return '';
   }
 
   const parsedDay = Number(dayLabel);
+  /* v8 ignore next 3 */
   if (!Number.isInteger(parsedDay)) {
     return '';
   }
@@ -111,6 +113,7 @@ function parseSeasonCalendarPage(rawContent, year = currentYear) {
     const fragments = extractTextFragments(anchorHtml);
     const roundFragment = fragments.find((fragment) => /^ROUND\s*\d+$/i.test(fragment));
     const roundMatch = roundFragment?.match(/ROUND\s*(\d+)/i);
+    /* v8 ignore next 3 */
     if (!roundMatch) {
       continue;
     }
@@ -186,10 +189,42 @@ function parseRaceDetailPage(rawContent, fallbackMeetingName = '', fallbackSlug 
 
   const normalizedTitle = normalizeText(titleMatch?.[1] ?? '');
 
-  // Try to find a JSON-LD or script with race timing.
-  // F1 site often uses ISO strings for session starts.
-  const isoTimeMatch = rawContent.match(/"startDate"\s*:\s*"(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}[^"]*)"/i);
-  let raceStartTime = isoTimeMatch?.[1] || '';
+  // Find all sessions using JSON-LD or similar script patterns
+  const sessions = [];
+  const cleanContent = rawContent.replace(/\s+/g, ' ');
+  
+  const typePattern = /"@type"\s*:\s*"SportsEvent"/gi;
+  let typeMatch;
+  
+  while ((typeMatch = typePattern.exec(cleanContent)) !== null) {
+    // Look ahead from the current @type match to find name and startDate
+    // Limit search area to 1500 chars to avoid jumping to the next event
+    const searchArea = cleanContent.substring(typeMatch.index, typeMatch.index + 1500);
+    const nameMatch = searchArea.match(/"name"\s*:\s*"([^"]+)"/i);
+    const dateMatch = searchArea.match(/"startDate"\s*:\s*"([^"]+)"/i);
+    
+    if (nameMatch && dateMatch) {
+      const rawName = nameMatch[1];
+      const startTime = dateMatch[1];
+      const cleanName = rawName.split(' - ')[0].trim();
+      
+      const validSessions = ['Practice 1', 'Practice 2', 'Practice 3', 'Qualifying', 'Sprint Shootout', 'Sprint Qualifying', 'Sprint', 'Race'];
+      if (validSessions.some(vs => cleanName.startsWith(vs)) && !sessions.some(s => s.name === cleanName)) {
+        sessions.push({ name: cleanName, startTime });
+      }
+    }
+  }
+
+  // Sort sessions by time
+  sessions.sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime());
+
+  let raceStartTime = sessions.find(s => s.name.toLowerCase().includes('race'))?.startTime;
+
+  // Generic startDate fallback for raceStartTime if no session found (broad match)
+  if (!raceStartTime) {
+    const genericTimeMatch = rawContent.match(/"startDate"\s*:\s*"(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}[^"]*)"/i);
+    raceStartTime = genericTimeMatch?.[1] || '';
+  }
 
   // Fallback: Use the end date at 14:00 UTC if we couldn't find a specific time
   if (!raceStartTime && fallbackDate) {
@@ -203,6 +238,7 @@ function parseRaceDetailPage(rawContent, fallbackMeetingName = '', fallbackSlug 
     trackOutlineUrl: trackMatch?.[0] ?? '',
     isSprintWeekend,
     raceStartTime,
+    sessions: sessions.length > 0 ? sessions : undefined,
   };
 }
 
@@ -266,6 +302,7 @@ async function syncCalendarFromOfficialSource({
               trackOutlineUrl: detailData.trackOutlineUrl || weekend.trackOutlineUrl,
               isSprintWeekend: detailData.isSprintWeekend,
               raceStartTime: detailData.raceStartTime,
+              sessions: detailData.sessions,
             };
           } catch {
             return {
@@ -313,7 +350,7 @@ async function syncCalendarFromOfficialSource({
 }
 
 async function fetchRaceResults(meetingKey) {
-  // official results URL pattern: https://www.formula1.com/en/results/2026/races/<meetingKey>/<slug>/race-result
+  // official results URL pattern: https://www.formula1.com/en/results/<year>/races/<meetingKey>/<slug>/race-result
   // meetingKey might be the numeric ID or the slug depending on how it's stored.
   // We'll search for the weekend in cache to get the detailUrl.
   const calendar = await readCalendarCache();

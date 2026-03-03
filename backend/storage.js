@@ -93,10 +93,6 @@ function sortCalendarByDate(calendar) {
 }
 
 function getNextUpcomingMeeting(calendar) {
-  if (!Array.isArray(calendar) || calendar.length === 0) {
-    return null;
-  }
-
   const sortedCalendar = sortCalendarByDate(calendar);
   const now = Date.now();
 

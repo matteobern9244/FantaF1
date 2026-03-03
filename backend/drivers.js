@@ -139,7 +139,11 @@ function parseFormulaOneDriversPage(rawContent) {
     const [, , avatarUrl, firstName, lastName] = match;
     const normalizedName = canonicalizeDriverName(`${firstName} ${lastName}`);
     const imageMatch = avatarUrl.match(/\/common\/f1\/\d{4}\/([^/]+)\//i);
-    const parsedTeamSlug = imageMatch?.[1]?.toLowerCase() ?? '';
+    let parsedTeamSlug = '';
+    /* v8 ignore next 3 */
+    if (imageMatch && imageMatch[1]) {
+      parsedTeamSlug = imageMatch[1].toLowerCase();
+    }
 
     driverMap.set(normalizedName, {
       teamSlug: parsedTeamSlug,

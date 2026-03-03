@@ -10,6 +10,10 @@ import {
   Trash2,
   Trophy,
   User,
+  Timer,
+  Zap,
+  FastForward,
+  Gauge,
 } from 'lucide-react';
 import './App.css';
 import {
@@ -23,7 +27,13 @@ import {
   visibleAppTitle,
 } from './constants';
 import type { AppData, Driver, Prediction, PredictionKey, RaceWeekend, UserData } from './types';
-import { getNextUpcomingRace, getRaceByMeetingKey, sortCalendarByRound } from './utils/calendar';
+import {
+  formatSessionTime,
+  getNextUpcomingRace,
+  getRaceByMeetingKey,
+  sortCalendarByRound,
+  translateSessionName,
+} from './utils/calendar';
 import {
   buildRaceRecord,
   calculatePointsEarned,
@@ -153,6 +163,15 @@ function AppLogo() {
   );
 }
 
+function SessionIcon({ name, size = 14 }: { name: string; size?: number }) {
+  const n = name.toLowerCase();
+  if (n.includes('practice')) return <Timer size={size} />;
+  if (n.includes('qualifying') || n.includes('shootout')) return <Zap size={size} />;
+  if (n.includes('sprint')) return <FastForward size={size} />;
+  if (n.includes('race')) return <Flag size={size} />;
+  return <Gauge size={size} />;
+}
+
 function App() {
   const [users, setUsers] = useState<UserData[]>([]);
   const [history, setHistory] = useState<AppData['history']>([]);
@@ -166,6 +185,7 @@ function App() {
     historyIndex: number;
   } | null>(null);
   const [loading, setLoading] = useState(true);
+  const [loadingMessage, setLoadingMessage] = useState('Preparazione dei box...');
   const [loadError, setLoadError] = useState('');
   const [showTooltip, setShowTooltip] = useState(false);
 
@@ -205,6 +225,7 @@ function App() {
     let isCancelled = false;
 
     async function loadAppState() {
+      setLoadingMessage('Sincronizzazione telemetria e piloti in corso...');
       const [dataResult, driversResult, calendarResult] = await Promise.allSettled([
         fetchWithRetry<AppData>(dataApiUrl),
         fetchWithRetry<Driver[]>(driversApiUrl),
@@ -214,6 +235,8 @@ function App() {
       if (isCancelled) {
         return;
       }
+
+      setLoadingMessage('Configurazione assetto weekend...');
 
       const loadedDrivers =
         driversResult.status === 'fulfilled' ? driversResult.value : [];
@@ -613,12 +636,12 @@ function App() {
     return (
       <div className="loading-shell">
         <div className="pitstop-loader">
-          <div className="speech-bubble">
-            Sto tentanto di caricare il calendario delle gare...
-          </div>
           <div className="mechanic-container">
             <img src={pitstopIcon} alt="Pitstop mechanic" className="mechanic-icon" />
             <img src={tireIcon} alt="Spinning tire" className="tire-icon spin" />
+          </div>
+          <div className="speech-bubble">
+            {loadingMessage}
           </div>
         </div>
       </div>
@@ -690,21 +713,45 @@ function App() {
           <section className="hero-card next-race-card">
             <div className="card-heading">
               <CalendarDays size={18} />
-              <span>{uiText.headings.nextRace}</span>
+              <span>
+                {selectedRace?.meetingKey === nextUpcomingRace?.meetingKey
+                  ? uiText.headings.nextRace
+                  : uiText.labels.selectedRace}
+              </span>
             </div>
-            {nextUpcomingRace ? (
-              <>
-                <strong>{nextUpcomingRace.grandPrixTitle}</strong>
-                <span>{nextUpcomingRace.dateRangeLabel}</span>
-                <span>
-                  {uiText.labels.calendarRound} {nextUpcomingRace.roundNumber}
-                </span>
-                <span className={`race-badge ${nextUpcomingRace.isSprintWeekend ? 'sprint' : ''}`}>
-                  {nextUpcomingRace.isSprintWeekend
-                    ? uiText.calendar.sprintBadge
-                    : uiText.calendar.raceBadge}
-                </span>
-              </>
+            {selectedRace ? (
+              <div className="next-race-content">
+                <div className="next-race-main">
+                  <strong>{selectedRace.grandPrixTitle}</strong>
+                  <span>{selectedRace.dateRangeLabel}</span>
+                  <span className="round-label">
+                    {uiText.labels.calendarRound} {selectedRace.roundNumber}
+                  </span>
+                  <span className={`race-badge ${selectedRace.isSprintWeekend ? 'sprint' : ''}`}>
+                    {selectedRace.isSprintWeekend
+                      ? uiText.calendar.sprintBadge
+                      : uiText.calendar.raceBadge}
+                  </span>
+                </div>
+                
+                {selectedRace.sessions && selectedRace.sessions.length > 0 ? (
+                  <div className="session-schedule">
+                    {selectedRace.sessions.map((session, idx) => (
+                      <div key={`${session.name}-${idx}`} className="session-row">
+                        <div className="session-name-group">
+                          <SessionIcon name={session.name} size={14} />
+                          <span className="session-name">{translateSessionName(session.name)}</span>
+                        </div>
+                        <span className="session-time">{formatSessionTime(session.startTime)}</span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="session-schedule">
+                    <p className="sidebar-note">Orari in fase di sincronizzazione...</p>
+                  </div>
+                )}
+              </div>
             ) : (
               <span>{uiText.calendar.empty}</span>
             )}
@@ -891,17 +938,19 @@ function App() {
 
             {selectedRace ? (
               <div className="selected-race-banner">
-                <div>
+                <div className="selected-race-info">
                   <span className="eyebrow">{uiText.labels.selectedRace}</span>
                   <strong>{selectedRace.grandPrixTitle}</strong>
                   <span>{selectedRace.dateRangeLabel}</span>
                 </div>
                 {selectedRace.trackOutlineUrl ? (
-                  <img
-                    alt={selectedRace.meetingName}
-                    className="track-map"
-                    src={selectedRace.trackOutlineUrl}
-                  />
+                  <div className="track-map-container">
+                    <img
+                      alt={selectedRace.meetingName}
+                      className="track-map"
+                      src={selectedRace.trackOutlineUrl}
+                    />
+                  </div>
                 ) : null}
               </div>
             ) : (

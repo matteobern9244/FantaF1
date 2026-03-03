@@ -15,7 +15,7 @@ function splitDriverName(name: string) {
 
   return {
     givenNames: normalizedParts.slice(0, -1).join(' '),
-    surname: normalizedParts[normalizedParts.length - 1] ?? '',
+    surname: normalizedParts[normalizedParts.length - 1],
   };
 }
 

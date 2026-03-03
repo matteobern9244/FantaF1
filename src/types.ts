@@ -30,6 +30,11 @@ export interface RaceRecord {
   >;
 }
 
+export interface Session {
+  name: string;
+  startTime: string; // ISO format
+}
+
 export interface RaceWeekend {
   meetingKey: string;
   meetingName: string;
@@ -43,6 +48,7 @@ export interface RaceWeekend {
   startDate?: string;
   endDate?: string;
   raceStartTime?: string;
+  sessions?: Session[];
 }
 
 export interface UserData {

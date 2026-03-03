@@ -41,3 +41,36 @@ export function getRaceByMeetingKey(
 ): RaceWeekend | null {
   return calendar.find((weekend) => weekend.meetingKey === meetingKey) ?? null;
 }
+
+export function translateSessionName(name: string) {
+  const translations: Record<string, string> = {
+    'Practice 1': 'Prove Libere 1',
+    'Practice 2': 'Prove Libere 2',
+    'Practice 3': 'Prove Libere 3',
+    'Qualifying': 'Qualifiche',
+    'Sprint Shootout': 'Qualifiche Sprint',
+    'Sprint Qualifying': 'Qualifiche Sprint',
+    'Sprint': 'Gara Sprint',
+    'Race': 'Gara',
+    'Grand Prix': 'Gara',
+  };
+
+  const cleanName = name.split(' - ')[0].trim();
+  return translations[cleanName] || translations[name] || name;
+}
+
+export function formatSessionTime(isoString: string) {
+  const date = new Date(isoString);
+  if (isNaN(date.getTime())) return '';
+  
+  const dayName = date.toLocaleDateString('it-IT', { weekday: 'long' });
+  const capitalizedDay = dayName.charAt(0).toUpperCase() + dayName.slice(1);
+  
+  const day = date.getDate().toString().padStart(2, '0');
+  const month = (date.getMonth() + 1).toString().padStart(2, '0');
+  const year = date.getFullYear();
+  const hours = date.getHours().toString().padStart(2, '0');
+  const minutes = date.getMinutes().toString().padStart(2, '0');
+  
+  return `${capitalizedDay} ${day}/${month}/${year} ${hours}:${minutes}`;
+}
