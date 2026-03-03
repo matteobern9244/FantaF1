@@ -820,16 +820,6 @@ function App() {
                   {uiText.headings.predictionEntry} ({uiText.labels.adminPrefix}: {app.adminName})
                 </h2>
               </div>
-              <div className="panel-actions">
-                <button className="secondary-button" onClick={clearAllPredictions} type="button" disabled={raceLocked}>
-                  <Trash2 size={16} />
-                  {uiText.buttons.clear}
-                </button>
-                <button className="primary-button compact-button" onClick={handleSavePredictions} type="button" disabled={raceLocked}>
-                  <Save size={16} />
-                  {uiText.buttons.savePredictions}
-                </button>
-              </div>
             </div>
 
             {raceLocked && <p className="locked-banner">{uiText.calendar.raceLocked}</p>}
@@ -867,6 +857,27 @@ function App() {
                   ))}
                 </article>
               ))}
+            </div>
+
+            <div className="stacked-actions">
+              <button
+                className="secondary-button"
+                onClick={clearAllPredictions}
+                type="button"
+                disabled={raceLocked}
+              >
+                <Trash2 size={16} />
+                {uiText.buttons.clear}
+              </button>
+              <button
+                className="primary-button"
+                onClick={handleSavePredictions}
+                type="button"
+                disabled={raceLocked}
+              >
+                <Save size={16} />
+                {uiText.buttons.savePredictions}
+              </button>
             </div>
           </section>
 

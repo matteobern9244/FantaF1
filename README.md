@@ -124,7 +124,14 @@ L'applicazione include una suite di **54 unit test** strutturali che coprono:
 
 ---
 
-### Ultime Modifiche (v1.3.1)
+### Ultime Modifiche (v1.3.2)
+- **Restyling UI "Pro"**: Implementato un nuovo design avanzato ispirato alla Formula 1 con effetti di Glassmorphism, Neon Glow e animazioni fluide per un'esperienza utente più immersiva.
+- **Ottimizzazione Tipografica**: Sostituito il font 'Formula1 Wide' con la versione regolare in tutte le card e le etichette per eliminare l'effetto "stretchato" e migliorare la leggibilità dei dati.
+- **Riorganizzazione Controlli**: Spostati i pulsanti di reset e salvataggio dei pronostici sotto la griglia dei giocatori, impilandoli verticalmente e allineandoli allo stile del pulsante dei risultati per una maggiore coerenza visiva.
+- **Full-Width Action Buttons**: Aggiornati i pulsanti principali (Reset, Salva, Conferma) affinché occupino l'intera larghezza disponibile nel pannello, migliorando l'accessibilità sia su desktop che su mobile.
+- **Protocollo Automazione Browser**: Implementato un nuovo sistema di chiusura e apertura intelligente delle schede del browser (Chrome) durante le operazioni di stop e riavvio dell'applicazione.
+
+### Modifiche Precedenti (v1.3.1)
 - **Fix Pulsanti Reset e Salva (Render)**: Risolto il problema che impediva il salvataggio dei dati in produzione su Render. La validazione lato server è stata resa più flessibile per accettare nomi partecipanti personalizzati nel database, evitando errori di blocco (400 Bad Request).
 - **Ottimizzazione Deploy**: Spostata la sincronizzazione dei dati (piloti e calendario) in background all'avvio del server. Questo elimina i timeout durante il deploy su Render, garantendo che l'applicazione sia immediatamente disponibile.
 - **Risoluzione Problemi Mobile & Safari**: Corretto il parsing delle date per garantire piena compatibilità con Safari su iOS. Ora il blocco automatico delle gare e la gestione dei weekend funzionano correttamente su tutti i dispositivi.
