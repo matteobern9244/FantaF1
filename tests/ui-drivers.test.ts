@@ -13,7 +13,7 @@ describe('UI driver formatting', () => {
     expect(formatDriverDisplayName('Max Verstappen')).toBe('Verstappen Max');
     expect(formatDriverDisplayName('Lewis Hamilton')).toBe('Hamilton Lewis');
     expect(formatDriverDisplayName('Cher')).toBe('Cher');
-    expect(formatDriverDisplayName(undefined as any)).toBe('');
+    expect(formatDriverDisplayName(undefined as unknown as string)).toBe('');
     expect(formatDriverDisplayName('   ')).toBe('');
   });
 

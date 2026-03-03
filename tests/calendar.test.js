@@ -111,7 +111,7 @@ describe('calendar parsing and fallback', () => {
     let fetchCount = 0;
 
     const result = await syncCalendarFromOfficialSource({
-      fetchHtmlImpl: async (url) => {
+      fetchHtmlImpl: async () => {
         fetchCount++;
         if (fetchCount === 1) return fakeSeasonHtml;
         if (fetchCount === 2) throw new Error('Detail offline'); // first detail fails
