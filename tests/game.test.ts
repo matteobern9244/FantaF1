@@ -33,8 +33,9 @@ describe('game utils', () => {
   });
 
   it('builds a race record and updates total points', () => {
+    const currentYear = new Date().getFullYear();
     const { record, updatedUsers } = buildRaceRecord(
-      'Chinese Grand Prix 2026',
+      `Chinese Grand Prix ${currentYear}`,
       '1280',
       {
         first: 'ver',
@@ -60,10 +61,10 @@ describe('game utils', () => {
         third: 2,
         pole: 1,
       },
-      () => '01/03/2026',
+      () => `01/03/${currentYear}`,
     );
 
-    expect(record.gpName).toBe('Chinese Grand Prix 2026');
+    expect(record.gpName).toBe(`Chinese Grand Prix ${currentYear}`);
     expect(record.meetingKey).toBe('1280');
     expect(record.results).toEqual({
       first: 'ver',
@@ -91,13 +92,14 @@ describe('game utils', () => {
   });
 
   it('rebuilds total points from race history and resets current predictions', () => {
+    const currentYear = new Date().getFullYear();
     const rebuiltUsers = rebuildUsersFromHistory(
       ['Player 3', 'Player 2', 'Player 1'],
       [
         {
-          gpName: 'Australian Grand Prix 2026',
+          gpName: `Australian Grand Prix ${currentYear}`,
           meetingKey: '1279',
-          date: '01/03/2026',
+          date: `01/03/${currentYear}`,
           results: {
             first: 'nor',
             second: 'ant',
@@ -121,9 +123,9 @@ describe('game utils', () => {
           },
         },
         {
-          gpName: 'Chinese Grand Prix 2026',
+          gpName: `Chinese Grand Prix ${currentYear}`,
           meetingKey: '1280',
-          date: '15/03/2026',
+          date: `15/03/${currentYear}`,
           results: createEmptyPrediction(),
           userPredictions: {
             'Player 3': {

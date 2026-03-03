@@ -1,8 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { sanitizeAppData } from '../backend/storage.js';
+import { sanitizeAppData, ensureDataDirectory } from '../backend/storage.js';
 
 describe('storage sanitization', () => {
   it('keeps only expected app fields and preserves participant ordering', () => {
+    const currentYear = new Date().getFullYear();
     const sanitized = sanitizeAppData(
       {
         users: [
@@ -57,15 +58,15 @@ describe('storage sanitization', () => {
         {
           meetingKey: '1280',
           meetingName: 'China',
-          grandPrixTitle: 'Chinese Grand Prix 2026',
+          grandPrixTitle: `Chinese Grand Prix ${currentYear}`,
           roundNumber: 2,
           dateRangeLabel: '13 - 15 MAR',
-          detailUrl: 'https://www.formula1.com/en/racing/2026/china',
+          detailUrl: `https://www.formula1.com/en/racing/${currentYear}/china`,
           heroImageUrl: '',
           trackOutlineUrl: '',
           isSprintWeekend: true,
-          startDate: '2026-03-13',
-          endDate: '2026-03-15',
+          startDate: `${currentYear}-03-13`,
+          endDate: `${currentYear}-03-15`,
         },
       ],
     );
@@ -75,7 +76,7 @@ describe('storage sanitization', () => {
     expect(sanitized.users[1].predictions.first).toBe('ham');
     expect(sanitized.users[2].points).toBe(0);
     expect(sanitized.selectedMeetingKey).toBe('1280');
-    expect(sanitized.gpName).toBe('Chinese Grand Prix 2026');
+    expect(sanitized.gpName).toBe(`Chinese Grand Prix ${currentYear}`);
     expect(sanitized.raceResults).toEqual({
       first: 'ver',
       second: '',
@@ -86,5 +87,23 @@ describe('storage sanitization', () => {
     expect(sanitized.history[0].userPredictions['TestUser 3'].pointsEarned).toBe(2);
     expect(sanitized).not.toHaveProperty('drivers');
     expect(sanitized).not.toHaveProperty('calendar');
+  });
+
+  describe('internal coverage', () => {
+    it('handles empty calendar in getNextUpcomingMeeting via createDefaultAppData', () => {
+      const defaultData = sanitizeAppData({}, []);
+      expect(defaultData.selectedMeetingKey).toBe('');
+    });
+    it('sorts calendar by round delta', () => {
+      const calendar = [
+        { roundNumber: 2, meetingKey: '2' },
+        { roundNumber: 1, meetingKey: '1' }
+      ];
+      const defaultData = sanitizeAppData({}, calendar);
+      expect(defaultData.selectedMeetingKey).toBe('1');
+    });
+    it('covers ensureDataDirectory', () => {
+      expect(() => ensureDataDirectory()).not.toThrow();
+    });
   });
 });

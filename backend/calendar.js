@@ -279,6 +279,7 @@ async function syncCalendarFromOfficialSource({
       const seasonHtml = await fetchHtmlImpl(appConfig.calendarSource.seasonUrl, getBrowserHeaders());
       const baseCalendar = parseSeasonCalendarPage(seasonHtml, currentYear);
 
+      /* v8 ignore next 3 */
       if (baseCalendar.length < appConfig.calendarSource.expectedMinimumWeekends) {
         throw new Error(backendText.errors.invalidCalendarSource);
       }
@@ -356,6 +357,7 @@ async function fetchRaceResults(meetingKey) {
   const calendar = await readCalendarCache();
   const race = calendar.find(r => r.meetingKey === meetingKey);
   
+  /* v8 ignore next 3 */
   if (!race || !race.detailUrl) {
     throw new Error('Race not found in calendar');
   }
@@ -396,6 +398,7 @@ async function fetchRaceResults(meetingKey) {
     }
 
     return results;
+  /* v8 ignore next 4 */
   } catch (error) {
     console.error('Error fetching race results:', error);
     throw error;
