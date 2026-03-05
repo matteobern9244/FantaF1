@@ -6,6 +6,11 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { syncCalendarFromOfficialSource, sortCalendarByRound, fetchRaceResults } from './backend/calendar.js';
 import { appConfig, currentYear, formatConfigText } from './backend/config.js';
+import {
+  normalizeRuntimeEnvironment,
+  resolveMongoDatabaseName,
+  verifyMongoDatabaseName,
+} from './backend/database.js';
 import { sortDriversAlphabetically, syncDriversFromOfficialSource } from './backend/drivers.js';
 import {
   readAppData,
@@ -124,27 +129,24 @@ async function connectToDatabase() {
   if (!uri) {
     throw new Error('MONGODB_URI environment variable is not defined');
   }
-  
-  try {
-    // Robust extraction for Atlas SRV strings or standard URIs:
-    // 1. Remove query string (?...)
-    // 2. Remove trailing slash if present
-    // 3. Split by /
-    // 4. The last non-empty part is likely the database name
-    const baseUri = uri.split('?')[0].replace(/\/$/, '');
-    const parts = baseUri.split('/');
-    let dbName = parts[parts.length - 1];
 
-    // If dbName looks like a host (e.g. cluster.mongodb.net) or is empty, 
-    // it means it's missing from the URI.
-    if (!dbName || dbName.includes('.') || dbName.includes(':')) {
-      dbName = undefined; // Let Mongoose use default or what's in the string
-    }
+  try {
+    const runtimeEnvironment = normalizeRuntimeEnvironment(process.env.NODE_ENV);
+    const targetDatabaseName = resolveMongoDatabaseName({
+      nodeEnv: process.env.NODE_ENV,
+      explicitDbName: process.env.MONGODB_DB_NAME,
+    });
 
     await mongoose.connect(uri, {
-      dbName: dbName,
+      dbName: targetDatabaseName,
     });
-    console.log(`[Database] Connected to MongoDB Atlas - Target: ${mongoose.connection.db.databaseName}`);
+
+    const connectedDatabaseName = mongoose.connection.db?.databaseName;
+    verifyMongoDatabaseName(connectedDatabaseName, targetDatabaseName);
+
+    console.log(
+      `[Database] Connected to MongoDB Atlas - Environment: ${runtimeEnvironment} - Target: ${connectedDatabaseName}`,
+    );
   } catch (error) {
     console.error('[Database] MongoDB connection error:', error);
     process.exit(1);

@@ -29,7 +29,7 @@ import {
 } from './constants';
 import type { AppData, Driver, Prediction, PredictionKey, RaceWeekend, UserData } from './types';
 import {
-  formatSessionTime,
+  formatSessionTimeParts,
   getNextUpcomingRace,
   getRaceByMeetingKey,
   sortCalendarByRound,
@@ -745,15 +745,36 @@ function App() {
                 
                 {selectedRace.sessions && selectedRace.sessions.length > 0 ? (
                   <div className="session-schedule">
-                    {selectedRace.sessions.map((session, idx) => (
-                      <div key={`${session.name}-${idx}`} className="session-row">
-                        <div className="session-name-group">
-                          <SessionIcon name={session.name} size={14} />
-                          <span className="session-name">{translateSessionName(session.name)}</span>
+                    {selectedRace.sessions.map((session, idx) => {
+                      const sessionTime = formatSessionTimeParts(session.startTime);
+
+                      return (
+                        <div key={`${session.name}-${idx}`} className="session-row">
+                          <div className="session-name-group">
+                            <SessionIcon name={session.name} size={14} />
+                            <span className="session-name">{translateSessionName(session.name)}</span>
+                          </div>
+                          <div
+                            aria-label={sessionTime?.label}
+                            className={`session-time ${sessionTime ? '' : 'session-time-empty'}`.trim()}
+                          >
+                            {sessionTime ? (
+                              <>
+                                <span className="session-date-line">
+                                  <span className="session-day">{sessionTime.dayLabel}</span>
+                                  <span className="session-calendar-date">
+                                    {sessionTime.dateLabel}
+                                  </span>
+                                </span>
+                                <span className="session-clock">{sessionTime.timeLabel}</span>
+                              </>
+                            ) : (
+                              <span className="session-calendar-date">-</span>
+                            )}
+                          </div>
                         </div>
-                        <span className="session-time">{formatSessionTime(session.startTime)}</span>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 ) : (
                   <div className="session-schedule">
@@ -775,8 +796,11 @@ function App() {
               {liveLeaderboardUsers.map((user) => (
                 <div key={`hero-live-${user.name}`} className="live-row">
                   <span>{user.name}</span>
-                  <strong>
-                    {user.points + calculatePotentialPoints(user.predictions)} {uiText.pointsSuffix}
+                  <strong className="live-score">
+                    <span className="live-score-value">
+                      {user.points + calculatePotentialPoints(user.predictions)}
+                    </span>
+                    <span className="live-score-suffix">{uiText.pointsSuffix}</span>
                   </strong>
                 </div>
               ))}
@@ -886,8 +910,11 @@ function App() {
                   <div className="user-card-head">
                     <h3>{user.name}</h3>
                     <span className="points-preview">
-                      {uiText.labels.potential}: {calculatePotentialPoints(user.predictions)}{' '}
-                      {uiText.pointsSuffix}
+                      <span className="points-preview-label">{uiText.labels.potential}:</span>
+                      <span className="points-preview-value">
+                        {calculatePotentialPoints(user.predictions)}
+                      </span>
+                      <span className="points-preview-suffix">{uiText.pointsSuffix}</span>
                     </span>
                   </div>
 

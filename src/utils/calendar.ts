@@ -1,8 +1,20 @@
 import type { RaceWeekend } from '../types';
 
+export interface SessionTimeParts {
+  label: string;
+  dayLabel: string;
+  dateLabel: string;
+  timeLabel: string;
+}
+
 function getDateValue(weekend: RaceWeekend) {
   const parsedValue = Date.parse(weekend.startDate ?? weekend.endDate ?? '');
   return Number.isNaN(parsedValue) ? Number.POSITIVE_INFINITY : parsedValue;
+}
+
+function getSessionDate(isoString: string) {
+  const date = new Date(isoString);
+  return Number.isNaN(date.getTime()) ? null : date;
 }
 
 export function sortCalendarByRound(calendar: RaceWeekend[]): RaceWeekend[] {
@@ -60,17 +72,30 @@ export function translateSessionName(name: string) {
 }
 
 export function formatSessionTime(isoString: string) {
-  const date = new Date(isoString);
-  if (isNaN(date.getTime())) return '';
-  
+  const parts = formatSessionTimeParts(isoString);
+  return parts?.label ?? '';
+}
+
+export function formatSessionTimeParts(isoString: string): SessionTimeParts | null {
+  const date = getSessionDate(isoString);
+  if (!date) {
+    return null;
+  }
+
   const dayName = date.toLocaleDateString('it-IT', { weekday: 'long' });
   const capitalizedDay = dayName.charAt(0).toUpperCase() + dayName.slice(1);
-  
   const day = date.getDate().toString().padStart(2, '0');
   const month = (date.getMonth() + 1).toString().padStart(2, '0');
   const year = date.getFullYear();
   const hours = date.getHours().toString().padStart(2, '0');
   const minutes = date.getMinutes().toString().padStart(2, '0');
-  
-  return `${capitalizedDay} ${day}/${month}/${year} ${hours}:${minutes}`;
+  const dateLabel = `${day}/${month}/${year}`;
+  const timeLabel = `${hours}:${minutes}`;
+
+  return {
+    label: `${capitalizedDay} ${dateLabel} ${timeLabel}`,
+    dayLabel: capitalizedDay,
+    dateLabel,
+    timeLabel,
+  };
 }

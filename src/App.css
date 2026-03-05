@@ -391,10 +391,20 @@ select,
   gap: 10px;
 }
 
+.next-race-card {
+  min-width: 0;
+  container-type: inline-size;
+}
+
 .next-race-content {
+  min-width: 0;
   display: flex;
   flex-direction: column;
   gap: 16px;
+}
+
+.next-race-main {
+  min-width: 0;
 }
 
 .next-race-main strong,
@@ -406,6 +416,7 @@ select,
   font-size: clamp(1.08rem, 1.6vw, 1.32rem);
   line-height: 1.15;
   margin-bottom: 8px;
+  overflow-wrap: anywhere;
 }
 
 .next-race-main span + span {
@@ -413,6 +424,7 @@ select,
 }
 
 .session-schedule {
+  min-width: 0;
   display: grid;
   gap: 8px;
   padding-top: 12px;
@@ -420,39 +432,68 @@ select,
 }
 
 .session-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+  min-width: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
   font-size: 0.8rem;
-  gap: 12px;
+  gap: 8px 14px;
 }
 
 .session-name-group {
+  min-width: 0;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 10px;
   color: var(--muted);
 }
 
 .session-name-group svg {
+  margin-top: 2px;
   flex-shrink: 0;
   color: var(--red);
   filter: drop-shadow(0 0 4px rgba(225, 6, 0, 0.2));
 }
 
 .session-name {
+  min-width: 0;
   font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.02em;
+  overflow-wrap: anywhere;
 }
 
 .session-time {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
   font-family: 'Formula1', sans-serif;
   color: var(--gold);
   font-weight: 700;
   font-size: 0.85rem;
   letter-spacing: 0.02em;
+  text-align: right;
+}
+
+.session-date-line {
+  min-width: 0;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.session-day,
+.session-calendar-date,
+.session-clock {
+  font-family: 'Formula1', sans-serif;
   white-space: nowrap;
+}
+
+.session-time-empty {
+  justify-self: end;
 }
 
 .race-badge,
@@ -637,6 +678,7 @@ select:focus {
 }
 
 .panel-head {
+  min-width: 0;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -770,6 +812,7 @@ select:focus {
 }
 
 .user-card-head {
+  min-width: 0;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -789,6 +832,9 @@ select:focus {
 }
 
 .points-preview {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   padding: 6px 14px;
   border-radius: 999px;
   background: var(--gold-glow);
@@ -797,6 +843,11 @@ select:focus {
   font-size: 0.85rem;
   font-weight: 700;
   border: 1px solid rgba(255, 184, 0, 0.2);
+}
+
+.points-preview-value,
+.points-preview-suffix {
+  font-family: 'Formula1', sans-serif;
 }
 
 .field-row {
@@ -812,6 +863,7 @@ select:focus {
 }
 
 .selected-race-banner {
+  min-width: 0;
   margin-bottom: 24px;
   padding: var(--panel-padding);
   border-radius: 20px;
@@ -825,9 +877,14 @@ select:focus {
 }
 
 .selected-race-info {
+  min-width: 0;
   display: flex;
   flex-direction: column;
   gap: 4px;
+}
+
+.selected-race-info strong {
+  overflow-wrap: anywhere;
 }
 
 .track-map-container {
@@ -859,6 +916,7 @@ select:focus {
 }
 
 .history-card {
+  min-width: 0;
   padding: var(--panel-padding);
   border-radius: 24px;
   border: 1px solid var(--line);
@@ -872,6 +930,7 @@ select:focus {
 }
 
 .history-top-row {
+  min-width: 0;
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
@@ -882,18 +941,48 @@ select:focus {
   margin-bottom: 12px;
 }
 
+.history-top-row > div:first-child {
+  min-width: 0;
+}
+
 .history-top strong {
   font-family: 'Formula1', sans-serif;
   font-weight: 700;
   font-size: 1.1rem;
   color: var(--ink);
   letter-spacing: 0.02em;
+  overflow-wrap: anywhere;
 }
 
 .history-summary {
   color: var(--muted);
   font-size: 0.9rem;
   font-style: italic;
+}
+
+.history-actions {
+  min-width: 0;
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.compact-button {
+  min-height: 40px;
+  padding: 10px 16px;
+  font-size: 0.78rem;
+}
+
+.danger-button {
+  border-color: rgba(225, 6, 0, 0.28);
+  background: rgba(225, 6, 0, 0.08);
+  color: #ffb5b0;
+}
+
+.danger-button:hover:not(:disabled) {
+  background: rgba(225, 6, 0, 0.14);
+  border-color: rgba(225, 6, 0, 0.4);
 }
 
 .rule-row,
@@ -922,8 +1011,18 @@ select:focus {
   border: 1px solid rgba(225, 6, 0, 0.2);
 }
 
+.live-score {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.live-score-value,
+.live-score-suffix {
+  font-family: 'Formula1', sans-serif;
+}
+
 .live-row strong {
-  font-family: 'Formula1Digits', sans-serif;
   color: var(--gold);
   font-size: 1rem;
 }
@@ -933,6 +1032,7 @@ select:focus {
   margin: 0;
   color: var(--muted);
   font-size: 0.9rem;
+  overflow-wrap: anywhere;
 }
 
 .app-footer {
@@ -951,6 +1051,23 @@ select:focus {
   opacity: 0.7;
   font-family: Arial, sans-serif;
   font-size: 0.76rem;
+}
+
+@container (max-width: 22rem) {
+  .session-row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .session-time,
+  .session-time-empty {
+    justify-self: start;
+    align-items: flex-start;
+    text-align: left;
+  }
+
+  .session-date-line {
+    justify-content: flex-start;
+  }
 }
 
 @keyframes spin {
@@ -1025,6 +1142,7 @@ select:focus {
   .history-top-row,
   .selected-race-banner,
   .user-card-head,
+  .history-actions,
   .rule-row,
   .spotlight-row,
   .live-row {

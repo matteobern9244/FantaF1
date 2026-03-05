@@ -5,6 +5,7 @@ import {
   getRaceByMeetingKey,
   translateSessionName,
   formatSessionTime,
+  formatSessionTimeParts,
 } from '../src/utils/calendar';
 import type { RaceWeekend } from '../src/types';
 
@@ -164,6 +165,23 @@ describe('UI Calendar Utils', () => {
 
     it('returns empty string for invalid dates', () => {
       expect(formatSessionTime('invalid')).toBe('');
+    });
+  });
+
+  describe('formatSessionTimeParts', () => {
+    it('returns structured labels for responsive rendering', () => {
+      const iso = `${currentYear}-03-06T10:30:00Z`;
+      const parts = formatSessionTimeParts(iso);
+
+      expect(parts).not.toBeNull();
+      expect(parts?.dateLabel).toBe(`06/03/${currentYear}`);
+      expect(parts?.timeLabel).toMatch(/^\d{2}:\d{2}$/);
+      expect(parts?.dayLabel.toLowerCase()).toMatch(/^(venerdì|friday)/);
+      expect(parts?.label).toBe(`${parts?.dayLabel} ${parts?.dateLabel} ${parts?.timeLabel}`);
+    });
+
+    it('returns null for invalid session times', () => {
+      expect(formatSessionTimeParts('invalid')).toBeNull();
     });
   });
 });
