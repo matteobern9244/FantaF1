@@ -118,6 +118,9 @@ Changes in these areas require additional validation.
 - Never break existing persisted data structure silently.
 - Any schema change must be migration-safe.
 - Existing historical data must remain valid.
+- CHANGELOG.md is the canonical release history for this repository.
+- Every new application version, git tag, or release must update CHANGELOG.md in the same task.
+- package.json, CHANGELOG.md, git tags, and GitHub/production release state must remain aligned.
 
 ---
 

@@ -94,6 +94,7 @@ Before declaring completion:
 3. Build passes.
 4. Application starts successfully.
 5. No regression introduced.
+6. For versioning, tagging, or release tasks, CHANGELOG.md is updated and aligned with the published version state.
 
 If any step cannot be executed, clearly state what was not executed and why.
 
@@ -105,6 +106,8 @@ If any step cannot be executed, clearly state what was not executed and why.
 - Never push directly to production branches unless explicitly instructed.
 - Keep commits focused.
 - Update documentation if behavior changes.
+- For every new application version, git tag, or release, update CHANGELOG.md in the same task before commit, push, or publication.
+- Never create a version, tag, or release with CHANGELOG.md out of sync with the real release state.
 
 ---
 

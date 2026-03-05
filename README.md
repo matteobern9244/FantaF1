@@ -167,6 +167,7 @@ Se il database non contiene ancora stato applicativo, il backend costruisce uno 
 
 - Hero full-width con branding, titolo visibile configurabile, anno corrente dinamico e card riepilogative.
 - Se `VITE_APP_LOCAL_NAME` estende il titolo base `Fanta Formula 1`, la hero separa il titolo in due righe fisse: titolo base in prima riga e suffisso in seconda.
+- Il titolo hero usa un fit basato sulla larghezza reale del contenitore: sui desktop wide mantiene il massimo visivo corrente, mentre su viewport piu' strette riduce il `font-size` solo quanto necessario per restare interamente visibile senza clipping.
 - Card "Prossimo weekend" con badge Sprint/Standard, programma sessioni e orari formattati in italiano.
 - Classifica live calcolata come punti storici piu' proiezione del weekend selezionato.
 - Calendario stagionale con selettore e strip orizzontale dei weekend.
@@ -191,7 +192,7 @@ Se il database non contiene ancora stato applicativo, il backend costruisce uno 
 - Il frontend usa API relative (`/api/...`) per compatibilita' locale e produzione.
 - Il titolo visualizzato nell'hero usa `VITE_APP_LOCAL_NAME` se valorizzata, altrimenti il titolo base definito nel config applicativo.
 - Quando l'override hero inizia con il titolo base e aggiunge un suffisso, il frontend lo rende in due righe stabili per preservare leggibilita' e coerenza visiva.
-- Sotto `768px` il titolo hero puo' ridurre il `font-size` per restare interamente visibile; da `768px` in su usa il `clamp` principale desktop/tablet.
+- Il titolo hero usa un fit `container-based`: il `font-size` resta al massimo corrente quando la prima riga entra nel pannello e si riduce solo quando la larghezza utile non basta, indipendentemente dal breakpoint.
 - Il titolo della scheda browser e' invece impostato in `index.html` come `FantaF1 <anno corrente>`.
 
 ### Backend

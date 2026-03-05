@@ -5,9 +5,10 @@ Cronologia sintetica delle release documentate del progetto Fanta Formula 1.
 ## In sviluppo
 
 - Titolo hero reso deterministico su due righe quando `VITE_APP_LOCAL_NAME` estende il titolo base: prima riga `Fanta Formula 1`, seconda riga con il suffisso configurato.
-- Su viewport responsive stretti il titolo hero puo' ridurre il `font-size` solo sotto i breakpoint mobili per restare interamente visibile, senza alterare il comportamento desktop.
+- Il titolo hero usa ora un fit reale basato sulla larghezza del contenitore: mantiene il massimo visivo sui desktop larghi e riduce il `font-size` solo quanto necessario per evitare clipping su viewport medi e piccoli.
 - Introdotta la utility `src/utils/title.ts` per centralizzare la scomposizione del titolo hero e riusare una logica coerente tra runtime e test.
 - Aggiunti test unitari specifici sul parsing del titolo hero e ripristinata la coverage globale allo standard del repo sullo scope configurato (`100%` lines/statements/functions, branch sopra soglia).
+- Formalizzato in `AGENTS.md` e `PROJECT.md` l'obbligo di aggiornare sempre `CHANGELOG.md` per ogni nuova versione applicativa, tag git o release GitHub.
 
 ## v1.3.3 - Produzione attuale
 
