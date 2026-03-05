@@ -23,6 +23,7 @@ import {
   currentYear,
   dataApiUrl,
   driversApiUrl,
+  genericAppTitle,
   predictionFieldOrder,
   visibleAppTitle,
 } from './constants';
@@ -48,6 +49,7 @@ import {
   getDriverDisplayNameById,
   sortDriversBySurname,
 } from './utils/drivers';
+import { splitHeroTitle } from './utils/title';
 
 const { app, driversSource, participants, points, uiText } = appConfig;
 
@@ -118,6 +120,8 @@ function buildEmptyAppData(calendar: RaceWeekend[]): AppData {
     selectedMeetingKey: fallbackRace?.meetingKey ?? '',
   };
 }
+
+const heroTitle = splitHeroTitle(visibleAppTitle, genericAppTitle);
 
 function resolveSelectedRace(calendar: RaceWeekend[], selectedMeetingKey: string): RaceWeekend | null {
   return getRaceByMeetingKey(calendar, selectedMeetingKey) ?? getNextUpcomingRace(calendar);
@@ -688,7 +692,12 @@ function App() {
         <div className="hero-brand">
           <AppLogo />
           <p className="eyebrow">{uiText.headings.seasonTag}</p>
-          <h1>{visibleAppTitle}</h1>
+          <h1 aria-label={visibleAppTitle}>
+            <span className="hero-title-line">{heroTitle.primaryLine}</span>
+            {heroTitle.secondaryLine ? (
+              <span className="hero-title-line">{heroTitle.secondaryLine}</span>
+            ) : null}
+          </h1>
           <p className="subtitle">{currentYear}</p>
         </div>
 

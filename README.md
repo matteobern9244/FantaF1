@@ -166,6 +166,7 @@ Se il database non contiene ancora stato applicativo, il backend costruisce uno 
 ### Interfaccia
 
 - Hero full-width con branding, titolo visibile configurabile, anno corrente dinamico e card riepilogative.
+- Se `VITE_APP_LOCAL_NAME` estende il titolo base `Fanta Formula 1`, la hero separa il titolo in due righe fisse: titolo base in prima riga e suffisso in seconda.
 - Card "Prossimo weekend" con badge Sprint/Standard, programma sessioni e orari formattati in italiano.
 - Classifica live calcolata come punti storici piu' proiezione del weekend selezionato.
 - Calendario stagionale con selettore e strip orizzontale dei weekend.
@@ -189,6 +190,8 @@ Se il database non contiene ancora stato applicativo, il backend costruisce uno 
 - SPA React 18 + TypeScript + Vite.
 - Il frontend usa API relative (`/api/...`) per compatibilita' locale e produzione.
 - Il titolo visualizzato nell'hero usa `VITE_APP_LOCAL_NAME` se valorizzata, altrimenti il titolo base definito nel config applicativo.
+- Quando l'override hero inizia con il titolo base e aggiunge un suffisso, il frontend lo rende in due righe stabili per preservare leggibilita' e coerenza visiva.
+- Sotto `768px` il titolo hero puo' ridurre il `font-size` per restare interamente visibile; da `768px` in su usa il `clamp` principale desktop/tablet.
 - Il titolo della scheda browser e' invece impostato in `index.html` come `FantaF1 <anno corrente>`.
 
 ### Backend
@@ -341,6 +344,7 @@ Ogni weekend puo' includere:
   - in locale il default e' `3001`.
 - `VITE_APP_LOCAL_NAME`
   - override del titolo visualizzato nell'hero del frontend;
+  - se estende il titolo base `Fanta Formula 1`, la hero lo divide in due righe: base title sopra, suffisso sotto;
   - viene letta da Vite a build-time per il bundle frontend;
   - in produzione richiede rebuild/redeploy per avere effetto.
 
@@ -431,6 +435,7 @@ Lo script integrato:
   - `statements: 100`
 
 La suite copre business logic, storage MongoDB, sanitizzazione, parsing di piloti e calendario, risultati, formattazione UI e regressioni sui flussi principali.
+Include anche test unitari dedicati allo split deterministico del titolo hero e ai fallback responsive del titolo configurato.
 
 ## Struttura del repository
 

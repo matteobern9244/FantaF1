@@ -227,17 +227,19 @@ select,
 }
 
 .hero-brand {
-  width: min(100%, 1220px);
+  width: min(100%, 1480px);
+  max-inline-size: 100%;
   min-width: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
   gap: 8px;
-  padding: clamp(10px, 1.5vw, 24px) 0;
+  padding: clamp(10px, 1.5vw, 24px) clamp(6px, 1.8vw, 24px);
   backdrop-filter: blur(8px);
   z-index: 2;
   position: relative;
+  overflow: visible;
 }
 
 .hero-brand::before {
@@ -272,6 +274,13 @@ select,
 
 .hero-brand h1 {
   margin: 0;
+  width: 100%;
+  max-width: 100%;
+  max-inline-size: 100%;
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   font-family: 'Formula1Wide', sans-serif;
   font-size: clamp(2.2rem, 5vw, 5rem);
   line-height: 0.95;
@@ -281,6 +290,14 @@ select,
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   filter: drop-shadow(0 4px 12px rgba(0,0,0,0.4));
+}
+
+.hero-title-line {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  white-space: nowrap;
+  text-align: center;
 }
 
 .subtitle {
@@ -943,6 +960,10 @@ select:focus {
 }
 
 @media (min-width: 1600px) {
+  .hero-brand {
+    width: min(100%, 1600px);
+  }
+
   .hero-summary-grid {
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
@@ -983,6 +1004,15 @@ select:focus {
   .app-shell {
     padding: 12px;
     gap: 14px;
+  }
+
+  .hero-brand {
+    width: 100%;
+    padding-inline: 4px;
+  }
+
+  .hero-brand h1 {
+    font-size: clamp(1.75rem, 8.8vw, 2.2rem);
   }
 
   .hero-panel,
@@ -1039,6 +1069,12 @@ select:focus {
 
   .track-map {
     width: 100%;
+  }
+}
+
+@media (max-width: 389px) {
+  .hero-brand h1 {
+    font-size: clamp(1.55rem, 8.2vw, 1.95rem);
   }
 }
 
