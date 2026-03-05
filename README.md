@@ -1,172 +1,446 @@
 # Fanta Formula 1
 
-Applicazione locale e cloud per gestire un Fanta Formula 1 privato con tre giocatori. La configurazione attuale prevede sempre tre partecipanti totali, con un admin che inserisce manualmente pronostici e risultati per tutto il gruppo.
+Applicazione full-stack privata per gestire un Fanta Formula 1 con frontend React + TypeScript + Vite, backend Express e persistenza MongoDB.
 
-## Regole di gioco
+L'applicazione e' pensata per un flusso amministrato: un admin seleziona il weekend, inserisce i pronostici dei tre partecipanti, registra o recupera i risultati reali e consolida i punti nello storico.
 
-Prima dell'inizio della gara della domenica, l'admin registra per ogni giocatore quattro scelte:
+## Panoramica funzionale
 
-- vincitore della gara
-- secondo classificato
-- terzo classificato
-- pole position oppure vincitore della Sprint, se il weekend e' Sprint
+- Lo stato di gioco mantiene sempre esattamente 3 partecipanti.
+- I pronostici prevedono 4 campi per ogni utente: primo, secondo, terzo e pole oppure vincitore Sprint.
+- Il salvataggio dei pronostici e' consentito solo quando tutti i campi sono vuoti oppure tutti i campi sono completi.
+- Il backend blocca le modifiche ai pronostici dopo l'inizio ufficiale della gara del weekend selezionato.
+- La conferma dei risultati e l'assegnazione punti sono possibili solo quando la gara e' considerata conclusa e tutti i risultati reali sono presenti.
+- Lo storico gare puo' essere modificato o eliminato; in entrambi i casi la classifica totale viene ricalcolata.
 
-I pronostici possono essere inseriti e modificati liberamente fino all'orario ufficiale di inizio della gara. Al termine dell'inserimento, l'admin deve cliccare su **"Salva dati inseriti"** per persistere i dati su MongoDB. Il sistema impedisce il salvataggio se i campi non sono completi per tutti i partecipanti.
+## Regole di gioco e flusso operativo
 
-Non appena la gara ha inizio, la sezione dei pronostici viene automaticamente bloccata per impedire modifiche tardive.
+### Pronostici
 
-## Risultati e Punteggi
+Per ogni weekend selezionato l'admin gestisce 4 pronostici per ciascun partecipante:
 
-Al termine della gara (circa 2.5 ore dopo l'orario di inizio), l'applicazione recupera automaticamente i risultati ufficiali dalla Formula 1 e popola la sezione "Risultati del weekend". 
+- vincitore della gara;
+- secondo classificato;
+- terzo classificato;
+- pole position oppure vincitore Sprint nei weekend Sprint.
 
-L'interfaccia include una **Classifica Live** nell'hero che mostra in tempo reale:
-- I punti totali già consolidati nello storico gare.
-- I **punti potenziali** (proiezioni) calcolati confrontando i pronostici attuali con i risultati del weekend selezionato.
+Il flusso previsto e' questo:
 
-Il pulsante per la conferma dei risultati e l'assegnazione definitiva dei punti rimane disabilitato fino alla conclusione effettiva della gara e alla presenza di dati validi.
+1. si seleziona il weekend dal calendario;
+2. si compilano i pronostici dei tre utenti;
+3. si salva lo stato corrente con `Salva dati inseriti`;
+4. a gara conclusa si inseriscono o si recuperano i risultati reali;
+5. si confermano i risultati per consolidare i punti nello storico.
 
-Il punteggio attuale e' quello definito in configurazione:
+### Validazione salvataggio pronostici
 
-- 5 punti per la prima posizione corretta
-- 3 punti per la seconda posizione corretta
-- 2 punti per la terza posizione corretta
-- 1 punto extra per pole position o vincitore Sprint
+Il salvataggio dei pronostici non accetta stati parziali. Il payload e' valido solo in due casi:
 
-## Implementazione attuale
+- tutti i campi pronostico di tutti gli utenti sono vuoti;
+- tutti i campi pronostico di tutti gli utenti sono compilati.
 
-Il frontend e' una SPA React + TypeScript + Vite. Il backend e' un server Express che gestisce la persistenza su MongoDB, la sincronizzazione delle sorgenti esterne, il recupero automatico dei risultati e le API consumate dal frontend. L'applicazione e' progettata per essere progettata per essere pubblicata su **Render.com** con database **MongoDB Atlas**.
+Questo comportamento vale sia lato frontend sia lato backend, dove il payload viene sanitizzato prima della persistenza.
 
-L'interfaccia attuale:
+### Race lock
 
-- carica automaticamente il calendario della stagione
-- seleziona un weekend dal calendario senza inserimento manuale del GP
-- centra il branding principale nell'hero e mostra i quattro riquadri di supporto subito sotto il titolo
-- mostra calendario, pronostici, risultati e storico a piena larghezza subito dopo i riquadri dell'hero
-- usa un layout responsive a piena larghezza, senza colonne laterali che coprono il contenuto
-- usa il font Formula 1 vendorizzato localmente in tutta l'interfaccia, con pesi e spaziatura regolati per mantenere leggibilita'
-- mostra nella UI l'elenco dei piloti ordinato alfabeticamente per cognome e formattato come `Cognome Nome`
-- permette di modificare o eliminare una gara gia' salvata nello storico, ricalcolando automaticamente la classifica
-- recupera automaticamente i risultati reali al termine della sessione per facilitare l'inserimento e l'assegnazione dei punti
-- include schermate di caricamento tematiche (Pit Stop) e icone personalizzate (Pneumatici, Bandiere)
+Il blocco gara e' applicato server-side.
 
-## Persistenza e database (MongoDB)
+- Se il weekend ha `raceStartTime`, quello e' l'orario usato per il lock.
+- Se `raceStartTime` manca, viene usato il fallback `endDate + 14:00:00Z`.
+- Dopo il lock, il backend rifiuta la richiesta solo se i pronostici correnti sono stati modificati rispetto a quelli gia' persistiti.
 
-L'applicazione utilizza **MongoDB Atlas** per la persistenza dei dati, sostituendo i file JSON locali.
+Di conseguenza:
 
-- La collezione `appdata` contiene i dati di gioco: utenti, pronostici correnti, risultati, storico e weekend selezionato.
-- La collezione `drivers` funge da cache per il roster piloti sincronizzato.
-- La collezione `weekends` funge da cache per il calendario stagionale.
+- non e' possibile alterare i pronostici dopo l'inizio ufficiale della gara;
+- e' ancora possibile salvare stato non regressivo che non modifica i pronostici bloccati.
 
-Il frontend non salva dati in `localStorage`. Tutte le operazioni di salvataggio, modifica o rimozione aggiornano il database tramite le API del backend.
+### Risultati reali e assegnazione punti
+
+L'applicazione considera la gara conclusa circa 2.5 ore dopo l'orario di inizio gara.
+
+Quando il weekend e' finito e i risultati reali correnti sono ancora vuoti:
+
+- il frontend prova a recuperarli automaticamente tramite `GET /api/results/:meetingKey`;
+- il recupero automatico non parte durante una modifica dello storico;
+- se il fetch non produce dati validi, l'admin puo' comunque inserire i risultati manualmente.
+
+Il pulsante di conferma risultati resta disabilitato finche' non sono vere entrambe le condizioni:
+
+- gara considerata conclusa;
+- risultati reali completi in tutti i 4 campi.
+
+Alla conferma:
+
+- viene creato un record storico per il weekend;
+- per ogni utente vengono calcolati i punti guadagnati in base ai match esatti sui 4 campi;
+- i punti vengono sommati al totale utente;
+- i pronostici correnti e i risultati correnti vengono azzerati;
+- se non si e' in modalita' modifica, il weekend selezionato avanza al prossimo weekend disponibile.
+
+### Punteggio e classifica live
+
+La scoring logic attuale e' configurata cosi':
+
+- 5 punti per il primo posto corretto;
+- 3 punti per il secondo posto corretto;
+- 2 punti per il terzo posto corretto;
+- 1 punto per pole position o Sprint corretti.
+
+Non esistono mezzi punti o bonus impliciti: i punti vengono assegnati solo per corrispondenza esatta del singolo campo.
+
+La classifica live mostrata nell'hero non rappresenta solo i punti storici. Per ogni utente visualizza:
+
+- punti storici gia' consolidati;
+- piu' la proiezione ottenuta confrontando i pronostici correnti con i risultati reali correnti.
+
+## Business logic applicativa
+
+### Selezione weekend e stato iniziale
+
+Lo stato applicativo usa `selectedMeetingKey` come riferimento principale del weekend attivo.
+
+Quando l'app carica o sanitizza lo stato:
+
+- se `selectedMeetingKey` corrisponde a un weekend esistente, viene usato quel weekend;
+- altrimenti il sistema prova a risolvere il GP tramite il nome;
+- se anche questo fallisce, viene selezionato il prossimo weekend disponibile in calendario;
+- se il calendario e' vuoto, lo stato resta senza weekend selezionato.
+
+Questo comportamento vale sia lato frontend sia lato backend quando viene ricostruito lo stato persistito.
+
+### Reset pronostici
+
+L'azione `Reset pronostici correnti`:
+
+- azzera i 4 campi pronostico per tutti gli utenti;
+- azzera i risultati reali correnti del weekend;
+- persiste immediatamente il nuovo stato nel database.
+
+Non e' una semplice pulizia locale della UI: e' un salvataggio effettivo dello stato corrente.
+
+### Modifica e cancellazione storico
+
+Lo storico non e' solo consultabile.
+
+#### Cancellazione
+
+Quando una gara storica viene eliminata:
+
+- il record viene rimosso dallo storico;
+- il totale punti utenti viene ricostruito partendo dallo storico residuo;
+- i nomi utente correnti vengono preservati.
+
+#### Modifica
+
+Quando una gara storica viene messa in modifica:
+
+- il record viene temporaneamente rimosso dallo storico;
+- la classifica viene ricalcolata senza quella gara;
+- i pronostici originali di quella gara vengono ricaricati nei campi utente;
+- i risultati reali originali vengono ricaricati nella sezione risultati;
+- il weekend relativo viene risolto di nuovo dal calendario tramite `meetingKey` o nome GP;
+- al salvataggio, il record aggiornato viene reinserito nello storico nella posizione originaria.
+
+Se la modifica viene annullata:
+
+- il record originale viene ripristinato nello storico;
+- i punti vengono ricostruiti;
+- i campi correnti vengono riportati a uno stato coerente con il weekend ripristinato.
+
+### Sanitizzazione e persistenza stato
+
+Il backend non persiste mai il payload grezzo del frontend.
+
+Prima di salvare:
+
+- normalizza i pronostici mancanti o malformati;
+- normalizza i punti utente a valori numerici validi;
+- tronca o ricostruisce gli utenti per mantenere sempre 3 partecipanti;
+- sanitizza lo storico gara per gara;
+- riallinea `gpName` e `selectedMeetingKey` al calendario disponibile.
+
+Se il database non contiene ancora stato applicativo, il backend costruisce uno stato di default usando il prossimo weekend disponibile.
+
+## Funzionalita' implementate
+
+### Interfaccia
+
+- Hero full-width con branding, titolo visibile configurabile, anno corrente dinamico e card riepilogative.
+- Card "Prossimo weekend" con badge Sprint/Standard, programma sessioni e orari formattati in italiano.
+- Classifica live calcolata come punti storici piu' proiezione del weekend selezionato.
+- Calendario stagionale con selettore e strip orizzontale dei weekend.
+- Griglia pronostici per i 3 partecipanti con selezione piloti ordinati per cognome e visualizzati come `Cognome Nome`.
+- Sezione risultati del weekend con track map, caricamento automatico risultati quando disponibili e pulsante conferma con tooltip di stato.
+- Storico gare modificabile con ricalcolo dei punteggi.
+- Loader tematico "Pit Stop", font F1 vendorizzati localmente e layout responsive desktop/mobile.
+
+### Logica di gioco
+
+- Configurazione punteggi centralizzata: 5 punti primo, 3 punti secondo, 2 punti terzo, 1 punto pole/Sprint.
+- Race lock server-side basato su `raceStartTime`, con fallback a `endDate + 14:00:00Z` se l'orario non e' disponibile.
+- Fine gara stimata a `raceStartTime + 2.5h` per sbloccare il recupero automatico dei risultati e l'assegnazione definitiva dei punti.
+- Reset dei pronostici correnti con salvataggio persistente immediato.
+- Conservazione dei nomi utente gia' persistiti durante modifica o cancellazione di gare storiche.
+
+## Architettura
+
+### Frontend
+
+- SPA React 18 + TypeScript + Vite.
+- Il frontend usa API relative (`/api/...`) per compatibilita' locale e produzione.
+- Il titolo visualizzato nell'hero usa `VITE_APP_LOCAL_NAME` se valorizzata, altrimenti il titolo base definito nel config applicativo.
+- Il titolo della scheda browser e' invece impostato in `index.html` come `FantaF1 <anno corrente>`.
+
+### Backend
+
+- Server Express 5 con `cors`, `express.json()` e `dotenv`.
+- Espone API REST, serve gli asset statici di `dist` e usa un catch-all per il routing SPA.
+- Si connette prima al database, poi avvia il server HTTP e infine esegue in background la sincronizzazione di piloti e calendario.
+- In produzione il server ascolta su `0.0.0.0` e usa `PORT` se fornita dall'ambiente.
+
+### Persistenza
+
+- MongoDB tramite `mongoose`.
+- Il backend gestisce tre insiemi logici di dati:
+  - stato globale del gioco;
+  - cache roster piloti;
+  - cache calendario weekend.
+- Il frontend non usa `localStorage` per i dati core del gioco.
 
 ## Sorgenti esterne e sincronizzazione
 
-Ad ogni avvio del backend (sia in locale che su Render):
+### Roster piloti
 
-- Il roster piloti viene sincronizzato da StatsF1 e salvato su MongoDB.
-- Il calendario ufficiale viene sincronizzato da Formula1.com e salvato su MongoDB.
-- Il backend usa i dati presenti nel database se una sorgente esterna non e' disponibile, con meccanismi di retry automatici.
+- Fonte primaria: StatsF1.
+- Arricchimento media e fallback secondario: Formula1.com.
+- Se il sync fallisce, il backend usa la cache MongoDB dei piloti.
+- Se la cache e' vuota ma la pagina piloti di Formula1.com e' disponibile, il backend costruisce un roster di fallback e lo salva.
 
-## API backend attuali
+### Calendario
 
-Il backend espone queste API utilizzate dal frontend:
+- Fonte primaria: pagine stagione e dettaglio gara di Formula1.com.
+- Il backend prova fino a 3 tentativi prima di degradare alla cache.
+- Il parsing del dettaglio gara arricchisce ogni weekend con:
+  - `meetingKey`;
+  - `grandPrixTitle`;
+  - immagine hero;
+  - track outline;
+  - badge Sprint;
+  - `raceStartTime`;
+  - lista sessioni con orari ISO.
+- Se il dettaglio di un singolo weekend fallisce, il backend mantiene comunque i dati base del calendario.
 
-- `GET /api/health`: Stato del server e connessione database.
-- `GET /api/data`: Recupero dello stato globale del gioco.
-- `POST /api/data`: Salvataggio pronostici e risultati (con validazione server-side).
-- `GET /api/drivers`: Lista dei piloti (cache o sincronizzati).
-- `GET /api/calendar`: Calendario stagionale (cache o sincronizzato).
-- `GET /api/results/:meetingKey`: Recupero automatico dei risultati reali per un weekend specifico.
+### Risultati gara
 
-## Deploy su Render.com
+- Endpoint interno: `GET /api/results/:meetingKey`.
+- Il backend costruisce gli URL risultati Formula1.com a partire dal `detailUrl` del weekend salvato in cache.
+- Per weekend standard recupera gara e qualifying.
+- Per weekend Sprint recupera gara e sprint-results.
+- Il parser estrae i codici pilota dai `data-driver-id` della pagina risultati.
 
-L'applicazione e' pronta per il deploy su Render come "Web Service":
+## API backend
 
-1. Collegare il repository GitHub a Render.
-2. Configurare il comando di build: `npm install && npm run build`.
-3. Configurare il comando di avvio: `npm start`.
-4. Aggiungere la variabile d'ambiente `MONGODB_URI` con la stringa di connessione di MongoDB Atlas.
+### `GET /api/health`
+
+Restituisce:
+
+- `status`
+- `year`
+- `dbState`
+
+Usato dal launcher locale e dai controlli di health.
+
+### `GET /api/data`
+
+Restituisce lo stato globale del gioco:
+
+- utenti;
+- storico;
+- GP selezionato;
+- risultati correnti;
+- `selectedMeetingKey`.
+
+### `POST /api/data`
+
+Salva lo stato globale del gioco dopo sanitizzazione e validazione.
+
+Comportamenti rilevanti:
+
+- `400` se il numero di partecipanti non e' quello atteso;
+- `403` se la gara e' iniziata e i pronostici correnti vengono modificati;
+- `500` in caso di errore persistente di salvataggio.
+
+### `GET /api/drivers`
+
+Restituisce il roster piloti ordinato alfabeticamente lato backend.
+
+### `GET /api/calendar`
+
+Restituisce il calendario ordinato per round.
+
+### `GET /api/results/:meetingKey`
+
+Recupera i risultati reali del weekend a partire dalla cache calendario.
+
+## Modello dati applicativo
+
+### Stato gioco
+
+Lo stato persistito contiene:
+
+- `users`
+- `history`
+- `gpName`
+- `raceResults`
+- `selectedMeetingKey`
+
+Ogni utente contiene:
+
+- `name`
+- `predictions`
+- `points`
+
+Ogni record storico contiene:
+
+- `gpName`
+- `meetingKey`
+- `date`
+- `results`
+- `userPredictions`
+
+### Weekend di gara
+
+Ogni weekend puo' includere:
+
+- `meetingKey`
+- `meetingName`
+- `grandPrixTitle`
+- `roundNumber`
+- `dateRangeLabel`
+- `detailUrl`
+- `heroImageUrl`
+- `trackOutlineUrl`
+- `isSprintWeekend`
+- `startDate`
+- `endDate`
+- `raceStartTime`
+- `sessions`
+
+## Variabili ambiente
+
+### Obbligatorie
+
+- `MONGODB_URI`
+  - stringa di connessione MongoDB usata dal backend;
+  - se assente il server termina in fase di bootstrap.
+
+### Opzionali
+
+- `PORT`
+  - porta HTTP del backend;
+  - in locale il default e' `3001`.
+- `VITE_APP_LOCAL_NAME`
+  - override del titolo visualizzato nell'hero del frontend;
+  - viene letta da Vite a build-time per il bundle frontend;
+  - in produzione richiede rebuild/redeploy per avere effetto.
+
+### Precedenza locale
+
+Il launcher locale carica:
+
+1. variabili di processo correnti;
+2. `.env`;
+3. `.env.local` come override finale.
 
 ## Avvio locale
 
-Installazione iniziale:
+### Prerequisiti
 
-- `npm install`
+- Node.js compatibile con il progetto.
+- Dipendenze installate con `npm install`.
+- MongoDB raggiungibile tramite `MONGODB_URI`.
+- Google Chrome installato in `/Applications/Google Chrome.app` se si usa il launcher integrato.
 
-Per l'avvio locale e' necessario un file `.env` o `.env.local` con la variabile `MONGODB_URI` (es. puntando al database `fanta1_dev`).
-
-Avvio separato per sviluppo:
+### Modalita' sviluppo separate
 
 - `npm run dev:backend`
 - `npm run dev:frontend`
 
-Avvio locale integrato (Consigliato):
+Il frontend Vite gira su `127.0.0.1:5173` e usa proxy `/api` verso `127.0.0.1:3001`.
 
-- `npm run start:local` (Script JS cross-platform)
-- `./start_fantaf1.command` (Script macOS legacy)
+### Modalita' integrata consigliata
 
-Lo script `start:local` gestisce automaticamente il ciclo di vita dei processi, avvia il backend (porta 3001) e il frontend (porta 5173), ed apre l'applicazione in Google Chrome in modalita' app con finestra massimizzata.
+- `npm run start:local`
+- `./start_fantaf1.command`
+
+Lo script integrato:
+
+- verifica che le porte `3001` e `5173` siano libere;
+- avvia backend e frontend;
+- attende gli health check locali;
+- apre Chrome in modalita' app sul frontend;
+- prova a massimizzare la finestra;
+- chiude i processi se uno dei child fallisce o se la finestra Chrome viene chiusa.
+
+## Deploy su Render
+
+### Configurazione servizio
+
+- Build command: `npm install && npm run build`
+- Start command: `npm start`
+
+### Variabili da configurare
+
+- `MONGODB_URI` obbligatoria.
+- `PORT` normalmente gestita dalla piattaforma.
+- `VITE_APP_LOCAL_NAME` opzionale se si vuole un titolo hero personalizzato anche in produzione.
+
+### Comportamento in produzione
+
+- Express serve i file statici generati in `dist`.
+- Dopo la connessione al database il server parte subito e sincronizza piloti e calendario in background, evitando di bloccare lo startup su sorgenti lente.
 
 ## Qualita' tecnica
 
-Sono disponibili questi controlli obbligatori prima di ogni rilascio:
+### Comandi disponibili
 
-- `npm run lint` (ESLint)
-- `npm run build` (TypeScript + Vite build)
-- `npm run test` (Vitest)
+- `npm run lint`
+- `npm run test`
+- `npm run build`
+- `npm run preview`
 
-L'applicazione include una suite di **117 unit test** strutturali che coprono:
-- **Test Coverage 100%**: È stata introdotta un'imposizione rigorosa che richiede il 100% di copertura del codice (linee, statement, funzioni, branch) tramite `@vitest/coverage-v8` per la business logic di backend e le utility, assicurando la totale assenza di regressioni.
-- **Validazione Backend**: Logica di blocco gare (Race Lock), verifica partecipanti e completezza pronostici.
-- **Sanitizzazione Dati**: Pulizia e integrità dei dati in ingresso al database (Storage Sanitization) e interazione completa con MongoDB.
-- **Logica di Gioco**: Calcolo dei punteggi, ricostruzione dello storico e gestione dei record di gara.
-- **Calendario e Piloti**: Parsing dei dati ufficiali F1, simulazione totale delle fallback di rete e gestione dei casi limite (es. eventi di un solo giorno, immagini corrotte).
-- **UI & UX**: Verifica dei componenti critici del frontend, ordinamento e formattazione temporale.
+### Lint
 
----
+- ESLint configurato per frontend TypeScript/React, backend Node e suite test.
+- Ignore principali: `dist`, `coverage`, `.playwright-cli`.
 
-### Ultime Modifiche (v1.3.2)
-- **100% Code Coverage**: Configurato e raggiunto il 100% assoluto di Code Coverage per l'intero layer di business logic e utils (117 test totali). È ora tassativo mantenere questo standard per ogni nuova implementazione.
-- **Dinamicità Stagionale Totale**: Rimosso ogni riferimento hard-coded all'anno in corso. L'applicazione rileva e applica ora l'anno di sistema in modo dinamico in ogni sua parte (Frontend, Backend, Titolo, Test), garantendo la compatibilità automatica con tutte le stagioni future.
-- **Programma Weekend Completo**: La card "Prossimo Weekend" ora include la lista dettagliata di tutte le sessioni (Prove Libere, Qualifiche, Sprint, Gara) con orari sincronizzati in tempo reale.
-- **Iconografia Dinamica**: Integrato un sistema di icone intelligenti (`Timer`, `Zap`, `FastForward`, `Flag`) che identificano visivamente ogni tipologia di evento nel weekend.
-- **Localizzazione Avanzata**: Formattazione date e orari in standard italiano (`Giorno dd/MM/yyyy HH:mm`) con supporto per il Lunedì come inizio settimana.
-- **Potenziamento Test Suite**: Raggiunta la quota di **117 unit test** che validano meticolosamente ogni aspetto della business logic, del parsing, del rendering temporale, dell'interazione con MongoDB e delle casistiche di failure di rete.
-- **Visual Circuit Enhancement**: Immagine del tracciato ingrandita, centrata e ottimizzata per l'alta definizione senza sgranature, con effetti di profondità dinamici.
-- **Pit Stop Loader 2.0**: Nuova interfaccia di caricamento con animazioni fluide del meccanico e della gomma, integrata con messaggi di stato dinamici per un feedback utente immediato.
-- **Restyling UI "Pro"**: Implementato un nuovo design avanzato ispirato alla Formula 1 con effetti di Glassmorphism, Neon Glow e animazioni fluide per un'esperienza utente più immersiva.
-- **Pulizia Cache Locale**: Rimossi definitivamente i vecchi file fisici `calendar.json` e `drivers.json`. L'applicazione ora si appoggia interamente e in modo esclusivo a MongoDB Atlas anche per le cache di piloti e calendario, garantendo la totale persistenza su Render.com senza perdite di dati ai riavvii.
-- **Ottimizzazione Tipografica**: Sostituito il font 'Formula1 Wide' con la versione regolare in tutte le card e le etichette per eliminare l'effetto "stretchato" e migliorare la leggibilità dei dati.
-- **Riorganizzazione Controlli**: Spostati i pulsanti di reset e salvataggio dei pronostici sotto la griglia dei giocatori, impilandoli verticalmente e allineandoli allo stile del pulsante dei risultati per una maggiore coerenza visiva.
-- **Full-Width Action Buttons**: Aggiornati i pulsanti principali (Reset, Salva, Conferma) affinché occupino l'intera larghezza disponibile nel pannello, migliorando l'accessibilità sia su desktop che su mobile.
-- **Protocollo Automazione Browser**: Implementato un nuovo sistema di chiusura e apertura intelligente delle schede del browser (Chrome) durante le operazioni di stop e riavvio dell'applicazione.
+### Test
 
-### Modifiche Precedenti (v1.3.1)
-- **Fix Pulsanti Reset e Salva (Render)**: Risolto il problema che impediva il salvataggio dei dati in produzione su Render. La validazione lato server è stata resa più flessibile per accettare nomi partecipanti personalizzati nel database, evitando errori di blocco (400 Bad Request).
-- **Ottimizzazione Deploy**: Spostata la sincronizzazione dei dati (piloti e calendario) in background all'avvio del server. Questo elimina i timeout durante il deploy su Render, garantendo che l'applicazione sia immediatamente disponibile.
-- **Risoluzione Problemi Mobile & Safari**: Corretto il parsing delle date per garantire piena compatibilità con Safari su iOS. Ora il blocco automatico delle gare e la gestione dei weekend funzionano correttamente su tutti i dispositivi.
-- **Integrità Nomi Partecipanti**: Corretta una regressione che riportava i nomi dei giocatori ai valori di default dopo l'eliminazione o la modifica di una gara dallo storico. Ora i nomi personalizzati vengono preservati in ogni operazione di ricalcolo.
-- **Robustezza Connessione DB**: Migliorata l'estrazione del nome del database dall'URI di MongoDB Atlas per una connessione più stabile in ambienti cloud.
+- Runner: Vitest.
+- Coverage provider: V8.
+- Scope coverage configurato:
+  - `backend/**/*.js`
+  - `src/utils/**/*.ts`
+- Esclusioni coverage:
+  - `backend/config.js`
+  - `backend/models.js`
+- Soglie attuali:
+  - `lines: 100`
+  - `functions: 100`
+  - `branches: 90`
+  - `statements: 100`
 
-### Modifiche Precedenti (v1.3.0 - Produzione Attuale)
-- **Robustezza dei Salvataggi**: Risolta una race condition logica nel frontend che mostrava messaggi di successo prematuri.
-- **Salvataggio Automatico al Reset**: L'azione "Reset pronostici correnti" ora azzera i dati e li salva automaticamente nel database.
-- **Modulo di Validazione Backend**: Introdotto un nuovo sistema di validazione (`backend/validation.js`) per garantire l'integrita' dei dati.
-- **Potenziamento Test Suite**: Espansione massiccia dei test automatizzati (54 test passanti).
-- **Miglioramento Parsing Calendario**: Corretto il supporto per gli eventi di un solo giorno e migliorata la resilienza del recupero dati.
+La suite copre business logic, storage MongoDB, sanitizzazione, parsing di piloti e calendario, risultati, formattazione UI e regressioni sui flussi principali.
 
-### Modifiche Precedenti (v1.2.0)
-- **Migrazione MongoDB Atlas**: Transizione completa dai file JSON locali alla persistenza cloud-ready per produzione e sviluppo (`fanta1_dev`).
-- **Integrazione Visuale**: Aggiunta di nuovi asset grafici (`pitstop.png`, `tire.png`, `flag.png`) per migliorare l'estetica dell'interfaccia.
-- **Validazione Server-Side**: Rafforzata la logica di salvataggio con controlli rigorosi sui partecipanti e sul blocco temporale delle gare.
-- **Process Management**: Migliorato lo script di avvio locale per una gestione piu' robusta dei processi e dell'apertura del browser.
-- **Supporto Express 5**: Aggiornato il backend per la piena compatibilita' con Express 5, risolvendo bug critici di routing.
-- **UI & UX Versioning**: Inserimento del numero di versione nel footer dell'applicazione.
+## Struttura del repository
 
-### Modifiche Precedenti (v1.1.0)
-- **Classifica Live & Proiezioni**: Introdotta una sezione nell'hero che mostra i punti potenziali in tempo reale durante il weekend di gara.
-- **Blocco Automatico Gara**: I pronostici vengono ora bloccati automaticamente all'orario di inizio ufficiale della sessione.
-- **Recupero Automatico Risultati**: Implementata l'integrazione con le API ufficiali F1 per popolare i risultati reali a fine gara.
-- **Validazione Avanzata**: Nuovo sistema di salvataggio manuale dei pronostici con controllo di completezza per tutti i partecipanti.
-- **Ottimizzazione Backend**: Aggiunti meccanismi di retry per la sincronizzazione del calendario e del roster piloti.
-- **UI & UX**: Nuova schermata di caricamento tematica (Pit Stop) e integrazione dei font ufficiali F1 in tutta l'applicazione.
+- `src/`: frontend React, costanti, tipi e utility UI.
+- `backend/`: parsing esterno, validazione, storage e modelli Mongoose.
+- `config/`: configurazione applicativa centralizzata.
+- `scripts/`: launcher locale.
+- `tests/`: test unitari e fixture HTML.
+- `public/`: font e asset statici serviti dal frontend.
+
+## Changelog
+
+La cronologia delle release e delle implementazioni documentate e' disponibile in [CHANGELOG.md](CHANGELOG.md).
