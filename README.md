@@ -251,6 +251,8 @@ Restituisce:
 - `status`
 - `year`
 - `dbState`
+- `environment`
+- `databaseTarget`
 
 Usato dal launcher locale e dai controlli di health.
 
@@ -273,6 +275,8 @@ Comportamenti rilevanti:
 - `400` se il numero di partecipanti non e' quello atteso;
 - `403` se la gara e' iniziata e i pronostici correnti vengono modificati;
 - `500` in caso di errore persistente di salvataggio.
+- In caso di errore il payload include sempre `error`, `code` e `requestId`.
+- `details` viene esposto solo fuori da production, per rendere diagnosticabili i fallimenti locali senza esporre stack in deploy.
 
 ### `GET /api/drivers`
 
@@ -336,14 +340,10 @@ Ogni weekend puo' includere:
 
 - `MONGODB_URI`
   - stringa di connessione MongoDB usata dal backend;
+  - puo' includere direttamente il nome del database nel path della URI;
   - se assente il server termina in fase di bootstrap.
 
 ### Opzionali
-
-- `MONGODB_DB_NAME`
-  - override esplicito del database MongoDB target;
-  - se assente, il backend usa `fantaf1_dev` in locale e `fantaf1` in produzione;
-  - all'avvio il backend verifica che il database effettivamente connesso coincida con il target atteso.
 
 - `PORT`
   - porta HTTP del backend;
@@ -362,7 +362,8 @@ Il launcher locale carica:
 2. `.env`;
 3. `.env.local` come override finale.
 
-In assenza di override, l'ambiente locale punta sempre a `fantaf1_dev`.
+In assenza di un database nel path della URI, l'ambiente locale punta sempre a `fantaf1_dev`.
+Se `MONGODB_URI` contiene gia' un database nel path, quel nome deve essere coerente con l'ambiente locale.
 
 ## Avvio locale
 
@@ -373,6 +374,7 @@ In assenza di override, l'ambiente locale punta sempre a `fantaf1_dev`.
 - MongoDB raggiungibile tramite `MONGODB_URI`.
 - Google Chrome installato in `/Applications/Google Chrome.app` se si usa il launcher integrato.
 - Database locale target atteso: `fantaf1_dev`.
+- La `MONGODB_URI` locale deve quindi puntare a `.../fantaf1_dev`.
 
 ### Modalita' sviluppo separate
 
@@ -380,7 +382,7 @@ In assenza di override, l'ambiente locale punta sempre a `fantaf1_dev`.
 - `npm run dev:frontend`
 
 Il frontend Vite gira su `127.0.0.1:5173` e usa proxy `/api` verso `127.0.0.1:3001`.
-Il backend verifica in startup che la connessione MongoDB locale punti davvero a `fantaf1_dev`, salvo override esplicito di `MONGODB_DB_NAME`.
+Il backend verifica in startup che `MONGODB_URI` sia allineata con `fantaf1_dev`.
 
 ### Modalita' integrata consigliata
 
@@ -389,8 +391,9 @@ Il backend verifica in startup che la connessione MongoDB locale punti davvero a
 
 Lo script integrato:
 
-- esegue `npm run lint`, `npm run test`, `npm run build` e `npm run test:ui-responsive`;
+- esegue `npm run lint`, `npm run test`, `npm run build`, `npm run test:ui-responsive` e `npm run test:save-local`;
 - avvia uno stack locale temporaneo solo per il controllo responsive e lo chiude se i test passano;
+- esegue uno smoke reale di lettura/scrittura su `fantaf1_dev` prima dell'avvio finale;
 - verifica che le porte `3001` e `5173` siano libere;
 - avvia backend e frontend;
 - attende gli health check locali;
@@ -408,14 +411,14 @@ Lo script integrato:
 ### Variabili da configurare
 
 - `MONGODB_URI` obbligatoria.
-- `MONGODB_DB_NAME` opzionale solo se serve un override esplicito; il default in produzione e' `fantaf1`.
+- `MONGODB_URI` deve puntare a `.../fantaf1`.
 - `PORT` normalmente gestita dalla piattaforma.
 - `VITE_APP_LOCAL_NAME` opzionale se si vuole un titolo hero personalizzato anche in produzione.
 
 ### Comportamento in produzione
 
 - Express serve i file statici generati in `dist`.
-- In produzione il backend punta a `fantaf1` per default e verifica il target al bootstrap.
+- In produzione il backend richiede che la configurazione risolva a `fantaf1`, leggendo il path di `MONGODB_URI` o, se assente, il fallback ambiente.
 - Dopo la connessione al database il server parte subito e sincronizza piloti e calendario in background, evitando di bloccare lo startup su sorgenti lente.
 
 ## Qualita' tecnica
@@ -424,6 +427,7 @@ Lo script integrato:
 
 - `npm run lint`
 - `npm run test`
+- `npm run test:save-local`
 - `npm run test:ui-responsive`
 - `npm run build`
 - `npm run preview`
@@ -452,6 +456,7 @@ Lo script integrato:
 La suite copre business logic, storage MongoDB, sanitizzazione, parsing di piloti e calendario, risultati, formattazione UI e regressioni sui flussi principali.
 Include anche test unitari dedicati allo split deterministico del titolo hero e ai fallback responsive del titolo configurato.
 Per la UI e' disponibile anche `npm run test:ui-responsive`, che usa Playwright CLI via `npx` contro l'app locale avviata e verifica i breakpoint principali, il box "Prossimo weekend", il tooltip risultati e l'assenza di overflow orizzontali fuori dal carosello calendario.
+Per il salvataggio locale e' disponibile `npm run test:save-local`, che legge `/api/data`, re-invia lo stesso payload su `POST /api/data`, verifica `environment=development`, `databaseTarget=fantaf1_dev` e controlla che lo stato resti invariato dopo il round-trip.
 
 ## Struttura del repository
 

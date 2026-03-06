@@ -17,6 +17,9 @@ vi.mock('../backend/storage.js', () => ({
 describe('Backend Drivers Extra Coverage', () => {
   beforeEach(() => {
     vi.resetAllMocks();
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    vi.spyOn(console, 'info').mockImplementation(() => {});
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
   });
 
   it('generates fallback IDs and handles collisions (slugify)', () => {
@@ -139,7 +142,6 @@ describe('Backend Drivers Extra Coverage', () => {
     storage.readDriversCache.mockResolvedValue([]);
     
     const result = await syncDriversFromOfficialSource();
-    console.info('Test length:', result.length, 'Content:', result);
     expect(result.length).toBeGreaterThan(20);
     expect(storage.writeDriversCache).toHaveBeenCalled();
   });
@@ -168,14 +170,23 @@ describe('Backend Drivers Extra Coverage', () => {
   });
 
   it('fetchHtml throws error on non-ok response', async () => {
-    // To trigger the internal fetchHtml failure directly:
-    global.fetch.mockResolvedValueOnce({
+    global.fetch.mockResolvedValue({
       ok: false,
       status: 404,
+      text: async () => '',
     });
-    // syncDriversFromOfficialSource will catch this.
     storage.readDriversCache.mockResolvedValue([]);
+
     const result = await syncDriversFromOfficialSource();
+    expect(result).toEqual([]);
+  });
+
+  it('syncDriversFromOfficialSource handles invalid fetch responses without throwing a TypeError', async () => {
+    global.fetch.mockResolvedValue(undefined);
+    storage.readDriversCache.mockResolvedValue([]);
+
+    const result = await syncDriversFromOfficialSource();
+
     expect(result).toEqual([]);
   });
 });

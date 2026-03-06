@@ -49,9 +49,10 @@ import {
   getDriverDisplayNameById,
   sortDriversBySurname,
 } from './utils/drivers';
+import { createSaveRequestError, getSaveErrorAlertMessage } from './utils/save';
 import { splitHeroTitle } from './utils/title';
 
-const { app, driversSource, participants, points, uiText } = appConfig;
+const { driversSource, participants, points, uiText } = appConfig;
 
 const predictionLabels: Record<PredictionKey, string> = {
   first: uiText.labels.winner,
@@ -122,6 +123,7 @@ function buildEmptyAppData(calendar: RaceWeekend[]): AppData {
 }
 
 const heroTitle = splitHeroTitle(visibleAppTitle, genericAppTitle);
+const saveRuntimeEnvironment = import.meta.env.DEV ? 'development' : 'production';
 
 function resolveSelectedRace(calendar: RaceWeekend[], selectedMeetingKey: string): RaceWeekend | null {
   return getRaceByMeetingKey(calendar, selectedMeetingKey) ?? getNextUpcomingRace(calendar);
@@ -383,9 +385,22 @@ function App() {
     });
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.error || 'Save failed');
+      throw await createSaveRequestError(response, {
+        fallbackMessage: uiText.backend.errors.saveFailed,
+        environment: saveRuntimeEnvironment,
+      });
     }
+  }
+
+  function handleSaveFailure(context: string, error: unknown) {
+    console.error(context, error);
+    window.alert(
+      getSaveErrorAlertMessage({
+        error,
+        fallbackMessage: uiText.backend.errors.saveFailed,
+        environment: saveRuntimeEnvironment,
+      }),
+    );
   }
 
   async function handleSavePredictions() {
@@ -400,8 +415,7 @@ function App() {
       await persistAppData();
       window.alert(appConfig.uiText.backend.messages.saveSuccess);
     } catch (error) {
-      console.error('Save error:', error);
-      window.alert(uiText.backend.errors.saveFailed);
+      handleSaveFailure('Save error:', error);
     }
   }
 
@@ -453,8 +467,7 @@ function App() {
       });
       window.alert(appConfig.uiText.backend.messages.saveSuccess);
     } catch (error) {
-      console.error('Clear and save error:', error);
-      window.alert(uiText.backend.errors.saveFailed);
+      handleSaveFailure('Clear and save error:', error);
     }
   }
 
@@ -481,8 +494,7 @@ function App() {
         users: rebuiltUsers,
       });
     } catch (error) {
-      console.error('Delete error:', error);
-      window.alert(uiText.backend.errors.saveFailed);
+      handleSaveFailure('Delete error:', error);
     }
   }
 
@@ -621,8 +633,7 @@ function App() {
         }),
       );
     } catch (error) {
-      console.error('Save race error:', error);
-      window.alert(uiText.backend.errors.saveFailed);
+      handleSaveFailure('Save race error:', error);
     }
   }
 
@@ -897,7 +908,7 @@ function App() {
               <div className="section-title">
                 <User size={20} />
                 <h2>
-                  {uiText.headings.predictionEntry} ({uiText.labels.adminPrefix}: {app.adminName})
+                  {uiText.headings.predictionEntry}
                 </h2>
               </div>
             </div>

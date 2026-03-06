@@ -13,6 +13,7 @@
     "lint": "eslint . --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
     "test": "vitest run",
+    "test:save-local": "node scripts/save-local-check.mjs",
     "test:ui-responsive": "node scripts/ui-responsive-check.mjs"
   },
   "dependencies": {

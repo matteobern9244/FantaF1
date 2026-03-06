@@ -1,5 +1,5 @@
 import fs from 'fs';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   parseDateRangeLabel,
   parseRaceDetailPage,
@@ -19,6 +19,11 @@ const detailFixture = fs.readFileSync(
 const currentYear = new Date().getFullYear();
 
 describe('calendar parsing and fallback', () => {
+  beforeEach(() => {
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+  });
+
   it('parses Formula1 season and detail fixtures', () => {
     const calendar = parseSeasonCalendarPage(seasonFixture, currentYear);
     const chinaDetail = parseRaceDetailPage(detailFixture, 'China', 'china');
@@ -177,7 +182,17 @@ describe('calendar parsing and fallback', () => {
     global.fetch = vi.fn().mockResolvedValueOnce({
       ok: false,
       status: 404,
+      text: async () => '',
     });
+    const result = await syncCalendarFromOfficialSource({
+      readCache: async () => [],
+      writeCache: async () => {},
+    });
+    expect(result).toEqual([]);
+  });
+
+  it('handles invalid fetch responses without throwing a TypeError', async () => {
+    global.fetch = vi.fn().mockResolvedValue(undefined);
     const result = await syncCalendarFromOfficialSource({
       readCache: async () => [],
       writeCache: async () => {},

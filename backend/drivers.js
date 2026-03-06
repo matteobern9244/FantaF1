@@ -188,6 +188,10 @@ function normalizeDrivers(rawContent, formulaOneDriverData = new Map()) {
 async function fetchHtml(url, headers = {}) {
   const response = await fetch(url, { headers });
 
+  if (!response || typeof response.ok !== 'boolean' || typeof response.text !== 'function') {
+    throw new Error(`Invalid response received from ${url}`);
+  }
+
   if (!response.ok) {
     throw new Error(`${response.status}`);
   }

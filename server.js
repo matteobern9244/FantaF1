@@ -7,10 +7,18 @@ import { fileURLToPath } from 'url';
 import { syncCalendarFromOfficialSource, sortCalendarByRound, fetchRaceResults } from './backend/calendar.js';
 import { appConfig, currentYear, formatConfigText } from './backend/config.js';
 import {
+  determineExpectedMongoDatabaseName,
   normalizeRuntimeEnvironment,
   resolveMongoDatabaseName,
   verifyMongoDatabaseName,
 } from './backend/database.js';
+import {
+  buildHealthPayload,
+  buildSaveErrorResponse,
+  classifySaveError,
+  createRequestId,
+  extractErrorDetails,
+} from './backend/http.js';
 import { sortDriversAlphabetically, syncDriversFromOfficialSource } from './backend/drivers.js';
 import {
   readAppData,
@@ -26,17 +34,22 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || appConfig.server.port;
 const HOST = '0.0.0.0'; // Bind to all interfaces for Render
+const runtimeEnvironment = normalizeRuntimeEnvironment(process.env.NODE_ENV);
+const databaseTargetName = determineExpectedMongoDatabaseName(process.env.NODE_ENV);
 
 app.use(cors());
 app.use(express.json());
 
 // 1. Health check route
 app.get(appConfig.api.healthPath, (req, res) => {
-  res.json({
-    status: 'ok',
-    year: currentYear,
-    dbState: mongoose.connection.readyState,
-  });
+  res.json(
+    buildHealthPayload({
+      currentYear,
+      dbState: mongoose.connection.readyState,
+      environment: runtimeEnvironment,
+      databaseTarget: databaseTargetName,
+    }),
+  );
 });
 
 // 2. API Routes
@@ -77,35 +90,65 @@ app.get('/api/results/:meetingKey', async (req, res) => {
 });
 
 app.post(appConfig.api.dataPath, async (req, res) => {
+  const requestId = createRequestId();
+
   try {
+    verifyMongoDatabaseName(mongoose.connection.db?.databaseName, databaseTargetName);
+
     const newData = req.body;
 
     // Server-side validation: Exact participants
-    if (!validateParticipants(newData.users, appConfig.participants)) {
-      return res.status(400).json({ 
-        error: `Invalid participants list. Expected ${appConfig.participants.length} participants.` 
+    if (!validateParticipants(newData?.users, appConfig.participants)) {
+      const participantError = `Invalid participants list. Expected ${appConfig.participants.length} participants.`;
+      const response = buildSaveErrorResponse({
+        environment: runtimeEnvironment,
+        requestId,
+        code: 'participants_invalid',
+        error: participantError,
+        details: `Expected ${appConfig.participants.length} participants, received ${Array.isArray(newData?.users) ? newData.users.length : 'unknown'}.`,
       });
+
+      return res.status(response.status).json(response.payload);
     }
 
     // Server-side validation: Race Lock
     const calendar = await readCalendarCache();
-    const selectedRace = calendar.find(r => r.meetingKey === newData.selectedMeetingKey);
+    const selectedRace = calendar.find(r => r.meetingKey === newData?.selectedMeetingKey);
     
     if (selectedRace) {
       const currentData = await readAppData();
       if (isRaceLocked(selectedRace, newData, currentData)) {
-        return res.status(403).json({ error: appConfig.uiText.calendar.raceLocked });
+        const response = buildSaveErrorResponse({
+          environment: runtimeEnvironment,
+          requestId,
+          code: 'race_locked',
+          error: appConfig.uiText.calendar.raceLocked,
+          details: `Race ${selectedRace.meetingKey} started at ${selectedRace.raceStartTime || selectedRace.endDate || 'unknown'} and current predictions differ from stored data.`,
+        });
+
+        return res.status(response.status).json(response.payload);
       }
     }
 
     await writeAppData(newData);
     res.json({ message: appConfig.uiText.backend.messages.saveSuccess });
   } catch (error) {
-    console.error('[Error Backend] POST /api/data fallito:', error);
-    res.status(500).json({
+    const code = classifySaveError(error);
+    const details = extractErrorDetails(error);
+    const response = buildSaveErrorResponse({
+      environment: runtimeEnvironment,
+      requestId,
+      code,
       error: appConfig.uiText.backend.errors.saveFailed,
-      details: error instanceof Error ? error.stack || error.message : String(error),
+      details,
     });
+
+    console.error(
+      `[Error Backend] POST /api/data fallito [requestId=${requestId}] [environment=${runtimeEnvironment}] [databaseTarget=${databaseTargetName}] [code=${code}]`,
+      error,
+    );
+
+    res.status(response.status).json(response.payload);
   }
 });
 
@@ -131,21 +174,20 @@ async function connectToDatabase() {
   }
 
   try {
-    const runtimeEnvironment = normalizeRuntimeEnvironment(process.env.NODE_ENV);
     const targetDatabaseName = resolveMongoDatabaseName({
       nodeEnv: process.env.NODE_ENV,
-      explicitDbName: process.env.MONGODB_DB_NAME,
+      mongoUri: uri,
     });
 
     await mongoose.connect(uri, {
-      dbName: targetDatabaseName,
+      dbName: databaseTargetName,
     });
 
     const connectedDatabaseName = mongoose.connection.db?.databaseName;
-    verifyMongoDatabaseName(connectedDatabaseName, targetDatabaseName);
+    verifyMongoDatabaseName(connectedDatabaseName, databaseTargetName);
 
     console.log(
-      `[Database] Connected to MongoDB Atlas - Environment: ${runtimeEnvironment} - Target: ${connectedDatabaseName}`,
+      `[Database] Connected to MongoDB Atlas - Environment: ${runtimeEnvironment} - Target: ${connectedDatabaseName} - Resolved: ${targetDatabaseName}`,
     );
   } catch (error) {
     console.error('[Database] MongoDB connection error:', error);
