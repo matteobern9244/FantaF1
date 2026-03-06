@@ -13,6 +13,8 @@ export default defineConfig({
     },
   },
   test: {
+    setupFiles: ['./tests/setup.ts'],
+    globals: true,
     coverage: {
       provider: 'v8',
       include: ['backend/**/*.js', 'src/utils/**/*.ts'],

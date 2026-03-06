@@ -43,24 +43,6 @@ class SaveRequestError extends Error {
 function normalizeText(value: unknown) {
   return typeof value === 'string' && value.trim() ? value.trim() : undefined;
 }
-
-function summarizeDetails(details: string | undefined) {
-  if (!details) {
-    return undefined;
-  }
-
-  const firstLine = details
-    .split('\n')
-    .map((line) => line.trim())
-    .find(Boolean);
-
-  if (!firstLine) {
-    return undefined;
-  }
-
-  return firstLine.length > 240 ? `${firstLine.slice(0, 237)}...` : firstLine;
-}
-
 function buildDevelopmentMessage(
   fallbackMessage: string,
   payload: SaveErrorPayload,
@@ -69,7 +51,17 @@ function buildDevelopmentMessage(
   const backendMessage = normalizeText(payload.error) ?? fallbackMessage;
   const code = normalizeText(payload.code);
   const requestId = normalizeText(payload.requestId);
-  const details = summarizeDetails(normalizeText(payload.details) ?? fallbackDetails);
+
+  const rawDetails = normalizeText(payload.details) ?? fallbackDetails;
+  let details: string | undefined = undefined;
+
+  if (rawDetails) {
+    const firstLine = rawDetails.split('\n').map((line) => line.trim()).find(Boolean);
+    if (firstLine) {
+      details = firstLine.length > 240 ? `${firstLine.slice(0, 237)}...` : firstLine;
+    }
+  }
+
   const messageLines = [backendMessage];
 
   if (code) {
@@ -112,14 +104,6 @@ function getSaveErrorAlertMessage({
   return buildDevelopmentMessage(fallbackMessage, {}, fallbackDetails);
 }
 
-async function readSaveErrorPayload(response: Response) {
-  try {
-    return (await response.json()) as SaveErrorPayload;
-  } catch {
-    return {};
-  }
-}
-
 async function createSaveRequestError(
   response: Response,
   {
@@ -130,7 +114,8 @@ async function createSaveRequestError(
     environment: RuntimeEnvironment;
   },
 ) {
-  const payload = await readSaveErrorPayload(response);
+  const payload: SaveErrorPayload = await response.json().catch(() => ({}));
+
   const code = normalizeText(payload.code);
   const requestId = normalizeText(payload.requestId);
   const details = normalizeText(payload.details);

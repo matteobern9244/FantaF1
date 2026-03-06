@@ -28,6 +28,16 @@ describe('MongoDB database target resolution', () => {
     ).toBe(LOCAL_DATABASE_NAME);
   });
 
+  it('returns undefined if the URI is empty or not a string', () => {
+    expect(extractMongoDatabaseName('')).toBeUndefined();
+    expect(extractMongoDatabaseName(null)).toBeUndefined();
+    expect(extractMongoDatabaseName(undefined)).toBeUndefined();
+  });
+
+  it('returns undefined and handles parsing errors if the URI is not a valid URL', () => {
+    expect(extractMongoDatabaseName('not-a-valid-url-at-all')).toBeUndefined();
+  });
+
   it('falls back to the environment target when the MongoDB URI does not specify a database', () => {
     expect(
       resolveMongoDatabaseName({

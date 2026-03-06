@@ -650,7 +650,7 @@ function App() {
   if (loading) {
     return (
       <div className="loading-shell">
-        <div className="pitstop-loader">
+        <div className="pitstop-loader" data-testid="pitstop-loader">
           <div className="mechanic-container">
             <img src={pitstopIcon} alt="Pitstop mechanic" className="mechanic-icon" />
             <img src={tireIcon} alt="Spinning tire" className="tire-icon spin" />

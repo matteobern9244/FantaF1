@@ -1,3 +1,6 @@
+/**
+ * @vitest-environment jsdom
+ */
 import { describe, expect, it } from 'vitest';
 import {
   SaveRequestError,
@@ -60,6 +63,20 @@ describe('UI save error helpers', () => {
     expect(error.details).toBe('hidden details');
   });
 
+  it('returns the userMessage directly if the error is a SaveRequestError', () => {
+    const saveError = new SaveRequestError('Backend error', {
+      status: 500,
+      userMessage: 'Messaggio utente formattato',
+    });
+    expect(
+      getSaveErrorAlertMessage({
+        error: saveError,
+        fallbackMessage: 'Fallback message',
+        environment: 'development',
+      })
+    ).toBe('Messaggio utente formattato');
+  });
+
   it('falls back to the thrown error details in development when the request did not return JSON', () => {
     expect(
       getSaveErrorAlertMessage({
@@ -78,5 +95,56 @@ describe('UI save error helpers', () => {
         environment: 'production',
       }),
     ).toBe('Impossibile salvare i dati.');
+  });
+
+  it('handles non-JSON responses gracefully by falling back to the default message', async () => {
+    const response = new Response('<html>502 Bad Gateway</html>', {
+      status: 502,
+      headers: { 'Content-Type': 'text/html' },
+    });
+
+    const error = await createSaveRequestError(response, {
+      fallbackMessage: 'Errore generico di salvataggio.',
+      environment: 'development',
+    });
+
+    expect(error.userMessage).toBe('Errore generico di salvataggio.');
+    expect(error.details).toBeUndefined();
+  });
+
+  it('summarizes multi-line details and ignores leading empty lines', () => {
+    expect(
+      getSaveErrorAlertMessage({
+        error: 'Error',
+        fallbackMessage: 'Fallback',
+        environment: 'development',
+      }),
+    ).toBe('Fallback\nDettagli: Error'); // L'oggetto error non e' un'istanza di Error ma una stringa
+
+    expect(
+      getSaveErrorAlertMessage({
+        error: new Error('\n\nPrima riga valida\nSeconda riga ignorata'),
+        fallbackMessage: 'Fallback',
+        environment: 'development',
+      }),
+    ).toBe('Fallback\nDettagli: Prima riga valida');
+  });
+
+  it('truncates extremely long details over 240 characters', async () => {
+    const longString = 'A'.repeat(300);
+    const response = new Response(
+      JSON.stringify({ error: 'Save failed', details: longString }),
+      {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' },
+      },
+    );
+
+    const error = await createSaveRequestError(response, {
+      fallbackMessage: 'Fallback',
+      environment: 'development',
+    });
+
+    expect(error.userMessage).toContain('A'.repeat(237) + '...');
   });
 });

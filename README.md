@@ -198,6 +198,7 @@ Se il database non contiene ancora stato applicativo, il backend costruisce uno 
 ### Backend
 
 - Server Express 5 con `cors`, `express.json()` e `dotenv`.
+- L'applicazione Express è definita in `app.js` per consentire test di integrazione, mentre `server.js` gestisce l'avvio e la connessione al database.
 - Espone API REST, serve gli asset statici di `dist` e usa un catch-all per il routing SPA.
 - Si connette prima al database, poi avvia il server HTTP e infine esegue in background la sincronizzazione di piloti e calendario.
 - In produzione il server ascolta su `0.0.0.0` e usa `PORT` se fornita dall'ambiente.
@@ -454,6 +455,7 @@ Lo script integrato:
   - `statements: 100`
 
 La suite copre business logic, storage MongoDB, sanitizzazione, parsing di piloti e calendario, risultati, formattazione UI e regressioni sui flussi principali.
+Include test di integrazione API (tramite `supertest` su `app.js`) e test dei componenti UI (tramite `jsdom` e `React Testing Library`).
 Include anche test unitari dedicati allo split deterministico del titolo hero e ai fallback responsive del titolo configurato.
 Per la UI e' disponibile anche `npm run test:ui-responsive`, che usa Playwright CLI via `npx` contro l'app locale avviata e verifica i breakpoint principali, il box "Prossimo weekend", il tooltip risultati e l'assenza di overflow orizzontali fuori dal carosello calendario.
 Per il salvataggio locale e' disponibile `npm run test:save-local`, che legge `/api/data`, re-invia lo stesso payload su `POST /api/data`, verifica `environment=development`, `databaseTarget=fantaf1_dev` e controlla che lo stato resti invariato dopo il round-trip.
@@ -462,6 +464,8 @@ Per il salvataggio locale e' disponibile `npm run test:save-local`, che legge `/
 
 - `src/`: frontend React, costanti, tipi e utility UI.
 - `backend/`: parsing esterno, validazione, storage e modelli Mongoose.
+- `app.js`: definizione dell'applicazione Express per il testing.
+- `server.js`: entry point per l'avvio del server.
 - `config/`: configurazione applicativa centralizzata.
 - `scripts/`: launcher locale.
 - `tests/`: test unitari e fixture HTML.

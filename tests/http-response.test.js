@@ -3,9 +3,19 @@ import {
   buildHealthPayload,
   buildSaveErrorResponse,
   classifySaveError,
+  createRequestId,
+  extractErrorDetails,
 } from '../backend/http.js';
 
 describe('backend http helpers', () => {
+  it('generates a unique request id', () => {
+    const id1 = createRequestId();
+    const id2 = createRequestId();
+    expect(id1).toBeDefined();
+    expect(typeof id1).toBe('string');
+    expect(id1).not.toBe(id2);
+  });
+
   it('builds the health payload with environment metadata', () => {
     expect(
       buildHealthPayload({
@@ -73,5 +83,31 @@ describe('backend http helpers', () => {
     expect(classifySaveError(new Error('MongoServerError: write failed'))).toBe(
       'storage_write_failed',
     );
+  });
+
+  it('classifies unknown errors as save_unexpected_error', () => {
+    expect(classifySaveError(new Error('Something completely unexpected'))).toBe(
+      'save_unexpected_error',
+    );
+  });
+
+  it('extracts details from different error types', () => {
+    expect(extractErrorDetails('String error')).toBe('String error');
+    expect(extractErrorDetails({ key: 'value' })).toBe('{"key":"value"}');
+
+    const circularObj = {};
+    circularObj.self = circularObj;
+    expect(extractErrorDetails(circularObj)).toBe('[object Object]');
+  });
+
+  it('builds save error payload without details if details are missing', () => {
+    const response = buildSaveErrorResponse({
+      environment: 'development',
+      requestId: 'req-1',
+      code: 'save_unexpected_error',
+      error: 'Impossibile salvare.',
+    });
+    expect(response.payload.details).toBeUndefined();
+    expect(response.status).toBe(500);
   });
 });
