@@ -4,6 +4,8 @@ Cronologia sintetica delle release documentate del progetto Fanta Formula 1.
 
 ## In sviluppo
 
+## v1.3.4 - Produzione attuale
+
 - Separata l'applicazione Express in `app.js` per isolare la logica delle rotte dall'avvio del server, migliorando la testabilità.
 - Introdotta una nuova suite di test di integrazione API utilizzando `supertest`.
 - Introdotta una suite di test dei componenti React tramite `jsdom` e `@testing-library/react`.
@@ -21,7 +23,7 @@ Cronologia sintetica delle release documentate del progetto Fanta Formula 1.
 - Aggiunti test unitari specifici sul parsing del titolo hero e ripristinata la coverage globale allo standard del repo sullo scope configurato (`100%` lines/statements/functions, branch sopra soglia).
 - Formalizzato in `AGENTS.md` e `PROJECT.md` l'obbligo di aggiornare sempre `CHANGELOG.md` per ogni nuova versione applicativa, tag git o release GitHub.
 
-## v1.3.3 - Produzione attuale
+## v1.3.3
 
 - Riallineata e ampliata la documentazione tecnica e di business logic nel `README.md` per riflettere con precisione il comportamento reale del repository.
 - Estratto il changelog operativo dal `README.md` in un file dedicato `CHANGELOG.md`, mantenendo la cronologia separata dalla documentazione evergreen.
