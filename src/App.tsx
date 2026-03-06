@@ -38,10 +38,13 @@ import {
 } from './utils/calendar';
 import {
   buildRaceRecord,
-  calculatePointsEarned,
+  calculateLiveTotal,
+  calculateProjectedPoints,
   createEmptyPrediction,
   createInitialUsers,
+  mergeMissingPredictionFields,
   rebuildUsersFromHistory,
+  sortUsersByLiveTotal,
   validatePredictions,
 } from './utils/game';
 import {
@@ -69,6 +72,8 @@ const resultLabels: Record<PredictionKey, string> = {
   pole: uiText.labels.resultPole,
 };
 
+type OfficialResultsAvailability = 'none' | 'partial' | 'complete';
+
 function formatText(template: string, replacements: Record<string, string | number>) {
   return Object.entries(replacements).reduce((value, [key, replacement]) => {
     return value.split(`{${key}}`).join(String(replacement));
@@ -82,6 +87,24 @@ function normalizeMeetingName(value: string) {
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, ' ')
     .trim();
+}
+
+function hasPredictionValue(value: string) {
+  return String(value ?? '').trim().length > 0;
+}
+
+function getOfficialResultsAvailability(raceResults: Prediction): OfficialResultsAvailability {
+  const filledFields = predictionFieldOrder.filter((field) => hasPredictionValue(raceResults[field]));
+
+  if (filledFields.length === 0) {
+    return 'none';
+  }
+
+  if (filledFields.length === predictionFieldOrder.length) {
+    return 'complete';
+  }
+
+  return 'partial';
 }
 
 async function fetchJson<T>(url: string): Promise<T> {
@@ -148,6 +171,62 @@ function getNextRaceAfter(calendar: RaceWeekend[], currentRace: RaceWeekend | nu
   return currentRace;
 }
 
+function getRaceStartTime(race: RaceWeekend | null) {
+  const startTimeStr = race?.raceStartTime || (race?.endDate ? `${race.endDate}T14:00:00Z` : null);
+  if (!startTimeStr) {
+    return null;
+  }
+
+  const normalizedTime = startTimeStr.replace(' ', 'T');
+  const startTime = new Date(normalizedTime);
+  return Number.isNaN(startTime.getTime()) ? null : startTime;
+}
+
+function getRaceFinishTime(race: RaceWeekend | null) {
+  const startTime = getRaceStartTime(race);
+  if (!startTime) {
+    return null;
+  }
+
+  return new Date(startTime.getTime() + 2.5 * 60 * 60 * 1000);
+}
+
+function isRaceStarted(race: RaceWeekend | null) {
+  const startTime = getRaceStartTime(race);
+  if (!startTime) {
+    return false;
+  }
+
+  return new Date() >= startTime;
+}
+
+function isRaceFinished(race: RaceWeekend | null) {
+  const finishTime = getRaceFinishTime(race);
+  if (!finishTime) {
+    return false;
+  }
+
+  return new Date() >= finishTime;
+}
+
+function isWeekendActive(race: RaceWeekend | null) {
+  if (!race?.startDate) {
+    return false;
+  }
+
+  const weekendStart = new Date(`${race.startDate}T00:00:00Z`);
+  const weekendEnd =
+    getRaceFinishTime(race) ??
+    (race.endDate ? new Date(`${race.endDate}T23:59:59Z`) : null);
+
+  if (!weekendEnd || Number.isNaN(weekendStart.getTime()) || Number.isNaN(weekendEnd.getTime())) {
+    return false;
+  }
+
+  const now = new Date();
+  return now >= weekendStart && now <= weekendEnd;
+}
+
 function AppLogo() {
   return (
     <svg
@@ -201,32 +280,23 @@ function App() {
   const sortedCalendar = sortCalendarByRound(calendar);
   const selectedRace = resolveSelectedRace(sortedCalendar, selectedMeetingKey);
   const nextUpcomingRace = getNextUpcomingRace(sortedCalendar);
-
-  function isRaceStarted(race: RaceWeekend | null) {
-    const startTimeStr = race?.raceStartTime || (race?.endDate ? `${race.endDate}T14:00:00Z` : null);
-    if (!startTimeStr) {
-      return false;
-    }
-    // Safari compatibility: Ensure 'T' and 'Z' or proper ISO format
-    const normalizedTime = startTimeStr.replace(' ', 'T');
-    const startTime = new Date(normalizedTime);
-    return !isNaN(startTime.getTime()) && new Date() >= startTime;
-  }
-
-  function isRaceFinished(race: RaceWeekend | null) {
-    const startTimeStr = race?.raceStartTime || (race?.endDate ? `${race.endDate}T14:00:00Z` : null);
-    if (!startTimeStr) {
-      return false;
-    }
-    // Safari compatibility
-    const normalizedTime = startTimeStr.replace(' ', 'T');
-    const startTime = new Date(normalizedTime);
-    if (isNaN(startTime.getTime())) return false;
-
-    // Assume race finishes after 2.5 hours
-    const finishTime = new Date(startTime.getTime() + 2.5 * 60 * 60 * 1000);
-    return new Date() >= finishTime;
-  }
+  const allLiveResultsFilled = predictionFieldOrder.every((field) => hasPredictionValue(raceResults[field]));
+  const shouldShowOfficialResultsStatus = Boolean(selectedRace) && !editingSession;
+  const officialResultsAvailability = shouldShowOfficialResultsStatus
+    ? getOfficialResultsAvailability(raceResults)
+    : null;
+  const liveResultsStatusMessage =
+    officialResultsAvailability === 'none'
+      ? uiText.status.liveNoOfficialResults
+      : officialResultsAvailability === 'partial'
+        ? uiText.status.livePartialOfficialResults
+        : '';
+  const predictionResultsStatusMessage =
+    officialResultsAvailability === 'none'
+      ? uiText.status.predictionNoOfficialResults
+      : officialResultsAvailability === 'partial'
+        ? uiText.status.predictionPartialOfficialResults
+        : '';
 
   useEffect(() => {
     let isCancelled = false;
@@ -293,42 +363,55 @@ function App() {
   }, []);
 
   useEffect(() => {
-    if (!selectedRace || !isRaceFinished(selectedRace)) {
+    if (!selectedRace || editingSession || allLiveResultsFilled) {
       return;
     }
 
-    const hasResults = predictionFieldOrder.every((field) => Boolean(raceResults[field]));
-    if (hasResults || editingSession) {
-      return;
-    }
+    const activeRace = selectedRace;
+    let isCancelled = false;
+    let pollingId: number | null = null;
 
-    async function autoFetchResults() {
+    async function syncSelectedWeekendResults() {
       try {
-        const response = await fetch(`/api/results/${selectedRace?.meetingKey}`);
+        const response = await fetch(`/api/results/${activeRace.meetingKey}`);
         if (!response.ok) {
           return;
         }
         const results = await response.json() as Prediction;
-        if (results.first || results.second || results.third || results.pole) {
-          setRaceResults(results);
+        if (isCancelled) {
+          return;
         }
+
+        setRaceResults((currentResults) => mergeMissingPredictionFields(currentResults, results));
       } catch (error) {
         console.error('Failed to auto-fetch results:', error);
       }
     }
 
-    void autoFetchResults();
-  }, [selectedRace, raceResults, editingSession]);
+    void syncSelectedWeekendResults();
 
-  const liveLeaderboardUsers = [...users].sort(
-    (firstUser, secondUser) =>
-      secondUser.points +
-      calculatePointsEarned(secondUser.predictions, raceResults, points) -
-      (firstUser.points + calculatePointsEarned(firstUser.predictions, raceResults, points)),
-  );
+    if (isWeekendActive(activeRace)) {
+      pollingId = window.setInterval(() => {
+        void syncSelectedWeekendResults();
+      }, 30_000);
+    }
+
+    return () => {
+      isCancelled = true;
+      if (pollingId !== null) {
+        window.clearInterval(pollingId);
+      }
+    };
+  }, [
+    allLiveResultsFilled,
+    editingSession,
+    selectedRace,
+  ]);
+
+  const liveLeaderboardUsers = sortUsersByLiveTotal(users, raceResults, points);
 
   function calculatePotentialPoints(userPrediction: Prediction) {
-    return calculatePointsEarned(userPrediction, raceResults, points);
+    return calculateProjectedPoints(userPrediction, raceResults, points);
   }
 
   function mergePredictionsIntoUsers(nextUsers: UserData[], sourceUsers: UserData[]) {
@@ -675,7 +758,7 @@ function App() {
 
   const raceLocked = isRaceStarted(selectedRace);
   const isFinished = isRaceFinished(selectedRace);
-  const allResultsFilled = predictionFieldOrder.every(field => Boolean(raceResults[field]));
+  const allResultsFilled = allLiveResultsFilled;
   const canAssignPoints = isFinished && allResultsFilled;
 
   let disabledReason = '';
@@ -805,12 +888,12 @@ function App() {
               <span>{uiText.headings.live}</span>
             </div>
             <div className="live-list">
-              {liveLeaderboardUsers.map((user) => (
+                      {liveLeaderboardUsers.map((user) => (
                 <div key={`hero-live-${user.name}`} className="live-row">
                   <span>{user.name}</span>
                   <strong className="live-score">
                     <span className="live-score-value">
-                      {user.points + calculatePotentialPoints(user.predictions)}
+                      {calculateLiveTotal(user, raceResults, points)}
                     </span>
                     <span className="live-score-suffix">{uiText.pointsSuffix}</span>
                   </strong>
@@ -818,6 +901,9 @@ function App() {
               ))}
             </div>
             <p className="sidebar-note">{uiText.history.liveHint}</p>
+            {liveResultsStatusMessage ? (
+              <p className="sidebar-note status-note">{liveResultsStatusMessage}</p>
+            ) : null}
           </section>
 
           <section className="hero-card">
@@ -915,6 +1001,9 @@ function App() {
             </div>
 
             {raceLocked && <p className="locked-banner">{uiText.calendar.raceLocked}</p>}
+            {predictionResultsStatusMessage ? (
+              <p className="sidebar-note status-note">{predictionResultsStatusMessage}</p>
+            ) : null}
 
             <div className="predictions-grid">
               {users.map((user) => (

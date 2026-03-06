@@ -6,6 +6,15 @@ Cronologia sintetica delle release documentate del progetto Fanta Formula 1.
 
 - Nessuna voce documentata al momento.
 
+## v1.3.7
+
+- **Proiezioni Live Riallineate**: Il tab `Pronostici dei giocatori` e la `Classifica live` usano ora in modo coerente il weekend selezionato e la stessa proiezione ufficiale del weekend corrente.
+- **Parsing Risultati Formula1.com Aggiornato**: Il backend non dipende piu' da `data-driver-id`; legge la tabella HTML corrente di Formula1.com, supporta `race-result`, `qualifying` e `sprint-results`, e restituisce campi vuoti quando la fonte ufficiale espone `No results available`.
+- **Cache Read-Only per Risultati Ufficiali**: Introdotta una cache in-memory a TTL corto sull'endpoint `GET /api/results/:meetingKey` per sostenere il polling live senza scritture automatiche su database e senza moltiplicare le richieste upstream.
+- **Chiarezza UX su Risultati Ufficiali**: Quando i risultati ufficiali non esistono ancora, la UI espone un messaggio esplicito invece di mostrare solo `0`; quando i risultati sono parziali, segnala chiaramente che proiezione e classifica live sono parziali.
+- **Regressioni Coperte da Test**: Estesi test unitari, API e UI su scoring live, parser risultati, cache TTL, stati `none/partial/complete` e riallineamento del weekend selezionato.
+- **Documentazione Allineata**: Aggiornati `README.md` e `CHANGELOG.md` per riflettere il recupero read-only dei risultati ufficiali, il polling live del weekend selezionato e il nuovo stato UI per risultati assenti o parziali.
+
 ## v1.3.6
 
 - **Hotfix Save Manuale Pronostici**: Il pulsante `Salva dati inseriti` ora richiede solo la presenza di almeno un pronostico compilato e accetta anche stati completamente compilati.
