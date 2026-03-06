@@ -4,6 +4,10 @@ Cronologia sintetica delle release documentate del progetto Fanta Formula 1.
 
 ## In sviluppo
 
+- **Consolidamento Linee Guida e Vincoli**: Formalizzate le direttive ingegneristiche e i vincoli di progetto nei file `AGENTS.md`, `PROJECT.md` e `GEMINI.md`.
+- **Standardizzazione Operativa**: Introdotto un workflow mandatorio che include TDD rigoroso, mindset "production-safe" per la protezione dei dati reali e disciplina cross-platform (macOS/Windows).
+- **Protocollo di Documentazione**: Automatizzato l'obbligo di aggiornamento di `README.md` e `CHANGELOG.md` per ogni commit autorizzato, garantendo la coerenza tra codice e documentazione.
+
 ## v1.3.5 - Produzione attuale
 
 - **Inversione Logica di Validazione**: Il salvataggio dei pronostici è ora consentito **esclusivamente** per stati parzialmente compilati (almeno un campo compilato e almeno uno vuoto).

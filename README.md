@@ -186,6 +186,16 @@ Se il database non contiene ancora stato applicativo, il backend costruisce uno 
 
 ## Architettura
 
+### Documentazione e Standard Operativi
+
+Il repository segue standard ingegneristici rigorosi per garantire la sicurezza dei dati di produzione e la manutenibilità a lungo termine. Questi standard sono formalizzati in tre file mandatori che ogni agente (AI o umano) deve seguire:
+
+- `AGENTS.md`: Contratto ingegneristico generale (TDD, workflow, sicurezza, qualità del codice).
+- `PROJECT.md`: Verità specifica del progetto FantaF1 (vincoli di business, integrità dei dati, aree ad alto rischio).
+- `GEMINI.md`: Direttive operative specifiche per l'automazione e il ciclo di vita dell'applicazione nel repository.
+
+L'applicazione di questi standard garantisce un approccio "production-safe" e una validazione continua tramite un ciclo rigoroso di test e build.
+
 ### Frontend
 
 - SPA React 18 + TypeScript + Vite.
