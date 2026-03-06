@@ -47,5 +47,5 @@ export function validatePredictions(users, fieldOrder) {
   const isAllEmpty = filledCount === 0;
   const isAllFilled = filledCount === totalCount;
 
-  return isAllEmpty || isAllFilled;
+  return !isAllEmpty && !isAllFilled;
 }

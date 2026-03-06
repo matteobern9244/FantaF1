@@ -4,7 +4,14 @@ Cronologia sintetica delle release documentate del progetto Fanta Formula 1.
 
 ## In sviluppo
 
-## v1.3.4 - Produzione attuale
+## v1.3.5 - Produzione attuale
+
+- **Inversione Logica di Validazione**: Il salvataggio dei pronostici è ora consentito **esclusivamente** per stati parzialmente compilati (almeno un campo compilato e almeno uno vuoto).
+- **Hardening Validazione**: Gli stati "tutti vuoti" o "tutti completi" sono ora considerati non validi e vengono bloccati sia dal frontend che dal backend per forzare un flusso di inserimento incrementale.
+- **Aggiornamento UI**: Aggiornato il messaggio di alert per riflettere con precisione il nuovo requisito di validazione.
+- **Suite di Test**: Aggiornati i test unitari (`game.test.ts` e `validation.test.js`) per coprire la nuova logica (TDD), garantendo che gli stati estremi (tutti vuoti/pieni) falliscano correttamente.
+
+## v1.3.4
 
 - Separata l'applicazione Express in `app.js` per isolare la logica delle rotte dall'avvio del server, migliorando la testabilità.
 - Introdotta una nuova suite di test di integrazione API utilizzando `supertest`.

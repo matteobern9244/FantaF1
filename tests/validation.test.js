@@ -82,52 +82,52 @@ describe('Validation Logic', () => {
   describe('validatePredictions', () => {
     const fields = ['first', 'second', 'third', 'pole'];
 
-    it('should return true if all fields are filled for all users', () => {
+    it('should return false if all fields are filled for all users', () => {
       const users = [
         { predictions: { first: 'A', second: 'B', third: 'C', pole: 'D' } },
         { predictions: { first: 'X', second: 'Y', third: 'Z', pole: 'W' } }
       ];
-      expect(validatePredictions(users, fields)).toBe(true);
+      expect(validatePredictions(users, fields)).toBe(false);
     });
 
-    it('should return true if all fields are empty for all users', () => {
+    it('should return false if all fields are empty for all users', () => {
       const users = [
         { predictions: { first: '', second: '', third: '', pole: '' } },
         { predictions: { first: '', second: '', third: '', pole: '' } }
       ];
-      expect(validatePredictions(users, fields)).toBe(true);
+      expect(validatePredictions(users, fields)).toBe(false);
     });
 
-    it('should return false if some fields are filled and others are not', () => {
+    it('should return true if some fields are filled and others are not', () => {
       const users = [
         { predictions: { first: 'A', second: 'B', third: 'C', pole: 'D' } },
         { predictions: { first: 'X', second: '', third: '', pole: '' } }
       ];
-      expect(validatePredictions(users, fields)).toBe(false);
+      expect(validatePredictions(users, fields)).toBe(true);
     });
 
-    it('should return false if one user is completely empty but another is partially filled', () => {
+    it('should return true if one user is completely empty but another is partially filled', () => {
        const users = [
         { predictions: { first: '', second: '', third: '', pole: '' } },
         { predictions: { first: 'X', second: '', third: '', pole: '' } }
       ];
-      expect(validatePredictions(users, fields)).toBe(false);
+      expect(validatePredictions(users, fields)).toBe(true);
     });
 
-    it('should return false if one user is completely filled but another is partially filled', () => {
+    it('should return true if one user is completely filled but another is partially filled', () => {
        const users = [
         { predictions: { first: 'A', second: 'B', third: 'C', pole: 'D' } },
         { predictions: { first: 'X', second: '', third: '', pole: '' } }
       ];
-      expect(validatePredictions(users, fields)).toBe(false);
+      expect(validatePredictions(users, fields)).toBe(true);
     });
 
-    it('should return false if one user is completely filled but another is completely empty', () => {
+    it('should return true if one user is completely filled but another is completely empty', () => {
        const users = [
         { predictions: { first: 'A', second: 'B', third: 'C', pole: 'D' } },
         { predictions: { first: '', second: '', third: '', pole: '' } }
       ];
-      expect(validatePredictions(users, fields)).toBe(false);
+      expect(validatePredictions(users, fields)).toBe(true);
     });
 
     it('should return false for invalid input', () => {

@@ -8,7 +8,7 @@ L'applicazione e' pensata per un flusso amministrato: un admin seleziona il week
 
 - Lo stato di gioco mantiene sempre esattamente 3 partecipanti.
 - I pronostici prevedono 4 campi per ogni utente: primo, secondo, terzo e pole oppure vincitore Sprint.
-- Il salvataggio dei pronostici e' consentito solo quando tutti i campi sono vuoti oppure tutti i campi sono completi.
+- Il salvataggio dei pronostici e' consentito solo quando i campi sono parzialmente compilati (almeno un campo vuoto e almeno un campo compilato). Lo stato "tutti vuoti" o "tutti completi" non e' considerato valido per il salvataggio diretto.
 - Il backend blocca le modifiche ai pronostici dopo l'inizio ufficiale della gara del weekend selezionato.
 - La conferma dei risultati e l'assegnazione punti sono possibili solo quando la gara e' considerata conclusa e tutti i risultati reali sono presenti.
 - Lo storico gare puo' essere modificato o eliminato; in entrambi i casi la classifica totale viene ricalcolata.
@@ -34,12 +34,12 @@ Il flusso previsto e' questo:
 
 ### Validazione salvataggio pronostici
 
-Il salvataggio dei pronostici non accetta stati parziali. Il payload e' valido solo in due casi:
+Il salvataggio dei pronostici accetta esclusivamente stati parziali. Il payload e' valido solo se:
 
-- tutti i campi pronostico di tutti gli utenti sono vuoti;
-- tutti i campi pronostico di tutti gli utenti sono compilati.
+- Esiste almeno un campo compilato (per evitare salvataggi vuoti inutili).
+- Esiste almeno un campo vuoto (per forzare il completamento dell'inserimento solo in fase di consolidamento).
 
-Questo comportamento vale sia lato frontend sia lato backend, dove il payload viene sanitizzato prima della persistenza.
+Questo comportamento vale sia lato frontend sia lato backend, dove il payload viene sanitizzato prima della persistenza. Lo stato "tutti vuoti" o "tutti completi" viene quindi rifiutato per il salvataggio diretto dei pronostici correnti.
 
 ### Race lock
 
