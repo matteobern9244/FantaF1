@@ -4,7 +4,9 @@ Cronologia sintetica delle release documentate del progetto Fanta Formula 1.
 
 ## In sviluppo
 
-- Nessuna voce documentata al momento.
+- **Coverage Repository Portata al 100%**: La suite sullo scope configurato (`backend/**/*.js`, `src/utils/**/*.ts`) raggiunge ora `100%` su statements, branches, functions e lines, con soglia enforcement aggiornata anche per i branch.
+- **Hardening Helper di Parsing**: Rafforzati gli helper di normalizzazione in `backend/calendar.js` e `backend/drivers.js` per gestire in modo deterministico input nullish senza alterare la business logic applicativa.
+- **Test Regressivi Estesi**: Aggiunti casi mirati su parser risultati, cache TTL, calendario, storage, scoring nullish, save error UI e normalizzazione roster per prevenire regressioni nei flussi sensibili.
 
 ## v1.3.7
 

@@ -52,6 +52,104 @@ describe('MongoDB Storage Functions', () => {
       const data = await readAppData(Promise.resolve([]));
       expect(data.gpName).toBe('');
     });
+
+    it('sanitizes fallback names, map-based history and reads the calendar cache when no promise is provided', async () => {
+      Weekend.find.mockReturnValue({
+        sort: vi.fn().mockResolvedValue([
+          {
+            toObject: () => ({
+              meetingKey: 'monaco',
+              meetingName: 'Monaco',
+              grandPrixTitle: 'Monaco Grand Prix',
+              roundNumber: 7,
+              startDate: '2026-05-24',
+              endDate: '2026-05-24',
+            }),
+          },
+        ]),
+      });
+      AppData.findOne.mockReturnValue({
+        sort: vi.fn().mockResolvedValue({
+          toObject: () => ({
+            gpName: 'Monaco Grand Prix',
+            selectedMeetingKey: 'missing',
+            users: [
+              {
+                name: '',
+                points: 'NaN',
+                predictions: { first: 1, second: 'ham', third: null, pole: undefined },
+              },
+              {
+                name: 'Valid User',
+                points: 7,
+                predictions: { first: 'ver', second: '', third: '', pole: '' },
+              },
+            ],
+            history: [
+              {
+                gpName: 'Historic GP',
+                meetingKey: 'historic',
+                date: '01/01/2026',
+                results: { first: 'ver', second: 'ham', third: 'lec', pole: 'nor' },
+                userPredictions: new Map([
+                  [
+                    'Player 1',
+                    {
+                      prediction: { first: 'ver', second: 'ham', third: 'lec', pole: 'nor' },
+                      pointsEarned: 'NaN',
+                    },
+                  ],
+                ]),
+              },
+            ],
+          }),
+        }),
+      });
+
+      const data = await readAppData();
+
+      expect(data.selectedMeetingKey).toBe('monaco');
+      expect(data.gpName).toBe('Monaco Grand Prix');
+      expect(data.users).toEqual([
+        {
+          name: 'Unknown',
+          predictions: { first: '', second: 'ham', third: '', pole: '' },
+          points: 0,
+        },
+        {
+          name: 'Valid User',
+          predictions: { first: 'ver', second: '', third: '', pole: '' },
+          points: 7,
+        },
+        {
+          name: 'Player 3',
+          predictions: { first: '', second: '', third: '', pole: '' },
+          points: 0,
+        },
+      ]);
+      expect(data.history[0].userPredictions['Player 1'].pointsEarned).toBe(0);
+    });
+
+    it('trims the list to the first three users when more are stored', async () => {
+      AppData.findOne.mockReturnValue({
+        sort: vi.fn().mockResolvedValue({
+          toObject: () => ({
+            users: [
+              { name: '', points: 1, predictions: {} },
+              { name: 'Two', points: 2, predictions: {} },
+              { name: 'Three', points: 3, predictions: {} },
+              { name: 'Four', points: 4, predictions: {} },
+            ],
+          }),
+        }),
+      });
+
+      const data = await readAppData(Promise.resolve([]));
+
+      expect(data.users).toHaveLength(3);
+      expect(data.users[0].name).toBe('Unknown');
+      expect(data.users[2].name).toBe('Three');
+    });
   });
 
   describe('writeAppData', () => {
@@ -64,6 +162,32 @@ describe('MongoDB Storage Functions', () => {
       AppData.findOneAndUpdate.mockResolvedValue();
       const data = await writeAppData({ gpName: 'Test GP' }, Promise.resolve([]));
       expect(data.gpName).toBe('Test GP');
+      expect(AppData.findOneAndUpdate).toHaveBeenCalled();
+    });
+
+    it('reads the calendar cache when writeAppData is called without a calendar promise', async () => {
+      Weekend.find.mockReturnValue({
+        sort: vi.fn().mockResolvedValue([
+          {
+            toObject: () => ({
+              meetingKey: 'australia',
+              meetingName: 'Australia',
+              grandPrixTitle: 'Australian Grand Prix',
+              roundNumber: 1,
+              startDate: '2026-03-08',
+              endDate: '2026-03-08',
+            }),
+          },
+        ]),
+      });
+      AppData.findOneAndUpdate.mockResolvedValue();
+
+      const result = await writeAppData({
+        users: [{ name: '', predictions: {}, points: 'nan' }],
+      });
+
+      expect(result.selectedMeetingKey).toBe('australia');
+      expect(result.users[0].name).toBe('Unknown');
       expect(AppData.findOneAndUpdate).toHaveBeenCalled();
     });
   });

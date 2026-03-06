@@ -142,5 +142,13 @@ describe('Validation Logic', () => {
     it('should return false for invalid input', () => {
       expect(validatePredictions(null, fields)).toBe(false);
     });
+
+    it('should treat non-string prediction fields as empty', () => {
+      const users = [
+        { predictions: { first: 42, second: null, third: undefined, pole: '' } },
+      ];
+
+      expect(validatePredictions(users, fields)).toBe(false);
+    });
   });
 });

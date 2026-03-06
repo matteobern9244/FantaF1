@@ -41,6 +41,18 @@ describe('Backend Drivers Extra Coverage', () => {
     expect(d4.id).toBe('xix');
   });
 
+  it('falls back to xxx ids and default team colors for empty driver names or unknown teams', () => {
+    const existing = new Set();
+    const driver = buildDriverRecord(undefined, 'Unknown Team', existing);
+
+    expect(driver.id).toBe('xxx');
+    expect(driver.name).toBe('');
+    expect(driver.team).toBe('Unknown Team');
+    expect(driver.color).toBe('#5F6673');
+    expect(driver.avatarUrl).toBeUndefined();
+    expect(driver.teamSlug).toBeUndefined();
+  });
+
   it('parseFormulaOneDriversPage handles missing team slug in image URL', () => {
     const formulaOneFixture = `
       <a href="/en/drivers/unknown-driver">
