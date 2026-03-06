@@ -2,6 +2,7 @@ import { randomUUID } from 'crypto';
 
 const SAVE_ERROR_STATUS = {
   participants_invalid: 400,
+  predictions_missing: 400,
   race_locked: 403,
   database_target_mismatch: 500,
   storage_write_failed: 500,
@@ -44,6 +45,13 @@ function classifySaveError(error) {
 
   if (normalizedDetails.includes('invalid participants list')) {
     return 'participants_invalid';
+  }
+
+  if (
+    normalizedDetails.includes("almeno un pronostico") ||
+    normalizedDetails.includes('at least one prediction')
+  ) {
+    return 'predictions_missing';
   }
 
   if (normalizedDetails.includes('pronostici sono bloccati')) {

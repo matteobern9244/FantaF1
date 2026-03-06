@@ -30,22 +30,18 @@ export function isRaceLocked(selectedRace, newData, currentData, now = new Date(
 }
 
 export function validatePredictions(users, fieldOrder) {
-  if (!Array.isArray(users)) return false;
+  if (!Array.isArray(users) || !Array.isArray(fieldOrder)) return false;
 
   let filledCount = 0;
-  let totalCount = 0;
 
   users.forEach((user) => {
     fieldOrder.forEach((field) => {
-      totalCount++;
-      if (user.predictions[field]) {
+      const value = typeof user?.predictions?.[field] === 'string' ? user.predictions[field].trim() : '';
+      if (value) {
         filledCount++;
       }
     });
   });
 
-  const isAllEmpty = filledCount === 0;
-  const isAllFilled = filledCount === totalCount;
-
-  return !isAllEmpty && !isAllFilled;
+  return filledCount > 0;
 }

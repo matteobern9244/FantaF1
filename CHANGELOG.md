@@ -4,11 +4,18 @@ Cronologia sintetica delle release documentate del progetto Fanta Formula 1.
 
 ## In sviluppo
 
-- **Consolidamento Linee Guida e Vincoli**: Formalizzate le direttive ingegneristiche e i vincoli di progetto nei file `AGENTS.md`, `PROJECT.md` e `GEMINI.md`.
-- **Standardizzazione Operativa**: Introdotto un workflow mandatorio che include TDD rigoroso, mindset "production-safe" per la protezione dei dati reali e disciplina cross-platform (macOS/Windows).
-- **Protocollo di Documentazione**: Automatizzato l'obbligo di aggiornamento di `README.md` e `CHANGELOG.md` per ogni commit autorizzato, garantendo la coerenza tra codice e documentazione.
+- Nessuna voce documentata al momento.
 
-## v1.3.5 - Produzione attuale
+## v1.3.6
+
+- **Hotfix Save Manuale Pronostici**: Il pulsante `Salva dati inseriti` ora richiede solo la presenza di almeno un pronostico compilato e accetta anche stati completamente compilati.
+- **Endpoint Dedicato**: Introdotto `POST /api/predictions` per applicare la regola del save manuale senza alterare i flussi di persistenza generica usati da reset, conferma risultati e storico.
+- **Allineamento Full-Stack**: Aggiornati validatori frontend/backend, messaggistica UI ed error code stabile `predictions_missing`.
+- **TDD Regressivo e Coverage**: Estesi test unitari, API e UI per coprire save vuoto, save valido con almeno un campo, race lock, persistenza generica invariata e casi limite di validazione.
+- **Documentazione Tecnica Allineata**: Aggiornati `README.md` e `PROJECT.md` per riflettere il nuovo contratto di salvataggio, la distinzione tra salvataggio manuale e persistenza generica e i vincoli di coerenza release.
+- **Disciplina Operativa di Release**: Rafforzate in `AGENTS.md` le regole di TDD, validazione completa e sincronizzazione obbligatoria tra changelog, versioni applicative e stato reale della release.
+
+## v1.3.5
 
 - **Inversione Logica di Validazione**: Il salvataggio dei pronostici è ora consentito **esclusivamente** per stati parzialmente compilati (almeno un campo compilato e almeno uno vuoto).
 - **Hardening Validazione**: Gli stati "tutti vuoti" o "tutti completi" sono ora considerati non validi e vengono bloccati sia dal frontend che dal backend per forzare un flusso di inserimento incrementale.

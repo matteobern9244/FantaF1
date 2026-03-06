@@ -35,6 +35,7 @@ const appConfig = {
 };
 
 const dataApiUrl = `${backendOrigin}${appConfig.api.dataPath}`;
+const predictionsApiUrl = `${backendOrigin}${appConfig.api.predictionsPath}`;
 const driversApiUrl = `${backendOrigin}${appConfig.api.driversPath}`;
 const calendarApiUrl = `${backendOrigin}${appConfig.api.calendarPath}`;
 const healthApiUrl = `${backendOrigin}${appConfig.api.healthPath}`;
@@ -51,6 +52,7 @@ export {
   frontendOrigin,
   genericAppTitle,
   healthApiUrl,
+  predictionsApiUrl,
   predictionFieldOrder,
   visibleAppTitle,
 };

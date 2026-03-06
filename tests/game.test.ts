@@ -160,7 +160,7 @@ describe('game utils', () => {
     ]);
   });
 
-  it('validates predictions correctly allowing ONLY partially filled', () => {
+  it('validates predictions correctly when at least one prediction is filled', () => {
     const predictionFields: ('first' | 'second' | 'third' | 'pole')[] = ['first', 'second', 'third', 'pole'];
 
     const user1AllEmpty = { name: 'User1', points: 0, predictions: createEmptyPrediction() };
@@ -180,8 +180,8 @@ describe('game utils', () => {
       predictions: { first: 'ham', second: 'rus', third: 'alo', pole: 'ver' },
     };
 
-    // All completely filled should be INVALID (returns false)
-    expect(validatePredictions([user1AllFilled, user2AllFilled], predictionFields)).toBe(false);
+    // All completely filled should be VALID (returns true)
+    expect(validatePredictions([user1AllFilled, user2AllFilled], predictionFields)).toBe(true);
 
     const user1Partial = {
       name: 'User1',
@@ -194,6 +194,35 @@ describe('game utils', () => {
 
     // Partially filled overall (1 completely filled user + 1 empty user) should be VALID (returns true)
     expect(validatePredictions([user1AllFilled, user2AllEmpty], predictionFields)).toBe(true);
+
+    const userWhitespaceOnly = {
+      name: 'User3',
+      points: 0,
+      predictions: { first: '   ', second: '', third: '', pole: '' },
+    };
+
+    // Whitespace-only values should still be treated as empty
+    expect(validatePredictions([userWhitespaceOnly, user2AllEmpty], predictionFields)).toBe(false);
+  });
+
+  it('rejects invalid inputs and non-string prediction values', () => {
+    const predictionFields: ('first' | 'second' | 'third' | 'pole')[] = ['first', 'second', 'third', 'pole'];
+
+    expect(validatePredictions(null as unknown as never[], predictionFields)).toBe(false);
+    expect(validatePredictions([], null as unknown as ('first' | 'second' | 'third' | 'pole')[])).toBe(false);
+
+    const malformedUser = {
+      name: 'Broken User',
+      points: 0,
+      predictions: {
+        first: null,
+        second: undefined,
+        third: 42,
+        pole: '',
+      },
+    };
+
+    expect(validatePredictions([malformedUser as never], predictionFields)).toBe(false);
   });
 
   describe('calculatePointsEarned detailed', () => {

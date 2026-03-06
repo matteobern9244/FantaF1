@@ -24,6 +24,7 @@ import {
   dataApiUrl,
   driversApiUrl,
   genericAppTitle,
+  predictionsApiUrl,
   predictionFieldOrder,
   visibleAppTitle,
 } from './constants';
@@ -368,7 +369,7 @@ function App() {
     return selectedRace ?? getNextUpcomingRace(sortedCalendar);
   }
 
-  async function persistAppData(updatedState?: Partial<AppData>) {
+  async function persistAppData(updatedState?: Partial<AppData>, targetUrl = dataApiUrl) {
     const payload: AppData = {
       users,
       history,
@@ -378,7 +379,7 @@ function App() {
       ...updatedState,
     };
 
-    const response = await fetch(dataApiUrl, {
+    const response = await fetch(targetUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
@@ -412,7 +413,7 @@ function App() {
     }
 
     try {
-      await persistAppData();
+      await persistAppData(undefined, predictionsApiUrl);
       window.alert(appConfig.uiText.backend.messages.saveSuccess);
     } catch (error) {
       handleSaveFailure('Save error:', error);

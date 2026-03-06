@@ -8,7 +8,7 @@ L'applicazione e' pensata per un flusso amministrato: un admin seleziona il week
 
 - Lo stato di gioco mantiene sempre esattamente 3 partecipanti.
 - I pronostici prevedono 4 campi per ogni utente: primo, secondo, terzo e pole oppure vincitore Sprint.
-- Il salvataggio dei pronostici e' consentito solo quando i campi sono parzialmente compilati (almeno un campo vuoto e almeno un campo compilato). Lo stato "tutti vuoti" o "tutti completi" non e' considerato valido per il salvataggio diretto.
+- Il salvataggio manuale dei pronostici richiede almeno un campo compilato. Lo stato "tutti vuoti" non e' valido per `Salva dati inseriti`, mentre uno stato completamente compilato e' consentito.
 - Il backend blocca le modifiche ai pronostici dopo l'inizio ufficiale della gara del weekend selezionato.
 - La conferma dei risultati e l'assegnazione punti sono possibili solo quando la gara e' considerata conclusa e tutti i risultati reali sono presenti.
 - Lo storico gare puo' essere modificato o eliminato; in entrambi i casi la classifica totale viene ricalcolata.
@@ -34,12 +34,12 @@ Il flusso previsto e' questo:
 
 ### Validazione salvataggio pronostici
 
-Il salvataggio dei pronostici accetta esclusivamente stati parziali. Il payload e' valido solo se:
+Il salvataggio manuale dei pronostici accetta qualsiasi stato che contenga almeno un pronostico compilato. Il payload e' valido solo se:
 
 - Esiste almeno un campo compilato (per evitare salvataggi vuoti inutili).
-- Esiste almeno un campo vuoto (per forzare il completamento dell'inserimento solo in fase di consolidamento).
 
-Questo comportamento vale sia lato frontend sia lato backend, dove il payload viene sanitizzato prima della persistenza. Lo stato "tutti vuoti" o "tutti completi" viene quindi rifiutato per il salvataggio diretto dei pronostici correnti.
+Questo comportamento vale sia lato frontend sia lato backend tramite l'endpoint dedicato `POST /api/predictions`. Lo stato "tutti vuoti" viene quindi rifiutato per il salvataggio diretto dei pronostici correnti, mentre lo stato completamente compilato resta valido.
+I flussi di persistenza interni dell'applicazione (`reset`, conferma risultati, ricalcolo storico) continuano invece a usare `POST /api/data`, che accetta anche uno stato corrente con pronostici vuoti quando generato intenzionalmente dall'app.
 
 ### Race lock
 
@@ -279,7 +279,7 @@ Restituisce lo stato globale del gioco:
 
 ### `POST /api/data`
 
-Salva lo stato globale del gioco dopo sanitizzazione e validazione.
+Salva lo stato globale del gioco dopo sanitizzazione e validazione per i flussi generici dell'applicazione.
 
 Comportamenti rilevanti:
 
@@ -288,6 +288,17 @@ Comportamenti rilevanti:
 - `500` in caso di errore persistente di salvataggio.
 - In caso di errore il payload include sempre `error`, `code` e `requestId`.
 - `details` viene esposto solo fuori da production, per rendere diagnosticabili i fallimenti locali senza esporre stack in deploy.
+
+### `POST /api/predictions`
+
+Salva manualmente i pronostici correnti con le stesse verifiche di partecipanti e race lock di `POST /api/data`, aggiungendo il vincolo di contenere almeno un pronostico compilato.
+
+Comportamenti rilevanti:
+
+- `400` con `code=predictions_missing` se tutti i campi pronostico sono vuoti;
+- `400` se il numero di partecipanti non e' quello atteso;
+- `403` se la gara e' iniziata e i pronostici correnti vengono modificati;
+- `500` in caso di errore persistente di salvataggio.
 
 ### `GET /api/drivers`
 
@@ -468,7 +479,7 @@ La suite copre business logic, storage MongoDB, sanitizzazione, parsing di pilot
 Include test di integrazione API (tramite `supertest` su `app.js`) e test dei componenti UI (tramite `jsdom` e `React Testing Library`).
 Include anche test unitari dedicati allo split deterministico del titolo hero e ai fallback responsive del titolo configurato.
 Per la UI e' disponibile anche `npm run test:ui-responsive`, che usa Playwright CLI via `npx` contro l'app locale avviata e verifica i breakpoint principali, il box "Prossimo weekend", il tooltip risultati e l'assenza di overflow orizzontali fuori dal carosello calendario.
-Per il salvataggio locale e' disponibile `npm run test:save-local`, che legge `/api/data`, re-invia lo stesso payload su `POST /api/data`, verifica `environment=development`, `databaseTarget=fantaf1_dev` e controlla che lo stato resti invariato dopo il round-trip.
+Per il salvataggio locale e' disponibile `npm run test:save-local`, che legge `/api/data`, re-invia lo stesso payload su `POST /api/data`, verifica `environment=development`, `databaseTarget=fantaf1_dev` e controlla che lo stato resti invariato dopo il round-trip. Questo smoke test copre il canale di persistenza generica, non il salvataggio manuale dei pronostici su `POST /api/predictions`.
 
 ## Struttura del repository
 

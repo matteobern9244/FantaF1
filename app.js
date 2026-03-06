@@ -24,7 +24,7 @@ import {
   readDriversCache,
   writeAppData,
 } from './backend/storage.js';
-import { isRaceLocked, validateParticipants } from './backend/validation.js';
+import { isRaceLocked, validateParticipants, validatePredictions } from './backend/validation.js';
 import { verifyMongoDatabaseName } from './backend/database.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -33,6 +33,7 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const runtimeEnvironment = normalizeRuntimeEnvironment(process.env.NODE_ENV);
 const databaseTargetName = determineExpectedMongoDatabaseName(process.env.NODE_ENV);
+const predictionFieldOrder = ['first', 'second', 'third', 'pole'];
 
 app.use(cors());
 app.use(express.json());
@@ -86,7 +87,29 @@ app.get('/api/results/:meetingKey', async (req, res) => {
   }
 });
 
-app.post(appConfig.api.dataPath, async (req, res) => {
+function buildParticipantsInvalidResponse(newData, requestId) {
+  const participantError = `Invalid participants list. Expected ${appConfig.participants.length} participants.`;
+
+  return buildSaveErrorResponse({
+    environment: runtimeEnvironment,
+    requestId,
+    code: 'participants_invalid',
+    error: participantError,
+    details: `Expected ${appConfig.participants.length} participants, received ${Array.isArray(newData?.users) ? newData.users.length : 'unknown'}.`,
+  });
+}
+
+function buildPredictionsMissingResponse(requestId) {
+  return buildSaveErrorResponse({
+    environment: runtimeEnvironment,
+    requestId,
+    code: 'predictions_missing',
+    error: appConfig.uiText.alerts.missingPredictions,
+    details: 'At least one prediction is required for manual predictions save.',
+  });
+}
+
+async function handleSaveRequest(req, res, { requirePredictions = false, routePath }) {
   const requestId = createRequestId();
 
   try {
@@ -95,15 +118,7 @@ app.post(appConfig.api.dataPath, async (req, res) => {
     const newData = req.body;
 
     if (!validateParticipants(newData?.users, appConfig.participants)) {
-      const participantError = `Invalid participants list. Expected ${appConfig.participants.length} participants.`;
-      const response = buildSaveErrorResponse({
-        environment: runtimeEnvironment,
-        requestId,
-        code: 'participants_invalid',
-        error: participantError,
-        details: `Expected ${appConfig.participants.length} participants, received ${Array.isArray(newData?.users) ? newData.users.length : 'unknown'}.`,
-      });
-
+      const response = buildParticipantsInvalidResponse(newData, requestId);
       return res.status(response.status).json(response.payload);
     }
 
@@ -125,6 +140,11 @@ app.post(appConfig.api.dataPath, async (req, res) => {
       }
     }
 
+    if (requirePredictions && !validatePredictions(newData?.users, predictionFieldOrder)) {
+      const response = buildPredictionsMissingResponse(requestId);
+      return res.status(response.status).json(response.payload);
+    }
+
     await writeAppData(newData);
     res.json({ message: appConfig.uiText.backend.messages.saveSuccess });
   } catch (error) {
@@ -139,12 +159,26 @@ app.post(appConfig.api.dataPath, async (req, res) => {
     });
 
     console.error(
-      `[Error Backend] POST /api/data fallito [requestId=${requestId}] [environment=${runtimeEnvironment}] [databaseTarget=${databaseTargetName}] [code=${code}]`,
+      `[Error Backend] POST ${routePath} fallito [requestId=${requestId}] [environment=${runtimeEnvironment}] [databaseTarget=${databaseTargetName}] [code=${code}]`,
       error,
     );
 
     res.status(response.status).json(response.payload);
   }
+}
+
+app.post(appConfig.api.dataPath, async (req, res) => {
+  await handleSaveRequest(req, res, {
+    requirePredictions: false,
+    routePath: appConfig.api.dataPath,
+  });
+});
+
+app.post(appConfig.api.predictionsPath, async (req, res) => {
+  await handleSaveRequest(req, res, {
+    requirePredictions: true,
+    routePath: appConfig.api.predictionsPath,
+  });
 });
 
 const distPath = path.join(__dirname, 'dist');

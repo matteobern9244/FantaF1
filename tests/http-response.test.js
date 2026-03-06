@@ -76,6 +76,9 @@ describe('backend http helpers', () => {
     expect(
       classifySaveError(new Error('Invalid participants list. Expected 3 participants.')),
     ).toBe('participants_invalid');
+    expect(
+      classifySaveError(new Error("Il salvataggio richiede l'inserimento di almeno un pronostico.")),
+    ).toBe('predictions_missing');
     expect(classifySaveError(new Error('I pronostici sono bloccati.'))).toBe('race_locked');
     expect(
       classifySaveError(new Error('MONGODB_URI targets "fantaf1" but development requires "fantaf1_dev".')),

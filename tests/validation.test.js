@@ -82,12 +82,12 @@ describe('Validation Logic', () => {
   describe('validatePredictions', () => {
     const fields = ['first', 'second', 'third', 'pole'];
 
-    it('should return false if all fields are filled for all users', () => {
+    it('should return true if all fields are filled for all users', () => {
       const users = [
         { predictions: { first: 'A', second: 'B', third: 'C', pole: 'D' } },
         { predictions: { first: 'X', second: 'Y', third: 'Z', pole: 'W' } }
       ];
-      expect(validatePredictions(users, fields)).toBe(false);
+      expect(validatePredictions(users, fields)).toBe(true);
     });
 
     it('should return false if all fields are empty for all users', () => {
@@ -128,6 +128,15 @@ describe('Validation Logic', () => {
         { predictions: { first: '', second: '', third: '', pole: '' } }
       ];
       expect(validatePredictions(users, fields)).toBe(true);
+    });
+
+    it('should ignore whitespace-only values when checking if at least one prediction exists', () => {
+      const users = [
+        { predictions: { first: '   ', second: '', third: '', pole: '' } },
+        { predictions: { first: '', second: '', third: '', pole: '' } }
+      ];
+
+      expect(validatePredictions(users, fields)).toBe(false);
     });
 
     it('should return false for invalid input', () => {

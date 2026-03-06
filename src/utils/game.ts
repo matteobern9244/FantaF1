@@ -104,20 +104,20 @@ export function validatePredictions(
   users: UserData[],
   predictionFieldOrder: (keyof Prediction)[],
 ): boolean {
+  if (!Array.isArray(users) || !Array.isArray(predictionFieldOrder)) {
+    return false;
+  }
+
   let filledCount = 0;
-  let totalCount = 0;
 
   users.forEach((user) => {
     predictionFieldOrder.forEach((field) => {
-      totalCount++;
-      if (user.predictions[field]) {
+      const value = typeof user.predictions?.[field] === 'string' ? user.predictions[field].trim() : '';
+      if (value) {
         filledCount++;
       }
     });
   });
 
-  const isAllEmpty = filledCount === 0;
-  const isAllFilled = filledCount === totalCount;
-
-  return !isAllEmpty && !isAllFilled;
+  return filledCount > 0;
 }
