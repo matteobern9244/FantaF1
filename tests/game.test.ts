@@ -2,8 +2,12 @@ import { describe, expect, it } from 'vitest';
 import {
   buildRaceRecord,
   calculatePointsEarned,
+  calculateProjectedPoints,
+  calculateLiveTotal,
   createEmptyPrediction,
+  mergeMissingPredictionFields,
   rebuildUsersFromHistory,
+  sortUsersByLiveTotal,
   validatePredictions,
 } from '../src/utils/game';
 
@@ -251,6 +255,85 @@ describe('game utils', () => {
 
     it('returns maximum points for all matches', () => {
       expect(calculatePointsEarned(results, results, config)).toBe(11);
+    });
+
+    it('normalizes case and whitespace before comparing predictions and results', () => {
+      expect(
+        calculatePointsEarned(
+          { first: ' a ', second: 'B ', third: ' c', pole: ' d ' },
+          results,
+          config,
+        ),
+      ).toBe(11);
+    });
+  });
+
+  describe('live scoring helpers', () => {
+    const config = { first: 5, second: 3, third: 2, pole: 1 };
+    const results = { first: 'ver', second: 'ham', third: 'lec', pole: 'pia' };
+
+    it('calculates projected points with the shared scoring helper', () => {
+      expect(
+        calculateProjectedPoints(
+          { first: 'ver', second: 'nor', third: 'lec', pole: 'pia' },
+          results,
+          config,
+        ),
+      ).toBe(8);
+    });
+
+    it('builds the live total as current points plus projection', () => {
+      expect(
+        calculateLiveTotal(
+          {
+            name: 'Player 1',
+            points: 10,
+            predictions: { first: 'ver', second: 'nor', third: 'lec', pole: 'pia' },
+          },
+          results,
+          config,
+        ),
+      ).toBe(18);
+    });
+
+    it('sorts users by live total using the shared comparison logic', () => {
+      const sortedUsers = sortUsersByLiveTotal(
+        [
+          {
+            name: 'Player 1',
+            points: 10,
+            predictions: { first: 'ver', second: 'nor', third: 'lec', pole: 'pia' },
+          },
+          {
+            name: 'Player 2',
+            points: 6,
+            predictions: { first: 'ver', second: 'ham', third: 'lec', pole: 'pia' },
+          },
+          {
+            name: 'Player 3',
+            points: 12,
+            predictions: { first: 'ham', second: 'nor', third: 'lec', pole: 'ver' },
+          },
+        ],
+        results,
+        config,
+      );
+
+      expect(sortedUsers.map((user) => user.name)).toEqual(['Player 1', 'Player 2', 'Player 3']);
+    });
+
+    it('merges fetched results without overwriting manually filled values', () => {
+      expect(
+        mergeMissingPredictionFields(
+          { first: 'ham', second: '', third: '', pole: '' },
+          { first: 'ver', second: 'nor', third: 'lec', pole: 'pia' },
+        ),
+      ).toEqual({
+        first: 'ham',
+        second: 'nor',
+        third: 'lec',
+        pole: 'pia',
+      });
     });
   });
 

@@ -15,6 +15,8 @@ const MONTH_INDEX = {
   NOV: 10,
   DEC: 11,
 };
+const RACE_RESULTS_CACHE_TTL_MS = 30_000;
+const raceResultsCache = new Map();
 
 function decodeHtmlEntities(value) {
   return String(value ?? '')
@@ -29,6 +31,125 @@ function normalizeText(value) {
   return decodeHtmlEntities(String(value ?? '').replace(/<[^>]+>/g, ' '))
     .replace(/\s+/g, ' ')
     .trim();
+}
+
+function toNameCase(value) {
+  return normalizeText(value)
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((part) =>
+      part
+        .split('-')
+        .map((token) => token.slice(0, 1).toUpperCase() + token.slice(1).toLowerCase())
+        .join('-'),
+    )
+    .join(' ');
+}
+
+function canonicalizeDriverName(name) {
+  const normalizedName = toNameCase(name);
+  return appConfig.driverAliases[normalizedName] ?? normalizedName;
+}
+
+function clearRaceResultsCache() {
+  raceResultsCache.clear();
+}
+
+function getCachedRaceResults(meetingKey) {
+  const cachedEntry = raceResultsCache.get(meetingKey);
+  if (!cachedEntry) {
+    return null;
+  }
+
+  if (Date.now() - cachedEntry.timestamp > RACE_RESULTS_CACHE_TTL_MS) {
+    raceResultsCache.delete(meetingKey);
+    return null;
+  }
+
+  return { ...cachedEntry.results };
+}
+
+function setCachedRaceResults(meetingKey, results) {
+  raceResultsCache.set(meetingKey, {
+    timestamp: Date.now(),
+    results: { ...results },
+  });
+
+  return { ...results };
+}
+
+function extractResultsTable(rawContent) {
+  if (/No results available/i.test(rawContent)) {
+    return '';
+  }
+
+  const tableMatch =
+    rawContent.match(/<table[^>]*class="[^"]*Table-module_table[^"]*"[^>]*>[\s\S]*?<\/table>/i) ??
+    rawContent.match(/<table[^>]*>[\s\S]*?<\/table>/i);
+
+  return tableMatch?.[0] ?? '';
+}
+
+function extractTableRows(tableHtml) {
+  const tbodyHtml = tableHtml.match(/<tbody[^>]*>([\s\S]*?)<\/tbody>/i)?.[1] ?? tableHtml;
+  return [...tbodyHtml.matchAll(/<tr\b[^>]*>([\s\S]*?)<\/tr>/gi)].map((match) => match[0]);
+}
+
+function extractTableCells(rowHtml) {
+  return [...rowHtml.matchAll(/<td\b[^>]*>([\s\S]*?)<\/td>/gi)].map((match) => match[1]);
+}
+
+function resolveDriverIdFromCell(cellHtml) {
+  const normalizedCellText = normalizeText(cellHtml);
+  const abbreviationMatch = normalizedCellText.match(/\b([A-Z]{3})\b$/);
+  if (abbreviationMatch?.[1]) {
+    return abbreviationMatch[1].toLowerCase();
+  }
+
+  const normalizedDriverName = canonicalizeDriverName(
+    normalizedCellText.replace(/\b[A-Z]{3}\b$/i, '').trim(),
+  );
+
+  return appConfig.driverIdOverrides[normalizedDriverName] ?? '';
+}
+
+function parseOrderedDriversFromResultsTable(rawContent, maxPosition) {
+  const tableHtml = extractResultsTable(rawContent);
+  if (!tableHtml) {
+    return [];
+  }
+
+  const orderedDrivers = Array.from({ length: maxPosition }, () => '');
+
+  extractTableRows(tableHtml).forEach((rowHtml) => {
+    const cells = extractTableCells(rowHtml);
+    if (cells.length < 3) {
+      return;
+    }
+
+    const position = Number.parseInt(normalizeText(cells[0]), 10);
+    if (!Number.isInteger(position) || position < 1 || position > maxPosition) {
+      return;
+    }
+
+    const driverId = resolveDriverIdFromCell(cells[2]);
+    if (!driverId) {
+      return;
+    }
+
+    orderedDrivers[position - 1] = driverId;
+  });
+
+  return orderedDrivers;
+}
+
+function parseRaceClassification(rawContent) {
+  const [first = '', second = '', third = ''] = parseOrderedDriversFromResultsTable(rawContent, 3);
+  return { first, second, third };
+}
+
+function parseBonusDriver(rawContent) {
+  return parseOrderedDriversFromResultsTable(rawContent, 1)[0] ?? '';
 }
 
 function normalizeDateRangeLabel(value) {
@@ -355,6 +476,11 @@ async function syncCalendarFromOfficialSource({
 }
 
 async function fetchRaceResults(meetingKey) {
+  const cachedResults = getCachedRaceResults(meetingKey);
+  if (cachedResults) {
+    return cachedResults;
+  }
+
   // official results URL pattern: https://www.formula1.com/en/results/<year>/races/<meetingKey>/<slug>/race-result
   // meetingKey might be the numeric ID or the slug depending on how it's stored.
   // We'll search for the weekend in cache to get the detailUrl.
@@ -385,23 +511,14 @@ async function fetchRaceResults(meetingKey) {
     };
 
     if (raceHtml) {
-      // Find drivers in result table. F1 site uses data-driver-id or short codes in cells.
-      const driverMatches = [...raceHtml.matchAll(/data-driver-id="([^"]+)"/gi)].map(m => m[1].toLowerCase());
-      if (driverMatches.length >= 3) {
-        results.first = driverMatches[0];
-        results.second = driverMatches[1];
-        results.third = driverMatches[2];
-      }
+      Object.assign(results, parseRaceClassification(raceHtml));
     }
 
     if (poleHtml) {
-      const poleMatch = poleHtml.match(/data-driver-id="([^"]+)"/i);
-      if (poleMatch) {
-        results.pole = poleMatch[1].toLowerCase();
-      }
+      results.pole = parseBonusDriver(poleHtml);
     }
 
-    return results;
+    return setCachedRaceResults(meetingKey, results);
   /* v8 ignore next 4 */
   } catch (error) {
     console.error('Error fetching race results:', error);
@@ -410,6 +527,7 @@ async function fetchRaceResults(meetingKey) {
 }
 
 export {
+  clearRaceResultsCache,
   fetchRaceResults,
   parseDateRangeLabel,
   parseRaceDetailPage,

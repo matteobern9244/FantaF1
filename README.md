@@ -58,10 +58,14 @@ Di conseguenza:
 
 L'applicazione considera la gara conclusa circa 2.5 ore dopo l'orario di inizio gara.
 
-Quando il weekend e' finito e i risultati reali correnti sono ancora vuoti:
+Quando il weekend selezionato ha risultati reali correnti incompleti:
 
-- il frontend prova a recuperarli automaticamente tramite `GET /api/results/:meetingKey`;
+- il frontend prova subito a recuperarli automaticamente tramite `GET /api/results/:meetingKey`;
+- durante un weekend attivo continua a fare polling periodico finche' i risultati ufficiali restano incompleti;
 - il recupero automatico non parte durante una modifica dello storico;
+- i risultati ufficiali recuperati riempiono solo i campi ancora vuoti e non sovrascrivono valori manuali o gia' presenti;
+- se Formula1.com non ha ancora pubblicato risultati ufficiali, l'app mantiene i campi vuoti e mostra un messaggio esplicativo sia nella classifica live sia nei pronostici;
+- se Formula1.com ha pubblicato solo una parte dei risultati ufficiali, la proiezione resta parziale e l'interfaccia lo segnala;
 - se il fetch non produce dati validi, l'admin puo' comunque inserire i risultati manualmente.
 
 Il pulsante di conferma risultati resta disabilitato finche' non sono vere entrambe le condizioni:
@@ -92,6 +96,10 @@ La classifica live mostrata nell'hero non rappresenta solo i punti storici. Per 
 
 - punti storici gia' consolidati;
 - piu' la proiezione ottenuta confrontando i pronostici correnti con i risultati reali correnti.
+
+Il tab `Pronostici dei giocatori` mostra la stessa proiezione del solo weekend selezionato.
+Quando i risultati ufficiali non esistono ancora, l'interfaccia non interpreta lo `0` come "nessun match": espone invece uno stato esplicito `nessun risultato ufficiale disponibile`.
+Quando i risultati ufficiali sono solo parziali, sia il tab pronostici sia la classifica live mostrano una proiezione parziale coerente con i soli campi gia' pubblicati.
 
 ## Business logic applicativa
 
@@ -169,10 +177,10 @@ Se il database non contiene ancora stato applicativo, il backend costruisce uno 
 - Se `VITE_APP_LOCAL_NAME` estende il titolo base `Fanta Formula 1`, la hero separa il titolo in due righe fisse: titolo base in prima riga e suffisso in seconda.
 - Il titolo hero usa un fit basato sulla larghezza reale del contenitore: sui desktop wide mantiene il massimo visivo corrente, mentre su viewport piu' strette riduce il `font-size` solo quanto necessario per restare interamente visibile senza clipping.
 - Card "Prossimo weekend" con badge Sprint/Standard, programma sessioni e orari formattati in italiano.
-- Classifica live calcolata come punti storici piu' proiezione del weekend selezionato.
+- Classifica live calcolata come punti storici piu' proiezione del weekend selezionato, con stato esplicito per risultati ufficiali assenti o parziali.
 - Calendario stagionale con selettore e strip orizzontale dei weekend.
 - Griglia pronostici per i 3 partecipanti con selezione piloti ordinati per cognome e visualizzati come `Cognome Nome`.
-- Sezione risultati del weekend con track map, caricamento automatico risultati quando disponibili e pulsante conferma con tooltip di stato.
+- Sezione risultati del weekend con track map, recupero automatico read-only dei risultati ufficiali, merge solo dei campi mancanti e pulsante conferma con tooltip di stato.
 - Storico gare modificabile con ricalcolo dei punteggi.
 - Loader tematico "Pit Stop", font F1 vendorizzati localmente e layout responsive desktop/mobile.
 
@@ -180,7 +188,7 @@ Se il database non contiene ancora stato applicativo, il backend costruisce uno 
 
 - Configurazione punteggi centralizzata: 5 punti primo, 3 punti secondo, 2 punti terzo, 1 punto pole/Sprint.
 - Race lock server-side basato su `raceStartTime`, con fallback a `endDate + 14:00:00Z` se l'orario non e' disponibile.
-- Fine gara stimata a `raceStartTime + 2.5h` per sbloccare il recupero automatico dei risultati e l'assegnazione definitiva dei punti.
+- Fine gara stimata a `raceStartTime + 2.5h` per abilitare l'assegnazione definitiva dei punti; il recupero ufficiale live dei risultati puo' iniziare prima ma resta read-only.
 - Reset dei pronostici correnti con salvataggio persistente immediato.
 - Conservazione dei nomi utente gia' persistiti durante modifica o cancellazione di gare storiche.
 
@@ -251,7 +259,9 @@ L'applicazione di questi standard garantisce un approccio "production-safe" e un
 - Il backend costruisce gli URL risultati Formula1.com a partire dal `detailUrl` del weekend salvato in cache.
 - Per weekend standard recupera gara e qualifying.
 - Per weekend Sprint recupera gara e sprint-results.
-- Il parser estrae i codici pilota dai `data-driver-id` della pagina risultati.
+- Il parser legge la tabella HTML corrente di Formula1.com ed estrae 1°, 2°, 3° e bonus pole/Sprint dalle prime righe ufficiali disponibili.
+- Se la pagina ufficiale riporta `No results available`, l'endpoint restituisce tutti i campi vuoti.
+- I risultati ufficiali sono messi in cache in memoria con TTL corto per supportare il polling live senza moltiplicare le richieste verso Formula1.com.
 
 ## API backend
 
@@ -311,6 +321,13 @@ Restituisce il calendario ordinato per round.
 ### `GET /api/results/:meetingKey`
 
 Recupera i risultati reali del weekend a partire dalla cache calendario.
+
+Comportamenti rilevanti:
+
+- restituisce sempre un payload con `first`, `second`, `third` e `pole`;
+- se Formula1.com non ha ancora pubblicato risultati ufficiali, i campi restano stringhe vuote;
+- il fetch e' read-only e non persiste automaticamente nulla nel database;
+- il backend applica una cache in-memory a TTL corto per proteggere il polling live del frontend.
 
 ## Modello dati applicativo
 
@@ -478,6 +495,7 @@ Lo script integrato:
 La suite copre business logic, storage MongoDB, sanitizzazione, parsing di piloti e calendario, risultati, formattazione UI e regressioni sui flussi principali.
 Include test di integrazione API (tramite `supertest` su `app.js`) e test dei componenti UI (tramite `jsdom` e `React Testing Library`).
 Include anche test unitari dedicati allo split deterministico del titolo hero e ai fallback responsive del titolo configurato.
+Include test dedicati alla live projection del weekend selezionato, agli stati UI `nessun risultato ufficiale` / `risultati parziali`, al parser risultati Formula1.com corrente e alla cache TTL di `GET /api/results/:meetingKey`.
 Per la UI e' disponibile anche `npm run test:ui-responsive`, che usa Playwright CLI via `npx` contro l'app locale avviata e verifica i breakpoint principali, il box "Prossimo weekend", il tooltip risultati e l'assenza di overflow orizzontali fuori dal carosello calendario.
 Per il salvataggio locale e' disponibile `npm run test:save-local`, che legge `/api/data`, re-invia lo stesso payload su `POST /api/data`, verifica `environment=development`, `databaseTarget=fantaf1_dev` e controlla che lo stato resti invariato dopo il round-trip. Questo smoke test copre il canale di persistenza generica, non il salvataggio manuale dei pronostici su `POST /api/predictions`.
 

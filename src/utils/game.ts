@@ -1,5 +1,9 @@
 import type { PointsConfig, Prediction, RaceRecord, UserData } from '../types';
 
+function normalizePredictionValue(value: string): string {
+  return String(value ?? '').trim().toLowerCase();
+}
+
 export function createEmptyPrediction(): Prediction {
   return {
     first: '',
@@ -43,24 +47,87 @@ export function calculatePointsEarned(
   pointsConfig: PointsConfig,
 ): number {
   let pointsEarned = 0;
+  const normalizedPrediction = {
+    first: normalizePredictionValue(prediction.first),
+    second: normalizePredictionValue(prediction.second),
+    third: normalizePredictionValue(prediction.third),
+    pole: normalizePredictionValue(prediction.pole),
+  };
+  const normalizedRaceResults = {
+    first: normalizePredictionValue(raceResults.first),
+    second: normalizePredictionValue(raceResults.second),
+    third: normalizePredictionValue(raceResults.third),
+    pole: normalizePredictionValue(raceResults.pole),
+  };
 
-  if (prediction.first === raceResults.first && raceResults.first) {
+  if (normalizedPrediction.first === normalizedRaceResults.first && normalizedRaceResults.first) {
     pointsEarned += pointsConfig.first;
   }
 
-  if (prediction.second === raceResults.second && raceResults.second) {
+  if (normalizedPrediction.second === normalizedRaceResults.second && normalizedRaceResults.second) {
     pointsEarned += pointsConfig.second;
   }
 
-  if (prediction.third === raceResults.third && raceResults.third) {
+  if (normalizedPrediction.third === normalizedRaceResults.third && normalizedRaceResults.third) {
     pointsEarned += pointsConfig.third;
   }
 
-  if (prediction.pole === raceResults.pole && raceResults.pole) {
+  if (normalizedPrediction.pole === normalizedRaceResults.pole && normalizedRaceResults.pole) {
     pointsEarned += pointsConfig.pole;
   }
 
   return pointsEarned;
+}
+
+export function calculateProjectedPoints(
+  prediction: Prediction,
+  raceResults: Prediction,
+  pointsConfig: PointsConfig,
+): number {
+  return calculatePointsEarned(prediction, raceResults, pointsConfig);
+}
+
+export function calculateLiveTotal(
+  user: UserData,
+  raceResults: Prediction,
+  pointsConfig: PointsConfig,
+): number {
+  return user.points + calculateProjectedPoints(user.predictions, raceResults, pointsConfig);
+}
+
+export function sortUsersByLiveTotal(
+  users: UserData[],
+  raceResults: Prediction,
+  pointsConfig: PointsConfig,
+): UserData[] {
+  return [...users].sort(
+    (firstUser, secondUser) =>
+      calculateLiveTotal(secondUser, raceResults, pointsConfig) -
+      calculateLiveTotal(firstUser, raceResults, pointsConfig),
+  );
+}
+
+export function mergeMissingPredictionFields(
+  currentPrediction: Prediction,
+  incomingPrediction: Prediction,
+): Prediction {
+  const mergedPrediction: Prediction = { ...currentPrediction };
+  let hasChanges = false;
+
+  (Object.keys(mergedPrediction) as (keyof Prediction)[]).forEach((field) => {
+    if (normalizePredictionValue(mergedPrediction[field])) {
+      return;
+    }
+
+    if (!normalizePredictionValue(incomingPrediction[field])) {
+      return;
+    }
+
+    mergedPrediction[field] = incomingPrediction[field];
+    hasChanges = true;
+  });
+
+  return hasChanges ? mergedPrediction : currentPrediction;
 }
 
 export function buildRaceRecord(

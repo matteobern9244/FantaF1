@@ -1035,6 +1035,10 @@ select:focus {
   overflow-wrap: anywhere;
 }
 
+.status-note {
+  margin-top: 8px;
+}
+
 .app-footer {
   margin-top: 12px;
   display: flex;
