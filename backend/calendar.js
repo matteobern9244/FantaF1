@@ -549,6 +549,7 @@ async function fetchRaceResults(meetingKey) {
 }
 
 export {
+  buildOfficialResultsBaseUrl,
   clearRaceResultsCache,
   fetchRaceResults,
   parseDateRangeLabel,

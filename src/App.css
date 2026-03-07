@@ -94,15 +94,18 @@ select,
   text-shadow: 0 0 10px rgba(225, 6, 0, 0.2);
 }
 
-.spin {
-  animation: spin 1s linear infinite;
-}
-
 .pitstop-loader {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 30px;
+}
+
+.splash-logo {
+  width: min(360px, 78vw);
+  height: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 18px 36px rgba(0, 0, 0, 0.45));
 }
 
 .speech-bubble {
@@ -158,40 +161,6 @@ select,
 .panel:nth-of-type(1) { animation-delay: 0.3s; }
 .panel:nth-of-type(2) { animation-delay: 0.4s; }
 .panel:nth-of-type(3) { animation-delay: 0.5s; }
-
-.mechanic-container {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 200px;
-  height: 160px;
-}
-
-.mechanic-icon {
-  width: 160px;
-  height: 160px;
-  object-fit: contain;
-  filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.5));
-}
-
-.tire-icon {
-  position: absolute;
-  width: 80px;
-  height: 80px;
-  bottom: 0;
-  right: 0;
-  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.4));
-}
-
-.spin {
-  animation: spin 0.8s linear infinite;
-}
-
-@keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
 
 @keyframes pulse-bubble {
   0%, 100% { transform: translateY(0) scale(1); }

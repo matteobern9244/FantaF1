@@ -156,6 +156,31 @@ When the user explicitly authorizes commit-related operations:
 
 No version/tag/release task is complete if `CHANGELOG.md` is out of sync with the real repository state.
 
+### Persistent deploy trigger
+
+If the user writes exactly `deploya`, treat that as explicit authorization to run the full deployment workflow below without asking for confirmation and without changing the sequence:
+
+1. Before starting, verify the repository state. If there are unstaged files, stop immediately and do not proceed. If there are staged files, proceed with the workflow.
+2. Determine the correct next application version and bump it consistently across the repository wherever needed.
+3. Update `README.md` and `CHANGELOG.md` so they are coherent, accurate, and aligned with the latest changes, implementations, and fixes in the repository.
+4. Run the full test suite, if a test suite exists.
+5. Run linting, build validation, and any other mandatory verification commands supported by the repository in addition to tests.
+   - If `npm run test:ui-responsive` is part of the validation set, ensure the command starts backend and frontend automatically before the check when they are not already reachable, and stop any temporary backend/frontend processes immediately after the check ends.
+6. If any test, lint, build, or mandatory validation fails, stop immediately. Fix issues only if they were caused by the recent work, rerun the relevant checks, and proceed only when the repository is deployable again.
+7. Create an intelligent commit message that accurately summarizes the work performed.
+8. Commit all required changes.
+9. Push the current working branch to its remote branch.
+10. Merge the current branch into `main`.
+11. Create a tag on `main` that matches the new version.
+12. Create a GitHub Release based on that tag, coherent with the version and delivered changes.
+13. Return to the original branch from which the deployment workflow started.
+
+Failure policy for `deploya`:
+- stop immediately if any critical step fails
+- do not merge into `main` unless all previous required steps completed successfully
+- do not create tags unless the merge to `main` completed successfully
+- do not create a GitHub Release unless the tag was created successfully and all previous steps completed successfully
+
 ---
 
 ## 11. Final Response Protocol

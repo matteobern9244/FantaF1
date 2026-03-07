@@ -6,6 +6,14 @@ Cronologia sintetica delle release documentate del progetto Fanta Formula 1.
 
 - Nessuna modifica documentata.
 
+## v1.3.10
+
+- **Set Icone Browser e PWA Riallineato**: favicon, `apple-touch-icon`, icone `192x192`, `512x512` e `maskable` usano ora il set grafico reale fornito in `IMMAGINIDAUSARE`, pubblicato nei path statici standard dell'app.
+- **Loader Iniziale Aggiornato**: il caricamento iniziale non usa piu' la combinazione `pitstop` + `tire`; mostra invece il logo splash `FantaF1` coerente con il nuovo branding visuale.
+- **Asset Splash Preparati per la Shell**: aggiunti gli asset statici `ios-splash-screen.png` e `splash-logo-only.png` per mantenere coerente la shell browser/PWA senza introdurre wiring iOS multi-device extra.
+- **Disciplina Deploy Formalizzata**: `AGENTS.md` documenta ora il trigger esplicito `deploya`, con workflow di release obbligatorio e failure policy deterministica.
+- **Regressioni Coperte e Release Validation Completa**: aggiunti test statici sugli asset PWA/browser e test UI sul loader; validati `vitest`, coverage `100%`, `lint` e `build` prima della release `v1.3.10`.
+
 ## v1.3.9
 
 - **Recupero Risultati Ufficiali Riallineato per Tutti i Weekend**: `GET /api/results/:meetingKey` costruisce ora gli URL Formula1.com nel formato canonico `.../results/<year>/races/<meetingKey>/<slug>/...`, cosi' qualifying, race-result e sprint-results tornano ad aggiornarsi correttamente anche per i weekend futuri.

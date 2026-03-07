@@ -1,6 +1,7 @@
 import fs from 'fs';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
+  buildOfficialResultsBaseUrl,
   parseDateRangeLabel,
   parseRaceDetailPage,
   parseSeasonCalendarPage,
@@ -198,5 +199,11 @@ describe('calendar parsing and fallback', () => {
       writeCache: async () => {},
     });
     expect(result).toEqual([]);
+  });
+
+  it('returns an empty official-results base URL when detail URL or meeting key are invalid', () => {
+    expect(buildOfficialResultsBaseUrl('', '1280')).toBe('');
+    expect(buildOfficialResultsBaseUrl(`https://www.formula1.com/en/racing/${currentYear}/monza`, '')).toBe('');
+    expect(buildOfficialResultsBaseUrl('https://example.com/race', '1280')).toBe('');
   });
 });

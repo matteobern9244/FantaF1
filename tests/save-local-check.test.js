@@ -50,6 +50,44 @@ describe('local save smoke runner', () => {
     );
   });
 
+  it('bootstraps the local backend when the health endpoint is initially unreachable', async () => {
+    const state = {
+      users: [{ name: 'Player 1', predictions: { first: '', second: '', third: '', pole: '' }, points: 0 }],
+      history: [],
+      gpName: 'Australian Grand Prix 2026',
+      raceResults: { first: '', second: '', third: '', pole: '' },
+      selectedMeetingKey: '2026-australia',
+    };
+    const fetchImpl = vi
+      .fn()
+      .mockRejectedValueOnce(new Error('fetch failed'))
+      .mockResolvedValueOnce(
+        createJsonResponse({
+          status: 'ok',
+          environment: 'development',
+          databaseTarget: 'fantaf1_dev',
+        }),
+      )
+      .mockResolvedValueOnce(createJsonResponse(state))
+      .mockResolvedValueOnce(createJsonResponse({ message: 'Dati salvati correttamente.' }))
+      .mockResolvedValueOnce(createJsonResponse(state));
+    const stopBackend = vi.fn().mockResolvedValue(undefined);
+    const ensureBackend = vi.fn().mockResolvedValue({
+      started: true,
+      stop: stopBackend,
+    });
+
+    const result = await runSaveSmoke({
+      baseUrl: 'http://127.0.0.1:3001',
+      fetchImpl,
+      ensureBackend,
+    });
+
+    expect(result.health.databaseTarget).toBe('fantaf1_dev');
+    expect(ensureBackend).toHaveBeenCalledTimes(1);
+    expect(stopBackend).toHaveBeenCalledTimes(1);
+  });
+
   it('fails when health resolves to the wrong environment', async () => {
     const fetchImpl = vi.fn().mockResolvedValueOnce(
       createJsonResponse({

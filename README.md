@@ -189,7 +189,7 @@ Se il database non contiene ancora stato applicativo, il backend costruisce uno 
 - Hero results card del weekend selezionato con nomi pilota visualizzati come `Nome Cognome`; dropdown e liste di selezione restano invece in formato `Cognome Nome`.
 - Sezione risultati del weekend con track map, recupero automatico read-only dei risultati ufficiali, merge solo dei campi mancanti e pulsante conferma con tooltip di stato.
 - Storico gare modificabile con ricalcolo dei punteggi.
-- Loader tematico "Pit Stop", font F1 vendorizzati localmente e layout responsive desktop/mobile.
+- Loader iniziale con splash logo `FantaF1`, set icone browser/PWA dedicato (`favicon`, `apple-touch-icon`, `192x192`, `512x512`, `maskable`) e layout responsive desktop/mobile.
 
 ### Logica di gioco
 

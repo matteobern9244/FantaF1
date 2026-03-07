@@ -64,6 +64,9 @@ describe('App Frontend Integration', () => {
   it('renders the initial loading state', async () => {
     render(<App />);
     expect(screen.getByTestId('pitstop-loader')).toBeInTheDocument();
+    expect(screen.getByAltText('FantaF1 splash logo')).toBeInTheDocument();
+    expect(screen.queryByAltText('Pitstop mechanic')).not.toBeInTheDocument();
+    expect(screen.queryByAltText('Spinning tire')).not.toBeInTheDocument();
   });
 
   it('renders the app title and hero after data is loaded', async () => {

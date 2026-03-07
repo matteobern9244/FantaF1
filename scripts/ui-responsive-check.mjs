@@ -1,10 +1,14 @@
 import fs from 'fs';
 import path from 'path';
-import { spawnSync } from 'child_process';
+import { spawn, spawnSync } from 'child_process';
+import { fileURLToPath, pathToFileURL } from 'url';
 
 const baseUrl = process.env.UI_RESPONSIVE_BASE_URL ?? 'http://127.0.0.1:5173';
+const backendHealthUrl = process.env.UI_RESPONSIVE_BACKEND_HEALTH_URL ?? 'http://127.0.0.1:3001/api/health';
 const sessionName = `ui-${Date.now().toString(36)}`;
 const outputDir = path.resolve(process.cwd(), 'output/playwright/ui-responsive');
+const startupTimeoutMs = 45000;
+const pollIntervalMs = 750;
 const breakpoints = [
   { label: 'mobile', width: 390, height: 844 },
   { label: 'iphone-16-pro-max', width: 440, height: 956 },
@@ -156,6 +160,8 @@ const inspectStateExpression = `() => {
       ),
     },
     selectedWeekend: {
+      calendarCardCount: document.querySelectorAll('.calendar-card').length,
+      sprintCardCount: document.querySelectorAll('.calendar-card.sprint').length,
       cardText: normalizeText(selectedCalendarCard?.textContent),
       bannerTitle: normalizeText(selectedRaceBanner?.querySelector('strong')?.textContent),
       firstPredictionValue: firstPredictionSelect?.value ?? '',
@@ -170,6 +176,10 @@ const inspectStateExpression = `() => {
     unauthorizedOverflow,
   };
 }`;
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const projectRoot = path.resolve(__dirname, '..');
 
 function fail(message, details) {
   const error = new Error(message);
@@ -189,6 +199,182 @@ function ensureNpx() {
 
   if (result.error || result.status !== 0) {
     fail('npx non disponibile. Installa Node.js/npm prima di eseguire il controllo responsive.');
+  }
+}
+
+function loadEnvFile(filePath) {
+  if (!fs.existsSync(filePath)) {
+    return {};
+  }
+
+  const parsedEntries = {};
+  const fileContent = fs.readFileSync(filePath, 'utf8');
+
+  for (const rawLine of fileContent.split(/\r?\n/)) {
+    const line = rawLine.trim();
+    if (!line || line.startsWith('#')) {
+      continue;
+    }
+
+    const separatorIndex = line.indexOf('=');
+    if (separatorIndex <= 0) {
+      continue;
+    }
+
+    const key = line.slice(0, separatorIndex).trim();
+    const rawValue = line.slice(separatorIndex + 1).trim();
+    parsedEntries[key] = rawValue.replace(/^['"]|['"]$/g, '');
+  }
+
+  return parsedEntries;
+}
+
+function loadRuntimeEnv() {
+  return {
+    ...process.env,
+    ...loadEnvFile(path.join(projectRoot, '.env')),
+    ...loadEnvFile(path.join(projectRoot, '.env.local')),
+  };
+}
+
+function sleep(durationMs) {
+  return new Promise((resolve) => {
+    setTimeout(resolve, durationMs);
+  });
+}
+
+async function waitForUrl(url, {
+  fetchImpl = fetch,
+  timeoutMs = startupTimeoutMs,
+  pollInterval = pollIntervalMs,
+  readyWhen = (response) => Boolean(response?.ok),
+  label = url,
+  failureMessage,
+  sleepImpl = sleep,
+} = {}) {
+  const startedAt = Date.now();
+
+  while (Date.now() - startedAt < timeoutMs) {
+    try {
+      const response = await fetchImpl(url, {
+        signal: AbortSignal.timeout(1500),
+      });
+
+      if (readyWhen(response)) {
+        return;
+      }
+    } catch {
+      // Retry until timeout
+    }
+
+    await sleepImpl(pollInterval);
+  }
+
+  fail(failureMessage ?? `Servizio non raggiungibile su ${label}.`);
+}
+
+async function probeUrl(url, { fetchImpl = fetch } = {}) {
+  try {
+    const response = await fetchImpl(url, {
+      signal: AbortSignal.timeout(1500),
+    });
+
+    return Boolean(response?.ok);
+  } catch {
+    return false;
+  }
+}
+
+function startChild(command, args, { cwd = projectRoot, env = loadRuntimeEnv(), spawnImpl = spawn } = {}) {
+  return spawnImpl(command, args, {
+    cwd,
+    env,
+    stdio: 'ignore',
+  });
+}
+
+async function stopChild(child, { sleepImpl = sleep } = {}) {
+  if (!child || child.killed) {
+    return;
+  }
+
+  child.kill('SIGTERM');
+  await sleepImpl(1000);
+
+  if (!child.killed) {
+    child.kill('SIGKILL');
+  }
+}
+
+async function ensureLocalAppStack({
+  frontendUrl = baseUrl,
+  backendUrl = backendHealthUrl,
+  fetchImpl = fetch,
+  spawnImpl = spawn,
+  sleepImpl = sleep,
+  timeoutMs = startupTimeoutMs,
+  pollInterval = pollIntervalMs,
+  cwd = projectRoot,
+  env = loadRuntimeEnv(),
+  backendCommand = 'node',
+  backendArgs = ['server.js'],
+  frontendCommand = 'npm',
+  frontendArgs = ['run', 'dev:frontend'],
+} = {}) {
+  if (await probeUrl(frontendUrl, { fetchImpl })) {
+    return {
+      started: false,
+      stop: async () => {},
+    };
+  }
+
+  const backendChild = startChild(backendCommand, backendArgs, {
+    cwd,
+    env,
+    spawnImpl,
+  });
+
+  try {
+    await waitForUrl(backendUrl, {
+      fetchImpl,
+      timeoutMs,
+      pollInterval,
+      label: backendUrl,
+      failureMessage: `Backend non raggiungibile su ${backendUrl}.`,
+      sleepImpl,
+    });
+
+    const frontendChild = startChild(frontendCommand, frontendArgs, {
+      cwd,
+      env,
+      spawnImpl,
+    });
+
+    try {
+      await waitForUrl(frontendUrl, {
+        fetchImpl,
+        timeoutMs,
+        pollInterval,
+        label: frontendUrl,
+        failureMessage: `Frontend non raggiungibile su ${frontendUrl}.`,
+        sleepImpl,
+      });
+
+      return {
+        started: true,
+        stop: async () => {
+          await stopChild(frontendChild, { sleepImpl });
+          await stopChild(backendChild, { sleepImpl });
+        },
+      };
+    } catch (error) {
+      await stopChild(frontendChild, { sleepImpl });
+      await stopChild(backendChild, { sleepImpl });
+      throw error;
+    }
+  } catch (error) {
+    await stopChild(backendChild, { sleepImpl });
+    throw error;
   }
 }
 
@@ -246,25 +432,11 @@ function waitForPageReady() {
 }
 
 async function waitForFrontend(url, timeoutMs = 45000) {
-  const startedAt = Date.now();
-
-  while (Date.now() - startedAt < timeoutMs) {
-    try {
-      const response = await fetch(url, {
-        signal: AbortSignal.timeout(1500),
-      });
-
-      if (response.ok) {
-        return;
-      }
-    } catch {
-      // Retry until timeout
-    }
-
-    await new Promise((resolve) => setTimeout(resolve, 750));
-  }
-
-  fail(`Frontend non raggiungibile su ${url}. Avvia backend e frontend locali prima del test.`);
+  await waitForUrl(url, {
+    timeoutMs,
+    label: url,
+    failureMessage: `Frontend non raggiungibile su ${url}. Avvia backend e frontend locali prima del test.`,
+  });
 }
 
 function prepareOutputDirectory() {
@@ -350,6 +522,13 @@ function openTooltipIfPresent() {
 }
 
 function switchWeekend() {
+  runCli([
+    'run-code',
+    `await page.waitForFunction(() => {
+      return document.querySelectorAll('.calendar-card').length > 1;
+    }, { timeout: 10000 });`,
+  ]);
+
   const result = evaluateJson(`() => {
     const cards = [...document.querySelectorAll('.calendar-card')];
     const currentIndex = cards.findIndex((card) => card.classList.contains('selected'));
@@ -482,94 +661,125 @@ function validateState(
   return failures;
 }
 
+function canSwitchWeekend(state) {
+  return Number(state?.selectedWeekend?.calendarCardCount ?? 0) > 1;
+}
+
+function canSelectSprintWeekend(state) {
+  return Number(state?.selectedWeekend?.sprintCardCount ?? 0) > 0;
+}
+
 async function main() {
   ensureNpx();
   prepareOutputDirectory();
-  await waitForFrontend(baseUrl);
+  const localStack = await ensureLocalAppStack();
 
-  console.log(`[ui-responsive] Avvio controlli su ${baseUrl}`);
-  runCli(['open', baseUrl]);
-  waitForPageReady();
+  try {
+    await waitForFrontend(baseUrl);
 
-  const allFailures = [];
+    console.log(`[ui-responsive] Avvio controlli su ${baseUrl}`);
+    runCli(['open', baseUrl]);
+    waitForPageReady();
 
-  for (const breakpoint of breakpoints) {
-    console.log(
-      `[ui-responsive] Controllo ${breakpoint.label} (${breakpoint.width}x${breakpoint.height})`,
-    );
-    resizeViewport(breakpoint);
-    navigateToBase();
+    const allFailures = [];
 
-    const defaultState = inspectState();
-    const defaultFailures = validateState(defaultState);
-    if (defaultFailures.length > 0) {
-      const screenshotPath = captureScreenshot(`${breakpoint.label}-default`);
-      allFailures.push({
-        viewport: breakpoint,
-        state: 'default',
-        failures: defaultFailures,
-        screenshotPath,
-      });
-    }
-
-    switchWeekend();
-    const switchedState = inspectState();
-    const switchedFailures = validateState(switchedState, {
-      expectedWeekendChangeFrom: defaultState.selectedWeekend,
-    });
-    if (switchedFailures.length > 0) {
-      const screenshotPath = captureScreenshot(`${breakpoint.label}-weekend-switch`);
-      allFailures.push({
-        viewport: breakpoint,
-        state: 'weekend-switch',
-        failures: switchedFailures,
-        screenshotPath,
-      });
-    }
-
-    selectSprintWeekend();
-    openTooltipIfPresent();
-
-    const sprintState = inspectState();
-    const sprintFailures = validateState(sprintState, {
-      expectSprintBadge: true,
-      expectVisibleTooltip: true,
-    });
-    if (sprintFailures.length > 0) {
-      const screenshotPath = captureScreenshot(`${breakpoint.label}-sprint-tooltip`);
-      allFailures.push({
-        viewport: breakpoint,
-        state: 'sprint-tooltip',
-        failures: sprintFailures,
-        screenshotPath,
-      });
-    }
-  }
-
-  if (allFailures.length > 0) {
-    console.error('[ui-responsive] Controlli falliti.');
-
-    for (const failure of allFailures) {
-      console.error(
-        `- ${failure.viewport.label} ${failure.viewport.width}x${failure.viewport.height} [${failure.state}]`,
+    for (const breakpoint of breakpoints) {
+      console.log(
+        `[ui-responsive] Controllo ${breakpoint.label} (${breakpoint.width}x${breakpoint.height})`,
       );
-      for (const message of failure.failures) {
-        console.error(`  - ${message}`);
+      resizeViewport(breakpoint);
+      navigateToBase();
+
+      const defaultState = inspectState();
+      const defaultFailures = validateState(defaultState);
+      if (defaultFailures.length > 0) {
+        const screenshotPath = captureScreenshot(`${breakpoint.label}-default`);
+        allFailures.push({
+          viewport: breakpoint,
+          state: 'default',
+          failures: defaultFailures,
+          screenshotPath,
+        });
       }
-      if (failure.screenshotPath) {
-        console.error(`  - screenshot: ${failure.screenshotPath}`);
+
+      if (canSwitchWeekend(defaultState)) {
+        switchWeekend();
+        const switchedState = inspectState();
+        const switchedFailures = validateState(switchedState, {
+          expectedWeekendChangeFrom: defaultState.selectedWeekend,
+        });
+        if (switchedFailures.length > 0) {
+          const screenshotPath = captureScreenshot(`${breakpoint.label}-weekend-switch`);
+          allFailures.push({
+            viewport: breakpoint,
+            state: 'weekend-switch',
+            failures: switchedFailures,
+            screenshotPath,
+          });
+        }
+      } else {
+        console.log(
+          `[ui-responsive] Salto controllo weekend-switch su ${breakpoint.label}: nessun weekend alternativo disponibile.`,
+        );
+      }
+
+      if (canSelectSprintWeekend(defaultState)) {
+        selectSprintWeekend();
+        openTooltipIfPresent();
+
+        const sprintState = inspectState();
+        const sprintFailures = validateState(sprintState, {
+          expectSprintBadge: true,
+          expectVisibleTooltip: true,
+        });
+        if (sprintFailures.length > 0) {
+          const screenshotPath = captureScreenshot(`${breakpoint.label}-sprint-tooltip`);
+          allFailures.push({
+            viewport: breakpoint,
+            state: 'sprint-tooltip',
+            failures: sprintFailures,
+            screenshotPath,
+          });
+        }
+      } else {
+        console.log(
+          `[ui-responsive] Salto controllo sprint-tooltip su ${breakpoint.label}: nessun weekend Sprint disponibile.`,
+        );
       }
     }
 
-    process.exitCode = 1;
-    return;
+    if (allFailures.length > 0) {
+      console.error('[ui-responsive] Controlli falliti.');
+
+      for (const failure of allFailures) {
+        console.error(
+          `- ${failure.viewport.label} ${failure.viewport.width}x${failure.viewport.height} [${failure.state}]`,
+        );
+        for (const message of failure.failures) {
+          console.error(`  - ${message}`);
+        }
+        if (failure.screenshotPath) {
+          console.error(`  - screenshot: ${failure.screenshotPath}`);
+        }
+      }
+
+      process.exitCode = 1;
+      return;
+    }
+
+    console.log('[ui-responsive] Tutti i controlli responsive sono passati.');
+  } finally {
+    runCli(['close'], { allowFailure: true });
+    await localStack.stop();
   }
-
-  console.log('[ui-responsive] Tutti i controlli responsive sono passati.');
 }
 
-try {
+const isMainModule =
+  typeof process.argv[1] === 'string' &&
+  import.meta.url === pathToFileURL(process.argv[1]).href;
+
+if (isMainModule) {
   await main();
-} finally {
-  runCli(['close'], { allowFailure: true });
 }
+
+export { canSelectSprintWeekend, canSwitchWeekend, ensureLocalAppStack };

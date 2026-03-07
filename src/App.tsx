@@ -1,5 +1,3 @@
-import pitstopIcon from './assets/pitstop.png';
-import tireIcon from './assets/tire.png';
 import { useEffect, useRef, useState } from 'react';
 import {
   CalendarDays,
@@ -775,10 +773,7 @@ function App() {
     return (
       <div className="loading-shell">
         <div className="pitstop-loader" data-testid="pitstop-loader">
-          <div className="mechanic-container">
-            <img src={pitstopIcon} alt="Pitstop mechanic" className="mechanic-icon" />
-            <img src={tireIcon} alt="Spinning tire" className="tire-icon spin" />
-          </div>
+          <img src="/splash-logo-only.png" alt="FantaF1 splash logo" className="splash-logo" />
           <div className="speech-bubble">
             {loadingMessage}
           </div>
