@@ -454,6 +454,7 @@ Lo script integrato:
 ### Configurazione servizio
 
 - Build command: `npm install && npm run build`
+- Il repository forza l'installazione delle `devDependencies` anche durante la build tramite `.npmrc`, per garantire su Render la presenza della toolchain TypeScript/Vite e dei type package React necessari alla compilazione frontend.
 - Start command: `npm start`
 
 ### Variabili da configurare
