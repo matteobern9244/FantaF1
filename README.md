@@ -7,7 +7,9 @@ L'applicazione e' pensata per un flusso amministrato: un admin seleziona il week
 ## Panoramica funzionale
 
 - Lo stato di gioco mantiene sempre esattamente 3 partecipanti.
+- I nomi dei partecipanti sono data-driven: backend e UI usano il roster gia' persistito nel database, senza nomi hardcoded a runtime.
 - I pronostici prevedono 4 campi per ogni utente: primo, secondo, terzo e pole oppure vincitore Sprint.
+- Ogni utente puo' impostare un `Weekend Boost` su uno dei 4 campi; se il campo boostato e' corretto, i punti di quel solo campo raddoppiano.
 - Il salvataggio manuale dei pronostici richiede almeno un campo compilato. Lo stato "tutti vuoti" non e' valido per `Salva dati inseriti`, mentre uno stato completamente compilato e' consentito.
 - Il backend blocca le modifiche ai pronostici dopo l'inizio ufficiale della gara del weekend selezionato.
 - La conferma dei risultati e l'assegnazione punti sono possibili solo quando la gara e' considerata conclusa e tutti i risultati reali sono presenti.
@@ -31,6 +33,16 @@ Il flusso previsto e' questo:
 3. si salva lo stato corrente con `Salva dati inseriti`;
 4. a gara conclusa si inseriscono o si recuperano i risultati reali;
 5. si confermano i risultati per consolidare i punti nello storico.
+
+### Weekend Boost
+
+Per ogni weekend ogni giocatore puo' associare un boost a uno tra `first`, `second`, `third` o `pole`, oppure lasciarlo su `none`.
+
+- In area pubblica il boost e' impostabile una sola volta per giocatore e weekend.
+- Dopo il primo salvataggio il boost del giocatore resta bloccato lato pubblico e puo' essere modificato solo dall'admin.
+- L'admin puo' sempre impostare, modificare o resettare qualsiasi boost.
+- Se il campo boostato e' corretto, il punteggio di quel solo campo viene raddoppiato.
+- Se il campo boostato e' errato, non ci sono penalita'.
 
 ### Validazione salvataggio pronostici
 
@@ -184,20 +196,24 @@ Se il database non contiene ancora stato applicativo, il backend costruisce uno 
 - Il titolo hero usa un fit basato sulla larghezza reale del contenitore: sui desktop wide mantiene il massimo visivo corrente, mentre su viewport piu' strette riduce il `font-size` solo quanto necessario per restare interamente visibile senza clipping.
 - Card "Prossimo weekend" con badge Sprint/Standard, programma sessioni e orari formattati in italiano.
 - Classifica live calcolata come punti storici piu' proiezione del weekend selezionato, con stato esplicito per risultati ufficiali assenti o parziali.
+- Modalita' `public` e `admin` separate, con login admin via sessione e pannelli operativi esposti solo quando la sessione e' valida.
 - Calendario stagionale con selettore e strip orizzontale dei weekend.
 - Griglia pronostici per i 3 partecipanti con selezione piloti ordinati per cognome e visualizzati come `Cognome Nome`.
 - Hero results card del weekend selezionato con nomi pilota visualizzati come `Nome Cognome`; dropdown e liste di selezione restano invece in formato `Cognome Nome`.
 - Sezione risultati del weekend con track map, recupero automatico read-only dei risultati ufficiali, merge solo dei campi mancanti e pulsante conferma con tooltip di stato.
 - Storico gare modificabile con ricalcolo dei punteggi.
+- Dashboard KPI per utente, analytics deep-dive, storico mobile piu' compatto, status strip, toast operativi e CTA installazione PWA.
 - Loader iniziale con splash logo `FantaF1`, set icone browser/PWA dedicato (`favicon`, `apple-touch-icon`, `192x192`, `512x512`, `maskable`) e layout responsive desktop/mobile.
 
 ### Logica di gioco
 
 - Configurazione punteggi centralizzata: 5 punti primo, 3 punti secondo, 2 punti terzo, 1 punto pole/Sprint.
+- `Weekend Boost` persistito per utente e weekend, con raddoppio dei soli punti del campo boostato quando il match e' corretto.
 - Race lock server-side basato su `raceStartTime`, con fallback a `endDate + 14:00:00Z` se l'orario non e' disponibile.
 - Fine gara stimata a `raceStartTime + 2.5h` per abilitare l'assegnazione definitiva dei punti; il recupero ufficiale live dei risultati puo' iniziare prima ma resta read-only.
 - Reset dei pronostici correnti con salvataggio persistente immediato.
 - Conservazione dei nomi utente gia' persistiti durante modifica o cancellazione di gare storiche.
+- Il roster ufficiale non arriva piu' dal config nominale: il backend usa il roster gia' persistito nell'ultimo stato valido del database e lo riapplica in validazione e salvataggio.
 
 ## Architettura
 
@@ -227,6 +243,7 @@ L'applicazione di questi standard garantisce un approccio "production-safe" e un
 - Espone API REST, serve gli asset statici di `dist` e usa un catch-all per il routing SPA.
 - Si connette prima al database, poi avvia il server HTTP e infine esegue in background la sincronizzazione di piloti e calendario.
 - In produzione il server ascolta su `0.0.0.0` e usa `PORT` se fornita dall'ambiente.
+- Le mutazioni admin sono protette da sessione cookie HTTP-only firmata con `ADMIN_SESSION_SECRET`; le route read-only restano pubbliche.
 
 ### Persistenza
 
@@ -295,6 +312,21 @@ Restituisce lo stato globale del gioco:
 - `selectedMeetingKey`;
 - `weekendStateByMeetingKey`.
 
+### `GET /api/session`
+
+Restituisce lo stato sessione runtime:
+
+- `isAdmin`;
+- `defaultViewMode`.
+
+### `POST /api/admin/session`
+
+Crea la sessione admin dopo verifica password e imposta il cookie HTTP-only firmato.
+
+### `DELETE /api/admin/session`
+
+Invalida subito la sessione admin e rimuove il cookie.
+
 ### `POST /api/data`
 
 Salva lo stato globale del gioco dopo sanitizzazione e validazione per i flussi generici dell'applicazione.
@@ -317,6 +349,27 @@ Comportamenti rilevanti:
 - `400` se il numero di partecipanti non e' quello atteso;
 - `403` se la gara e' iniziata e i pronostici correnti vengono modificati;
 - `500` in caso di errore persistente di salvataggio.
+
+### `POST /api/public-boost`
+
+Permette a un giocatore di salvare pubblicamente il proprio `Weekend Boost` per il weekend selezionato.
+
+Comportamenti rilevanti:
+
+- `400` se `meetingKey`, `userName` o `boost` non sono validi;
+- `400` se quel giocatore ha gia' lockato il boost per quel weekend;
+- `403` se il weekend e' gia' lockato dalla gara;
+- persiste `weekendBoostByUser` e `weekendBoostLockedByUser` nel DB corrente.
+
+### `POST /api/admin/boost`
+
+Endpoint admin-only per override completo del `Weekend Boost`.
+
+Comportamenti rilevanti:
+
+- valida `meetingKey`, `userName`, `boost` e `locked`;
+- l'admin puo' modificare anche boost gia' lockati lato pubblico;
+- il salvataggio viene accettato solo se il weekend richiesto esiste davvero ed e' stato persistito correttamente.
 
 ### `GET /api/drivers`
 
@@ -355,6 +408,7 @@ Ogni utente contiene:
 - `name`
 - `predictions`
 - `points`
+- `weekendBoost`
 
 Ogni record storico contiene:
 
@@ -363,6 +417,12 @@ Ogni record storico contiene:
 - `date`
 - `results`
 - `userPredictions`
+
+Ogni `userPredictions[name]` storico contiene:
+
+- `prediction`
+- `weekendBoost`
+- `pointsEarned`
 
 ### Weekend di gara
 
@@ -381,6 +441,8 @@ Ogni weekend puo' includere:
 - `endDate`
 - `raceStartTime`
 - `sessions`
+- `weekendBoostByUser`
+- `weekendBoostLockedByUser`
 
 ## Variabili ambiente
 
@@ -390,12 +452,19 @@ Ogni weekend puo' includere:
   - stringa di connessione MongoDB usata dal backend;
   - puo' includere direttamente il nome del database nel path della URI;
   - se assente il server termina in fase di bootstrap.
+- `ADMIN_SESSION_SECRET`
+  - segreto usato per firmare e verificare la sessione admin;
+  - in produzione va impostato esplicitamente con una stringa lunga e casuale;
+  - se cambia, le sessioni admin esistenti diventano invalide.
 
 ### Opzionali
 
 - `PORT`
   - porta HTTP del backend;
   - in locale il default e' `3001`.
+- `NODE_ENV`
+  - controlla il targeting del database (`fantaf1_dev` in development, `fantaf1` in production) e il default `viewMode`;
+  - in development l'app apre in modalita' admin, in production in modalita' pubblica.
 - `VITE_APP_LOCAL_NAME`
   - override del titolo visualizzato nell'hero del frontend;
   - se estende il titolo base `Fanta Formula 1`, la hero lo divide in due righe: base title sopra, suffisso sotto;
@@ -407,8 +476,7 @@ Ogni weekend puo' includere:
 Il launcher locale carica:
 
 1. variabili di processo correnti;
-2. `.env`;
-3. `.env.local` come override finale.
+2. `.env`.
 
 In assenza di un database nel path della URI, l'ambiente locale punta sempre a `fantaf1_dev`.
 Se `MONGODB_URI` contiene gia' un database nel path, quel nome deve essere coerente con l'ambiente locale.
@@ -461,6 +529,8 @@ Lo script integrato:
 
 - `MONGODB_URI` obbligatoria.
 - `MONGODB_URI` deve puntare a `.../fantaf1`.
+- `ADMIN_SESSION_SECRET` obbligatoria e privata.
+- `NODE_ENV=production` raccomandata per allineare cookie sicuri, DB target e modalita' iniziale.
 - `PORT` normalmente gestita dalla piattaforma.
 - `VITE_APP_LOCAL_NAME` opzionale se si vuole un titolo hero personalizzato anche in produzione.
 
@@ -499,7 +569,7 @@ Lo script integrato:
 - Soglie attuali:
   - `lines: 100`
   - `functions: 100`
-  - `branches: 90`
+  - `branches: 100`
   - `statements: 100`
 
 La suite copre business logic, storage MongoDB, sanitizzazione, parsing di piloti e calendario, risultati, formattazione UI e regressioni sui flussi principali.

@@ -1,4 +1,4 @@
-import type { PointsConfig, Prediction, RaceRecord, UserData } from '../types';
+import type { PointsConfig, Prediction, RaceRecord, UserData, WeekendBoost } from '../types';
 
 function normalizePredictionValue(value: string): string {
   return String(value ?? '').trim().toLowerCase();
@@ -13,11 +13,16 @@ export function createEmptyPrediction(): Prediction {
   };
 }
 
-export function createInitialUsers(participants: string[]): UserData[] {
-  return participants.map((name) => ({
+export function createInitialUsers(participantsOrSlots: string[] | number): UserData[] {
+  const participantNames = Array.isArray(participantsOrSlots)
+    ? participantsOrSlots
+    : Array.from({ length: participantsOrSlots }, (_, index) => `Player ${index + 1}`);
+
+  return participantNames.map((name) => ({
     name,
     predictions: createEmptyPrediction(),
     points: 0,
+    weekendBoost: 'none',
   }));
 }
 
@@ -41,12 +46,18 @@ export function rebuildUsersFromHistory(
   return users;
 }
 
-export function calculatePointsEarned(
+export function normalizeWeekendBoost(boost?: string | null): WeekendBoost {
+  return boost === 'first' || boost === 'second' || boost === 'third' || boost === 'pole'
+    ? boost
+    : 'none';
+}
+
+export function calculatePointsBreakdown(
   prediction: Prediction,
   raceResults: Prediction,
   pointsConfig: PointsConfig,
-): number {
-  let pointsEarned = 0;
+  weekendBoost: WeekendBoost = 'none',
+) {
   const normalizedPrediction = {
     first: normalizePredictionValue(prediction.first),
     second: normalizePredictionValue(prediction.second),
@@ -59,32 +70,44 @@ export function calculatePointsEarned(
     third: normalizePredictionValue(raceResults.third),
     pole: normalizePredictionValue(raceResults.pole),
   };
+  let basePoints = 0;
+  let boostBonus = 0;
 
-  if (normalizedPrediction.first === normalizedRaceResults.first && normalizedRaceResults.first) {
-    pointsEarned += pointsConfig.first;
-  }
+  (Object.keys(pointsConfig) as (keyof PointsConfig)[]).forEach((field) => {
+    const isMatch = normalizedPrediction[field] === normalizedRaceResults[field] && normalizedRaceResults[field];
+    if (!isMatch) {
+      return;
+    }
 
-  if (normalizedPrediction.second === normalizedRaceResults.second && normalizedRaceResults.second) {
-    pointsEarned += pointsConfig.second;
-  }
+    basePoints += pointsConfig[field];
+    if (weekendBoost === field) {
+      boostBonus += pointsConfig[field];
+    }
+  });
 
-  if (normalizedPrediction.third === normalizedRaceResults.third && normalizedRaceResults.third) {
-    pointsEarned += pointsConfig.third;
-  }
+  return {
+    basePoints,
+    boostBonus,
+    totalPoints: basePoints + boostBonus,
+  };
+}
 
-  if (normalizedPrediction.pole === normalizedRaceResults.pole && normalizedRaceResults.pole) {
-    pointsEarned += pointsConfig.pole;
-  }
-
-  return pointsEarned;
+export function calculatePointsEarned(
+  prediction: Prediction,
+  raceResults: Prediction,
+  pointsConfig: PointsConfig,
+  weekendBoost: WeekendBoost = 'none',
+): number {
+  return calculatePointsBreakdown(prediction, raceResults, pointsConfig, weekendBoost).totalPoints;
 }
 
 export function calculateProjectedPoints(
   prediction: Prediction,
   raceResults: Prediction,
   pointsConfig: PointsConfig,
+  weekendBoost: WeekendBoost = 'none',
 ): number {
-  return calculatePointsEarned(prediction, raceResults, pointsConfig);
+  return calculatePointsEarned(prediction, raceResults, pointsConfig, weekendBoost);
 }
 
 export function calculateLiveTotal(
@@ -92,7 +115,12 @@ export function calculateLiveTotal(
   raceResults: Prediction,
   pointsConfig: PointsConfig,
 ): number {
-  return user.points + calculateProjectedPoints(user.predictions, raceResults, pointsConfig);
+  return user.points + calculateProjectedPoints(
+    user.predictions,
+    raceResults,
+    pointsConfig,
+    normalizeWeekendBoost(user.weekendBoost),
+  );
 }
 
 export function sortUsersByLiveTotal(
@@ -142,16 +170,24 @@ export function buildRaceRecord(
   const userPredictions: RaceRecord['userPredictions'] = {};
 
   const updatedUsers = users.map((user) => {
-    const pointsEarned = calculatePointsEarned(user.predictions, raceResults, pointsConfig);
+    const normalizedWeekendBoost = normalizeWeekendBoost(user.weekendBoost);
+    const pointsEarned = calculatePointsEarned(
+      user.predictions,
+      raceResults,
+      pointsConfig,
+      normalizedWeekendBoost,
+    );
 
     userPredictions[user.name] = {
       prediction: { ...user.predictions },
+      weekendBoost: normalizedWeekendBoost,
       pointsEarned,
     };
 
     return {
       ...user,
       points: user.points + pointsEarned,
+      weekendBoost: normalizedWeekendBoost,
     };
   });
 

@@ -10,6 +10,7 @@ import {
   verifyMongoDatabaseName,
 } from './backend/database.js';
 import { syncDriversFromOfficialSource } from './backend/drivers.js';
+import { ensureAdminCredentials } from './backend/auth.js';
 
 const PORT = process.env.PORT || appConfig.server.port;
 const HOST = '0.0.0.0'; // Bind to all interfaces for Render
@@ -49,6 +50,7 @@ async function startServer() {
   await connectToDatabase();
 
   // 2. Start listening immediately to satisfy platform (Render) health checks
+  await ensureAdminCredentials();
   app.listen(PORT, HOST, () => {
     console.log(
       formatConfigText(appConfig.uiText.backend.logs.serverStarted, {

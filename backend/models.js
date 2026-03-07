@@ -11,6 +11,7 @@ const UserSchema = new mongoose.Schema({
   name: { type: String, required: true },
   predictions: { type: PredictionSchema, default: () => ({}) },
   points: { type: Number, default: 0 },
+  weekendBoost: { type: String, default: 'none' },
 });
 
 const WeekendPredictionStateSchema = new mongoose.Schema(
@@ -21,6 +22,16 @@ const WeekendPredictionStateSchema = new mongoose.Schema(
       default: () => ({}),
     },
     raceResults: { type: PredictionSchema, default: () => ({}) },
+    weekendBoostByUser: {
+      type: Map,
+      of: String,
+      default: () => ({}),
+    },
+    weekendBoostLockedByUser: {
+      type: Map,
+      of: Boolean,
+      default: () => ({}),
+    },
   },
   { _id: false },
 );
@@ -34,6 +45,7 @@ const RaceResultSchema = new mongoose.Schema({
     type: Map,
     of: new mongoose.Schema({
       prediction: PredictionSchema,
+      weekendBoost: { type: String, default: 'none' },
       pointsEarned: { type: Number, default: 0 },
     }, { _id: false }),
     default: () => ({}),
@@ -88,3 +100,17 @@ const AppDataSchema = new mongoose.Schema({
 export const AppData = mongoose.model('AppData', AppDataSchema);
 export const Driver = mongoose.model('Driver', DriverSchema);
 export const Weekend = mongoose.model('Weekend', WeekendSchema);
+export const AdminCredential =
+  mongoose.models.AdminCredential ||
+  mongoose.model(
+    'AdminCredential',
+    new mongoose.Schema(
+      {
+        role: { type: String, required: true, unique: true },
+        passwordHash: { type: String, required: true },
+        passwordSalt: { type: String, required: true },
+        lastLoginAt: { type: Date },
+      },
+      { timestamps: true },
+    ),
+  );

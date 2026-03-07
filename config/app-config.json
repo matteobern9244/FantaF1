@@ -1,7 +1,8 @@
 {
   "app": {
     "title": "Fanta Formula 1",
-    "adminName": "Admin"
+    "adminName": "Admin",
+    "defaultViewMode": "public"
   },
   "server": {
     "host": "127.0.0.1",
@@ -11,7 +12,7 @@
     "host": "127.0.0.1",
     "port": 5173
   },
-  "participants": ["Player 1", "Player 2", "Player 3"],
+  "participantSlots": 3,
   "points": {
     "first": 5,
     "second": 3,
@@ -125,7 +126,13 @@
       "deleteRace": "Elimina",
       "saveEditedRace": "Salva modifiche gara",
       "cancelEdit": "Annulla modifica",
-      "savePredictions": "Salva dati inseriti"
+      "savePredictions": "Salva dati inseriti",
+      "publicView": "Vista pubblica",
+      "adminView": "Modalita' admin",
+      "installApp": "Installa app",
+      "logout": "Logout",
+      "saveBoost": "Salva weekend boost",
+      "adminBoostSave": "Aggiorna boost"
     },
     "headings": {
       "seasonTag": "Fanta Formula 1",
@@ -135,7 +142,11 @@
       "rules": "Regole del gioco",
       "live": "Classifica live",
       "calendar": "Calendario stagione",
-      "nextRace": "Prossimo weekend"
+      "nextRace": "Prossimo weekend",
+      "userKpi": "User KPI Dashboard",
+      "userAnalytics": "Deep-dive KPI dashboard",
+      "weekendBoost": "Weekend Boost",
+      "adminAccess": "Accesso admin"
     },
     "labels": {
       "adminPrefix": "Admin",
@@ -150,7 +161,37 @@
       "resultPole": "Pole / Sprint reale",
       "potential": "Proiezione gara",
       "calendarRound": "Round",
-      "calendarSprint": "Sprint"
+      "calendarSprint": "Sprint",
+      "viewMode": "View mode",
+      "publicMode": "Vista pubblica",
+      "adminMode": "Modalita' admin",
+      "seasonPoints": "Totale punti stagionali",
+      "averagePosition": "Posizione media",
+      "poleAccuracy": "Percentuale pole esatte",
+      "averagePointsPerRace": "Media punti/gara",
+      "bestWeekend": "Miglior weekend",
+      "worstWeekend": "Peggior weekend",
+      "mostPickedDriver": "Pilota piu' pronosticato",
+      "fieldAccuracy": "Hit rate per campo",
+      "pointsTrend": "Punti per GP",
+      "userKpiSelector": "Dashboard utente",
+      "todayStatus": "Data corretta",
+      "seasonStatus": "Stagione F1",
+      "weekendWins": "Weekend vinti",
+      "podiums": "Podi di giornata",
+      "averageLeaderDelta": "Delta medio dal leader",
+      "totalHitRate": "Hit rate totale",
+      "boostConversionRate": "Boost conversion rate",
+      "boostSelection": "Campo boost",
+      "boostPlayer": "Giocatore",
+      "boostStatus": "Stato boost",
+      "boostLocked": "Boost salvato",
+      "boostUnlocked": "Boost non impostato",
+      "boostAdminOnly": "Modificabile solo admin",
+      "boostedWeekends": "Weekend con boost",
+      "boostPointsEarned": "Punti extra boost",
+      "weekendsAboveLeader": "Weekend da leader",
+      "cumulativeTrend": "Trend cumulato"
     },
     "placeholders": {
       "driverSelect": "Seleziona un pilota",
@@ -168,13 +209,25 @@
       "liveHint": "Punteggio attuale piu' proiezione del weekend selezionato",
       "empty": "Nessuna gara registrata finora.",
       "resultSummaryTemplate": "{actualLabel}: 1° {first} | 2° {second} | 3° {third} | Pole/Sprint {pole}",
-      "editingLabel": "Stai modificando una gara salvata. La classifica e' gia' stata ricalcolata senza questa gara."
+      "editingLabel": "Stai modificando una gara salvata. La classifica e' gia' stata ricalcolata senza questa gara.",
+      "publicReadonly": "Gestione admin in sola lettura per i non admin.",
+      "analyticsEmpty": "Le analytics saranno disponibili dopo le prime gare confermate."
     },
     "status": {
       "liveNoOfficialResults": "Nessun risultato ufficiale disponibile ancora per il weekend selezionato.",
       "livePartialOfficialResults": "Risultati ufficiali parziali per il weekend selezionato.",
       "predictionNoOfficialResults": "La proiezione si aggiornera' quando Formula1.com pubblichera' pole/sprint/gara ufficiali.",
-      "predictionPartialOfficialResults": "La proiezione e' parziale e usa solo i risultati ufficiali gia' pubblicati."
+      "predictionPartialOfficialResults": "La proiezione e' parziale e usa solo i risultati ufficiali gia' pubblicati.",
+      "raceLockedStrip": "Race lock attivo",
+      "raceOpenStrip": "Pronostici ancora aperti",
+      "resultsReadyStrip": "Risultati ufficiali completi",
+      "predictionsSaved": "Pronostici salvati.",
+      "pwaInstalled": "App installata correttamente.",
+      "pwaInstallHint": "Installa FantaF1 sul dispositivo per una home-screen experience piu' rapida.",
+      "adminLoginSuccess": "Modalita' admin attiva.",
+      "adminLogoutSuccess": "Logout completato. Modalita' pubblica attiva.",
+      "boostSaved": "Weekend boost salvato.",
+      "adminBoostSaved": "Weekend boost aggiornato dall'admin."
     },
     "calendar": {
       "empty": "Calendario non disponibile.",
@@ -191,6 +244,9 @@
       "deleteRaceConfirm": "Vuoi eliminare questa gara dallo storico? La classifica verra' ricalcolata automaticamente.",
       "cancelEditConfirm": "Vuoi annullare la modifica in corso e ripristinare la gara originale nello storico?",
       "editRaceLoaded": "Gara {gpName} caricata in modifica. Aggiorna i dati e salva di nuovo."
+      ,
+      "adminPasswordRequired": "Inserisci la password admin.",
+      "boostAlreadyLocked": "Questo boost e' gia' stato salvato e puo' essere modificato solo dall'admin."
     },
     "footer": "Application created by Matteo Bernardini©",
     "tooltips": {

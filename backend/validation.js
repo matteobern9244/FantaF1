@@ -1,9 +1,42 @@
 import { getSelectedWeekendState, sanitizePrediction } from './weekend-state.js';
 
-export function validateParticipants(incomingUsers, requiredParticipants) {
-  if (!Array.isArray(incomingUsers)) return false;
-  // We only enforce the total number of participants (exactly 3)
-  return incomingUsers.length === requiredParticipants.length;
+function getNormalizedParticipantNames(incomingUsers) {
+  if (!Array.isArray(incomingUsers)) {
+    return null;
+  }
+
+  return incomingUsers.map((user) =>
+    typeof user?.name === 'string' ? user.name.trim() : '',
+  );
+}
+
+export function resolveParticipantRoster(incomingUsers, participantSlots = 3) {
+  const normalizedIncomingNames = getNormalizedParticipantNames(incomingUsers);
+
+  if (!normalizedIncomingNames || normalizedIncomingNames.length !== participantSlots) {
+    return null;
+  }
+  if (normalizedIncomingNames.some((name) => !name)) {
+    return null;
+  }
+
+  const uniqueIncomingNames = new Set(normalizedIncomingNames);
+  if (uniqueIncomingNames.size !== participantSlots) {
+    return null;
+  }
+
+  return normalizedIncomingNames;
+}
+
+export function validateParticipants(incomingUsers, requiredParticipants, participantSlots = 3) {
+  const normalizedIncomingNames = resolveParticipantRoster(incomingUsers, participantSlots);
+  if (!normalizedIncomingNames) return false;
+
+  if (!Array.isArray(requiredParticipants) || requiredParticipants.length !== participantSlots) {
+    return true;
+  }
+
+  return [...normalizedIncomingNames].sort().join('||') === [...requiredParticipants].sort().join('||');
 }
 
 function extractSelectedWeekendPredictions(data, meetingKey) {

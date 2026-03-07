@@ -108,6 +108,16 @@ function createAppData() {
           'Player 3': createEmptyPrediction(),
         },
         raceResults: { first: 'ver', second: '', third: '', pole: '' },
+        weekendBoostByUser: {
+          'Player 1': 'none',
+          'Player 2': 'none',
+          'Player 3': 'none',
+        },
+        weekendBoostLockedByUser: {
+          'Player 1': false,
+          'Player 2': false,
+          'Player 3': false,
+        },
       },
       'race-2': {
         userPredictions: {
@@ -116,6 +126,16 @@ function createAppData() {
           'Player 3': createEmptyPrediction(),
         },
         raceResults: { first: 'ham', second: '', third: '', pole: 'pia' },
+        weekendBoostByUser: {
+          'Player 1': 'none',
+          'Player 2': 'none',
+          'Player 3': 'none',
+        },
+        weekendBoostLockedByUser: {
+          'Player 1': false,
+          'Player 2': false,
+          'Player 3': false,
+        },
       },
     },
   };
@@ -149,6 +169,10 @@ function setupFetch({
   const fetchMock = global.fetch as ReturnType<typeof vi.fn>;
 
   fetchMock.mockImplementation((url: string) => {
+    if (url.includes('/api/session')) {
+      return Promise.resolve(createResponse({ isAdmin: true, defaultViewMode: 'admin' }));
+    }
+
     if (url.includes('/api/data')) {
       return Promise.resolve(createResponse(appData));
     }

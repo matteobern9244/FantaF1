@@ -4,7 +4,12 @@ Cronologia sintetica delle release documentate del progetto Fanta Formula 1.
 
 ## In sviluppo
 
-- Nessuna modifica documentata.
+- **Auth Reale Admin/Public**: introdotte sessioni admin firmate via cookie HTTP-only, endpoint `GET /api/session`, `POST /api/admin/session` e `DELETE /api/admin/session`, con default `public` in production e `admin` in development.
+- **Weekend Boost con Flusso Pubblico**: aggiunto `weekendBoost` per utente/weekend, con salvataggio pubblico one-shot per giocatore, override completo lato admin e persistenza dedicata in `weekendStateByMeetingKey`.
+- **Dashboard KPI e Analytics Estese**: introdotti KPI utente, analytics deep-dive, storico mobile piu' compatto, toast UX e CTA PWA senza modificare i payload pubblici principali.
+- **Roster Dinamico da Database**: eliminato l'hardcoding runtime dei nomi giocatore; validazione e riordino usano ora il roster persistito nell'ultimo `appdata.users`, mantenendo fallback neutrale solo su database vuoto.
+- **Hardening Server-Side**: rafforzate la validazione partecipanti, la route admin del boost e la sanitizzazione storage per impedire save semanticamente invalidi.
+- **Coverage Ripristinata al Massimo Standard**: estesa la suite fino a `100%` su lines, statements, functions e branches per lo scope configurato del repository.
 
 ## v1.3.11
 

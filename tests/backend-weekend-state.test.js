@@ -31,6 +31,8 @@ describe('backend weekend state helpers', () => {
     expect(createEmptyWeekendState()).toEqual({
       userPredictions: {},
       raceResults: createEmptyPrediction(),
+      weekendBoostByUser: {},
+      weekendBoostLockedByUser: {},
     });
     expect(sanitizePrediction({ first: 'ver', second: 1 })).toEqual({
       first: 'ver',
@@ -51,10 +53,14 @@ describe('backend weekend state helpers', () => {
         'Player 1': { first: 'ver', second: '', third: '', pole: '' },
       },
       raceResults: { first: '', second: '', third: '', pole: 'pia' },
+      weekendBoostByUser: {},
+      weekendBoostLockedByUser: {},
     });
     expect(sanitizeWeekendState({})).toEqual({
       userPredictions: {},
       raceResults: { first: '', second: '', third: '', pole: '' },
+      weekendBoostByUser: {},
+      weekendBoostLockedByUser: {},
     });
 
     expect(
@@ -77,6 +83,8 @@ describe('backend weekend state helpers', () => {
           'Player 1': { first: 'ver', second: '', third: '', pole: '' },
         },
         raceResults: { first: '', second: '', third: '', pole: 'pia' },
+        weekendBoostByUser: {},
+        weekendBoostLockedByUser: {},
       },
     });
   });
@@ -97,6 +105,16 @@ describe('backend weekend state helpers', () => {
         'Player 3': createEmptyPrediction(),
       },
       raceResults: { first: '', second: '', third: '', pole: 'nor' },
+      weekendBoostByUser: {
+        'Player 1': 'none',
+        'Player 2': 'none',
+        'Player 3': 'none',
+      },
+      weekendBoostLockedByUser: {
+        'Player 1': false,
+        'Player 2': false,
+        'Player 3': false,
+      },
     });
     expect(getSelectedWeekendState({}, '')).toEqual(createEmptyWeekendState());
     expect(upsertSelectedWeekendState({ race: builtState }, '', users, { pole: 'nor' })).toEqual({
@@ -115,9 +133,16 @@ describe('backend weekend state helpers', () => {
         'Player 2': { first: '', second: '', third: '', pole: '' },
       },
       raceResults: createEmptyPrediction(),
+      weekendBoostByUser: {
+        'Player 1': 'third',
+      },
+      weekendBoostLockedByUser: {
+        'Player 1': true,
+      },
     };
 
     expect(hydrateUsersForSelectedWeekend(users, weekendState)[0].predictions.first).toBe('ver');
+    expect(hydrateUsersForSelectedWeekend(users, weekendState)[0].weekendBoost).toBe('third');
     expect(hydrateUsersForSelectedWeekend(null, weekendState)).toEqual([]);
     expect(hasAnyPredictionValue(users)).toBe(false);
     expect(hasAnyPredictionValue(createUsers())).toBe(true);
@@ -125,6 +150,8 @@ describe('backend weekend state helpers', () => {
     expect(buildWeekendStateFromUsers(null, { pole: 'nor' })).toEqual({
       userPredictions: {},
       raceResults: { first: '', second: '', third: '', pole: 'nor' },
+      weekendBoostByUser: {},
+      weekendBoostLockedByUser: {},
     });
   });
 });

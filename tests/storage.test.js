@@ -112,9 +112,102 @@ describe('storage sanitization', () => {
         third: '',
         pole: '',
       },
+      weekendBoostByUser: {
+        'TestUser 3': 'none',
+        'TestUser 2': 'none',
+        'TestUser 1': 'none',
+      },
+      weekendBoostLockedByUser: {
+        'TestUser 3': false,
+        'TestUser 2': false,
+        'TestUser 1': false,
+      },
     });
     expect(sanitized).not.toHaveProperty('drivers');
     expect(sanitized).not.toHaveProperty('calendar');
+  });
+
+  it('preserves the incoming order when no persisted roster exists yet', () => {
+    const currentYear = new Date().getFullYear();
+    const sanitized = sanitizeAppData(
+      {
+        users: [
+          { name: 'Player 3', predictions: { first: 'ver' }, points: 3 },
+          { name: 'Player 1', predictions: { first: 'ham' }, points: 2 },
+          { name: 'Player 2', predictions: { first: 'lec' }, points: 1 },
+        ],
+        selectedMeetingKey: '',
+      },
+      [
+        {
+          meetingKey: '1280',
+          meetingName: 'China',
+          grandPrixTitle: `Chinese Grand Prix ${currentYear}`,
+          roundNumber: 2,
+          dateRangeLabel: '13 - 15 MAR',
+          detailUrl: `https://www.formula1.com/en/racing/${currentYear}/china`,
+          heroImageUrl: '',
+          trackOutlineUrl: '',
+          isSprintWeekend: true,
+          startDate: `${currentYear}-03-13`,
+          endDate: `${currentYear}-03-15`,
+        },
+      ],
+    );
+
+    expect(sanitized.users.map((user) => user.name)).toEqual(['Player 3', 'Player 1', 'Player 2']);
+    expect(sanitized.users[0].predictions.first).toBe('ver');
+    expect(sanitized.users[1].predictions.first).toBe('ham');
+    expect(sanitized.users[2].predictions.first).toBe('lec');
+  });
+
+  it('preserves a valid non-placeholder roster when it is already stored in a valid order', () => {
+    const sanitized = sanitizeAppData({
+      users: [
+        { name: 'Uno', predictions: { first: 'ver' }, points: 3 },
+        { name: 'Due', predictions: { first: 'ham' }, points: 2 },
+        { name: 'Tre', predictions: { first: 'lec' }, points: 1 },
+      ],
+    });
+
+    expect(sanitized.users.map((user) => user.name)).toEqual(['Uno', 'Due', 'Tre']);
+  });
+
+  it('keeps the incoming order when the provided persisted roster does not match the payload users', () => {
+    const sanitized = sanitizeAppData(
+      {
+        users: [
+          { name: 'Uno', predictions: { first: 'ver' }, points: 3 },
+          { name: 'Due', predictions: { first: 'ham' }, points: 2 },
+          { name: 'Quattro', predictions: { first: 'lec' }, points: 1 },
+        ],
+      },
+      [],
+      {
+        participantRoster: ['Uno', 'Due', 'Tre'],
+      },
+    );
+
+    expect(sanitized.users.map((user) => user.name)).toEqual(['Uno', 'Due', 'Quattro']);
+  });
+
+  it('falls back to the incoming users when a provided roster cannot map a non-string user name', () => {
+    const sanitized = sanitizeAppData(
+      {
+        users: [
+          { name: 'Uno', predictions: { first: 'ver' }, points: 3 },
+          { name: { raw: 'Due' }, predictions: { first: 'ham' }, points: 2 },
+          { name: 'Tre', predictions: { first: 'lec' }, points: 1 },
+        ],
+      },
+      [],
+      {
+        participantRoster: ['Uno', 'Due', 'Tre'],
+      },
+    );
+
+    expect(sanitized.users[1].name).toEqual({ raw: 'Due' });
+    expect(sanitized.users.map((user) => user.predictions.first)).toEqual(['ver', 'ham', 'lec']);
   });
 
   describe('internal coverage', () => {
