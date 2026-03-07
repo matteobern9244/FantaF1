@@ -9,6 +9,13 @@ const sessionName = `ui-${Date.now().toString(36)}`;
 const outputDir = path.resolve(process.cwd(), 'output/playwright/ui-responsive');
 const startupTimeoutMs = 45000;
 const pollIntervalMs = 750;
+const cliCommandTimeoutMs = 10000;
+const cliStartupTimeoutMs = 15000;
+const cliCleanupTimeoutMs = 5000;
+const uiShellTimeoutMs = 30000;
+const uiShellPollIntervalMs = 250;
+const responsiveSessionPrefix = 'ui-';
+const playwrightCliBaseArgs = ['--yes', '--package', '@playwright/cli', 'playwright-cli'];
 const breakpoints = [
   { label: 'mobile', width: 390, height: 844 },
   { label: 'iphone-16-pro-max', width: 440, height: 956 },
@@ -181,6 +188,25 @@ const inspectStateExpression = `() => {
   };
 }`;
 
+const appShellStateExpression = `() => {
+  return {
+    href: window.location.href,
+    title: document.title,
+    readyState: document.readyState,
+    loadingShell: Boolean(document.querySelector('.loading-shell')),
+    selectors: {
+      heroPanel: Boolean(document.querySelector('.hero-panel')),
+      heroSummaryGrid: Boolean(document.querySelector('.hero-summary-grid')),
+      calendarPanel: Boolean(document.querySelector('.calendar-panel')),
+      predictionsGrid: Boolean(document.querySelector('.predictions-grid')),
+      appFooter: Boolean(document.querySelector('.app-footer')),
+      resultsActions: Boolean(document.querySelector('.results-actions')),
+      liveScoreValue: Boolean(document.querySelector('.live-score-value')),
+      pointsPreviewValue: Boolean(document.querySelector('.points-preview-value')),
+    },
+  };
+}`;
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const projectRoot = path.resolve(__dirname, '..');
@@ -195,10 +221,35 @@ function fail(message, details) {
   throw error;
 }
 
-function ensureNpx() {
-  const result = spawnSync('npx', ['--version'], {
-    cwd: process.cwd(),
+function formatErrorDetails(error) {
+  if (error instanceof Error) {
+    return error.message;
+  }
+
+  return String(error ?? 'Errore sconosciuto');
+}
+
+function stringifyDiagnostics(value) {
+  return JSON.stringify(value, null, 2);
+}
+
+function markDiagnosticsCollected(error) {
+  if (error && typeof error === 'object') {
+    error.diagnosticsCollected = true;
+  }
+
+  return error;
+}
+
+function hasDiagnosticsCollected(error) {
+  return Boolean(error && typeof error === 'object' && error.diagnosticsCollected);
+}
+
+function ensureNpx({ spawnSyncImpl = spawnSync, cwd = process.cwd() } = {}) {
+  const result = spawnSyncImpl('npx', ['--version'], {
+    cwd,
     encoding: 'utf8',
+    timeout: cliCleanupTimeoutMs,
   });
 
   if (result.error || result.status !== 0) {
@@ -289,7 +340,11 @@ async function probeUrl(url, { fetchImpl = fetch } = {}) {
   }
 }
 
-function startChild(command, args, { cwd = projectRoot, env = loadRuntimeEnv(), spawnImpl = spawn } = {}) {
+function startChild(command, args, {
+  cwd = projectRoot,
+  env = loadRuntimeEnv(),
+  spawnImpl = spawn,
+} = {}) {
   return spawnImpl(command, args, {
     cwd,
     env,
@@ -297,16 +352,29 @@ function startChild(command, args, { cwd = projectRoot, env = loadRuntimeEnv(), 
   });
 }
 
+function isChildRunning(child) {
+  return Boolean(child) && child.exitCode == null && child.signalCode == null;
+}
+
 async function stopChild(child, { sleepImpl = sleep } = {}) {
-  if (!child || child.killed) {
+  if (!child || typeof child.kill !== 'function') {
     return;
   }
 
-  child.kill('SIGTERM');
+  try {
+    child.kill('SIGTERM');
+  } catch {
+    return;
+  }
+
   await sleepImpl(1000);
 
-  if (!child.killed) {
-    child.kill('SIGKILL');
+  if (isChildRunning(child)) {
+    try {
+      child.kill('SIGKILL');
+    } catch {
+      // Ignore best-effort cleanup failures
+    }
   }
 }
 
@@ -318,6 +386,7 @@ async function ensureLocalAppStack({
   sleepImpl = sleep,
   timeoutMs = startupTimeoutMs,
   pollInterval = pollIntervalMs,
+  pollIntervalMs: pollIntervalOverride,
   cwd = projectRoot,
   env = loadRuntimeEnv(),
   backendCommand = 'node',
@@ -325,6 +394,8 @@ async function ensureLocalAppStack({
   frontendCommand = 'npm',
   frontendArgs = ['run', 'dev:frontend'],
 } = {}) {
+  const resolvedPollInterval = pollIntervalOverride ?? pollInterval;
+
   if (await probeUrl(frontendUrl, { fetchImpl })) {
     return {
       started: false,
@@ -342,7 +413,7 @@ async function ensureLocalAppStack({
     await waitForUrl(backendUrl, {
       fetchImpl,
       timeoutMs,
-      pollInterval,
+      pollInterval: resolvedPollInterval,
       label: backendUrl,
       failureMessage: `Backend non raggiungibile su ${backendUrl}.`,
       sleepImpl,
@@ -358,7 +429,7 @@ async function ensureLocalAppStack({
       await waitForUrl(frontendUrl, {
         fetchImpl,
         timeoutMs,
-        pollInterval,
+        pollInterval: resolvedPollInterval,
         label: frontendUrl,
         failureMessage: `Frontend non raggiungibile su ${frontendUrl}.`,
         sleepImpl,
@@ -382,94 +453,20 @@ async function ensureLocalAppStack({
   }
 }
 
-function getCliArgs(args) {
+function buildCliArgs(args, { sessionId } = {}) {
   return [
-    '--yes',
-    '--package',
-    '@playwright/cli',
-    'playwright-cli',
-    `-s=${sessionName}`,
+    ...playwrightCliBaseArgs,
+    ...(sessionId ? [`-s=${sessionId}`] : []),
     ...args,
   ];
 }
 
-function isPlaywrightSessionReady({ runCliImpl = runCli } = {}) {
-  const output = runCliImpl(['tab-list'], {
-    allowFailure: true,
-  });
-
-  return !/not open, please run open first/i.test(output);
-}
-
-async function waitForPlaywrightSession({
-  probeImpl = isPlaywrightSessionReady,
-  timeoutMs = startupTimeoutMs,
-  pollInterval = pollIntervalMs,
-  sleepImpl = sleep,
-} = {}) {
-  const startedAt = Date.now();
-
-  while (Date.now() - startedAt < timeoutMs) {
-    if (probeImpl()) {
-      return;
-    }
-
-    await sleepImpl(pollInterval);
-  }
-
-  fail('Sessione Playwright non pronta entro il timeout previsto.');
-}
-
-async function startPlaywrightSession({
-  spawnImpl = spawn,
-  sleepImpl = sleep,
-  waitForReadyImpl = waitForPlaywrightSession,
-  timeoutMs = startupTimeoutMs,
-  pollInterval = pollIntervalMs,
-} = {}) {
-  const child = spawnImpl('npx', getCliArgs(['open']), {
-    cwd: process.cwd(),
-    stdio: 'ignore',
-  });
-
-  try {
-    await waitForReadyImpl({
-      timeoutMs,
-      pollInterval,
-      sleepImpl,
-    });
-
-    return {
-      stop: async () => {
-        await stopChild(child, { sleepImpl });
-      },
-    };
-  } catch (error) {
-    await stopChild(child, { sleepImpl });
-    throw error;
-  }
-}
-
-function runCli(args, { allowFailure = false } = {}) {
-  const result = spawnSync('npx', getCliArgs(args), {
-    cwd: process.cwd(),
-    encoding: 'utf8',
-  });
-  const output = `${result.stdout ?? ''}${result.stderr ?? ''}`.trim();
-
-  if (result.error) {
-    throw result.error;
-  }
-
-  if (!allowFailure && result.status !== 0) {
-    fail(`Comando Playwright fallito: ${args.join(' ')}`, output);
-  }
-
-  return output;
+function extractProcessOutput(result) {
+  return `${result.stdout ?? ''}${result.stderr ?? ''}`.trim();
 }
 
 function extractResultBlock(output) {
-  const match = output.match(/### Result\s*([\s\S]*?)\n### Ran Playwright code/);
+  const match = String(output).match(/### Result\s*([\s\S]*?)(?:\n### Ran Playwright code|\n### Page|\n### Snapshot|$)/);
 
   if (!match) {
     fail('Impossibile leggere il risultato da Playwright CLI.', output);
@@ -478,24 +475,110 @@ function extractResultBlock(output) {
   return match[1].trim();
 }
 
-function evaluateJson(expression) {
-  const output = runCli(['eval', expression]);
-  const raw = extractResultBlock(output);
+function extractMarkdownLinkTarget(output) {
+  const match = String(output).match(/\]\(([^)]+)\)/);
+  return match ? match[1].trim() : null;
+}
 
-  try {
-    return JSON.parse(raw);
-  } catch {
-    fail('Impossibile fare il parse del risultato JSON di Playwright.', raw);
+function sanitizeName(value) {
+  return value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+}
+
+function parsePlaywrightSessions(output) {
+  const sessions = [];
+  let current = null;
+
+  for (const rawLine of String(output ?? '').split(/\r?\n/)) {
+    const line = rawLine.trim();
+    const nameMatch = line.match(/^- ([^:\s]+):$/);
+    if (nameMatch) {
+      current = {
+        name: nameMatch[1],
+        status: '',
+      };
+      sessions.push(current);
+      continue;
+    }
+
+    const statusMatch = line.match(/^- status:\s*(.+)$/i);
+    if (statusMatch && current) {
+      current.status = statusMatch[1].trim().toLowerCase();
+    }
   }
+
+  return sessions;
+}
+
+function findStaleResponsiveSessions(output, { prefix = responsiveSessionPrefix } = {}) {
+  return parsePlaywrightSessions(output)
+    .filter((session) => session.name.startsWith(prefix) && session.status === 'open')
+    .map((session) => session.name);
+}
+
+function parseCurrentTabUrl(output) {
+  const match = String(output).match(/\(current\)\s*\[[^\]]*]\(([^)]+)\)/i);
+  return match ? match[1] : null;
+}
+
+function buildCleanupInstructions(sessionIds) {
+  return [
+    `Sessioni rilevate: ${sessionIds.join(', ')}`,
+    'Bonifica manuale consigliata:',
+    '- npx --yes --package @playwright/cli playwright-cli list',
+    '- npx --yes --package @playwright/cli playwright-cli -s=<sessione> close',
+    '- in ultima istanza: npx --yes --package @playwright/cli playwright-cli close-all oppure kill-all',
+  ].join('\n');
 }
 
 function sleepSync(durationMs) {
   Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, durationMs);
 }
 
+function isAppShellReady(pageInfo) {
+  const selectors = pageInfo?.selectors ?? {};
+
+  return (
+    Boolean(pageInfo) &&
+    !pageInfo.loadingShell &&
+    Boolean(selectors.heroPanel) &&
+    Boolean(selectors.heroSummaryGrid) &&
+    Boolean(selectors.calendarPanel) &&
+    Boolean(selectors.predictionsGrid) &&
+    Boolean(selectors.appFooter)
+  );
+}
+
+function waitForAppShell({
+  getPageInfoImpl,
+  sleepSyncImpl = sleepSync,
+  timeoutMs = uiShellTimeoutMs,
+  pollInterval = uiShellPollIntervalMs,
+  failureMessage = 'Shell UI principale non pronta entro il timeout previsto.',
+} = {}) {
+  const startedAt = Date.now();
+  let lastPageInfo = null;
+
+  while (Date.now() - startedAt < timeoutMs) {
+    try {
+      lastPageInfo = getPageInfoImpl();
+      if (isAppShellReady(lastPageInfo)) {
+        return lastPageInfo;
+      }
+    } catch {
+      // Retry until timeout
+    }
+
+    sleepSyncImpl(pollInterval);
+  }
+
+  fail(failureMessage, lastPageInfo ? stringifyDiagnostics(lastPageInfo) : undefined);
+}
+
 function waitForEvaluatedCondition(
   expression,
   {
+    evaluateJsonImpl,
+    sleepSyncImpl = sleepSync,
     timeoutMs = 30000,
     pollInterval = 250,
     failureMessage = 'Condizione UI non raggiunta in tempo.',
@@ -505,39 +588,366 @@ function waitForEvaluatedCondition(
 
   while (Date.now() - startedAt < timeoutMs) {
     try {
-      if (evaluateJson(expression) === true) {
+      if (evaluateJsonImpl(expression) === true) {
         return;
       }
     } catch {
       // Retry until timeout
     }
 
-    sleepSync(pollInterval);
+    sleepSyncImpl(pollInterval);
   }
 
   fail(failureMessage);
 }
 
-function waitForPageReady() {
-  waitForEvaluatedCondition(
-    `() => {
-      return Boolean(document.querySelector('.hero-panel')) &&
-        !document.querySelector('.loading-shell') &&
-        Boolean(document.querySelector('.hero-summary-grid')) &&
-        Boolean(document.querySelector('.calendar-panel')) &&
-        Boolean(document.querySelector('.results-actions')) &&
-        Boolean(document.querySelector('.app-footer')) &&
-        Boolean(document.querySelector('.live-score-value')) &&
-        Boolean(document.querySelector('.points-preview-value'));
-    }`,
-    {
-      failureMessage: 'Shell UI principale non pronta entro il timeout previsto.',
-    },
-  );
-  sleepSync(250);
+function prepareOutputDirectory({ fsImpl = fs, outputDirectory = outputDir } = {}) {
+  fsImpl.rmSync(outputDirectory, { recursive: true, force: true });
+  fsImpl.mkdirSync(outputDirectory, { recursive: true });
 }
 
-async function waitForFrontend(url, timeoutMs = 45000) {
+function createPlaywrightCliAdapter({
+  sessionId = sessionName,
+  basePageUrl = baseUrl,
+  outputDirectory = outputDir,
+  cwd = process.cwd(),
+  cliTimeoutMs = cliCommandTimeoutMs,
+  startupTimeoutMs: sessionStartupTimeoutMs = cliStartupTimeoutMs,
+  cleanupTimeoutMs = cliCleanupTimeoutMs,
+  pollInterval = pollIntervalMs,
+  sessionPrefix = responsiveSessionPrefix,
+  spawnImpl = spawn,
+  spawnSyncImpl = spawnSync,
+  sleepImpl = sleep,
+  sleepSyncImpl = sleepSync,
+  fsImpl = fs,
+  pathImpl = path,
+} = {}) {
+  function run(args, {
+    allowFailure = false,
+    timeoutMs = cliTimeoutMs,
+    sessionScoped = true,
+  } = {}) {
+    const result = spawnSyncImpl('npx', buildCliArgs(args, {
+      sessionId: sessionScoped ? sessionId : undefined,
+    }), {
+      cwd,
+      encoding: 'utf8',
+      timeout: timeoutMs,
+    });
+    const output = extractProcessOutput(result);
+
+    if (result.error) {
+      if (result.error.code === 'ETIMEDOUT') {
+        fail(`Comando Playwright scaduto dopo ${timeoutMs}ms: ${args.join(' ')}`, output || result.error.message);
+      }
+
+      fail(`Comando Playwright fallito: ${args.join(' ')}`, output || result.error.message);
+    }
+
+    if (!allowFailure && result.status !== 0) {
+      fail(`Comando Playwright fallito: ${args.join(' ')}`, output);
+    }
+
+    return output;
+  }
+
+  function safeRun(args, options) {
+    try {
+      return {
+        ok: true,
+        output: run(args, options),
+      };
+    } catch (error) {
+      return {
+        ok: false,
+        error,
+      };
+    }
+  }
+
+  function evaluateJson(expression, options) {
+    const output = run(['eval', expression], options);
+    const raw = extractResultBlock(output);
+
+    try {
+      return JSON.parse(raw);
+    } catch {
+      fail('Impossibile fare il parse del risultato JSON di Playwright.', raw);
+    }
+  }
+
+  function safeEvaluateJson(expression, options) {
+    try {
+      return {
+        ok: true,
+        value: evaluateJson(expression, options),
+      };
+    } catch (error) {
+      return {
+        ok: false,
+        error,
+      };
+    }
+  }
+
+  function writeTextArtifact(fileName, content) {
+    const targetPath = pathImpl.join(outputDirectory, fileName);
+    fsImpl.writeFileSync(targetPath, content, 'utf8');
+    return targetPath;
+  }
+
+  function copyLinkedArtifact(commandOutput, targetBaseName) {
+    const linkedPath = extractMarkdownLinkTarget(commandOutput);
+    if (!linkedPath) {
+      return null;
+    }
+
+    const sourcePath = pathImpl.resolve(cwd, linkedPath);
+    if (typeof fsImpl.existsSync === 'function' && !fsImpl.existsSync(sourcePath)) {
+      return null;
+    }
+
+    const extension = pathImpl.extname(sourcePath) || '.txt';
+    const targetPath = pathImpl.join(outputDirectory, `${sanitizeName(targetBaseName)}${extension}`);
+    fsImpl.copyFileSync(sourcePath, targetPath);
+    return targetPath;
+  }
+
+  function getPageInfo() {
+    return evaluateJson(appShellStateExpression);
+  }
+
+  function waitForCurrentUrl(expectedUrl, {
+    timeoutMs = sessionStartupTimeoutMs,
+    pollInterval: currentPollInterval = pollInterval,
+    failureMessage = `Sessione Playwright non pronta su ${expectedUrl} entro il timeout previsto.`,
+  } = {}) {
+    const startedAt = Date.now();
+    let lastUrl = '';
+
+    while (Date.now() - startedAt < timeoutMs) {
+      const result = safeRun(['tab-list'], {
+        allowFailure: true,
+        timeoutMs: cleanupTimeoutMs,
+      });
+
+      if (result.ok) {
+        lastUrl = parseCurrentTabUrl(result.output) ?? '';
+        if (expectedUrl ? lastUrl.startsWith(expectedUrl) : lastUrl) {
+          return lastUrl;
+        }
+      }
+
+      sleepSyncImpl(currentPollInterval);
+    }
+
+    fail(failureMessage, lastUrl || 'Nessun tab corrente disponibile.');
+  }
+
+  function assertCleanEnvironment() {
+    const output = run(['list'], {
+      sessionScoped: false,
+      timeoutMs: cleanupTimeoutMs,
+    });
+    const staleSessions = findStaleResponsiveSessions(output, {
+      prefix: sessionPrefix,
+    });
+
+    if (staleSessions.length > 0) {
+      fail(
+        `Sessioni Playwright responsive gia' aperte: ${staleSessions.join(', ')}. Chiudi manualmente le sessioni residue prima di rieseguire il test.`,
+        buildCleanupInstructions(staleSessions),
+      );
+    }
+  }
+
+  async function startSession({
+    url = basePageUrl,
+    timeoutMs = sessionStartupTimeoutMs,
+    pollInterval: currentPollInterval = pollInterval,
+  } = {}) {
+    const child = spawnImpl('npx', buildCliArgs(['open', url], { sessionId }), {
+      cwd,
+      stdio: 'ignore',
+    });
+
+    try {
+      waitForCurrentUrl(url, {
+        timeoutMs,
+        pollInterval: currentPollInterval,
+      });
+
+      return {
+        sessionId,
+        stop: async () => {
+          const issues = [];
+          const closeResult = safeRun(['close'], {
+            allowFailure: true,
+            timeoutMs: cleanupTimeoutMs,
+          });
+
+          if (!closeResult.ok && !/not open, please run open first/i.test(formatErrorDetails(closeResult.error))) {
+            issues.push(`Chiusura sessione Playwright fallita: ${formatErrorDetails(closeResult.error)}`);
+          }
+
+          await stopChild(child, { sleepImpl });
+
+          const listResult = safeRun(['list'], {
+            sessionScoped: false,
+            allowFailure: true,
+            timeoutMs: cleanupTimeoutMs,
+          });
+
+          if (listResult.ok) {
+            const openSessions = parsePlaywrightSessions(listResult.output)
+              .filter((entry) => entry.status === 'open')
+              .map((entry) => entry.name);
+
+            if (openSessions.includes(sessionId)) {
+              issues.push(`Sessione Playwright orfana ancora aperta: ${sessionId}. ${buildCleanupInstructions([sessionId])}`);
+            }
+          }
+
+          return issues;
+        },
+      };
+    } catch (error) {
+      await stopChild(child, { sleepImpl });
+      throw error;
+    }
+  }
+
+  function goto(url, {
+    timeoutMs = sessionStartupTimeoutMs,
+    pollInterval: currentPollInterval = pollInterval,
+  } = {}) {
+    run(['goto', url]);
+    waitForCurrentUrl(url, {
+      timeoutMs,
+      pollInterval: currentPollInterval,
+      failureMessage: `Navigazione Playwright non riuscita verso ${url}.`,
+    });
+  }
+
+  function captureScreenshot(name) {
+    const screenshotResult = safeRun(['screenshot'], {
+      allowFailure: true,
+      timeoutMs: cleanupTimeoutMs,
+    });
+
+    if (!screenshotResult.ok) {
+      return null;
+    }
+
+    return copyLinkedArtifact(screenshotResult.output, `${name}-screenshot`);
+  }
+
+  function collectDiagnostics({
+    label = 'fatal',
+    error,
+    remediation,
+  } = {}) {
+    const safeLabel = sanitizeName(label);
+    const screenshotPath = captureScreenshot(safeLabel);
+
+    const tabListResult = safeRun(['tab-list'], {
+      allowFailure: true,
+      timeoutMs: cleanupTimeoutMs,
+    });
+    writeTextArtifact(
+      `${safeLabel}-tab-list.txt`,
+      tabListResult.ok
+        ? tabListResult.output
+        : `Impossibile leggere i tab Playwright.\n${formatErrorDetails(tabListResult.error)}`,
+    );
+
+    const pageInfoResult = safeEvaluateJson(appShellStateExpression, {
+      allowFailure: true,
+      timeoutMs: cleanupTimeoutMs,
+    });
+    writeTextArtifact(
+      pageInfoResult.ok
+        ? `${safeLabel}-page-state.json`
+        : `${safeLabel}-page-state.txt`,
+      pageInfoResult.ok
+        ? stringifyDiagnostics(pageInfoResult.value)
+        : `Impossibile leggere lo stato pagina.\n${formatErrorDetails(pageInfoResult.error)}`,
+    );
+
+    const consoleResult = safeRun(['console', 'info'], {
+      allowFailure: true,
+      timeoutMs: cleanupTimeoutMs,
+    });
+    const consolePath = consoleResult.ok
+      ? copyLinkedArtifact(consoleResult.output, `${safeLabel}-console`)
+      : null;
+    if (!consolePath) {
+      writeTextArtifact(
+        `${safeLabel}-console.txt`,
+        consoleResult.ok ? consoleResult.output : formatErrorDetails(consoleResult.error),
+      );
+    }
+
+    const networkResult = safeRun(['network'], {
+      allowFailure: true,
+      timeoutMs: cleanupTimeoutMs,
+    });
+    const networkPath = networkResult.ok
+      ? copyLinkedArtifact(networkResult.output, `${safeLabel}-network`)
+      : null;
+    if (!networkPath) {
+      writeTextArtifact(
+        `${safeLabel}-network.txt`,
+        networkResult.ok ? networkResult.output : formatErrorDetails(networkResult.error),
+      );
+    }
+
+    const summaryLines = [
+      `sessionId: ${sessionId}`,
+      `label: ${safeLabel}`,
+      `error: ${formatErrorDetails(error)}`,
+    ];
+
+    if (error?.cause) {
+      summaryLines.push(
+        `cause: ${typeof error.cause === 'string' ? error.cause : stringifyDiagnostics(error.cause)}`,
+      );
+    }
+
+    if (remediation) {
+      summaryLines.push(`remediation: ${remediation}`);
+    }
+
+    if (screenshotPath) {
+      summaryLines.push(`screenshot: ${screenshotPath}`);
+    }
+
+    const summaryPath = writeTextArtifact(`${safeLabel}-summary.txt`, summaryLines.join('\n'));
+
+    return {
+      summaryPath,
+      screenshotPath,
+      consolePath,
+      networkPath,
+    };
+  }
+
+  return {
+    sessionId,
+    run,
+    safeRun,
+    evaluateJson,
+    getPageInfo,
+    assertCleanEnvironment,
+    startSession,
+    goto,
+    captureScreenshot,
+    collectDiagnostics,
+  };
+}
+
+async function waitForFrontend(url, timeoutMs = startupTimeoutMs) {
   await waitForUrl(url, {
     timeoutMs,
     label: url,
@@ -545,45 +955,46 @@ async function waitForFrontend(url, timeoutMs = 45000) {
   });
 }
 
-function prepareOutputDirectory() {
-  fs.rmSync(outputDir, { recursive: true, force: true });
-  fs.mkdirSync(outputDir, { recursive: true });
+function inspectState({ evaluateJsonImpl }) {
+  return evaluateJsonImpl(inspectStateExpression);
 }
 
-function sanitizeName(value) {
-  return value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-}
-
-function captureScreenshot(name) {
-  const output = runCli(['screenshot']);
-  const match = output.match(/\]\(([^)]+\.png)\)/);
-
-  if (!match) {
-    return null;
+function navigateToBase(cli, {
+  label = 'navigation',
+  remediation = 'Verifica il lifecycle della sessione Playwright e i log raccolti in output/playwright/ui-responsive.',
+} = {}) {
+  try {
+    cli.goto(baseUrl);
+    const pageInfo = waitForAppShell({
+      getPageInfoImpl: () => cli.getPageInfo(),
+    });
+    sleepSync(250);
+    return pageInfo;
+  } catch (error) {
+    const normalizedError = error instanceof Error ? error : new Error(String(error));
+    cli.collectDiagnostics({
+      label,
+      error: normalizedError,
+      remediation,
+    });
+    markDiagnosticsCollected(normalizedError);
+    throw normalizedError;
   }
-
-  const sourcePath = path.resolve(process.cwd(), match[1]);
-  const targetPath = path.join(outputDir, `${sanitizeName(name)}.png`);
-  fs.copyFileSync(sourcePath, targetPath);
-  return targetPath;
 }
 
-function inspectState() {
-  return evaluateJson(inspectStateExpression);
+function resizeViewport({ width, height }, {
+  runCliImpl,
+  sleepSyncImpl = sleepSync,
+} = {}) {
+  runCliImpl(['resize', String(width), String(height)]);
+  sleepSyncImpl(150);
 }
 
-function navigateToBase() {
-  runCli(['run-code', `await page.goto(${JSON.stringify(baseUrl)});`]);
-  waitForPageReady();
-}
-
-function resizeViewport({ width, height }) {
-  runCli(['run-code', `await page.setViewportSize({ width: ${width}, height: ${height} });`]);
-  sleepSync(150);
-}
-
-function selectSprintWeekend() {
-  const result = evaluateJson(`() => {
+function selectSprintWeekend({
+  evaluateJsonImpl,
+  sleepSyncImpl = sleepSync,
+} = {}) {
+  const result = evaluateJsonImpl(`() => {
     const sprintCard = document.querySelector('.calendar-card.sprint');
 
     if (!sprintCard) {
@@ -604,15 +1015,20 @@ function selectSprintWeekend() {
       return Boolean(badge) && /sprint/i.test(badge.textContent || '');
     }`,
     {
+      evaluateJsonImpl,
+      sleepSyncImpl,
       timeoutMs: 10000,
       failureMessage: 'Badge Sprint non aggiornato dopo la selezione del weekend Sprint.',
     },
   );
-  sleepSync(150);
+  sleepSyncImpl(150);
 }
 
-function openTooltipIfPresent() {
-  const result = evaluateJson(`() => {
+function openTooltipIfPresent({
+  evaluateJsonImpl,
+  sleepSyncImpl = sleepSync,
+} = {}) {
+  const result = evaluateJsonImpl(`() => {
     const wrapper = document.querySelector('.results-actions .tooltip-wrapper.disabled-wrapper');
 
     if (!wrapper) {
@@ -627,17 +1043,22 @@ function openTooltipIfPresent() {
     return false;
   }
 
-  sleepSync(100);
+  sleepSyncImpl(100);
   return true;
 }
 
-function switchWeekend() {
+function switchWeekend({
+  evaluateJsonImpl,
+  sleepSyncImpl = sleepSync,
+} = {}) {
   waitForEvaluatedCondition('() => document.querySelectorAll(".calendar-card").length > 1', {
+    evaluateJsonImpl,
+    sleepSyncImpl,
     timeoutMs: 10000,
     failureMessage: 'Calendario UI senza weekend alternativi disponibili.',
   });
 
-  const result = evaluateJson(`() => {
+  const result = evaluateJsonImpl(`() => {
     const cards = [...document.querySelectorAll('.calendar-card')];
     const currentIndex = cards.findIndex((card) => card.classList.contains('selected'));
     const nextCard = cards.find((_, index) => index !== currentIndex) || null;
@@ -657,7 +1078,7 @@ function switchWeekend() {
     fail('Impossibile selezionare un weekend alternativo nel calendario UI.');
   }
 
-  sleepSync(150);
+  sleepSyncImpl(150);
 }
 
 function validateState(
@@ -781,18 +1202,56 @@ function canSelectSprintWeekend(state) {
   return Number(state?.selectedWeekend?.sprintCardCount ?? 0) > 0;
 }
 
+async function cleanupResponsiveCheck({
+  playwrightSession,
+  localStack,
+  consoleImpl = console,
+} = {}) {
+  const issues = [];
+
+  try {
+    if (playwrightSession?.stop) {
+      const sessionIssues = await playwrightSession.stop();
+      if (Array.isArray(sessionIssues)) {
+        issues.push(...sessionIssues);
+      }
+    }
+  } catch (error) {
+    issues.push(`Teardown sessione Playwright fallito: ${formatErrorDetails(error)}`);
+  }
+
+  try {
+    await localStack?.stop?.();
+  } catch (error) {
+    issues.push(`Arresto stack locale fallito: ${formatErrorDetails(error)}`);
+  }
+
+  for (const issue of issues) {
+    consoleImpl.error(`[ui-responsive] ${issue}`);
+  }
+
+  return issues;
+}
+
 async function main() {
   ensureNpx();
   prepareOutputDirectory();
   const localStack = await ensureLocalAppStack();
+  const cli = createPlaywrightCliAdapter();
   let playwrightSession = null;
 
   try {
     await waitForFrontend(baseUrl);
-    playwrightSession = await startPlaywrightSession();
+    cli.assertCleanEnvironment();
+    playwrightSession = await cli.startSession({
+      url: baseUrl,
+    });
 
     console.log(`[ui-responsive] Avvio controlli su ${baseUrl}`);
-    navigateToBase();
+    navigateToBase(cli, {
+      label: 'initial-load',
+      remediation: 'Verifica l\'allineamento della sessione Playwright, la splash iniziale e i log raccolti.',
+    });
 
     const allFailures = [];
 
@@ -800,13 +1259,20 @@ async function main() {
       console.log(
         `[ui-responsive] Controllo ${breakpoint.label} (${breakpoint.width}x${breakpoint.height})`,
       );
-      resizeViewport(breakpoint);
-      navigateToBase();
+      resizeViewport(breakpoint, {
+        runCliImpl: cli.run,
+      });
+      navigateToBase(cli, {
+        label: `${breakpoint.label}-navigation`,
+        remediation: 'Verifica che la sessione Playwright punti davvero al frontend locale e che la shell esca dal loading.',
+      });
 
-      const defaultState = inspectState();
+      const defaultState = inspectState({
+        evaluateJsonImpl: cli.evaluateJson,
+      });
       const defaultFailures = validateState(defaultState);
       if (defaultFailures.length > 0) {
-        const screenshotPath = captureScreenshot(`${breakpoint.label}-default`);
+        const screenshotPath = cli.captureScreenshot(`${breakpoint.label}-default`);
         allFailures.push({
           viewport: breakpoint,
           state: 'default',
@@ -816,13 +1282,17 @@ async function main() {
       }
 
       if (canSwitchWeekend(defaultState)) {
-        switchWeekend();
-        const switchedState = inspectState();
+        switchWeekend({
+          evaluateJsonImpl: cli.evaluateJson,
+        });
+        const switchedState = inspectState({
+          evaluateJsonImpl: cli.evaluateJson,
+        });
         const switchedFailures = validateState(switchedState, {
           expectedWeekendChangeFrom: defaultState.selectedWeekend,
         });
         if (switchedFailures.length > 0) {
-          const screenshotPath = captureScreenshot(`${breakpoint.label}-weekend-switch`);
+          const screenshotPath = cli.captureScreenshot(`${breakpoint.label}-weekend-switch`);
           allFailures.push({
             viewport: breakpoint,
             state: 'weekend-switch',
@@ -837,16 +1307,22 @@ async function main() {
       }
 
       if (canSelectSprintWeekend(defaultState)) {
-        selectSprintWeekend();
-        const tooltipActivated = openTooltipIfPresent();
+        selectSprintWeekend({
+          evaluateJsonImpl: cli.evaluateJson,
+        });
+        const tooltipActivated = openTooltipIfPresent({
+          evaluateJsonImpl: cli.evaluateJson,
+        });
 
-        const sprintState = inspectState();
+        const sprintState = inspectState({
+          evaluateJsonImpl: cli.evaluateJson,
+        });
         const sprintFailures = validateState(sprintState, {
           expectSprintBadge: true,
           expectVisibleTooltip: tooltipActivated,
         });
         if (sprintFailures.length > 0) {
-          const screenshotPath = captureScreenshot(`${breakpoint.label}-sprint-tooltip`);
+          const screenshotPath = cli.captureScreenshot(`${breakpoint.label}-sprint-tooltip`);
           allFailures.push({
             viewport: breakpoint,
             state: 'sprint-tooltip',
@@ -881,10 +1357,37 @@ async function main() {
     }
 
     console.log('[ui-responsive] Tutti i controlli responsive sono passati.');
+  } catch (error) {
+    const normalizedError = error instanceof Error ? error : new Error(String(error));
+
+    if (!hasDiagnosticsCollected(normalizedError)) {
+      cli.collectDiagnostics({
+        label: 'fatal',
+        error: normalizedError,
+        remediation:
+          'Verifica i file generati in output/playwright/ui-responsive e chiudi eventuali sessioni Playwright residue prima di riprovare.',
+      });
+      markDiagnosticsCollected(normalizedError);
+    }
+
+    console.error(`[ui-responsive] ${normalizedError.message}`);
+    if (normalizedError.cause) {
+      console.error(
+        typeof normalizedError.cause === 'string'
+          ? normalizedError.cause
+          : stringifyDiagnostics(normalizedError.cause),
+      );
+    }
+    process.exitCode = 1;
   } finally {
-    runCli(['close'], { allowFailure: true });
-    await playwrightSession?.stop();
-    await localStack.stop();
+    const cleanupIssues = await cleanupResponsiveCheck({
+      playwrightSession,
+      localStack,
+    });
+
+    if (cleanupIssues.length > 0) {
+      process.exitCode = 1;
+    }
   }
 }
 
@@ -899,5 +1402,11 @@ if (isMainModule) {
 export {
   canSelectSprintWeekend,
   canSwitchWeekend,
+  cleanupResponsiveCheck,
+  createPlaywrightCliAdapter,
   ensureLocalAppStack,
+  findStaleResponsiveSessions,
+  isAppShellReady,
+  validateState,
+  waitForAppShell,
 };
