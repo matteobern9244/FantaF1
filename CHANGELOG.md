@@ -6,6 +6,12 @@ Cronologia sintetica delle release documentate del progetto Fanta Formula 1.
 
 - Nessuna modifica documentata.
 
+## v1.3.11
+
+- **Hotfix Build Render Deterministica**: aggiunto `.npmrc` con `include=dev` per garantire anche in ambiente build la presenza di TypeScript, Vite e dei type package React necessari alla compilazione frontend.
+- **Documentazione Deploy Allineata**: aggiornata la sezione Render del `README.md` per esplicitare che il repository forza l'installazione delle `devDependencies` durante la build ed evitare regressioni dovute a configurazioni implicite della piattaforma.
+- **Release Validation Completa**: riprodotto il failure con installazione production-like senza devDependencies e validati poi `build`, `lint` e `vitest` dopo l'hotfix prima della release `v1.3.11`.
+
 ## v1.3.10
 
 - **Set Icone Browser e PWA Riallineato**: favicon, `apple-touch-icon`, icone `192x192`, `512x512` e `maskable` usano ora il set grafico reale fornito in `IMMAGINIDAUSARE`, pubblicato nei path statici standard dell'app.
