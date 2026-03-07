@@ -13,8 +13,12 @@ export function createEmptyPrediction(): Prediction {
   };
 }
 
-export function createInitialUsers(participants: string[]): UserData[] {
-  return participants.map((name) => ({
+export function createInitialUsers(participantsOrSlots: string[] | number): UserData[] {
+  const participantNames = Array.isArray(participantsOrSlots)
+    ? participantsOrSlots
+    : Array.from({ length: participantsOrSlots }, (_, index) => `Player ${index + 1}`);
+
+  return participantNames.map((name) => ({
     name,
     predictions: createEmptyPrediction(),
     points: 0,
@@ -41,12 +45,11 @@ export function rebuildUsersFromHistory(
   return users;
 }
 
-export function calculatePointsEarned(
+export function calculatePointsBreakdown(
   prediction: Prediction,
   raceResults: Prediction,
   pointsConfig: PointsConfig,
-): number {
-  let pointsEarned = 0;
+) {
   const normalizedPrediction = {
     first: normalizePredictionValue(prediction.first),
     second: normalizePredictionValue(prediction.second),
@@ -59,24 +62,29 @@ export function calculatePointsEarned(
     third: normalizePredictionValue(raceResults.third),
     pole: normalizePredictionValue(raceResults.pole),
   };
+  let basePoints = 0;
 
-  if (normalizedPrediction.first === normalizedRaceResults.first && normalizedRaceResults.first) {
-    pointsEarned += pointsConfig.first;
-  }
+  (Object.keys(pointsConfig) as (keyof PointsConfig)[]).forEach((field) => {
+    const isMatch = normalizedPrediction[field] === normalizedRaceResults[field] && normalizedRaceResults[field];
+    if (!isMatch) {
+      return;
+    }
 
-  if (normalizedPrediction.second === normalizedRaceResults.second && normalizedRaceResults.second) {
-    pointsEarned += pointsConfig.second;
-  }
+    basePoints += pointsConfig[field];
+  });
 
-  if (normalizedPrediction.third === normalizedRaceResults.third && normalizedRaceResults.third) {
-    pointsEarned += pointsConfig.third;
-  }
+  return {
+    basePoints,
+    totalPoints: basePoints,
+  };
+}
 
-  if (normalizedPrediction.pole === normalizedRaceResults.pole && normalizedRaceResults.pole) {
-    pointsEarned += pointsConfig.pole;
-  }
-
-  return pointsEarned;
+export function calculatePointsEarned(
+  prediction: Prediction,
+  raceResults: Prediction,
+  pointsConfig: PointsConfig,
+): number {
+  return calculatePointsBreakdown(prediction, raceResults, pointsConfig).totalPoints;
 }
 
 export function calculateProjectedPoints(

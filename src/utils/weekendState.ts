@@ -75,7 +75,10 @@ function upsertWeekendPredictionState(
 
   return {
     ...normalizeWeekendStateByMeetingKey(weekendStateByMeetingKey),
-    [meetingKey]: buildWeekendPredictionState(users, raceResults),
+    [meetingKey]: buildWeekendPredictionState(
+      users,
+      raceResults,
+    ),
   };
 }
 
@@ -91,12 +94,12 @@ function upsertWeekendRaceResults(
   const currentWeekendState = getWeekendPredictionState(weekendStateByMeetingKey, meetingKey);
 
   return {
-    ...normalizeWeekendStateByMeetingKey(weekendStateByMeetingKey),
-    [meetingKey]: {
-      userPredictions: currentWeekendState.userPredictions,
-      raceResults: clonePrediction(raceResults),
-    },
-  };
+      ...normalizeWeekendStateByMeetingKey(weekendStateByMeetingKey),
+      [meetingKey]: {
+        userPredictions: currentWeekendState.userPredictions,
+        raceResults: clonePrediction(raceResults),
+      },
+    };
 }
 
 function getWeekendPredictionState(

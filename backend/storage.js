@@ -9,13 +9,51 @@ import {
   sanitizeWeekendStateByMeetingKey,
   upsertSelectedWeekendState,
 } from './weekend-state.js';
+import { resolveParticipantRoster } from './validation.js';
+
+const participantSlots = Number.isFinite(Number(appConfig.participantSlots))
+  ? Number(appConfig.participantSlots)
+  : 3;
 
 function createInitialUsers() {
-  return appConfig.participants.map((name) => ({
-    name,
+  return Array.from({ length: participantSlots }, (_, index) => ({
+    name: `Player ${index + 1}`,
     predictions: createEmptyPrediction(),
     points: 0,
   }));
+}
+
+async function readPersistedParticipantRoster() {
+  try {
+    const storedData = await AppData.findOne().sort({ createdAt: -1 });
+    const plainData = storedData ? storedData.toObject() : null;
+    return resolveParticipantRoster(plainData?.users, participantSlots);
+  } catch (error) {
+    console.error('Error reading participant roster from DB:', error);
+    return null;
+  }
+}
+
+function normalizeUsersToRoster(users, roster) {
+  /* v8 ignore start -- internal helper only receives arrays from sanitizeAppData */
+  if (!Array.isArray(users)) {
+    return [];
+  }
+  /* v8 ignore stop */
+
+  if (!Array.isArray(roster) || roster.length !== participantSlots) {
+    return users;
+  }
+
+  const usersByName = new Map(
+    users.map((user) => [typeof user?.name === 'string' ? user.name.trim() : '', user]),
+  );
+
+  if (users.length === participantSlots && roster.every((name) => usersByName.has(name))) {
+    return roster.map((name) => usersByName.get(name));
+  }
+
+  return users;
 }
 
 function sanitizeUser(user, fallbackName) {
@@ -141,20 +179,30 @@ function createDefaultAppData(calendar = []) {
   };
 }
 
-function sanitizeAppData(value, calendar = [], { preferPayloadSelectedWeekend = false } = {}) {
+function sanitizeAppData(
+  value,
+  calendar = [],
+  { preferPayloadSelectedWeekend = false, participantRoster = null } = {},
+) {
   const defaultData = createDefaultAppData(calendar);
   const incomingUsers = Array.isArray(value?.users) ? value.users : [];
+  const resolvedIncomingRoster = Array.isArray(participantRoster)
+    ? participantRoster
+    : resolveParticipantRoster(incomingUsers, participantSlots);
   
   // Rule: We must always have exactly 3 players as per PROJECT.md.
-  // We keep the names from the DB if present, otherwise fallback to defaults.
+  // We keep persisted names when the roster is valid, otherwise fallback to neutral placeholders.
   let normalizedUsers;
-  if (incomingUsers.length >= 3) {
-    normalizedUsers = incomingUsers.slice(0, 3).map(user => sanitizeUser(user, user.name || 'Unknown'));
+  if (incomingUsers.length >= participantSlots) {
+    normalizedUsers = normalizeUsersToRoster(
+      incomingUsers.slice(0, participantSlots).map(user => sanitizeUser(user, user.name || 'Unknown')),
+      resolvedIncomingRoster,
+    );
   } else if (incomingUsers.length > 0) {
-    normalizedUsers = [
+    normalizedUsers = normalizeUsersToRoster([
       ...incomingUsers.map(user => sanitizeUser(user, user.name || 'Unknown')),
       ...createInitialUsers().slice(incomingUsers.length)
-    ];
+    ], resolvedIncomingRoster);
   } else {
     normalizedUsers = defaultData.users;
   }
@@ -221,8 +269,10 @@ async function readAppData(calendarPromise) {
 
 async function writeAppData(appData, calendarPromise) {
   const calendar = await (calendarPromise || readCalendarCache());
+  const participantRoster = await readPersistedParticipantRoster();
   const sanitizedData = sanitizeAppData(appData, calendar, {
     preferPayloadSelectedWeekend: true,
+    participantRoster,
   });
   
   try {
@@ -292,6 +342,7 @@ export {
   createDefaultAppData,
   ensureDataDirectory,
   readAppData,
+  readPersistedParticipantRoster,
   writeAppData,
   readDriversCache,
   writeDriversCache,

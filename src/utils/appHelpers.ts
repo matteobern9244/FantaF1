@@ -3,7 +3,9 @@ import type { AppData, Prediction, RaceWeekend } from '../types';
 import { getNextUpcomingRace, getRaceByMeetingKey, sortCalendarByRound } from './calendar';
 import { createEmptyPrediction, createInitialUsers } from './game';
 
-const { participants } = appConfig;
+const participantSlots = Number.isFinite(Number(appConfig.participantSlots))
+  ? Number(appConfig.participantSlots)
+  : 3;
 
 type OfficialResultsAvailability = 'none' | 'partial' | 'complete';
 
@@ -74,7 +76,7 @@ function buildEmptyAppData(calendar: RaceWeekend[]): AppData {
   const fallbackRace = getNextUpcomingRace(calendar);
 
   return {
-    users: createInitialUsers(participants),
+    users: createInitialUsers(participantSlots),
     history: [],
     gpName: fallbackRace?.grandPrixTitle ?? fallbackRace?.meetingName ?? '',
     raceResults: createEmptyPrediction(),

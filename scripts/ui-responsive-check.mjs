@@ -58,7 +58,9 @@ const inspectStateExpression = `() => {
   });
   const note = schedule?.querySelector('.sidebar-note');
   const noteRect = note?.getBoundingClientRect();
-  const tooltipText = document.querySelector('.results-actions .tooltip-wrapper .tooltip-text');
+  const tooltipWrapper = document.querySelector('.results-actions .tooltip-wrapper');
+  const disabledTooltipWrapper = document.querySelector('.results-actions .tooltip-wrapper.disabled-wrapper');
+  const tooltipText = tooltipWrapper?.querySelector('.tooltip-text');
   const activeTooltip = document.querySelector('.results-actions .tooltip-wrapper.show-tooltip .tooltip-text');
   const tooltipRect = activeTooltip?.getBoundingClientRect();
   const historyHeading = [...document.querySelectorAll('h2')].find((element) =>
@@ -141,6 +143,8 @@ const inspectStateExpression = `() => {
       projectionValue: readFontFamily('.points-preview-value'),
     },
     tooltip: {
+      wrapperPresent: Boolean(tooltipWrapper),
+      disabledWrapperPresent: Boolean(disabledTooltipWrapper),
       present: Boolean(tooltipText),
       visible: Boolean(activeTooltip),
       fitsViewport:
@@ -378,15 +382,79 @@ async function ensureLocalAppStack({
   }
 }
 
+function getCliArgs(args) {
+  return [
+    '--yes',
+    '--package',
+    '@playwright/cli',
+    'playwright-cli',
+    `-s=${sessionName}`,
+    ...args,
+  ];
+}
+
+function isPlaywrightSessionReady({ runCliImpl = runCli } = {}) {
+  const output = runCliImpl(['tab-list'], {
+    allowFailure: true,
+  });
+
+  return !/not open, please run open first/i.test(output);
+}
+
+async function waitForPlaywrightSession({
+  probeImpl = isPlaywrightSessionReady,
+  timeoutMs = startupTimeoutMs,
+  pollInterval = pollIntervalMs,
+  sleepImpl = sleep,
+} = {}) {
+  const startedAt = Date.now();
+
+  while (Date.now() - startedAt < timeoutMs) {
+    if (probeImpl()) {
+      return;
+    }
+
+    await sleepImpl(pollInterval);
+  }
+
+  fail('Sessione Playwright non pronta entro il timeout previsto.');
+}
+
+async function startPlaywrightSession({
+  spawnImpl = spawn,
+  sleepImpl = sleep,
+  waitForReadyImpl = waitForPlaywrightSession,
+  timeoutMs = startupTimeoutMs,
+  pollInterval = pollIntervalMs,
+} = {}) {
+  const child = spawnImpl('npx', getCliArgs(['open']), {
+    cwd: process.cwd(),
+    stdio: 'ignore',
+  });
+
+  try {
+    await waitForReadyImpl({
+      timeoutMs,
+      pollInterval,
+      sleepImpl,
+    });
+
+    return {
+      stop: async () => {
+        await stopChild(child, { sleepImpl });
+      },
+    };
+  } catch (error) {
+    await stopChild(child, { sleepImpl });
+    throw error;
+  }
+}
+
 function runCli(args, { allowFailure = false } = {}) {
-  const result = spawnSync(
-    'npx',
-    ['--yes', '--package', '@playwright/cli', 'playwright-cli', `-s=${sessionName}`, ...args],
-    {
-      cwd: process.cwd(),
-      encoding: 'utf8',
-    },
-  );
+  const result = spawnSync('npx', getCliArgs(args), {
+    cwd: process.cwd(),
+    encoding: 'utf8',
+  });
   const output = `${result.stdout ?? ''}${result.stderr ?? ''}`.trim();
 
   if (result.error) {
@@ -421,14 +489,52 @@ function evaluateJson(expression) {
   }
 }
 
+function sleepSync(durationMs) {
+  Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, durationMs);
+}
+
+function waitForEvaluatedCondition(
+  expression,
+  {
+    timeoutMs = 30000,
+    pollInterval = 250,
+    failureMessage = 'Condizione UI non raggiunta in tempo.',
+  } = {},
+) {
+  const startedAt = Date.now();
+
+  while (Date.now() - startedAt < timeoutMs) {
+    try {
+      if (evaluateJson(expression) === true) {
+        return;
+      }
+    } catch {
+      // Retry until timeout
+    }
+
+    sleepSync(pollInterval);
+  }
+
+  fail(failureMessage);
+}
+
 function waitForPageReady() {
-  runCli([
-    'run-code',
-    `await page.waitForFunction(() => {
-      return Boolean(document.querySelector('.hero-panel')) && !document.querySelector('.loading-shell');
-    }, { timeout: 30000 });`,
-  ]);
-  runCli(['run-code', 'await page.waitForTimeout(250);']);
+  waitForEvaluatedCondition(
+    `() => {
+      return Boolean(document.querySelector('.hero-panel')) &&
+        !document.querySelector('.loading-shell') &&
+        Boolean(document.querySelector('.hero-summary-grid')) &&
+        Boolean(document.querySelector('.calendar-panel')) &&
+        Boolean(document.querySelector('.results-actions')) &&
+        Boolean(document.querySelector('.app-footer')) &&
+        Boolean(document.querySelector('.live-score-value')) &&
+        Boolean(document.querySelector('.points-preview-value'));
+    }`,
+    {
+      failureMessage: 'Shell UI principale non pronta entro il timeout previsto.',
+    },
+  );
+  sleepSync(250);
 }
 
 async function waitForFrontend(url, timeoutMs = 45000) {
@@ -467,13 +573,13 @@ function inspectState() {
 }
 
 function navigateToBase() {
-  runCli(['goto', baseUrl]);
+  runCli(['run-code', `await page.goto(${JSON.stringify(baseUrl)});`]);
   waitForPageReady();
 }
 
 function resizeViewport({ width, height }) {
-  runCli(['resize', String(width), String(height)]);
-  runCli(['run-code', 'await page.waitForTimeout(150);']);
+  runCli(['run-code', `await page.setViewportSize({ width: ${width}, height: ${height} });`]);
+  sleepSync(150);
 }
 
 function selectSprintWeekend() {
@@ -492,14 +598,17 @@ function selectSprintWeekend() {
     fail('Nessun weekend Sprint trovato nel calendario UI.');
   }
 
-  runCli([
-    'run-code',
-    `await page.waitForFunction(() => {
+  waitForEvaluatedCondition(
+    `() => {
       const badge = document.querySelector('.next-race-card .race-badge');
       return Boolean(badge) && /sprint/i.test(badge.textContent || '');
-    }, { timeout: 10000 });`,
-  ]);
-  runCli(['run-code', 'await page.waitForTimeout(150);']);
+    }`,
+    {
+      timeoutMs: 10000,
+      failureMessage: 'Badge Sprint non aggiornato dopo la selezione del weekend Sprint.',
+    },
+  );
+  sleepSync(150);
 }
 
 function openTooltipIfPresent() {
@@ -515,19 +624,18 @@ function openTooltipIfPresent() {
   }`);
 
   if (!result.clicked) {
-    fail('Tooltip dei risultati non disponibile nello stato corrente.');
+    return false;
   }
 
-  runCli(['run-code', 'await page.waitForTimeout(100);']);
+  sleepSync(100);
+  return true;
 }
 
 function switchWeekend() {
-  runCli([
-    'run-code',
-    `await page.waitForFunction(() => {
-      return document.querySelectorAll('.calendar-card').length > 1;
-    }, { timeout: 10000 });`,
-  ]);
+  waitForEvaluatedCondition('() => document.querySelectorAll(".calendar-card").length > 1', {
+    timeoutMs: 10000,
+    failureMessage: 'Calendario UI senza weekend alternativi disponibili.',
+  });
 
   const result = evaluateJson(`() => {
     const cards = [...document.querySelectorAll('.calendar-card')];
@@ -549,7 +657,7 @@ function switchWeekend() {
     fail('Impossibile selezionare un weekend alternativo nel calendario UI.');
   }
 
-  runCli(['run-code', 'await page.waitForTimeout(150);']);
+  sleepSync(150);
 }
 
 function validateState(
@@ -612,7 +720,11 @@ function validateState(
     failures.push(`Badge Sprint non rilevato dopo la selezione: "${state.nextRace.badgeText}"`);
   }
 
-  if (!state.tooltip.present) {
+  if (expectVisibleTooltip && !state.tooltip.wrapperPresent) {
+    failures.push('Tooltip risultati non disponibile nello stato corrente.');
+  }
+
+  if (expectVisibleTooltip && !state.tooltip.present) {
     failures.push('Tooltip risultati non presente nel DOM.');
   }
 
@@ -673,13 +785,14 @@ async function main() {
   ensureNpx();
   prepareOutputDirectory();
   const localStack = await ensureLocalAppStack();
+  let playwrightSession = null;
 
   try {
     await waitForFrontend(baseUrl);
+    playwrightSession = await startPlaywrightSession();
 
     console.log(`[ui-responsive] Avvio controlli su ${baseUrl}`);
-    runCli(['open', baseUrl]);
-    waitForPageReady();
+    navigateToBase();
 
     const allFailures = [];
 
@@ -725,12 +838,12 @@ async function main() {
 
       if (canSelectSprintWeekend(defaultState)) {
         selectSprintWeekend();
-        openTooltipIfPresent();
+        const tooltipActivated = openTooltipIfPresent();
 
         const sprintState = inspectState();
         const sprintFailures = validateState(sprintState, {
           expectSprintBadge: true,
-          expectVisibleTooltip: true,
+          expectVisibleTooltip: tooltipActivated,
         });
         if (sprintFailures.length > 0) {
           const screenshotPath = captureScreenshot(`${breakpoint.label}-sprint-tooltip`);
@@ -770,6 +883,7 @@ async function main() {
     console.log('[ui-responsive] Tutti i controlli responsive sono passati.');
   } finally {
     runCli(['close'], { allowFailure: true });
+    await playwrightSession?.stop();
     await localStack.stop();
   }
 }
@@ -782,4 +896,8 @@ if (isMainModule) {
   await main();
 }
 
-export { canSelectSprintWeekend, canSwitchWeekend, ensureLocalAppStack };
+export {
+  canSelectSprintWeekend,
+  canSwitchWeekend,
+  ensureLocalAppStack,
+};

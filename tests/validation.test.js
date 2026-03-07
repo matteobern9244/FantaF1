@@ -1,18 +1,33 @@
 import { describe, it, expect } from 'vitest';
-import { validateParticipants, isRaceLocked, validatePredictions } from '../backend/validation.js';
+import {
+  validateParticipants,
+  resolveParticipantRoster,
+  isRaceLocked,
+  validatePredictions,
+} from '../backend/validation.js';
 
 describe('Validation Logic', () => {
   describe('validateParticipants', () => {
     const required = ['A', 'B', 'C'];
     
-    it('should return true for correct number of participants', () => {
+    it('should return true for the exact configured roster', () => {
       const users = [{ name: 'A' }, { name: 'B' }, { name: 'C' }];
       expect(validateParticipants(users, required)).toBe(true);
     });
 
-    it('should return true even if names are different but count is the same', () => {
-      const users = [{ name: 'X' }, { name: 'Y' }, { name: 'Z' }];
+    it('should return true when the exact roster is present in a different order', () => {
+      const users = [{ name: 'C' }, { name: 'A' }, { name: 'B' }];
       expect(validateParticipants(users, required)).toBe(true);
+    });
+
+    it('should return false when names do not match the configured roster', () => {
+      const users = [{ name: 'X' }, { name: 'Y' }, { name: 'Z' }];
+      expect(validateParticipants(users, required)).toBe(false);
+    });
+
+    it('should return false when duplicate names are provided', () => {
+      const users = [{ name: 'A' }, { name: 'A' }, { name: 'C' }];
+      expect(validateParticipants(users, required)).toBe(false);
     });
 
     it('should return false if the number of participants is incorrect', () => {
@@ -22,6 +37,23 @@ describe('Validation Logic', () => {
 
     it('should return false if input is not an array', () => {
       expect(validateParticipants(null, required)).toBe(false);
+    });
+
+    it('should accept a valid unique roster when no persisted roster exists yet', () => {
+      const users = [{ name: 'X' }, { name: 'Y' }, { name: 'Z' }];
+      expect(validateParticipants(users, null, 3)).toBe(true);
+    });
+
+    it('should resolve a roster only when the incoming users are valid and distinct', () => {
+      expect(resolveParticipantRoster([{ name: 'A' }, { name: 'B' }, { name: 'C' }], 3)).toEqual([
+        'A',
+        'B',
+        'C',
+      ]);
+      expect(resolveParticipantRoster([{ name: 'A' }, { name: 'A' }, { name: 'C' }], 3)).toBeNull();
+      expect(resolveParticipantRoster([{ name: 'A' }, { name: '' }, { name: 'C' }], 3)).toBeNull();
+      expect(resolveParticipantRoster([{ name: 'A' }, { id: 'B' }, { name: 'C' }], 3)).toBeNull();
+      expect(resolveParticipantRoster([{ name: 'A' }, { name: 'B' }], 3)).toBeNull();
     });
   });
 

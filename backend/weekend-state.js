@@ -82,7 +82,11 @@ function upsertSelectedWeekendState(
 
   return {
     ...safeWeekendStateByMeetingKey,
-    [selectedMeetingKey.trim()]: buildWeekendStateFromUsers(users, raceResults),
+    [selectedMeetingKey.trim()]: buildWeekendStateFromUsers(
+      users,
+      raceResults,
+      getSelectedWeekendState(safeWeekendStateByMeetingKey, selectedMeetingKey),
+    ),
   };
 }
 

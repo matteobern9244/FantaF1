@@ -7,6 +7,7 @@ L'applicazione e' pensata per un flusso amministrato: un admin seleziona il week
 ## Panoramica funzionale
 
 - Lo stato di gioco mantiene sempre esattamente 3 partecipanti.
+- I nomi dei partecipanti sono data-driven: backend e UI usano il roster gia' persistito nel database, senza nomi hardcoded a runtime.
 - I pronostici prevedono 4 campi per ogni utente: primo, secondo, terzo e pole oppure vincitore Sprint.
 - Il salvataggio manuale dei pronostici richiede almeno un campo compilato. Lo stato "tutti vuoti" non e' valido per `Salva dati inseriti`, mentre uno stato completamente compilato e' consentito.
 - Il backend blocca le modifiche ai pronostici dopo l'inizio ufficiale della gara del weekend selezionato.
@@ -184,11 +185,13 @@ Se il database non contiene ancora stato applicativo, il backend costruisce uno 
 - Il titolo hero usa un fit basato sulla larghezza reale del contenitore: sui desktop wide mantiene il massimo visivo corrente, mentre su viewport piu' strette riduce il `font-size` solo quanto necessario per restare interamente visibile senza clipping.
 - Card "Prossimo weekend" con badge Sprint/Standard, programma sessioni e orari formattati in italiano.
 - Classifica live calcolata come punti storici piu' proiezione del weekend selezionato, con stato esplicito per risultati ufficiali assenti o parziali.
+- Modalita' `public` e `admin` separate, con login admin via sessione e pannelli operativi esposti solo quando la sessione e' valida.
 - Calendario stagionale con selettore e strip orizzontale dei weekend.
 - Griglia pronostici per i 3 partecipanti con selezione piloti ordinati per cognome e visualizzati come `Cognome Nome`.
 - Hero results card del weekend selezionato con nomi pilota visualizzati come `Nome Cognome`; dropdown e liste di selezione restano invece in formato `Cognome Nome`.
 - Sezione risultati del weekend con track map, recupero automatico read-only dei risultati ufficiali, merge solo dei campi mancanti e pulsante conferma con tooltip di stato.
 - Storico gare modificabile con ricalcolo dei punteggi.
+- Dashboard KPI per utente, analytics deep-dive, storico mobile piu' compatto, status strip, toast operativi e CTA installazione PWA.
 - Loader iniziale con splash logo `FantaF1`, set icone browser/PWA dedicato (`favicon`, `apple-touch-icon`, `192x192`, `512x512`, `maskable`) e layout responsive desktop/mobile.
 
 ### Logica di gioco
@@ -198,6 +201,7 @@ Se il database non contiene ancora stato applicativo, il backend costruisce uno 
 - Fine gara stimata a `raceStartTime + 2.5h` per abilitare l'assegnazione definitiva dei punti; il recupero ufficiale live dei risultati puo' iniziare prima ma resta read-only.
 - Reset dei pronostici correnti con salvataggio persistente immediato.
 - Conservazione dei nomi utente gia' persistiti durante modifica o cancellazione di gare storiche.
+- Il roster ufficiale non arriva piu' dal config nominale: il backend usa il roster gia' persistito nell'ultimo stato valido del database e lo riapplica in validazione e salvataggio.
 
 ## Architettura
 
@@ -227,6 +231,7 @@ L'applicazione di questi standard garantisce un approccio "production-safe" e un
 - Espone API REST, serve gli asset statici di `dist` e usa un catch-all per il routing SPA.
 - Si connette prima al database, poi avvia il server HTTP e infine esegue in background la sincronizzazione di piloti e calendario.
 - In produzione il server ascolta su `0.0.0.0` e usa `PORT` se fornita dall'ambiente.
+- Le mutazioni admin sono protette da sessione cookie HTTP-only firmata con `ADMIN_SESSION_SECRET`; le route read-only restano pubbliche.
 
 ### Persistenza
 
@@ -294,6 +299,21 @@ Restituisce lo stato globale del gioco:
 - risultati correnti;
 - `selectedMeetingKey`;
 - `weekendStateByMeetingKey`.
+
+### `GET /api/session`
+
+Restituisce lo stato sessione runtime:
+
+- `isAdmin`;
+- `defaultViewMode`.
+
+### `POST /api/admin/session`
+
+Crea la sessione admin dopo verifica password e imposta il cookie HTTP-only firmato.
+
+### `DELETE /api/admin/session`
+
+Invalida subito la sessione admin e rimuove il cookie.
 
 ### `POST /api/data`
 
@@ -364,6 +384,11 @@ Ogni record storico contiene:
 - `results`
 - `userPredictions`
 
+Ogni `userPredictions[name]` storico contiene:
+
+- `prediction`
+- `pointsEarned`
+
 ### Weekend di gara
 
 Ogni weekend puo' includere:
@@ -390,12 +415,19 @@ Ogni weekend puo' includere:
   - stringa di connessione MongoDB usata dal backend;
   - puo' includere direttamente il nome del database nel path della URI;
   - se assente il server termina in fase di bootstrap.
+- `ADMIN_SESSION_SECRET`
+  - segreto usato per firmare e verificare la sessione admin;
+  - in produzione va impostato esplicitamente con una stringa lunga e casuale;
+  - se cambia, le sessioni admin esistenti diventano invalide.
 
 ### Opzionali
 
 - `PORT`
   - porta HTTP del backend;
   - in locale il default e' `3001`.
+- `NODE_ENV`
+  - controlla il targeting del database (`fantaf1_dev` in development, `fantaf1` in production) e il default `viewMode`;
+  - in development l'app apre in modalita' admin, in production in modalita' pubblica.
 - `VITE_APP_LOCAL_NAME`
   - override del titolo visualizzato nell'hero del frontend;
   - se estende il titolo base `Fanta Formula 1`, la hero lo divide in due righe: base title sopra, suffisso sotto;
@@ -407,8 +439,7 @@ Ogni weekend puo' includere:
 Il launcher locale carica:
 
 1. variabili di processo correnti;
-2. `.env`;
-3. `.env.local` come override finale.
+2. `.env`.
 
 In assenza di un database nel path della URI, l'ambiente locale punta sempre a `fantaf1_dev`.
 Se `MONGODB_URI` contiene gia' un database nel path, quel nome deve essere coerente con l'ambiente locale.
@@ -461,6 +492,8 @@ Lo script integrato:
 
 - `MONGODB_URI` obbligatoria.
 - `MONGODB_URI` deve puntare a `.../fantaf1`.
+- `ADMIN_SESSION_SECRET` obbligatoria e privata.
+- `NODE_ENV=production` raccomandata per allineare cookie sicuri, DB target e modalita' iniziale.
 - `PORT` normalmente gestita dalla piattaforma.
 - `VITE_APP_LOCAL_NAME` opzionale se si vuole un titolo hero personalizzato anche in produzione.
 
@@ -480,6 +513,7 @@ Lo script integrato:
 - `npm run test:ui-responsive`
 - `npm run build`
 - `npm run preview`
+- `npm run migrate:remove-weekend-boost`
 
 ### Lint
 
@@ -499,7 +533,7 @@ Lo script integrato:
 - Soglie attuali:
   - `lines: 100`
   - `functions: 100`
-  - `branches: 90`
+  - `branches: 100`
   - `statements: 100`
 
 La suite copre business logic, storage MongoDB, sanitizzazione, parsing di piloti e calendario, risultati, formattazione UI e regressioni sui flussi principali.
@@ -508,6 +542,7 @@ Include anche test unitari dedicati allo split deterministico del titolo hero e 
 Include test dedicati alla live projection del weekend selezionato, agli stati UI `nessun risultato ufficiale` / `risultati parziali`, al parser risultati Formula1.com corrente e alla cache TTL di `GET /api/results/:meetingKey`.
 Per la UI e' disponibile anche `npm run test:ui-responsive`, che usa Playwright CLI via `npx` contro l'app locale avviata e verifica i breakpoint principali, il box "Prossimo weekend", il tooltip risultati e l'assenza di overflow orizzontali fuori dal carosello calendario.
 Per il salvataggio locale e' disponibile `npm run test:save-local`, che legge `/api/data`, re-invia lo stesso payload su `POST /api/data`, verifica `environment=development`, `databaseTarget=fantaf1_dev` e controlla che lo stato resti invariato dopo il round-trip. Questo smoke test copre il canale di persistenza generica, non il salvataggio manuale dei pronostici su `POST /api/predictions`.
+Per ripulire documenti legacy che contengono ancora campi del `Weekend Boost` e' disponibile `npm run migrate:remove-weekend-boost`, script idempotente che riscrive gli `AppData` del database corrente in forma sanificata.
 
 ## Struttura del repository
 
@@ -516,7 +551,7 @@ Per il salvataggio locale e' disponibile `npm run test:save-local`, che legge `/
 - `app.js`: definizione dell'applicazione Express per il testing.
 - `server.js`: entry point per l'avvio del server.
 - `config/`: configurazione applicativa centralizzata.
-- `scripts/`: launcher locale.
+- `scripts/`: launcher locale e migrazioni operative one-shot.
 - `tests/`: test unitari e fixture HTML.
 - `public/`: font e asset statici serviti dal frontend.
 

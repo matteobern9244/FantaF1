@@ -12,6 +12,11 @@ import {
   Zap,
   FastForward,
   Gauge,
+  Smartphone,
+  BarChart3,
+  LockKeyhole,
+  Download,
+  LogOut,
 } from 'lucide-react';
 import './App.css';
 import {
@@ -45,7 +50,9 @@ import type {
   Prediction,
   PredictionKey,
   RaceWeekend,
+  SessionState,
   UserData,
+  ViewMode,
   WeekendStateByMeetingKey,
 } from './types';
 import {
@@ -71,6 +78,7 @@ import {
   getDriverDisplayNameById,
   sortDriversBySurname,
 } from './utils/drivers';
+import { buildUserAnalytics, buildUserKpiSummaries, trackedFields } from './utils/analytics';
 import { createSaveRequestError, getSaveErrorAlertMessage } from './utils/save';
 import { splitHeroTitle } from './utils/title';
 import {
@@ -101,6 +109,20 @@ const resultLabels: Record<PredictionKey, string> = {
 const heroTitle = splitHeroTitle(visibleAppTitle, genericAppTitle);
 /* v8 ignore next -- runtime environment branch depends on bundler mode */
 const saveRuntimeEnvironment = import.meta.env.DEV ? 'development' : 'production';
+const sessionApiUrl = '/api/session';
+const adminSessionApiUrl = '/api/admin/session';
+
+type DeferredInstallPromptEvent = Event & {
+  prompt: () => Promise<void>;
+  userChoice: Promise<{ outcome: 'accepted' | 'dismissed'; platform: string }>;
+};
+
+type ToastTone = 'info' | 'success';
+
+interface ToastState {
+  message: string;
+  tone: ToastTone;
+}
 
 /* v8 ignore next -- static SVG exercised by integration and browser smoke tests */
 function AppLogo() {
@@ -156,7 +178,19 @@ function App() {
   const [loadingMessage, setLoadingMessage] = useState('Preparazione dei box...');
   const [loadError, setLoadError] = useState('');
   const [showTooltip, setShowTooltip] = useState(false);
+  const [viewMode, setViewMode] = useState<ViewMode>('public');
+  const [sessionState, setSessionState] = useState<SessionState>({
+    isAdmin: false,
+    defaultViewMode: 'public',
+  });
+  const [selectedInsightsUser, setSelectedInsightsUser] = useState('');
+  const [toast, setToast] = useState<ToastState | null>(null);
+  const [installPromptEvent, setInstallPromptEvent] = useState<DeferredInstallPromptEvent | null>(null);
+  const [showAdminLogin, setShowAdminLogin] = useState(false);
+  const [adminPassword, setAdminPassword] = useState('');
+  const [adminLoginError, setAdminLoginError] = useState('');
   const selectedMeetingKeyRef = useRef(selectedMeetingKey);
+  const toastTimeoutRef = useRef<number | null>(null);
 
   // Derived state (declared before effects to avoid TS errors)
   const sortedDrivers = sortDriversBySurname(drivers, driversSource.sortLocale);
@@ -180,17 +214,71 @@ function App() {
       : officialResultsAvailability === 'partial'
         ? uiText.status.predictionPartialOfficialResults
         : '';
+  const kpiSummaries = buildUserKpiSummaries(users, history);
+  const selectedInsightsUserName = selectedInsightsUser || users[0]?.name || '';
+  const selectedKpiSummary =
+    kpiSummaries.find((summary) => summary.userName === selectedInsightsUserName) ?? null;
+  const selectedAnalyticsSummary = selectedInsightsUserName
+    ? buildUserAnalytics(history, selectedInsightsUserName)
+    : null;
 
   useEffect(() => {
     selectedMeetingKeyRef.current = selectedMeetingKey;
   }, [selectedMeetingKey]);
+
+  function showToastMessage(message: string, tone: ToastTone = 'info') {
+    if (toastTimeoutRef.current !== null) {
+      window.clearTimeout(toastTimeoutRef.current);
+    }
+
+    setToast({ message, tone });
+    toastTimeoutRef.current = window.setTimeout(() => {
+      setToast(null);
+      toastTimeoutRef.current = null;
+    }, 3200);
+  }
+
+  useEffect(() => {
+    if (!selectedInsightsUser && users[0]?.name) {
+      setSelectedInsightsUser(users[0].name);
+    }
+  }, [selectedInsightsUser, users]);
+
+  useEffect(() => {
+    function handleBeforeInstallPrompt(event: Event) {
+      event.preventDefault();
+      setInstallPromptEvent(event as DeferredInstallPromptEvent);
+    }
+
+    function handleAppInstalled() {
+      setInstallPromptEvent(null);
+      showToastMessage(uiText.status.pwaInstalled, 'success');
+    }
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    window.addEventListener('appinstalled', handleAppInstalled);
+
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+      window.removeEventListener('appinstalled', handleAppInstalled);
+    };
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (toastTimeoutRef.current !== null) {
+        window.clearTimeout(toastTimeoutRef.current);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     let isCancelled = false;
 
     async function loadAppState() {
       setLoadingMessage('Sincronizzazione telemetria e piloti in corso...');
-      const [dataResult, driversResult, calendarResult] = await Promise.allSettled([
+      const [sessionResult, dataResult, driversResult, calendarResult] = await Promise.allSettled([
+        fetchWithRetry<SessionState>(sessionApiUrl),
         fetchWithRetry<AppData>(dataApiUrl),
         fetchWithRetry<Driver[]>(driversApiUrl),
         fetchWithRetry<RaceWeekend[]>(calendarApiUrl),
@@ -210,6 +298,13 @@ function App() {
           : [];
       const fallbackData = buildEmptyAppData(loadedCalendar);
       const incomingData = dataResult.status === 'fulfilled' ? dataResult.value : fallbackData;
+      const resolvedSessionState: SessionState =
+        sessionResult.status === 'fulfilled'
+          ? sessionResult.value
+          : {
+              isAdmin: saveRuntimeEnvironment === 'development',
+              defaultViewMode: saveRuntimeEnvironment === 'development' ? 'admin' : 'public',
+            };
       const resolvedRace =
         resolveSelectedRace(loadedCalendar, incomingData.selectedMeetingKey) ??
         getNextUpcomingRace(loadedCalendar);
@@ -238,12 +333,14 @@ function App() {
 
       setDrivers(loadedDrivers);
       setCalendar(loadedCalendar);
+      setSessionState(resolvedSessionState);
       setUsers(hydratedIncomingData.users);
       setHistory(hydratedIncomingData.history);
       setRaceResults(hydratedIncomingData.raceResults);
       setWeekendStateByMeetingKey(initialWeekendStateByMeetingKey);
       setSelectedMeetingKey(resolvedMeetingKey);
       setGpName(resolvedRace?.grandPrixTitle ?? fallbackData.gpName);
+      setViewMode(resolvedSessionState.isAdmin ? 'admin' : resolvedSessionState.defaultViewMode);
 
       if (driversResult.status === 'rejected' || calendarResult.status === 'rejected') {
         setLoadError(uiText.loadError);
@@ -351,10 +448,10 @@ function App() {
 
       return sourceUser
         ? {
-            ...nextUser,
-            predictions: { ...sourceUser.predictions },
-          }
-        : nextUser;
+          ...nextUser,
+          predictions: { ...sourceUser.predictions },
+        }
+      : nextUser;
     });
   }
 
@@ -458,7 +555,7 @@ function App() {
 
     try {
       await persistAppData(undefined, predictionsApiUrl);
-      window.alert(appConfig.uiText.backend.messages.saveSuccess);
+      showToastMessage(uiText.status.predictionsSaved, 'success');
     } catch (error) {
       handleSaveFailure('Save error:', error);
     }
@@ -524,6 +621,49 @@ function App() {
     });
   }
 
+  async function handleAdminLogin() {
+    if (!adminPassword.trim()) {
+      setAdminLoginError(uiText.alerts.adminPasswordRequired);
+      return;
+    }
+
+    try {
+      const response = await fetch(adminSessionApiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: adminPassword }),
+      });
+
+      if (!response.ok) {
+        setAdminLoginError(uiText.backend.errors.saveFailed);
+        return;
+      }
+
+      const session = await response.json() as SessionState;
+      setSessionState(session);
+      setViewMode('admin');
+      setShowAdminLogin(false);
+      setAdminPassword('');
+      setAdminLoginError('');
+      showToastMessage(uiText.status.adminLoginSuccess, 'success');
+    } catch (error) {
+      console.error(error);
+      setAdminLoginError(uiText.backend.errors.saveFailed);
+    }
+  }
+
+  async function handleAdminLogout() {
+    await fetch(adminSessionApiUrl, {
+      method: 'DELETE',
+    });
+    setSessionState({
+      isAdmin: false,
+      defaultViewMode: 'public',
+    });
+    setViewMode('public');
+    showToastMessage(uiText.status.adminLogoutSuccess, 'success');
+  }
+
   async function clearAllPredictions() {
     if (editingSession) {
       return;
@@ -554,7 +694,7 @@ function App() {
         raceResults: createEmptyPrediction(),
         weekendStateByMeetingKey: nextWeekendStateByMeetingKey,
       });
-      window.alert(appConfig.uiText.backend.messages.saveSuccess);
+      showToastMessage(appConfig.uiText.backend.messages.saveSuccess, 'success');
     } catch (error) {
       handleSaveFailure('Clear and save error:', error);
     }
@@ -691,14 +831,17 @@ function App() {
     let nextHistory = history;
     let nextMeetingKey = selectedMeetingKey;
     let nextGpName = gpName;
-    let nextUsers = clearedUsers;
+    let nextUsers: UserData[] = clearedUsers;
     let nextRaceResults = createEmptyPrediction();
     let nextWeekendStateByMeetingKey = weekendStateByMeetingKey;
 
     if (editingSession) {
       const updatedHistory = [...history];
       updatedHistory.splice(editingSession.historyIndex, 0, record);
-      const currentWeekendView = hydrateSelectedWeekendView(selectedRace.meetingKey, updatedUsers);
+      const currentWeekendView: {
+        users: UserData[];
+        raceResults: Prediction;
+      } = hydrateSelectedWeekendView(selectedRace.meetingKey, updatedUsers);
       nextHistory = updatedHistory;
       nextUsers = currentWeekendView.users;
       nextRaceResults = currentWeekendView.raceResults;
@@ -719,7 +862,10 @@ function App() {
       nextHistory = [record, ...history];
       nextMeetingKey = nextRace?.meetingKey ?? selectedRace.meetingKey;
       nextGpName = nextRace?.grandPrixTitle ?? nextRace?.meetingName ?? '';
-      const nextWeekendView = {
+      const nextWeekendView: {
+        users: UserData[];
+        raceResults: Prediction;
+      } = {
         users: hydrateUsersForWeekend(
           updatedUsers,
           getWeekendPredictionState(nextWeekendStateByMeetingKey, nextMeetingKey),
@@ -748,11 +894,11 @@ function App() {
         raceResults: nextRaceResults,
         weekendStateByMeetingKey: nextWeekendStateByMeetingKey,
       });
-
-      window.alert(
+      showToastMessage(
         formatText(uiText.alerts.raceSaved, {
           gpName: record.gpName,
         }),
+        'success',
       );
     } catch (error) {
       handleSaveFailure('Save race error:', error);
@@ -767,6 +913,32 @@ function App() {
       third: getDriverDisplayNameById(drivers, record.results.third, uiText.history.unknownDriver),
       pole: getDriverDisplayNameById(drivers, record.results.pole, uiText.history.unknownDriver),
     });
+  }
+
+  function formatAverageValue(value: number | null, digits = 1) {
+    if (value === null) {
+      return uiText.placeholders.emptyOption;
+    }
+
+    return value.toFixed(digits).replace(/\.?0+$/, '');
+  }
+
+  function formatTrendDriver(driverId: string) {
+    return getDriverDisplayNameById(drivers, driverId, uiText.history.unknownDriver);
+  }
+
+  async function handleInstallApp() {
+    if (!installPromptEvent) {
+      return;
+    }
+
+    await installPromptEvent.prompt();
+    const choice = await installPromptEvent.userChoice;
+
+    if (choice.outcome === 'accepted') {
+      showToastMessage(uiText.status.pwaInstalled, 'success');
+      setInstallPromptEvent(null);
+    }
   }
 
   if (loading) {
@@ -795,6 +967,30 @@ function App() {
   const isFinished = isRaceFinished(selectedRace);
   const allResultsFilled = allLiveResultsFilled;
   const canAssignPoints = isFinished && allResultsFilled;
+  const isPublicView = viewMode === 'public';
+  const todayLabel = new Intl.DateTimeFormat('it-IT', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  }).format(new Date());
+  const statusChips = [
+    {
+      key: 'date',
+      label: `${uiText.labels.todayStatus}: ${todayLabel}`,
+    },
+    {
+      key: 'season',
+      label: `${uiText.labels.seasonStatus} ${currentYear}`,
+    },
+    {
+      key: 'lock',
+      label: raceLocked ? uiText.status.raceLockedStrip : uiText.status.raceOpenStrip,
+      tone: raceLocked ? 'alert' : 'default',
+    },
+    ...(officialResultsAvailability === 'complete'
+      ? [{ key: 'results', label: uiText.status.resultsReadyStrip, tone: 'success' as const }]
+      : []),
+  ];
 
   let disabledReason = '';
   if (!canAssignPoints) {
@@ -820,6 +1016,59 @@ function App() {
             : undefined
         }
       >
+        <div className="status-strip">
+          <div className="status-chip-row">
+            {statusChips.map((chip) => (
+              <span
+                key={chip.key}
+                className={`status-chip ${chip.tone ? `status-chip-${chip.tone}` : ''}`.trim()}
+              >
+                {chip.label}
+              </span>
+            ))}
+          </div>
+          <div className="hero-controls">
+            <div className="view-mode-toggle" aria-label={uiText.labels.viewMode} role="group">
+              <button
+                className={`secondary-button toggle-button ${!isPublicView ? 'active' : ''}`.trim()}
+                onClick={() => {
+                  if (sessionState.isAdmin) {
+                    setViewMode('admin');
+                    return;
+                  }
+
+                  setShowAdminLogin(true);
+                }}
+                type="button"
+                aria-pressed={!isPublicView}
+              >
+                <LockKeyhole size={16} />
+                {uiText.buttons.adminView}
+              </button>
+              <button
+                className={`secondary-button toggle-button ${isPublicView ? 'active' : ''}`.trim()}
+                onClick={() => setViewMode('public')}
+                type="button"
+                aria-pressed={isPublicView}
+              >
+                <Smartphone size={16} />
+                {uiText.buttons.publicView}
+              </button>
+            </div>
+            {sessionState.isAdmin ? (
+              <button className="secondary-button install-button" onClick={handleAdminLogout} type="button">
+                <LogOut size={16} />
+                {uiText.buttons.logout}
+              </button>
+            ) : null}
+            {installPromptEvent ? (
+              <button className="secondary-button install-button" onClick={handleInstallApp} type="button">
+                <Download size={16} />
+                {uiText.buttons.installApp}
+              </button>
+            ) : null}
+          </div>
+        </div>
         <div className="hero-brand">
           <AppLogo />
           <p className="eyebrow">{uiText.headings.seasonTag}</p>
@@ -1027,6 +1276,128 @@ function App() {
           <section className="panel">
             <div className="panel-head">
               <div className="section-title">
+                <BarChart3 size={20} />
+                <h2>{uiText.headings.userKpi}</h2>
+              </div>
+              <div className="insights-picker">
+                <label htmlFor="insights-user-selector">{uiText.labels.userKpiSelector}</label>
+                <select
+                  id="insights-user-selector"
+                  value={selectedInsightsUserName}
+                  onChange={(event) => setSelectedInsightsUser(event.target.value)}
+                >
+                  {users.map((user) => (
+                    <option key={`insights-${user.name}`} value={user.name}>
+                      {user.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            {selectedKpiSummary ? (
+              <div className="kpi-grid" data-testid="user-kpi-dashboard">
+                <article className="kpi-card">
+                  <strong>{selectedKpiSummary.seasonPoints}</strong>
+                  <span>{uiText.labels.seasonPoints}</span>
+                </article>
+                <article className="kpi-card">
+                  <strong>{formatAverageValue(selectedKpiSummary.averagePosition, 1)}</strong>
+                  <span>{uiText.labels.averagePosition}</span>
+                </article>
+                <article className="kpi-card">
+                  <strong>{selectedKpiSummary.poleAccuracy}%</strong>
+                  <span>{uiText.labels.poleAccuracy}</span>
+                </article>
+                <article className="kpi-card">
+                  <strong>{formatAverageValue(selectedKpiSummary.averagePointsPerRace, 2)}</strong>
+                  <span>{uiText.labels.averagePointsPerRace}</span>
+                </article>
+              </div>
+            ) : (
+              <p className="empty-copy">{uiText.history.analyticsEmpty}</p>
+            )}
+          </section>
+
+          <section className="panel analytics-panel">
+            <div className="section-title">
+              <BarChart3 size={20} />
+              <h2>{uiText.headings.userAnalytics}</h2>
+            </div>
+            {selectedAnalyticsSummary ? (
+              <>
+                <div className="analytics-summary-grid">
+                  <article className="analytics-card">
+                    <span className="analytics-label">{uiText.labels.bestWeekend}</span>
+                    <strong>{selectedAnalyticsSummary.bestWeekend?.gpName ?? uiText.history.unknownDriver}</strong>
+                    <small>
+                      {selectedAnalyticsSummary.bestWeekend?.points ?? 0} {uiText.pointsSuffix}
+                    </small>
+                  </article>
+                  <article className="analytics-card">
+                    <span className="analytics-label">{uiText.labels.worstWeekend}</span>
+                    <strong>{selectedAnalyticsSummary.worstWeekend?.gpName ?? uiText.history.unknownDriver}</strong>
+                    <small>
+                      {selectedAnalyticsSummary.worstWeekend?.points ?? 0} {uiText.pointsSuffix}
+                    </small>
+                  </article>
+                  <article className="analytics-card">
+                    <span className="analytics-label">{uiText.labels.mostPickedDriver}</span>
+                    <strong>{formatTrendDriver(selectedAnalyticsSummary.mostPickedDriverId)}</strong>
+                    <small>{selectedInsightsUserName}</small>
+                  </article>
+                </div>
+
+                <div className="analytics-columns">
+                  <div className="analytics-subpanel">
+                    <h3>{uiText.labels.fieldAccuracy}</h3>
+                    <div className="field-accuracy-list">
+                      {selectedAnalyticsSummary.fieldAccuracy.map((entry) => (
+                        <div key={`${selectedAnalyticsSummary.userName}-${entry.field}`} className="field-accuracy-row">
+                          <span>{predictionLabels[entry.field]}</span>
+                          <strong>{entry.accuracy}%</strong>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="analytics-subpanel">
+                    <h3>{uiText.labels.pointsTrend}</h3>
+                    {selectedAnalyticsSummary.trend.length > 0 ? (
+                      <div className="trend-chart" data-testid="user-points-trend">
+                        {selectedAnalyticsSummary.trend.map((point) => {
+                          const maxTrendValue = Math.max(
+                            ...selectedAnalyticsSummary.trend.map((trendPoint) => trendPoint.points),
+                            1,
+                          );
+
+                          return (
+                            <div key={`${selectedAnalyticsSummary.userName}-${point.gpName}`} className="trend-bar-group">
+                              <div className="trend-bar-shell">
+                                <span
+                                  className="trend-bar"
+                                  style={{ height: `${Math.max((point.points / maxTrendValue) * 100, 8)}%` }}
+                                />
+                              </div>
+                              <strong>{point.points}</strong>
+                              <span>{point.gpName}</span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <p className="empty-copy">{uiText.history.analyticsEmpty}</p>
+                    )}
+                  </div>
+                </div>
+              </>
+            ) : (
+              <p className="empty-copy">{uiText.history.analyticsEmpty}</p>
+            )}
+          </section>
+
+          {!isPublicView ? (
+          <section className="panel">
+            <div className="panel-head">
+              <div className="section-title">
                 <User size={20} />
                 <h2>
                   {uiText.headings.predictionEntry}
@@ -1046,9 +1417,9 @@ function App() {
                     <h3>{user.name}</h3>
                     <span className="points-preview">
                       <span className="points-preview-label">{uiText.labels.potential}:</span>
-                      <span className="points-preview-value">
+                        <span className="points-preview-value">
                         {calculatePotentialPoints(user.predictions)}
-                      </span>
+                        </span>
                       <span className="points-preview-suffix">{uiText.pointsSuffix}</span>
                     </span>
                   </div>
@@ -1098,7 +1469,41 @@ function App() {
               </button>
             </div>
           </section>
+          ) : (
+            <section className="panel public-readonly-panel">
+              <div className="section-title">
+                <User size={20} />
+                <h2>{uiText.headings.predictionEntry}</h2>
+              </div>
+              <p className="locked-banner">{uiText.history.publicReadonly}</p>
+              <div className="predictions-grid readonly-grid">
+                {users.map((user) => (
+                  <article key={`readonly-${user.name}`} className="user-card readonly-card">
+                    <div className="user-card-head">
+                      <h3>{user.name}</h3>
+                      <span className="points-preview">
+                        <span className="points-preview-label">{uiText.labels.potential}:</span>
+                        <span className="points-preview-value">
+                          {calculatePotentialPoints(user.predictions)}
+                        </span>
+                        <span className="points-preview-suffix">{uiText.pointsSuffix}</span>
+                      </span>
+                    </div>
+                    <div className="readonly-picks">
+                      {trackedFields.map((field) => (
+                        <div key={`readonly-${user.name}-${field}`} className="spotlight-row">
+                          <span>{predictionLabels[field]}</span>
+                          <strong>{getDriverDisplayNameById(drivers, user.predictions[field], uiText.placeholders.emptyOption)}</strong>
+                        </div>
+                      ))}
+                    </div>
+                  </article>
+                ))}
+              </div>
+            </section>
+          )}
 
+          {!isPublicView ? (
           <section className="panel accent-panel">
             <div className="section-title">
               <ListChecks size={20} />
@@ -1174,6 +1579,7 @@ function App() {
               </div>
             </div>
           </section>
+          ) : null}
 
           <section className="panel">
             <div className="section-title">
@@ -1192,29 +1598,31 @@ function App() {
                           <strong>{record.gpName}</strong>
                           <span>{record.date}</span>
                         </div>
-                        <div className="history-actions">
-                          <button
-                            className="secondary-button compact-button"
-                            onClick={() => handleEditHistoryRace(index)}
-                            type="button"
-                            disabled={Boolean(editingSession)}
-                          >
-                            {uiText.buttons.editRace}
-                          </button>
-                          <button
-                            className="secondary-button compact-button danger-button"
-                            onClick={() => handleDeleteHistoryRace(index)}
-                            type="button"
-                            disabled={Boolean(editingSession)}
-                          >
-                            {uiText.buttons.deleteRace}
-                          </button>
-                        </div>
+                        {!isPublicView ? (
+                          <div className="history-actions">
+                            <button
+                              className="secondary-button compact-button"
+                              onClick={() => handleEditHistoryRace(index)}
+                              type="button"
+                              disabled={Boolean(editingSession)}
+                            >
+                              {uiText.buttons.editRace}
+                            </button>
+                            <button
+                              className="secondary-button compact-button danger-button"
+                              onClick={() => handleDeleteHistoryRace(index)}
+                              type="button"
+                              disabled={Boolean(editingSession)}
+                            >
+                              {uiText.buttons.deleteRace}
+                            </button>
+                          </div>
+                        ) : null}
                       </div>
                       <span className="history-summary">{renderHistoryResults(record)}</span>
                     </div>
 
-                    <div className="history-grid">
+                    <div className="history-grid history-grid-compact">
                       {Object.entries(record.userPredictions).map(([name, result]) => {
                         const winnerDriver = getDriverById(drivers, result.prediction.first);
 
@@ -1240,6 +1648,49 @@ function App() {
           </section>
         </section>
       </main>
+
+      {showAdminLogin ? (
+        <div className="auth-modal-backdrop" role="presentation" onClick={() => setShowAdminLogin(false)}>
+          <div
+            className="auth-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="admin-login-title"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="section-title">
+              <LockKeyhole size={20} />
+              <h2 id="admin-login-title">{uiText.headings.adminAccess}</h2>
+            </div>
+            <div className="field-row">
+              <label htmlFor="admin-password">{uiText.buttons.adminView}</label>
+              <input
+                id="admin-password"
+                className="auth-input"
+                type="password"
+                value={adminPassword}
+                onChange={(event) => setAdminPassword(event.target.value)}
+              />
+            </div>
+            {adminLoginError ? <p className="locked-banner">{adminLoginError}</p> : null}
+            <div className="results-actions">
+              <button className="secondary-button" onClick={() => setShowAdminLogin(false)} type="button">
+                {uiText.buttons.publicView}
+              </button>
+              <button className="primary-button" onClick={handleAdminLogin} type="button">
+                <LockKeyhole size={16} />
+                {uiText.buttons.adminView}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {toast ? (
+        <div className={`toast-shell toast-${toast.tone}`} role="status" aria-live="polite">
+          {toast.message}
+        </div>
+      ) : null}
 
       <footer className="app-footer">
         <p>{uiText.footer}</p>

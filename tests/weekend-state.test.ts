@@ -139,6 +139,7 @@ describe('weekendState utils', () => {
 
     expect(hydrated.users[1].predictions.first).toBe('ham');
     expect(hydrated.raceResults.pole).toBe('nor');
+    expect(hydrated.weekendStateByMeetingKey?.['race-1'].raceResults.pole).toBe('nor');
   });
 
   it('returns an empty draft for unknown or blank meetings', () => {

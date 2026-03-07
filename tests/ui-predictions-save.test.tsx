@@ -58,6 +58,12 @@ describe('Manual predictions save UI', () => {
     const fetchMock = global.fetch as ReturnType<typeof vi.fn>;
 
     fetchMock.mockImplementation((url: string) => {
+      if (url.includes('/api/session')) {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({ isAdmin: true, defaultViewMode: 'admin' }),
+        } as Response);
+      }
       if (url.includes('/api/data')) {
         return Promise.resolve({
           ok: true,
@@ -99,7 +105,7 @@ describe('Manual predictions save UI', () => {
   });
 
   it('posts the manual save to /api/predictions when at least one prediction exists', async () => {
-    const alertSpy = vi.spyOn(window, 'alert').mockImplementation(() => {});
+    vi.spyOn(window, 'alert').mockImplementation(() => {});
     const fetchMock = global.fetch as ReturnType<typeof vi.fn>;
     const appData = createAppData([
       { first: 'ver', second: '', third: '', pole: '' },
@@ -108,6 +114,12 @@ describe('Manual predictions save UI', () => {
     ]);
 
     fetchMock.mockImplementation((url: string, options?: RequestInit) => {
+      if (url.includes('/api/session')) {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({ isAdmin: true, defaultViewMode: 'admin' }),
+        } as Response);
+      }
       if (url.includes('/api/data')) {
         return Promise.resolve({
           ok: true,
@@ -160,6 +172,6 @@ describe('Manual predictions save UI', () => {
       );
     });
 
-    expect(alertSpy).toHaveBeenCalledWith('Dati salvati correttamente.');
+    expect(screen.getByRole('status')).toHaveTextContent('Pronostici salvati.');
   });
 });

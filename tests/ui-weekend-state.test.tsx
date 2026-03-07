@@ -149,6 +149,10 @@ function setupFetch({
   const fetchMock = global.fetch as ReturnType<typeof vi.fn>;
 
   fetchMock.mockImplementation((url: string) => {
+    if (url.includes('/api/session')) {
+      return Promise.resolve(createResponse({ isAdmin: true, defaultViewMode: 'admin' }));
+    }
+
     if (url.includes('/api/data')) {
       return Promise.resolve(createResponse(appData));
     }

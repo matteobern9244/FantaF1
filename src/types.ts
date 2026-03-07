@@ -79,3 +79,47 @@ export interface PointsConfig {
   third: number;
   pole: number;
 }
+
+export type ViewMode = 'public' | 'admin';
+
+export interface UserKpiSummary {
+  userName: string;
+  seasonPoints: number;
+  averagePosition: number | null;
+  poleAccuracy: number;
+  averagePointsPerRace: number;
+  racesCount: number;
+  weekendWins: number;
+  podiums: number;
+  averageLeaderDelta: number;
+  totalHitRate: number;
+}
+
+export interface UserFieldAccuracy {
+  field: PredictionKey;
+  hits: number;
+  total: number;
+  accuracy: number;
+}
+
+export interface UserGpTrendPoint {
+  gpName: string;
+  points: number;
+}
+
+export interface UserAnalyticsSummary {
+  userName: string;
+  bestWeekend: UserGpTrendPoint | null;
+  worstWeekend: UserGpTrendPoint | null;
+  mostPickedDriverId: string;
+  fieldAccuracy: UserFieldAccuracy[];
+  trend: UserGpTrendPoint[];
+  cumulativeTrend: UserGpTrendPoint[];
+  pointsByField: Record<PredictionKey, number>;
+  weekendsAboveLeader: number;
+}
+
+export interface SessionState {
+  isAdmin: boolean;
+  defaultViewMode: ViewMode;
+}

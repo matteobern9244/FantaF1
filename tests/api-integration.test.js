@@ -6,6 +6,7 @@ import {
   readAppData,
   readCalendarCache,
   readDriversCache,
+  readPersistedParticipantRoster,
   writeAppData,
 } from '../backend/storage.js';
 import { fetchRaceResults } from '../backend/calendar.js';
@@ -16,6 +17,7 @@ vi.mock('../backend/storage.js', () => ({
   readAppData: vi.fn(() => Promise.resolve({ users: [] })),
   readCalendarCache: vi.fn(() => Promise.resolve([])),
   readDriversCache: vi.fn(() => Promise.resolve([])),
+  readPersistedParticipantRoster: vi.fn(() => Promise.resolve(['Player 1', 'Player 2', 'Player 3'])),
   writeAppData: vi.fn(() => Promise.resolve()),
 }));
 
@@ -74,6 +76,7 @@ describe('API Integration - Routes', () => {
     readAppData.mockResolvedValue({ users: createUsers() });
     readCalendarCache.mockResolvedValue([]);
     readDriversCache.mockResolvedValue([]);
+    readPersistedParticipantRoster.mockResolvedValue(['Player 1', 'Player 2', 'Player 3']);
     writeAppData.mockResolvedValue();
     fetchRaceResults.mockResolvedValue(createEmptyPrediction());
   });
@@ -164,6 +167,18 @@ describe('API Integration - Routes', () => {
     expect(response.body).toEqual({ error: 'API Endpoint not found' });
   });
 
+  it('removed boost endpoints should return 404', async () => {
+    const [publicResponse, adminResponse] = await Promise.all([
+      request(app).post('/api/public-boost').send({}),
+      request(app).post('/api/admin/boost').send({}),
+    ]);
+
+    expect(publicResponse.status).toBe(404);
+    expect(publicResponse.body).toEqual({ error: 'API Endpoint not found' });
+    expect(adminResponse.status).toBe(404);
+    expect(adminResponse.body).toEqual({ error: 'API Endpoint not found' });
+  });
+
   it('POST /api/data should keep allowing an all-empty payload for non-manual save flows', async () => {
     const payload = createPayload();
     const response = await request(app).post('/api/data').send(payload);
@@ -186,7 +201,26 @@ describe('API Integration - Routes', () => {
     expect(writeAppData).not.toHaveBeenCalled();
   });
 
+  it('POST /api/data should reject a roster with three unexpected participant names', async () => {
+    const payload = {
+      ...createPayload(),
+      users: [
+        { name: 'Alpha', predictions: createEmptyPrediction(), points: 0 },
+        { name: 'Beta', predictions: createEmptyPrediction(), points: 0 },
+        { name: 'Gamma', predictions: createEmptyPrediction(), points: 0 },
+      ],
+    };
+
+    const response = await request(app).post('/api/data').send(payload);
+
+    expect(response.status).toBe(400);
+    expect(response.body.code).toBe('participants_invalid');
+    expect(writeAppData).not.toHaveBeenCalled();
+  });
+
   it('POST /api/data should report unknown participant count when users are missing', async () => {
+    readPersistedParticipantRoster.mockResolvedValue(null);
+
     const response = await request(app).post('/api/data').send({
       history: [],
       gpName: 'Australian Grand Prix 2026',
@@ -197,6 +231,23 @@ describe('API Integration - Routes', () => {
     expect(response.status).toBe(400);
     expect(response.body.code).toBe('participants_invalid');
     expect(response.body.details).toContain('unknown');
+  });
+
+  it('POST /api/data should accept the first valid roster when no persisted roster exists yet', async () => {
+    readPersistedParticipantRoster.mockResolvedValue(null);
+    const payload = {
+      ...createPayload(),
+      users: [
+        { name: 'Alpha', predictions: createEmptyPrediction(), points: 0 },
+        { name: 'Beta', predictions: createEmptyPrediction(), points: 0 },
+        { name: 'Gamma', predictions: createEmptyPrediction(), points: 0 },
+      ],
+    };
+
+    const response = await request(app).post('/api/data').send(payload);
+
+    expect(response.status).toBe(200);
+    expect(writeAppData).toHaveBeenCalledWith(payload);
   });
 
   it('POST /api/predictions should reject a payload with no predictions', async () => {

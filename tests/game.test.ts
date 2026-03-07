@@ -4,6 +4,7 @@ import {
   calculatePointsEarned,
   calculateProjectedPoints,
   calculateLiveTotal,
+  calculatePointsBreakdown,
   createEmptyPrediction,
   mergeMissingPredictionFields,
   rebuildUsersFromHistory,
@@ -34,6 +35,33 @@ describe('game utils', () => {
     });
 
     expect(points).toBe(8);
+  });
+
+  it('returns a breakdown with only the base score', () => {
+    const prediction = {
+      first: 'ver',
+      second: 'nor',
+      third: 'lec',
+      pole: 'pia',
+    };
+    const raceResults = {
+      first: 'ver',
+      second: 'ham',
+      third: 'lec',
+      pole: 'pia',
+    };
+
+    expect(
+      calculatePointsBreakdown(prediction, raceResults, {
+        first: 5,
+        second: 3,
+        third: 2,
+        pole: 1,
+      }),
+    ).toEqual({
+      basePoints: 8,
+      totalPoints: 8,
+    });
   });
 
   it('builds a race record and updates total points', () => {

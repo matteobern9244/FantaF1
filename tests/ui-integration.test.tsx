@@ -27,6 +27,12 @@ describe('App Frontend Integration', () => {
     
     // Default mocks for API responses
     (global.fetch as any).mockImplementation((url: string) => {
+      if (url.includes('/api/session')) {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({ isAdmin: true, defaultViewMode: 'admin' }),
+        });
+      }
       if (url.includes('/api/health')) {
         return Promise.resolve({
           ok: true,

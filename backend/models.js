@@ -88,3 +88,17 @@ const AppDataSchema = new mongoose.Schema({
 export const AppData = mongoose.model('AppData', AppDataSchema);
 export const Driver = mongoose.model('Driver', DriverSchema);
 export const Weekend = mongoose.model('Weekend', WeekendSchema);
+export const AdminCredential =
+  mongoose.models.AdminCredential ||
+  mongoose.model(
+    'AdminCredential',
+    new mongoose.Schema(
+      {
+        role: { type: String, required: true, unique: true },
+        passwordHash: { type: String, required: true },
+        passwordSalt: { type: String, required: true },
+        lastLoginAt: { type: Date },
+      },
+      { timestamps: true },
+    ),
+  );

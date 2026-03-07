@@ -17,11 +17,19 @@ import {
   createRequestId,
   extractErrorDetails,
 } from './backend/http.js';
+import {
+  buildSessionClearCookie,
+  buildSessionCookie,
+  ensureAdminCredentials,
+  readAdminSession,
+  verifyAdminPassword,
+} from './backend/auth.js';
 import { sortDriversAlphabetically } from './backend/drivers.js';
 import {
   readAppData,
   readCalendarCache,
   readDriversCache,
+  readPersistedParticipantRoster,
   writeAppData,
 } from './backend/storage.js';
 import { isRaceLocked, validateParticipants, validatePredictions } from './backend/validation.js';
@@ -34,9 +42,41 @@ const app = express();
 const runtimeEnvironment = normalizeRuntimeEnvironment(process.env.NODE_ENV);
 const databaseTargetName = determineExpectedMongoDatabaseName(process.env.NODE_ENV);
 const predictionFieldOrder = ['first', 'second', 'third', 'pole'];
+const participantSlots = Number.isFinite(Number(appConfig.participantSlots))
+  ? Number(appConfig.participantSlots)
+  : 3;
 
 app.use(cors());
 app.use(express.json());
+
+function isProductionEnvironment() {
+  return runtimeEnvironment === 'production';
+}
+
+function getDefaultViewMode() {
+  return isProductionEnvironment() ? 'public' : 'admin';
+}
+
+function isAdminRequest(req) {
+  if (!isProductionEnvironment()) {
+    return true;
+  }
+
+  return Boolean(readAdminSession(req));
+}
+
+function requireAdminSession(req, res) {
+  if (isAdminRequest(req)) {
+    return true;
+  }
+
+  res.status(401).json({
+    error: 'Admin authentication required',
+    code: 'admin_auth_required',
+  });
+
+  return false;
+}
 
 // 1. Health check route
 app.get(appConfig.api.healthPath, (req, res) => {
@@ -48,6 +88,32 @@ app.get(appConfig.api.healthPath, (req, res) => {
       databaseTarget: databaseTargetName,
     }),
   );
+});
+
+app.get('/api/session', async (req, res) => {
+  await ensureAdminCredentials();
+  res.json({
+    isAdmin: isAdminRequest(req),
+    defaultViewMode: getDefaultViewMode(),
+  });
+});
+
+app.post('/api/admin/session', async (req, res) => {
+  await ensureAdminCredentials();
+  const password = typeof req.body?.password === 'string' ? req.body.password : '';
+  const isPasswordValid = await verifyAdminPassword(password);
+
+  if (!isPasswordValid) {
+    return res.status(401).json({ error: 'Invalid password', code: 'admin_auth_invalid' });
+  }
+
+  res.setHeader('Set-Cookie', buildSessionCookie({ isProduction: isProductionEnvironment() }));
+  res.json({ isAdmin: true, defaultViewMode: getDefaultViewMode() });
+});
+
+app.delete('/api/admin/session', (req, res) => {
+  res.setHeader('Set-Cookie', buildSessionClearCookie({ isProduction: isProductionEnvironment() }));
+  res.json({ isAdmin: false, defaultViewMode: getDefaultViewMode() });
 });
 
 // 2. API Routes
@@ -88,14 +154,14 @@ app.get('/api/results/:meetingKey', async (req, res) => {
 });
 
 function buildParticipantsInvalidResponse(newData, requestId) {
-  const participantError = `Invalid participants list. Expected ${appConfig.participants.length} participants.`;
+  const participantError = `Invalid participants list. Expected ${participantSlots} participants.`;
 
   return buildSaveErrorResponse({
     environment: runtimeEnvironment,
     requestId,
     code: 'participants_invalid',
     error: participantError,
-    details: `Expected ${appConfig.participants.length} participants, received ${Array.isArray(newData?.users) ? newData.users.length : 'unknown'}.`,
+    details: `Expected ${participantSlots} participants, received ${Array.isArray(newData?.users) ? newData.users.length : 'unknown'}.`,
   });
 }
 
@@ -113,11 +179,16 @@ async function handleSaveRequest(req, res, { requirePredictions = false, routePa
   const requestId = createRequestId();
 
   try {
+    if (!requireAdminSession(req, res)) {
+      return;
+    }
+
     verifyMongoDatabaseName(mongoose.connection.db?.databaseName, databaseTargetName);
 
     const newData = req.body;
+    const persistedParticipantRoster = await readPersistedParticipantRoster();
 
-    if (!validateParticipants(newData?.users, appConfig.participants)) {
+    if (!validateParticipants(newData?.users, persistedParticipantRoster, participantSlots)) {
       const response = buildParticipantsInvalidResponse(newData, requestId);
       return res.status(response.status).json(response.payload);
     }

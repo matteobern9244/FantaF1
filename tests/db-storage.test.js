@@ -1,5 +1,13 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
-import { readAppData, writeAppData, readDriversCache, writeDriversCache, readCalendarCache, writeCalendarCache } from '../backend/storage.js';
+import {
+  readAppData,
+  readPersistedParticipantRoster,
+  writeAppData,
+  readDriversCache,
+  writeDriversCache,
+  readCalendarCache,
+  writeCalendarCache,
+} from '../backend/storage.js';
 import { AppData, Driver, Weekend } from '../backend/models.js';
 
 vi.mock('../backend/models.js', () => ({
@@ -94,6 +102,42 @@ describe('MongoDB Storage Functions', () => {
       });
       const data = await readAppData(Promise.resolve([]));
       expect(data.gpName).toBe('');
+    });
+
+    it('reads the persisted roster from the latest stored app data when available', async () => {
+      AppData.findOne.mockReturnValue({
+        sort: vi.fn().mockResolvedValue({
+          toObject: () => ({
+            users: [
+              { name: 'Uno' },
+              { name: 'Due' },
+              { name: 'Tre' },
+            ],
+          }),
+        }),
+      });
+
+      await expect(readPersistedParticipantRoster()).resolves.toEqual(['Uno', 'Due', 'Tre']);
+    });
+
+    it('returns null for the persisted roster when no valid stored roster exists', async () => {
+      AppData.findOne.mockReturnValue({
+        sort: vi.fn().mockResolvedValue({
+          toObject: () => ({
+            users: [{ name: 'Solo' }],
+          }),
+        }),
+      });
+
+      await expect(readPersistedParticipantRoster()).resolves.toBeNull();
+    });
+
+    it('returns null for the persisted roster when no document exists yet', async () => {
+      AppData.findOne.mockReturnValue({
+        sort: vi.fn().mockResolvedValue(null),
+      });
+
+      await expect(readPersistedParticipantRoster()).resolves.toBeNull();
     });
 
     it('sanitizes fallback names, map-based history and reads the calendar cache when no promise is provided', async () => {
@@ -249,6 +293,17 @@ describe('MongoDB Storage Functions', () => {
     });
 
     it('preserves non-selected weekend drafts while updating the selected one', async () => {
+      AppData.findOne.mockReturnValue({
+        sort: vi.fn().mockResolvedValue({
+          toObject: () => ({
+            users: [
+              { name: 'Player 1' },
+              { name: 'Player 2' },
+              { name: 'Player 3' },
+            ],
+          }),
+        }),
+      });
       AppData.findOneAndUpdate.mockResolvedValue();
 
       const result = await writeAppData(
