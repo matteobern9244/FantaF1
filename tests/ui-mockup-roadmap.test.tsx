@@ -101,16 +101,6 @@ function createAppData() {
           Sara: { first: 'ver', second: 'lec', third: 'ham', pole: 'pia' },
         },
         raceResults: createEmptyPrediction(),
-        weekendBoostByUser: {
-          Marco: 'none',
-          Luca: 'none',
-          Sara: 'none',
-        },
-        weekendBoostLockedByUser: {
-          Marco: false,
-          Luca: false,
-          Sara: false,
-        },
       },
     },
   };

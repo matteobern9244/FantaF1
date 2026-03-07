@@ -130,9 +130,7 @@
       "publicView": "Vista pubblica",
       "adminView": "Modalita' admin",
       "installApp": "Installa app",
-      "logout": "Logout",
-      "saveBoost": "Salva weekend boost",
-      "adminBoostSave": "Aggiorna boost"
+      "logout": "Logout"
     },
     "headings": {
       "seasonTag": "Fanta Formula 1",
@@ -145,7 +143,6 @@
       "nextRace": "Prossimo weekend",
       "userKpi": "User KPI Dashboard",
       "userAnalytics": "Deep-dive KPI dashboard",
-      "weekendBoost": "Weekend Boost",
       "adminAccess": "Accesso admin"
     },
     "labels": {
@@ -181,15 +178,6 @@
       "podiums": "Podi di giornata",
       "averageLeaderDelta": "Delta medio dal leader",
       "totalHitRate": "Hit rate totale",
-      "boostConversionRate": "Boost conversion rate",
-      "boostSelection": "Campo boost",
-      "boostPlayer": "Giocatore",
-      "boostStatus": "Stato boost",
-      "boostLocked": "Boost salvato",
-      "boostUnlocked": "Boost non impostato",
-      "boostAdminOnly": "Modificabile solo admin",
-      "boostedWeekends": "Weekend con boost",
-      "boostPointsEarned": "Punti extra boost",
       "weekendsAboveLeader": "Weekend da leader",
       "cumulativeTrend": "Trend cumulato"
     },
@@ -225,9 +213,7 @@
       "pwaInstalled": "App installata correttamente.",
       "pwaInstallHint": "Installa FantaF1 sul dispositivo per una home-screen experience piu' rapida.",
       "adminLoginSuccess": "Modalita' admin attiva.",
-      "adminLogoutSuccess": "Logout completato. Modalita' pubblica attiva.",
-      "boostSaved": "Weekend boost salvato.",
-      "adminBoostSaved": "Weekend boost aggiornato dall'admin."
+      "adminLogoutSuccess": "Logout completato. Modalita' pubblica attiva."
     },
     "calendar": {
       "empty": "Calendario non disponibile.",
@@ -245,8 +231,7 @@
       "cancelEditConfirm": "Vuoi annullare la modifica in corso e ripristinare la gara originale nello storico?",
       "editRaceLoaded": "Gara {gpName} caricata in modifica. Aggiorna i dati e salva di nuovo."
       ,
-      "adminPasswordRequired": "Inserisci la password admin.",
-      "boostAlreadyLocked": "Questo boost e' gia' stato salvato e puo' essere modificato solo dall'admin."
+      "adminPasswordRequired": "Inserisci la password admin."
     },
     "footer": "Application created by Matteo Bernardini©",
     "tooltips": {

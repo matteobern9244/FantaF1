@@ -53,7 +53,6 @@ import type {
   SessionState,
   UserData,
   ViewMode,
-  WeekendBoost,
   WeekendStateByMeetingKey,
 } from './types';
 import {
@@ -67,7 +66,6 @@ import {
   buildRaceRecord,
   calculateLiveTotal,
   calculateProjectedPoints,
-  normalizeWeekendBoost,
   createEmptyPrediction,
   mergeMissingPredictionFields,
   rebuildUsersFromHistory,
@@ -113,8 +111,6 @@ const heroTitle = splitHeroTitle(visibleAppTitle, genericAppTitle);
 const saveRuntimeEnvironment = import.meta.env.DEV ? 'development' : 'production';
 const sessionApiUrl = '/api/session';
 const adminSessionApiUrl = '/api/admin/session';
-const adminBoostApiUrl = '/api/admin/boost';
-const publicBoostApiUrl = '/api/public-boost';
 
 type DeferredInstallPromptEvent = Event & {
   prompt: () => Promise<void>;
@@ -190,8 +186,6 @@ function App() {
   const [selectedInsightsUser, setSelectedInsightsUser] = useState('');
   const [toast, setToast] = useState<ToastState | null>(null);
   const [installPromptEvent, setInstallPromptEvent] = useState<DeferredInstallPromptEvent | null>(null);
-  const [selectedBoostUser, setSelectedBoostUser] = useState('');
-  const [selectedBoostValue, setSelectedBoostValue] = useState<WeekendBoost>('none');
   const [showAdminLogin, setShowAdminLogin] = useState(false);
   const [adminPassword, setAdminPassword] = useState('');
   const [adminLoginError, setAdminLoginError] = useState('');
@@ -227,11 +221,6 @@ function App() {
   const selectedAnalyticsSummary = selectedInsightsUserName
     ? buildUserAnalytics(history, selectedInsightsUserName)
     : null;
-  const selectedBoostWeekendState = getWeekendPredictionState(weekendStateByMeetingKey, selectedMeetingKey);
-  const selectedBoostUserName = selectedBoostUser || users[0]?.name || '';
-  const selectedBoostLocked = Boolean(
-    selectedBoostWeekendState.weekendBoostLockedByUser[selectedBoostUserName],
-  );
 
   useEffect(() => {
     selectedMeetingKeyRef.current = selectedMeetingKey;
@@ -254,22 +243,6 @@ function App() {
       setSelectedInsightsUser(users[0].name);
     }
   }, [selectedInsightsUser, users]);
-
-  useEffect(() => {
-    if (!selectedBoostUser && users[0]?.name) {
-      setSelectedBoostUser(users[0].name);
-    }
-  }, [selectedBoostUser, users]);
-
-  useEffect(() => {
-    if (!selectedBoostUserName) {
-      return;
-    }
-
-    setSelectedBoostValue(
-      normalizeWeekendBoost(selectedBoostWeekendState.weekendBoostByUser[selectedBoostUserName]),
-    );
-  }, [selectedBoostUserName, selectedBoostWeekendState]);
 
   useEffect(() => {
     function handleBeforeInstallPrompt(event: Event) {
@@ -465,8 +438,8 @@ function App() {
 
   const liveLeaderboardUsers = sortUsersByLiveTotal(users, raceResults, points);
 
-  function calculatePotentialPoints(userPrediction: Prediction, weekendBoost: WeekendBoost = 'none') {
-    return calculateProjectedPoints(userPrediction, raceResults, points, weekendBoost);
+  function calculatePotentialPoints(userPrediction: Prediction) {
+    return calculateProjectedPoints(userPrediction, raceResults, points);
   }
 
   function mergePredictionsIntoUsers(nextUsers: UserData[], sourceUsers: UserData[]) {
@@ -477,7 +450,6 @@ function App() {
         ? {
           ...nextUser,
           predictions: { ...sourceUser.predictions },
-          weekendBoost: normalizeWeekendBoost(sourceUser.weekendBoost),
         }
       : nextUser;
     });
@@ -649,106 +621,6 @@ function App() {
     });
   }
 
-  function applyWeekendBoostToUsers(
-    targetUserName: string,
-    boostValue: WeekendBoost,
-    boostLocked: boolean,
-  ) {
-    const normalizedBoost = normalizeWeekendBoost(boostValue);
-
-    setUsers((currentUsers) =>
-      currentUsers.map((user) =>
-        user.name === targetUserName
-          ? {
-              ...user,
-              weekendBoost: normalizedBoost,
-            }
-          : user,
-      ),
-    );
-    setWeekendStateByMeetingKey((currentWeekendStateByMeetingKey) => {
-      const currentWeekendState = getWeekendPredictionState(currentWeekendStateByMeetingKey, selectedMeetingKey);
-      return {
-        ...normalizeWeekendStateByMeetingKey(currentWeekendStateByMeetingKey),
-        [selectedMeetingKey]: {
-          ...currentWeekendState,
-          weekendBoostByUser: {
-            ...currentWeekendState.weekendBoostByUser,
-            [targetUserName]: normalizedBoost,
-          },
-          weekendBoostLockedByUser: {
-            ...currentWeekendState.weekendBoostLockedByUser,
-            [targetUserName]: boostLocked,
-          },
-        },
-      };
-    });
-  }
-
-  async function handleBoostSave() {
-    if (!selectedMeetingKey || !selectedBoostUserName) {
-      return;
-    }
-
-    if (sessionState.isAdmin) {
-      try {
-        const response = await fetch(adminBoostApiUrl, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            meetingKey: selectedMeetingKey,
-            userName: selectedBoostUserName,
-            boost: selectedBoostValue,
-            locked: true,
-          }),
-        });
-
-        if (!response.ok) {
-          throw await createSaveRequestError(response, {
-            fallbackMessage: uiText.backend.errors.saveFailed,
-            environment: saveRuntimeEnvironment,
-          });
-        }
-
-        applyWeekendBoostToUsers(selectedBoostUserName, selectedBoostValue, true);
-        showToastMessage(uiText.status.adminBoostSaved, 'success');
-      } catch (error) {
-        handleSaveFailure('Admin boost save error:', error);
-      }
-
-      return;
-    }
-
-    if (selectedBoostLocked) {
-      window.alert(uiText.alerts.boostAlreadyLocked);
-      return;
-    }
-
-    try {
-      const response = await fetch(publicBoostApiUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          meetingKey: selectedMeetingKey,
-          userName: selectedBoostUserName,
-          boost: selectedBoostValue,
-        }),
-      });
-
-      if (!response.ok) {
-        throw await createSaveRequestError(response, {
-          fallbackMessage: uiText.backend.errors.saveFailed,
-          environment: saveRuntimeEnvironment,
-        });
-      }
-
-      applyWeekendBoostToUsers(selectedBoostUserName, selectedBoostValue, true);
-      showToastMessage(uiText.status.boostSaved, 'success');
-    } catch (error) {
-      handleSaveFailure('Public boost save error:', error);
-    }
-  }
-
   async function handleAdminLogin() {
     if (!adminPassword.trim()) {
       setAdminLoginError(uiText.alerts.adminPasswordRequired);
@@ -804,7 +676,6 @@ function App() {
     const clearedUsers = users.map((user) => ({
       ...user,
       predictions: createEmptyPrediction(),
-      weekendBoost: 'none' as WeekendBoost,
     }));
 
     setUsers(clearedUsers);
@@ -877,7 +748,6 @@ function App() {
       return {
         ...user,
         predictions: storedPrediction ? { ...storedPrediction } : createEmptyPrediction(),
-        weekendBoost: normalizeWeekendBoost(record.userPredictions[user.name]?.weekendBoost),
       };
     });
     const resolvedRace = resolveRaceFromRecord(record);
@@ -956,7 +826,6 @@ function App() {
     const clearedUsers = updatedUsers.map((user) => ({
       ...user,
       predictions: createEmptyPrediction(),
-      weekendBoost: 'none' as WeekendBoost,
     }));
 
     let nextHistory = history;
@@ -1449,70 +1318,6 @@ function App() {
             )}
           </section>
 
-          <section className="panel">
-            <div className="panel-head">
-              <div className="section-title">
-                <Zap size={20} />
-                <h2>{uiText.headings.weekendBoost}</h2>
-              </div>
-            </div>
-            <div className="results-grid">
-              <div className="field-row">
-                <label htmlFor="boost-user-selector">{uiText.labels.boostPlayer}</label>
-                <select
-                  id="boost-user-selector"
-                  value={selectedBoostUserName}
-                  onChange={(event) => setSelectedBoostUser(event.target.value)}
-                >
-                  {users.map((user) => (
-                    <option key={`boost-user-${user.name}`} value={user.name}>
-                      {user.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="field-row">
-                <label htmlFor="boost-selector">{uiText.labels.boostSelection}</label>
-                <select
-                  id="boost-selector"
-                  value={selectedBoostValue}
-                  onChange={(event) => setSelectedBoostValue(normalizeWeekendBoost(event.target.value))}
-                  disabled={!sessionState.isAdmin && selectedBoostLocked}
-                >
-                  <option value="none">None</option>
-                  <option value="first">{predictionLabels.first}</option>
-                  <option value="second">{predictionLabels.second}</option>
-                  <option value="third">{predictionLabels.third}</option>
-                  <option value="pole">{predictionLabels.pole}</option>
-                </select>
-              </div>
-            </div>
-            <div className="readonly-picks">
-              {users.map((user) => {
-                const userBoost = normalizeWeekendBoost(selectedBoostWeekendState.weekendBoostByUser[user.name]);
-                const isLockedBoost = Boolean(selectedBoostWeekendState.weekendBoostLockedByUser[user.name]);
-                return (
-                  <div key={`boost-status-${user.name}`} className="spotlight-row">
-                    <span>{user.name}</span>
-                    <strong>
-                      {userBoost === 'none' ? uiText.labels.boostUnlocked : predictionLabels[userBoost]}
-                      {isLockedBoost ? ` · ${uiText.labels.boostAdminOnly}` : ''}
-                    </strong>
-                  </div>
-                );
-              })}
-            </div>
-            {!sessionState.isAdmin && selectedBoostLocked ? (
-              <p className="sidebar-note status-note">{uiText.alerts.boostAlreadyLocked}</p>
-            ) : null}
-            <div className="stacked-actions">
-              <button className="primary-button" onClick={handleBoostSave} type="button" disabled={raceLocked && !sessionState.isAdmin}>
-                <Zap size={16} />
-                {sessionState.isAdmin ? uiText.buttons.adminBoostSave : uiText.buttons.saveBoost}
-              </button>
-            </div>
-          </section>
-
           <section className="panel analytics-panel">
             <div className="section-title">
               <BarChart3 size={20} />
@@ -1613,7 +1418,7 @@ function App() {
                     <span className="points-preview">
                       <span className="points-preview-label">{uiText.labels.potential}:</span>
                         <span className="points-preview-value">
-                        {calculatePotentialPoints(user.predictions, normalizeWeekendBoost(user.weekendBoost))}
+                        {calculatePotentialPoints(user.predictions)}
                         </span>
                       <span className="points-preview-suffix">{uiText.pointsSuffix}</span>
                     </span>
@@ -1679,7 +1484,7 @@ function App() {
                       <span className="points-preview">
                         <span className="points-preview-label">{uiText.labels.potential}:</span>
                         <span className="points-preview-value">
-                          {calculatePotentialPoints(user.predictions, normalizeWeekendBoost(user.weekendBoost))}
+                          {calculatePotentialPoints(user.predictions)}
                         </span>
                         <span className="points-preview-suffix">{uiText.pointsSuffix}</span>
                       </span>

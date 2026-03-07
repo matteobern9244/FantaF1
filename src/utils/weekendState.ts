@@ -2,11 +2,10 @@ import type {
   AppData,
   Prediction,
   UserData,
-  WeekendBoost,
   WeekendPredictionState,
   WeekendStateByMeetingKey,
 } from '../types';
-import { createEmptyPrediction, normalizeWeekendBoost } from './game';
+import { createEmptyPrediction } from './game';
 
 function clonePrediction(prediction?: Partial<Prediction> | null): Prediction {
   return {
@@ -21,8 +20,6 @@ function createEmptyWeekendPredictionState(): WeekendPredictionState {
   return {
     userPredictions: {},
     raceResults: createEmptyPrediction(),
-    weekendBoostByUser: {},
-    weekendBoostLockedByUser: {},
   };
 }
 
@@ -37,18 +34,6 @@ function cloneWeekendPredictionState(
   return {
     userPredictions: Object.fromEntries(entries),
     raceResults: clonePrediction(weekendState?.raceResults),
-    weekendBoostByUser: Object.fromEntries(
-      Object.entries(weekendState?.weekendBoostByUser ?? {}).map(([userName, boost]) => [
-        userName,
-        normalizeWeekendBoost(boost),
-      ]),
-    ) as Record<string, WeekendBoost>,
-    weekendBoostLockedByUser: Object.fromEntries(
-      Object.entries(weekendState?.weekendBoostLockedByUser ?? {}).map(([userName, isLocked]) => [
-        userName,
-        Boolean(isLocked),
-      ]),
-    ),
   };
 }
 
@@ -69,24 +54,12 @@ function normalizeWeekendStateByMeetingKey(
 function buildWeekendPredictionState(
   users: UserData[],
   raceResults: Prediction,
-  existingWeekendState?: WeekendPredictionState,
 ): WeekendPredictionState {
   return {
     userPredictions: Object.fromEntries(
       users.map((user) => [user.name, clonePrediction(user.predictions)]),
     ),
     raceResults: clonePrediction(raceResults),
-    weekendBoostByUser: Object.fromEntries(
-      users.map((user) => [
-        user.name,
-        normalizeWeekendBoost(
-          user.weekendBoost ?? existingWeekendState?.weekendBoostByUser[user.name],
-        ),
-      ]),
-    ),
-    weekendBoostLockedByUser: Object.fromEntries(
-      users.map((user) => [user.name, Boolean(existingWeekendState?.weekendBoostLockedByUser[user.name])]),
-    ),
   };
 }
 
@@ -105,7 +78,6 @@ function upsertWeekendPredictionState(
     [meetingKey]: buildWeekendPredictionState(
       users,
       raceResults,
-      getWeekendPredictionState(weekendStateByMeetingKey, meetingKey),
     ),
   };
 }
@@ -126,8 +98,6 @@ function upsertWeekendRaceResults(
       [meetingKey]: {
         userPredictions: currentWeekendState.userPredictions,
         raceResults: clonePrediction(raceResults),
-        weekendBoostByUser: currentWeekendState.weekendBoostByUser,
-        weekendBoostLockedByUser: currentWeekendState.weekendBoostLockedByUser,
       },
     };
 }
@@ -147,7 +117,6 @@ function hydrateUsersForWeekend(users: UserData[], weekendState: WeekendPredicti
   return users.map((user) => ({
     ...user,
     predictions: clonePrediction(weekendState.userPredictions[user.name]),
-    weekendBoost: normalizeWeekendBoost(weekendState.weekendBoostByUser[user.name]),
   }));
 }
 

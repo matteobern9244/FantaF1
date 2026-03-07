@@ -1,4 +1,4 @@
-import type { PointsConfig, Prediction, RaceRecord, UserData, WeekendBoost } from '../types';
+import type { PointsConfig, Prediction, RaceRecord, UserData } from '../types';
 
 function normalizePredictionValue(value: string): string {
   return String(value ?? '').trim().toLowerCase();
@@ -22,7 +22,6 @@ export function createInitialUsers(participantsOrSlots: string[] | number): User
     name,
     predictions: createEmptyPrediction(),
     points: 0,
-    weekendBoost: 'none',
   }));
 }
 
@@ -46,17 +45,10 @@ export function rebuildUsersFromHistory(
   return users;
 }
 
-export function normalizeWeekendBoost(boost?: string | null): WeekendBoost {
-  return boost === 'first' || boost === 'second' || boost === 'third' || boost === 'pole'
-    ? boost
-    : 'none';
-}
-
 export function calculatePointsBreakdown(
   prediction: Prediction,
   raceResults: Prediction,
   pointsConfig: PointsConfig,
-  weekendBoost: WeekendBoost = 'none',
 ) {
   const normalizedPrediction = {
     first: normalizePredictionValue(prediction.first),
@@ -71,7 +63,6 @@ export function calculatePointsBreakdown(
     pole: normalizePredictionValue(raceResults.pole),
   };
   let basePoints = 0;
-  let boostBonus = 0;
 
   (Object.keys(pointsConfig) as (keyof PointsConfig)[]).forEach((field) => {
     const isMatch = normalizedPrediction[field] === normalizedRaceResults[field] && normalizedRaceResults[field];
@@ -80,15 +71,11 @@ export function calculatePointsBreakdown(
     }
 
     basePoints += pointsConfig[field];
-    if (weekendBoost === field) {
-      boostBonus += pointsConfig[field];
-    }
   });
 
   return {
     basePoints,
-    boostBonus,
-    totalPoints: basePoints + boostBonus,
+    totalPoints: basePoints,
   };
 }
 
@@ -96,18 +83,16 @@ export function calculatePointsEarned(
   prediction: Prediction,
   raceResults: Prediction,
   pointsConfig: PointsConfig,
-  weekendBoost: WeekendBoost = 'none',
 ): number {
-  return calculatePointsBreakdown(prediction, raceResults, pointsConfig, weekendBoost).totalPoints;
+  return calculatePointsBreakdown(prediction, raceResults, pointsConfig).totalPoints;
 }
 
 export function calculateProjectedPoints(
   prediction: Prediction,
   raceResults: Prediction,
   pointsConfig: PointsConfig,
-  weekendBoost: WeekendBoost = 'none',
 ): number {
-  return calculatePointsEarned(prediction, raceResults, pointsConfig, weekendBoost);
+  return calculatePointsEarned(prediction, raceResults, pointsConfig);
 }
 
 export function calculateLiveTotal(
@@ -115,12 +100,7 @@ export function calculateLiveTotal(
   raceResults: Prediction,
   pointsConfig: PointsConfig,
 ): number {
-  return user.points + calculateProjectedPoints(
-    user.predictions,
-    raceResults,
-    pointsConfig,
-    normalizeWeekendBoost(user.weekendBoost),
-  );
+  return user.points + calculateProjectedPoints(user.predictions, raceResults, pointsConfig);
 }
 
 export function sortUsersByLiveTotal(
@@ -170,24 +150,16 @@ export function buildRaceRecord(
   const userPredictions: RaceRecord['userPredictions'] = {};
 
   const updatedUsers = users.map((user) => {
-    const normalizedWeekendBoost = normalizeWeekendBoost(user.weekendBoost);
-    const pointsEarned = calculatePointsEarned(
-      user.predictions,
-      raceResults,
-      pointsConfig,
-      normalizedWeekendBoost,
-    );
+    const pointsEarned = calculatePointsEarned(user.predictions, raceResults, pointsConfig);
 
     userPredictions[user.name] = {
       prediction: { ...user.predictions },
-      weekendBoost: normalizedWeekendBoost,
       pointsEarned,
     };
 
     return {
       ...user,
       points: user.points + pointsEarned,
-      weekendBoost: normalizedWeekendBoost,
     };
   });
 

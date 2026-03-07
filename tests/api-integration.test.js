@@ -167,6 +167,18 @@ describe('API Integration - Routes', () => {
     expect(response.body).toEqual({ error: 'API Endpoint not found' });
   });
 
+  it('removed boost endpoints should return 404', async () => {
+    const [publicResponse, adminResponse] = await Promise.all([
+      request(app).post('/api/public-boost').send({}),
+      request(app).post('/api/admin/boost').send({}),
+    ]);
+
+    expect(publicResponse.status).toBe(404);
+    expect(publicResponse.body).toEqual({ error: 'API Endpoint not found' });
+    expect(adminResponse.status).toBe(404);
+    expect(adminResponse.body).toEqual({ error: 'API Endpoint not found' });
+  });
+
   it('POST /api/data should keep allowing an all-empty payload for non-manual save flows', async () => {
     const payload = createPayload();
     const response = await request(app).post('/api/data').send(payload);

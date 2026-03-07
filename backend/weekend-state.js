@@ -7,12 +7,6 @@ function createEmptyPrediction() {
   };
 }
 
-function normalizeWeekendBoost(value) {
-  return value === 'first' || value === 'second' || value === 'third' || value === 'pole'
-    ? value
-    : 'none';
-}
-
 function sanitizePrediction(value) {
   return {
     first: typeof value?.first === 'string' ? value.first : '',
@@ -26,8 +20,6 @@ function createEmptyWeekendState() {
   return {
     userPredictions: {},
     raceResults: createEmptyPrediction(),
-    weekendBoostByUser: {},
-    weekendBoostLockedByUser: {},
   };
 }
 
@@ -46,18 +38,6 @@ function sanitizeWeekendState(value) {
   return {
     userPredictions: safeUserPredictions,
     raceResults: sanitizePrediction(value?.raceResults),
-    weekendBoostByUser: Object.fromEntries(
-      Object.entries(value?.weekendBoostByUser || {}).map(([userName, boost]) => [
-        userName,
-        normalizeWeekendBoost(boost),
-      ]),
-    ),
-    weekendBoostLockedByUser: Object.fromEntries(
-      Object.entries(value?.weekendBoostLockedByUser || {}).map(([userName, locked]) => [
-        userName,
-        Boolean(locked),
-      ]),
-    ),
   };
 }
 
@@ -76,7 +56,7 @@ function sanitizeWeekendStateByMeetingKey(value) {
   );
 }
 
-function buildWeekendStateFromUsers(users, raceResults, existingWeekendState = createEmptyWeekendState()) {
+function buildWeekendStateFromUsers(users, raceResults) {
   return {
     userPredictions: Object.fromEntries(
       (Array.isArray(users) ? users : []).map((user) => [
@@ -85,15 +65,6 @@ function buildWeekendStateFromUsers(users, raceResults, existingWeekendState = c
       ]),
     ),
     raceResults: sanitizePrediction(raceResults),
-    weekendBoostByUser: Object.fromEntries(
-      (Array.isArray(users) ? users : []).map((user) => [
-        user.name,
-        normalizeWeekendBoost(user?.weekendBoost ?? existingWeekendState?.weekendBoostByUser?.[user.name]),
-      ]),
-    ),
-    weekendBoostLockedByUser: Object.fromEntries(
-      (Array.isArray(users) ? users : []).map((user) => [user.name, Boolean(existingWeekendState?.weekendBoostLockedByUser?.[user.name])]),
-    ),
   };
 }
 
@@ -135,7 +106,6 @@ function hydrateUsersForSelectedWeekend(users, weekendState) {
   return (Array.isArray(users) ? users : []).map((user) => ({
     ...user,
     predictions: sanitizePrediction(safeWeekendState.userPredictions[user.name]),
-    weekendBoost: normalizeWeekendBoost(safeWeekendState.weekendBoostByUser[user.name]),
   }));
 }
 
@@ -156,5 +126,4 @@ export {
   sanitizeWeekendState,
   sanitizeWeekendStateByMeetingKey,
   upsertSelectedWeekendState,
-  normalizeWeekendBoost,
 };

@@ -5,7 +5,6 @@ import {
   createEmptyPrediction,
   getSelectedWeekendState,
   hydrateUsersForSelectedWeekend,
-  normalizeWeekendBoost,
   sanitizePrediction,
   sanitizeWeekendStateByMeetingKey,
   upsertSelectedWeekendState,
@@ -21,7 +20,6 @@ function createInitialUsers() {
     name: `Player ${index + 1}`,
     predictions: createEmptyPrediction(),
     points: 0,
-    weekendBoost: 'none',
   }));
 }
 
@@ -66,7 +64,6 @@ function sanitizeUser(user, fallbackName) {
     name,
     predictions: sanitizePrediction(user?.predictions),
     points: Number.isFinite(numericPoints) ? numericPoints : 0,
-    weekendBoost: normalizeWeekendBoost(user?.weekendBoost),
   };
 }
 
@@ -81,7 +78,6 @@ function sanitizeRaceRecord(record) {
       name,
       {
         prediction: sanitizePrediction(value?.prediction),
-        weekendBoost: normalizeWeekendBoost(value?.weekendBoost),
         pointsEarned: Number.isFinite(Number(value?.pointsEarned)) ? Number(value.pointsEarned) : 0,
       },
     ]),

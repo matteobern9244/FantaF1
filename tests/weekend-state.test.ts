@@ -37,8 +37,6 @@ describe('weekendState utils', () => {
     expect(createEmptyWeekendPredictionState()).toEqual({
       userPredictions: {},
       raceResults: createEmptyPrediction(),
-      weekendBoostByUser: {},
-      weekendBoostLockedByUser: {},
     });
   });
 
@@ -63,8 +61,6 @@ describe('weekendState utils', () => {
           'Player 1': { first: 'ver', second: '', third: '', pole: '' },
         },
         raceResults: { first: '', second: '', third: '', pole: 'nor' },
-        weekendBoostByUser: {},
-        weekendBoostLockedByUser: {},
       },
     });
   });
@@ -91,16 +87,6 @@ describe('weekendState utils', () => {
           'Player 3': createEmptyPrediction(),
         },
         raceResults: createEmptyPrediction(),
-        weekendBoostByUser: {
-          'Player 1': 'none',
-          'Player 2': 'none',
-          'Player 3': 'none',
-        },
-        weekendBoostLockedByUser: {
-          'Player 1': false,
-          'Player 2': false,
-          'Player 3': false,
-        },
       },
     });
   });
@@ -117,7 +103,6 @@ describe('weekendState utils', () => {
 
     expect(updatedState['race-1'].userPredictions['Player 1'].first).toBe('ver');
     expect(updatedState['race-1'].raceResults.pole).toBe('pia');
-    expect(updatedState['race-1'].weekendBoostByUser['Player 1']).toBe('none');
     expect(upsertWeekendRaceResults(initialState, '', createEmptyPrediction())).toEqual(initialState);
   });
 
@@ -134,16 +119,6 @@ describe('weekendState utils', () => {
           'Player 3': createEmptyPrediction(),
         },
         raceResults: { first: '', second: '', third: '', pole: 'nor' },
-        weekendBoostByUser: {
-          'Player 1': 'first',
-          'Player 2': 'none',
-          'Player 3': 'none',
-        },
-        weekendBoostLockedByUser: {
-          'Player 1': true,
-          'Player 2': false,
-          'Player 3': false,
-        },
       },
     };
 
@@ -164,7 +139,7 @@ describe('weekendState utils', () => {
 
     expect(hydrated.users[1].predictions.first).toBe('ham');
     expect(hydrated.raceResults.pole).toBe('nor');
-    expect(hydrated.weekendStateByMeetingKey?.['race-1'].weekendBoostByUser['Player 1']).toBe('first');
+    expect(hydrated.weekendStateByMeetingKey?.['race-1'].raceResults.pole).toBe('nor');
   });
 
   it('returns an empty draft for unknown or blank meetings', () => {

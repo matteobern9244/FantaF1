@@ -37,7 +37,7 @@ describe('game utils', () => {
     expect(points).toBe(8);
   });
 
-  it('applies the weekend boost only to the selected correct field', () => {
+  it('returns a breakdown with only the base score', () => {
     const prediction = {
       first: 'ver',
       second: 'nor',
@@ -52,33 +52,16 @@ describe('game utils', () => {
     };
 
     expect(
-      calculatePointsEarned(prediction, raceResults, {
-        first: 5,
-        second: 3,
-        third: 2,
-        pole: 1,
-      }, 'first'),
-    ).toBe(13);
-    expect(
       calculatePointsBreakdown(prediction, raceResults, {
         first: 5,
         second: 3,
         third: 2,
         pole: 1,
-      }, 'first'),
+      }),
     ).toEqual({
       basePoints: 8,
-      boostBonus: 5,
-      totalPoints: 13,
+      totalPoints: 8,
     });
-    expect(
-      calculatePointsEarned(prediction, raceResults, {
-        first: 5,
-        second: 3,
-        third: 2,
-        pole: 1,
-      }, 'second'),
-    ).toBe(8);
   });
 
   it('builds a race record and updates total points', () => {
@@ -131,7 +114,6 @@ describe('game utils', () => {
         pole: 'pia',
       },
       points: 16,
-      weekendBoost: 'none',
     });
     expect(createEmptyPrediction()).toEqual({
       first: '',
@@ -196,19 +178,16 @@ describe('game utils', () => {
         name: 'Player 3',
         predictions: createEmptyPrediction(),
         points: 10,
-        weekendBoost: 'none',
       },
       {
         name: 'Player 2',
         predictions: createEmptyPrediction(),
         points: 0,
-        weekendBoost: 'none',
       },
       {
         name: 'Player 1',
         predictions: createEmptyPrediction(),
         points: 5,
-        weekendBoost: 'none',
       },
     ]);
   });

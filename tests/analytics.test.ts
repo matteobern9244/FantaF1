@@ -67,7 +67,6 @@ describe('analytics utils', () => {
         podiums: 2,
         averageLeaderDelta: 1,
         totalHitRate: 88,
-        boostConversionRate: 0,
       },
       {
         userName: 'Luca',
@@ -80,7 +79,6 @@ describe('analytics utils', () => {
         podiums: 2,
         averageLeaderDelta: 5.5,
         totalHitRate: 50,
-        boostConversionRate: 0,
       },
       {
         userName: 'Sara',
@@ -93,7 +91,6 @@ describe('analytics utils', () => {
         podiums: 2,
         averageLeaderDelta: 4,
         totalHitRate: 75,
-        boostConversionRate: 0,
       },
     ]);
   });
@@ -124,21 +121,12 @@ describe('analytics utils', () => {
       { gpName: 'Chinese Grand Prix 2099', points: 11 },
       { gpName: 'Australian Grand Prix 2099', points: 20 },
     ]);
-    expect(summary.boostUsage).toEqual({
-      none: 2,
-      first: 0,
-      second: 0,
-      third: 0,
-      pole: 0,
-    });
     expect(summary.pointsByField).toEqual({
       first: 10,
       second: 6,
       third: 2,
       pole: 2,
     });
-    expect(summary.boostedWeekends).toBe(0);
-    expect(summary.boostPointsEarned).toBe(0);
     expect(summary.weekendsAboveLeader).toBe(1);
   });
 
@@ -155,7 +143,6 @@ describe('analytics utils', () => {
         podiums: 0,
         averageLeaderDelta: 0,
         totalHitRate: 0,
-        boostConversionRate: 0,
       },
       {
         userName: 'Luca',
@@ -168,7 +155,6 @@ describe('analytics utils', () => {
         podiums: 0,
         averageLeaderDelta: 0,
         totalHitRate: 0,
-        boostConversionRate: 0,
       },
       {
         userName: 'Sara',
@@ -181,7 +167,6 @@ describe('analytics utils', () => {
         podiums: 0,
         averageLeaderDelta: 0,
         totalHitRate: 0,
-        boostConversionRate: 0,
       },
     ]);
 
@@ -198,30 +183,21 @@ describe('analytics utils', () => {
       ],
       trend: [],
       cumulativeTrend: [],
-      boostUsage: {
-        none: 0,
-        first: 0,
-        second: 0,
-        third: 0,
-        pole: 0,
-      },
       pointsByField: {
         first: 0,
         second: 0,
         third: 0,
         pole: 0,
       },
-      boostedWeekends: 0,
-      boostPointsEarned: 0,
       weekendsAboveLeader: 0,
     });
   });
 
-  it('covers tie-breakers, missing predictions and boost-specific branches', () => {
+  it('covers tie-breakers and missing predictions branches', () => {
     const usersWithTie = [
-      { name: 'Adriano', predictions: createEmptyPrediction(), points: 0, weekendBoost: 'none' as const },
-      { name: 'Fabio', predictions: createEmptyPrediction(), points: 0, weekendBoost: 'none' as const },
-      { name: 'Matteo', predictions: createEmptyPrediction(), points: 0, weekendBoost: 'none' as const },
+      { name: 'Adriano', predictions: createEmptyPrediction(), points: 0 },
+      { name: 'Fabio', predictions: createEmptyPrediction(), points: 0 },
+      { name: 'Matteo', predictions: createEmptyPrediction(), points: 0 },
     ];
     const tieHistory = [
       {
@@ -232,17 +208,14 @@ describe('analytics utils', () => {
         userPredictions: {
           Adriano: {
             prediction: { first: 'ver', second: '', third: 'nor', pole: '' },
-            weekendBoost: 'first' as const,
             pointsEarned: 7,
           },
           Fabio: {
             prediction: { first: 'ver', second: '', third: 'nor', pole: '' },
-            weekendBoost: 'pole' as const,
             pointsEarned: 7,
           },
           Matteo: {
             prediction: { first: '', second: '', third: '', pole: '' },
-            weekendBoost: 'none' as const,
             pointsEarned: 0,
           },
         },
@@ -255,12 +228,10 @@ describe('analytics utils', () => {
         userPredictions: {
           Adriano: {
             prediction: { first: 'ham', second: 'ver', third: '', pole: '' },
-            weekendBoost: 'none' as const,
             pointsEarned: 8,
           },
           Fabio: {
             prediction: { first: 'ham', second: 'ver', third: 'pia', pole: 'lec' },
-            weekendBoost: 'pole' as const,
             pointsEarned: 12,
           },
         },
@@ -271,23 +242,18 @@ describe('analytics utils', () => {
     const matteoSummary = summaries.find((entry) => entry.userName === 'Matteo');
     const fabioSummary = summaries.find((entry) => entry.userName === 'Fabio');
     const matteoAnalytics = buildUserAnalytics(tieHistory, 'Matteo');
-    const fabioAnalytics = buildUserAnalytics(tieHistory, 'Fabio');
 
     expect(matteoSummary).toMatchObject({
       averagePosition: 3,
       totalHitRate: 0,
-      boostConversionRate: 0,
     });
     expect(fabioSummary).toMatchObject({
       weekendWins: 1,
-      boostConversionRate: 50,
     });
     expect(matteoAnalytics).toMatchObject({
       mostPickedDriverId: '',
       bestWeekend: { gpName: 'Tie Grand Prix', points: 0 },
       worstWeekend: { gpName: 'Tie Grand Prix B', points: 0 },
-      boostPointsEarned: 0,
-      boostedWeekends: 0,
       weekendsAboveLeader: 0,
     });
     expect(matteoAnalytics.pointsByField).toEqual({
@@ -296,24 +262,16 @@ describe('analytics utils', () => {
       third: 0,
       pole: 0,
     });
-    expect(fabioAnalytics.boostUsage).toEqual({
-      none: 0,
-      first: 0,
-      second: 0,
-      third: 0,
-      pole: 2,
-    });
-    expect(fabioAnalytics.boostPointsEarned).toBe(1);
   });
 
   it('tracks podiums correctly when a fourth player finishes outside the top three', () => {
-    const users = [
-      { name: 'Adriano', predictions: createEmptyPrediction(), points: 0, weekendBoost: 'none' as const },
-      { name: 'Fabio', predictions: createEmptyPrediction(), points: 0, weekendBoost: 'none' as const },
-      { name: 'Matteo', predictions: createEmptyPrediction(), points: 0, weekendBoost: 'none' as const },
-      { name: 'Luca', predictions: createEmptyPrediction(), points: 0, weekendBoost: 'none' as const },
+    const expandedUsers = [
+      { name: 'Adriano', predictions: createEmptyPrediction(), points: 0 },
+      { name: 'Fabio', predictions: createEmptyPrediction(), points: 0 },
+      { name: 'Matteo', predictions: createEmptyPrediction(), points: 0 },
+      { name: 'Luca', predictions: createEmptyPrediction(), points: 0 },
     ];
-    const history = [
+    const expandedHistory = [
       {
         gpName: 'Expanded Grid Grand Prix',
         meetingKey: 'expanded-1',
@@ -328,38 +286,11 @@ describe('analytics utils', () => {
       },
     ];
 
-    const summaries = buildUserKpiSummaries(users, history);
+    const summaries = buildUserKpiSummaries(expandedUsers, expandedHistory);
 
     expect(summaries.find((entry) => entry.userName === 'Luca')).toMatchObject({
       averagePosition: 4,
       podiums: 0,
-    });
-  });
-
-  it('handles boosted entries with missing predictions without crashing and without counting conversion', () => {
-    const users = [
-      { name: 'Adriano', predictions: createEmptyPrediction(), points: 0, weekendBoost: 'none' as const },
-    ];
-    const history = [
-      {
-        gpName: 'Broken Boost Grand Prix',
-        meetingKey: 'broken-1',
-        date: '19/04/2099',
-        results: { first: 'ver', second: 'lec', third: 'nor', pole: 'ham' },
-        userPredictions: {
-          Adriano: {
-            weekendBoost: 'first' as const,
-            pointsEarned: 0,
-          },
-        },
-      },
-    ];
-
-    const [summary] = buildUserKpiSummaries(users, history);
-
-    expect(summary).toMatchObject({
-      boostConversionRate: 0,
-      totalHitRate: 0,
     });
   });
 });

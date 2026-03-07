@@ -1,7 +1,7 @@
 {
   "name": "fantaf1",
   "private": true,
-  "version": "1.3.11",
+  "version": "1.3.12",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -14,7 +14,8 @@
     "preview": "vite preview",
     "test": "vitest run",
     "test:save-local": "node scripts/save-local-check.mjs",
-    "test:ui-responsive": "node scripts/ui-responsive-check.mjs"
+    "test:ui-responsive": "node scripts/ui-responsive-check.mjs",
+    "migrate:remove-weekend-boost": "node scripts/remove-weekend-boost.mjs"
   },
   "dependencies": {
     "cors": "^2.8.6",

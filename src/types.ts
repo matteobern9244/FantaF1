@@ -8,7 +8,6 @@ export interface Driver {
 }
 
 export type PredictionKey = 'first' | 'second' | 'third' | 'pole';
-export type WeekendBoost = PredictionKey | 'none';
 
 export interface Prediction {
   first: string;
@@ -20,8 +19,6 @@ export interface Prediction {
 export interface WeekendPredictionState {
   userPredictions: Record<string, Prediction>;
   raceResults: Prediction;
-  weekendBoostByUser: Record<string, WeekendBoost>;
-  weekendBoostLockedByUser: Record<string, boolean>;
 }
 
 export type WeekendStateByMeetingKey = Record<string, WeekendPredictionState>;
@@ -35,7 +32,6 @@ export interface RaceRecord {
     string,
     {
       prediction: Prediction;
-      weekendBoost?: WeekendBoost;
       pointsEarned: number;
     }
   >;
@@ -66,7 +62,6 @@ export interface UserData {
   name: string;
   predictions: Prediction;
   points: number;
-  weekendBoost?: WeekendBoost;
 }
 
 export interface AppData {
@@ -98,7 +93,6 @@ export interface UserKpiSummary {
   podiums: number;
   averageLeaderDelta: number;
   totalHitRate: number;
-  boostConversionRate: number;
 }
 
 export interface UserFieldAccuracy {
@@ -121,10 +115,7 @@ export interface UserAnalyticsSummary {
   fieldAccuracy: UserFieldAccuracy[];
   trend: UserGpTrendPoint[];
   cumulativeTrend: UserGpTrendPoint[];
-  boostUsage: Record<WeekendBoost, number>;
   pointsByField: Record<PredictionKey, number>;
-  boostedWeekends: number;
-  boostPointsEarned: number;
   weekendsAboveLeader: number;
 }
 

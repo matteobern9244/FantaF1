@@ -32,7 +32,6 @@ import {
   readPersistedParticipantRoster,
   writeAppData,
 } from './backend/storage.js';
-import { getSelectedWeekendState, normalizeWeekendBoost, sanitizeWeekendStateByMeetingKey } from './backend/weekend-state.js';
 import { isRaceLocked, validateParticipants, validatePredictions } from './backend/validation.js';
 import { verifyMongoDatabaseName } from './backend/database.js';
 
@@ -43,7 +42,6 @@ const app = express();
 const runtimeEnvironment = normalizeRuntimeEnvironment(process.env.NODE_ENV);
 const databaseTargetName = determineExpectedMongoDatabaseName(process.env.NODE_ENV);
 const predictionFieldOrder = ['first', 'second', 'third', 'pole'];
-const allowedWeekendBoosts = new Set(['none', 'first', 'second', 'third', 'pole']);
 const participantSlots = Number.isFinite(Number(appConfig.participantSlots))
   ? Number(appConfig.participantSlots)
   : 3;
@@ -78,54 +76,6 @@ function requireAdminSession(req, res) {
   });
 
   return false;
-}
-
-function hasRaceStarted(selectedRace, now = new Date()) {
-  if (!selectedRace) {
-    return false;
-  }
-
-  const startTimeStr =
-    selectedRace.raceStartTime || (selectedRace.endDate ? `${selectedRace.endDate}T14:00:00Z` : null);
-
-  if (!startTimeStr) {
-    return false;
-  }
-
-  const startTime = new Date(startTimeStr.replace(' ', 'T'));
-  if (Number.isNaN(startTime.getTime())) {
-    return false;
-  }
-
-  return now >= startTime;
-}
-
-function updateBoostState(appData, meetingKey, userName, boost, { locked }) {
-  const weekendStateByMeetingKey = sanitizeWeekendStateByMeetingKey(appData.weekendStateByMeetingKey);
-  const selectedWeekendState = getSelectedWeekendState(weekendStateByMeetingKey, meetingKey);
-
-  return {
-    ...appData,
-    selectedMeetingKey: meetingKey,
-    weekendStateByMeetingKey: {
-      ...weekendStateByMeetingKey,
-      [meetingKey]: {
-        ...selectedWeekendState,
-        weekendBoostByUser: {
-          ...selectedWeekendState.weekendBoostByUser,
-          [userName]: normalizeWeekendBoost(boost),
-        },
-        weekendBoostLockedByUser: {
-          ...selectedWeekendState.weekendBoostLockedByUser,
-          [userName]: Boolean(locked),
-        },
-      },
-    },
-  };
-}
-
-function isExplicitValidWeekendBoost(value) {
-  return typeof value === 'string' && allowedWeekendBoosts.has(value.trim());
 }
 
 // 1. Health check route
@@ -309,97 +259,6 @@ app.post(appConfig.api.predictionsPath, async (req, res) => {
     requirePredictions: true,
     routePath: appConfig.api.predictionsPath,
   });
-});
-
-app.post('/api/public-boost', async (req, res) => {
-  try {
-    verifyMongoDatabaseName(mongoose.connection.db?.databaseName, databaseTargetName);
-    const { meetingKey, userName, boost } = req.body ?? {};
-    const normalizedMeetingKey = typeof meetingKey === 'string' ? meetingKey.trim() : '';
-    const normalizedUserName = typeof userName === 'string' ? userName.trim() : '';
-    const normalizedBoost = normalizeWeekendBoost(boost);
-    const currentData = await readAppData();
-
-    if (!normalizedMeetingKey || !normalizedUserName) {
-      return res.status(400).json({ error: 'Invalid boost payload', code: 'public_boost_invalid' });
-    }
-
-    if (!currentData.users.some((user) => user.name === normalizedUserName)) {
-      return res.status(400).json({ error: 'Unknown player', code: 'public_boost_unknown_user' });
-    }
-
-    const calendar = await readCalendarCache();
-    const selectedRace = calendar.find((weekend) => weekend.meetingKey === normalizedMeetingKey);
-    if (hasRaceStarted(selectedRace)) {
-      return res.status(403).json({ error: appConfig.uiText.calendar.raceLocked, code: 'public_boost_locked' });
-    }
-
-    const selectedWeekendState = getSelectedWeekendState(
-      currentData.weekendStateByMeetingKey,
-      normalizedMeetingKey,
-    );
-    if (selectedWeekendState.weekendBoostLockedByUser[normalizedUserName]) {
-      return res.status(409).json({ error: 'Boost already saved', code: 'public_boost_already_locked' });
-    }
-
-    const updatedData = updateBoostState(currentData, normalizedMeetingKey, normalizedUserName, normalizedBoost, {
-      locked: true,
-    });
-
-    await writeAppData(updatedData);
-    res.json({
-      message: 'Boost salvato correttamente.',
-      weekendBoostByUser: updatedData.weekendStateByMeetingKey[normalizedMeetingKey].weekendBoostByUser,
-      weekendBoostLockedByUser:
-        updatedData.weekendStateByMeetingKey[normalizedMeetingKey].weekendBoostLockedByUser,
-    });
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to save public boost', details: error.message });
-  }
-});
-
-app.post('/api/admin/boost', async (req, res) => {
-  try {
-    if (!requireAdminSession(req, res)) {
-      return;
-    }
-
-    verifyMongoDatabaseName(mongoose.connection.db?.databaseName, databaseTargetName);
-    const { meetingKey, userName, boost, locked = true } = req.body ?? {};
-    const normalizedMeetingKey = typeof meetingKey === 'string' ? meetingKey.trim() : '';
-    const normalizedUserName = typeof userName === 'string' ? userName.trim() : '';
-    const currentData = await readAppData();
-    const calendar = await readCalendarCache();
-
-    if (!normalizedMeetingKey) {
-      return res.status(400).json({ error: 'Invalid meeting key', code: 'admin_boost_invalid_meeting' });
-    }
-
-    const selectedRace = calendar.find((weekend) => weekend.meetingKey === normalizedMeetingKey);
-    if (!selectedRace) {
-      return res.status(400).json({ error: 'Unknown meeting key', code: 'admin_boost_unknown_meeting' });
-    }
-
-    if (!currentData.users.some((user) => user.name === normalizedUserName)) {
-      return res.status(400).json({ error: 'Unknown player', code: 'admin_boost_unknown_user' });
-    }
-
-    if (!isExplicitValidWeekendBoost(boost)) {
-      return res.status(400).json({ error: 'Invalid boost value', code: 'admin_boost_invalid_value' });
-    }
-
-    if (Object.hasOwn(req.body ?? {}, 'locked') && typeof locked !== 'boolean') {
-      return res.status(400).json({ error: 'Invalid locked flag', code: 'admin_boost_invalid_locked' });
-    }
-
-    const updatedData = updateBoostState(currentData, normalizedMeetingKey, normalizedUserName, boost, {
-      locked,
-    });
-    await writeAppData(updatedData);
-    res.json({ message: 'Boost admin aggiornato correttamente.' });
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to save admin boost', details: error.message });
-  }
 });
 
 const distPath = path.join(__dirname, 'dist');

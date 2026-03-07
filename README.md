@@ -9,7 +9,6 @@ L'applicazione e' pensata per un flusso amministrato: un admin seleziona il week
 - Lo stato di gioco mantiene sempre esattamente 3 partecipanti.
 - I nomi dei partecipanti sono data-driven: backend e UI usano il roster gia' persistito nel database, senza nomi hardcoded a runtime.
 - I pronostici prevedono 4 campi per ogni utente: primo, secondo, terzo e pole oppure vincitore Sprint.
-- Ogni utente puo' impostare un `Weekend Boost` su uno dei 4 campi; se il campo boostato e' corretto, i punti di quel solo campo raddoppiano.
 - Il salvataggio manuale dei pronostici richiede almeno un campo compilato. Lo stato "tutti vuoti" non e' valido per `Salva dati inseriti`, mentre uno stato completamente compilato e' consentito.
 - Il backend blocca le modifiche ai pronostici dopo l'inizio ufficiale della gara del weekend selezionato.
 - La conferma dei risultati e l'assegnazione punti sono possibili solo quando la gara e' considerata conclusa e tutti i risultati reali sono presenti.
@@ -33,16 +32,6 @@ Il flusso previsto e' questo:
 3. si salva lo stato corrente con `Salva dati inseriti`;
 4. a gara conclusa si inseriscono o si recuperano i risultati reali;
 5. si confermano i risultati per consolidare i punti nello storico.
-
-### Weekend Boost
-
-Per ogni weekend ogni giocatore puo' associare un boost a uno tra `first`, `second`, `third` o `pole`, oppure lasciarlo su `none`.
-
-- In area pubblica il boost e' impostabile una sola volta per giocatore e weekend.
-- Dopo il primo salvataggio il boost del giocatore resta bloccato lato pubblico e puo' essere modificato solo dall'admin.
-- L'admin puo' sempre impostare, modificare o resettare qualsiasi boost.
-- Se il campo boostato e' corretto, il punteggio di quel solo campo viene raddoppiato.
-- Se il campo boostato e' errato, non ci sono penalita'.
 
 ### Validazione salvataggio pronostici
 
@@ -208,7 +197,6 @@ Se il database non contiene ancora stato applicativo, il backend costruisce uno 
 ### Logica di gioco
 
 - Configurazione punteggi centralizzata: 5 punti primo, 3 punti secondo, 2 punti terzo, 1 punto pole/Sprint.
-- `Weekend Boost` persistito per utente e weekend, con raddoppio dei soli punti del campo boostato quando il match e' corretto.
 - Race lock server-side basato su `raceStartTime`, con fallback a `endDate + 14:00:00Z` se l'orario non e' disponibile.
 - Fine gara stimata a `raceStartTime + 2.5h` per abilitare l'assegnazione definitiva dei punti; il recupero ufficiale live dei risultati puo' iniziare prima ma resta read-only.
 - Reset dei pronostici correnti con salvataggio persistente immediato.
@@ -350,27 +338,6 @@ Comportamenti rilevanti:
 - `403` se la gara e' iniziata e i pronostici correnti vengono modificati;
 - `500` in caso di errore persistente di salvataggio.
 
-### `POST /api/public-boost`
-
-Permette a un giocatore di salvare pubblicamente il proprio `Weekend Boost` per il weekend selezionato.
-
-Comportamenti rilevanti:
-
-- `400` se `meetingKey`, `userName` o `boost` non sono validi;
-- `400` se quel giocatore ha gia' lockato il boost per quel weekend;
-- `403` se il weekend e' gia' lockato dalla gara;
-- persiste `weekendBoostByUser` e `weekendBoostLockedByUser` nel DB corrente.
-
-### `POST /api/admin/boost`
-
-Endpoint admin-only per override completo del `Weekend Boost`.
-
-Comportamenti rilevanti:
-
-- valida `meetingKey`, `userName`, `boost` e `locked`;
-- l'admin puo' modificare anche boost gia' lockati lato pubblico;
-- il salvataggio viene accettato solo se il weekend richiesto esiste davvero ed e' stato persistito correttamente.
-
 ### `GET /api/drivers`
 
 Restituisce il roster piloti ordinato alfabeticamente lato backend.
@@ -408,7 +375,6 @@ Ogni utente contiene:
 - `name`
 - `predictions`
 - `points`
-- `weekendBoost`
 
 Ogni record storico contiene:
 
@@ -421,7 +387,6 @@ Ogni record storico contiene:
 Ogni `userPredictions[name]` storico contiene:
 
 - `prediction`
-- `weekendBoost`
 - `pointsEarned`
 
 ### Weekend di gara
@@ -441,8 +406,6 @@ Ogni weekend puo' includere:
 - `endDate`
 - `raceStartTime`
 - `sessions`
-- `weekendBoostByUser`
-- `weekendBoostLockedByUser`
 
 ## Variabili ambiente
 
@@ -550,6 +513,7 @@ Lo script integrato:
 - `npm run test:ui-responsive`
 - `npm run build`
 - `npm run preview`
+- `npm run migrate:remove-weekend-boost`
 
 ### Lint
 
@@ -578,6 +542,7 @@ Include anche test unitari dedicati allo split deterministico del titolo hero e 
 Include test dedicati alla live projection del weekend selezionato, agli stati UI `nessun risultato ufficiale` / `risultati parziali`, al parser risultati Formula1.com corrente e alla cache TTL di `GET /api/results/:meetingKey`.
 Per la UI e' disponibile anche `npm run test:ui-responsive`, che usa Playwright CLI via `npx` contro l'app locale avviata e verifica i breakpoint principali, il box "Prossimo weekend", il tooltip risultati e l'assenza di overflow orizzontali fuori dal carosello calendario.
 Per il salvataggio locale e' disponibile `npm run test:save-local`, che legge `/api/data`, re-invia lo stesso payload su `POST /api/data`, verifica `environment=development`, `databaseTarget=fantaf1_dev` e controlla che lo stato resti invariato dopo il round-trip. Questo smoke test copre il canale di persistenza generica, non il salvataggio manuale dei pronostici su `POST /api/predictions`.
+Per ripulire documenti legacy che contengono ancora campi del `Weekend Boost` e' disponibile `npm run migrate:remove-weekend-boost`, script idempotente che riscrive gli `AppData` del database corrente in forma sanificata.
 
 ## Struttura del repository
 
@@ -586,7 +551,7 @@ Per il salvataggio locale e' disponibile `npm run test:save-local`, che legge `/
 - `app.js`: definizione dell'applicazione Express per il testing.
 - `server.js`: entry point per l'avvio del server.
 - `config/`: configurazione applicativa centralizzata.
-- `scripts/`: launcher locale.
+- `scripts/`: launcher locale e migrazioni operative one-shot.
 - `tests/`: test unitari e fixture HTML.
 - `public/`: font e asset statici serviti dal frontend.
 

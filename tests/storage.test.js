@@ -112,16 +112,6 @@ describe('storage sanitization', () => {
         third: '',
         pole: '',
       },
-      weekendBoostByUser: {
-        'TestUser 3': 'none',
-        'TestUser 2': 'none',
-        'TestUser 1': 'none',
-      },
-      weekendBoostLockedByUser: {
-        'TestUser 3': false,
-        'TestUser 2': false,
-        'TestUser 1': false,
-      },
     });
     expect(sanitized).not.toHaveProperty('drivers');
     expect(sanitized).not.toHaveProperty('calendar');

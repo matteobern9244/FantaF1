@@ -202,19 +202,16 @@ describe('MongoDB Storage Functions', () => {
           name: 'Unknown',
           predictions: { first: '', second: 'ham', third: '', pole: '' },
           points: 0,
-          weekendBoost: 'none',
         },
         {
           name: 'Valid User',
           predictions: { first: 'ver', second: '', third: '', pole: '' },
           points: 7,
-          weekendBoost: 'none',
         },
         {
           name: 'Player 3',
           predictions: { first: '', second: '', third: '', pole: '' },
           points: 0,
-          weekendBoost: 'none',
         },
       ]);
       expect(data.history[0].userPredictions['Player 1'].pointsEarned).toBe(0);
@@ -225,16 +222,6 @@ describe('MongoDB Storage Functions', () => {
           'Player 3': { first: '', second: '', third: '', pole: '' },
         },
         raceResults: { first: '', second: '', third: '', pole: '' },
-        weekendBoostByUser: {
-          Unknown: 'none',
-          'Valid User': 'none',
-          'Player 3': 'none',
-        },
-        weekendBoostLockedByUser: {
-          Unknown: false,
-          'Valid User': false,
-          'Player 3': false,
-        },
       });
     });
 

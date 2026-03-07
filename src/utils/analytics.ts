@@ -6,9 +6,7 @@ import type {
   UserGpTrendPoint,
   UserKpiSummary,
   UserData,
-  WeekendBoost,
 } from '../types';
-import { calculatePointsBreakdown, normalizeWeekendBoost } from './game';
 
 const trackedFields: PredictionKey[] = ['first', 'second', 'third', 'pole'];
 
@@ -64,21 +62,6 @@ function buildUserKpiSummaries(users: UserData[], history: RaceRecord[]): UserKp
         return fieldSum + (prediction?.[field] && prediction[field] === record.results[field] ? 1 : 0);
       }, 0);
     }, 0);
-    const boostConversionRate = history.reduce((sum, record) => {
-      const entry = record.userPredictions[user.name];
-      const boost = normalizeWeekendBoost(entry?.weekendBoost);
-      if (boost === 'none') {
-        return sum;
-      }
-
-      const breakdown = calculatePointsBreakdown(entry?.prediction ?? { first: '', second: '', third: '', pole: '' }, record.results, {
-        first: 5,
-        second: 3,
-        third: 2,
-        pole: 1,
-      }, boost);
-      return sum + (breakdown.boostBonus > 0 ? 1 : 0);
-    }, 0);
     const totalLeaderDelta = history.reduce((sum, record, index) => {
       const userPoints = record.userPredictions[user.name]?.pointsEarned ?? 0;
       return sum + (leaderScores[index] - userPoints);
@@ -95,7 +78,6 @@ function buildUserKpiSummaries(users: UserData[], history: RaceRecord[]): UserKp
       podiums,
       averageLeaderDelta: raceCount > 0 ? roundTo(totalLeaderDelta / raceCount, 2) : 0,
       totalHitRate: totalPossibleHits > 0 ? Math.round((totalHits / totalPossibleHits) * 100) : 0,
-      boostConversionRate: raceCount > 0 ? Math.round((boostConversionRate / raceCount) * 100) : 0,
     };
   });
 }
@@ -166,22 +148,6 @@ function buildCumulativeTrend(trend: UserGpTrendPoint[]) {
   });
 }
 
-function buildBoostUsage(userName: string, history: RaceRecord[]) {
-  const usage = {
-    none: 0,
-    first: 0,
-    second: 0,
-    third: 0,
-    pole: 0,
-  } as Record<WeekendBoost, number>;
-
-  history.forEach((record) => {
-    usage[normalizeWeekendBoost(record.userPredictions[userName]?.weekendBoost)] += 1;
-  });
-
-  return usage;
-}
-
 function buildPointsByField(userName: string, history: RaceRecord[]) {
   const pointsByField = {
     first: 0,
@@ -221,24 +187,7 @@ function buildUserAnalytics(history: RaceRecord[], userName: string): UserAnalyt
     fieldAccuracy: buildFieldAccuracy(userName, history),
     trend,
     cumulativeTrend,
-    boostUsage: buildBoostUsage(userName, history),
     pointsByField: buildPointsByField(userName, history),
-    boostedWeekends: history.filter(
-      (record) => normalizeWeekendBoost(record.userPredictions[userName]?.weekendBoost) !== 'none',
-    ).length,
-    boostPointsEarned: history.reduce((sum, record) => {
-      const entry = record.userPredictions[userName];
-      if (!entry) {
-        return sum;
-      }
-
-      return sum + calculatePointsBreakdown(entry.prediction, record.results, {
-        first: 5,
-        second: 3,
-        third: 2,
-        pole: 1,
-      }, normalizeWeekendBoost(entry.weekendBoost)).boostBonus;
-    }, 0),
     weekendsAboveLeader: history.reduce((sum, record) => {
       const leaderScore = Math.max(...Object.values(record.userPredictions).map((entry) => entry.pointsEarned), 0);
       return sum + ((record.userPredictions[userName]?.pointsEarned ?? 0) === leaderScore ? 1 : 0);

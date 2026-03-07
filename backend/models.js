@@ -11,7 +11,6 @@ const UserSchema = new mongoose.Schema({
   name: { type: String, required: true },
   predictions: { type: PredictionSchema, default: () => ({}) },
   points: { type: Number, default: 0 },
-  weekendBoost: { type: String, default: 'none' },
 });
 
 const WeekendPredictionStateSchema = new mongoose.Schema(
@@ -22,16 +21,6 @@ const WeekendPredictionStateSchema = new mongoose.Schema(
       default: () => ({}),
     },
     raceResults: { type: PredictionSchema, default: () => ({}) },
-    weekendBoostByUser: {
-      type: Map,
-      of: String,
-      default: () => ({}),
-    },
-    weekendBoostLockedByUser: {
-      type: Map,
-      of: Boolean,
-      default: () => ({}),
-    },
   },
   { _id: false },
 );
@@ -45,7 +34,6 @@ const RaceResultSchema = new mongoose.Schema({
     type: Map,
     of: new mongoose.Schema({
       prediction: PredictionSchema,
-      weekendBoost: { type: String, default: 'none' },
       pointsEarned: { type: Number, default: 0 },
     }, { _id: false }),
     default: () => ({}),
