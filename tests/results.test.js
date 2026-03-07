@@ -86,7 +86,7 @@ describe('fetchRaceResults', () => {
     vi.mocked(storage.readCalendarCache).mockResolvedValue(mockCalendar);
 
     global.fetch = vi.fn((url) => {
-      if (url.includes('race-result')) {
+      if (url === 'https://www.formula1.com/en/results/2026/races/1234/test-gp/race-result') {
         return Promise.resolve({
           ok: true,
           text: () =>
@@ -99,7 +99,7 @@ describe('fetchRaceResults', () => {
             ),
         });
       }
-      if (url.includes('qualifying')) {
+      if (url === 'https://www.formula1.com/en/results/2026/races/1234/test-gp/qualifying') {
         return Promise.resolve({
           ok: true,
           text: () =>
@@ -122,6 +122,16 @@ describe('fetchRaceResults', () => {
       third: 'lec',
       pole: 'pia',
     });
+    expect(global.fetch).toHaveBeenNthCalledWith(
+      1,
+      'https://www.formula1.com/en/results/2026/races/1234/test-gp/race-result',
+      expect.any(Object),
+    );
+    expect(global.fetch).toHaveBeenNthCalledWith(
+      2,
+      'https://www.formula1.com/en/results/2026/races/1234/test-gp/qualifying',
+      expect.any(Object),
+    );
   });
 
   it('uses sprint-results as the bonus source during sprint weekends', async () => {
@@ -135,7 +145,7 @@ describe('fetchRaceResults', () => {
     ]);
 
     global.fetch = vi.fn((url) => {
-      if (url.includes('race-result')) {
+      if (url === 'https://www.formula1.com/en/results/2026/races/1280/china/race-result') {
         return Promise.resolve({
           ok: true,
           text: () =>
@@ -149,7 +159,7 @@ describe('fetchRaceResults', () => {
         });
       }
 
-      if (url.includes('sprint-results')) {
+      if (url === 'https://www.formula1.com/en/results/2026/races/1280/china/sprint-results') {
         return Promise.resolve({
           ok: true,
           text: () =>
@@ -166,6 +176,16 @@ describe('fetchRaceResults', () => {
       third: 'lec',
       pole: 'ver',
     });
+    expect(global.fetch).toHaveBeenNthCalledWith(
+      1,
+      'https://www.formula1.com/en/results/2026/races/1280/china/race-result',
+      expect.any(Object),
+    );
+    expect(global.fetch).toHaveBeenNthCalledWith(
+      2,
+      'https://www.formula1.com/en/results/2026/races/1280/china/sprint-results',
+      expect.any(Object),
+    );
   });
 
   it('returns empty fields when the official page reports no results available yet', async () => {

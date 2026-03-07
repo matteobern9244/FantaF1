@@ -996,6 +996,17 @@ select:focus {
   padding: 8px 0;
 }
 
+.driver-spotlight .spotlight-row > span {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.driver-spotlight .spotlight-row strong {
+  flex: 0 0 auto;
+  white-space: nowrap;
+  text-align: right;
+}
+
 .rule-row {
   border-bottom: 1px solid rgba(255, 255, 255, 0.04);
 }
@@ -1152,6 +1163,11 @@ select:focus {
   .live-row {
     align-items: flex-start;
     flex-direction: column;
+  }
+
+  .driver-spotlight .spotlight-row strong {
+    white-space: normal;
+    text-align: left;
   }
 
   .secondary-button,

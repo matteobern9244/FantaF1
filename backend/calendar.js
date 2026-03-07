@@ -78,6 +78,21 @@ function setCachedRaceResults(meetingKey, results) {
   return { ...results };
 }
 
+function buildOfficialResultsBaseUrl(detailUrl = '', meetingKey = '') {
+  const trimmedDetailUrl = String(detailUrl).replace(/\/+$/, '');
+  const trimmedMeetingKey = String(meetingKey).trim();
+  const detailMatch = trimmedDetailUrl.match(
+    /^https:\/\/www\.formula1\.com\/en\/racing\/(\d{4})\/([^/?#]+)$/i,
+  );
+
+  if (!detailMatch || !trimmedMeetingKey) {
+    return '';
+  }
+
+  const [, year, slug] = detailMatch;
+  return `https://www.formula1.com/en/results/${year}/races/${trimmedMeetingKey}/${slug}`;
+}
+
 function extractResultsTable(rawContent) {
   if (/No results available/i.test(rawContent)) {
     return '';
@@ -492,10 +507,17 @@ async function fetchRaceResults(meetingKey) {
     throw new Error('Race not found in calendar');
   }
 
-  const resultsUrl = race.detailUrl.replace(/\/racing\/\d{4}\//, (match) => match.replace('racing', 'results')) + '/race-result';
-  const poleUrl = race.isSprintWeekend 
-    ? race.detailUrl.replace(/\/racing\/\d{4}\//, (match) => match.replace('racing', 'results')) + '/sprint-results'
-    : race.detailUrl.replace(/\/racing\/\d{4}\//, (match) => match.replace('racing', 'results')) + '/qualifying';
+  const resultsBaseUrl = buildOfficialResultsBaseUrl(race.detailUrl, race.meetingKey);
+
+  /* v8 ignore next 3 */
+  if (!resultsBaseUrl) {
+    throw new Error('Race results URL could not be derived from calendar data');
+  }
+
+  const resultsUrl = `${resultsBaseUrl}/race-result`;
+  const poleUrl = race.isSprintWeekend
+    ? `${resultsBaseUrl}/sprint-results`
+    : `${resultsBaseUrl}/qualifying`;
 
   try {
     const [raceHtml, poleHtml] = await Promise.all([

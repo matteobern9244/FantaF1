@@ -2,7 +2,7 @@
  * @vitest-environment jsdom
  */
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import React from 'react';
 import App from '../src/App';
 
@@ -185,6 +185,10 @@ function getLiveRows() {
   }));
 }
 
+function getSelectedRaceHeroCard() {
+  return document.querySelector('.driver-spotlight')?.closest('section') ?? null;
+}
+
 describe('Live projection UI', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -247,6 +251,12 @@ describe('Live projection UI', () => {
       { name: 'Matteo', score: '11' },
       { name: 'Adriano', score: '7' },
     ]);
+    const selectedRaceHeroCard = getSelectedRaceHeroCard();
+    expect(selectedRaceHeroCard).not.toBeNull();
+    expect(within(selectedRaceHeroCard as HTMLElement).getByText('Oscar Piastri')).toBeInTheDocument();
+    expect(
+      within(selectedRaceHeroCard as HTMLElement).queryByText('Piastri Oscar'),
+    ).not.toBeInTheDocument();
   });
 
   it('fetches the selected weekend results before race finish and updates projections plus live standings', async () => {

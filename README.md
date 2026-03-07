@@ -186,6 +186,7 @@ Se il database non contiene ancora stato applicativo, il backend costruisce uno 
 - Classifica live calcolata come punti storici piu' proiezione del weekend selezionato, con stato esplicito per risultati ufficiali assenti o parziali.
 - Calendario stagionale con selettore e strip orizzontale dei weekend.
 - Griglia pronostici per i 3 partecipanti con selezione piloti ordinati per cognome e visualizzati come `Cognome Nome`.
+- Hero results card del weekend selezionato con nomi pilota visualizzati come `Nome Cognome`; dropdown e liste di selezione restano invece in formato `Cognome Nome`.
 - Sezione risultati del weekend con track map, recupero automatico read-only dei risultati ufficiali, merge solo dei campi mancanti e pulsante conferma con tooltip di stato.
 - Storico gare modificabile con ricalcolo dei punteggi.
 - Loader tematico "Pit Stop", font F1 vendorizzati localmente e layout responsive desktop/mobile.
@@ -262,7 +263,7 @@ L'applicazione di questi standard garantisce un approccio "production-safe" e un
 ### Risultati gara
 
 - Endpoint interno: `GET /api/results/:meetingKey`.
-- Il backend costruisce gli URL risultati Formula1.com a partire dal `detailUrl` del weekend salvato in cache.
+- Il backend costruisce gli URL risultati Formula1.com a partire da `detailUrl` e `meetingKey` del weekend salvato in cache, usando il formato `.../results/<year>/races/<meetingKey>/<slug>/...`.
 - Per weekend standard recupera gara e qualifying.
 - Per weekend Sprint recupera gara e sprint-results.
 - Il parser legge la tabella HTML corrente di Formula1.com ed estrae 1°, 2°, 3° e bonus pole/Sprint dalle prime righe ufficiali disponibili.

@@ -961,9 +961,7 @@ function App() {
                     <div key={`hero-spotlight-${field}`} className="spotlight-row">
                       <span>{resultLabels[field]}</span>
                       <strong>
-                        {driver
-                          ? formatDriverDisplayName(driver.name)
-                          : uiText.placeholders.emptyOption}
+                        {driver ? driver.name : uiText.placeholders.emptyOption}
                       </strong>
                     </div>
                   );

@@ -6,6 +6,13 @@ Cronologia sintetica delle release documentate del progetto Fanta Formula 1.
 
 - Nessuna modifica documentata.
 
+## v1.3.9
+
+- **Recupero Risultati Ufficiali Riallineato per Tutti i Weekend**: `GET /api/results/:meetingKey` costruisce ora gli URL Formula1.com nel formato canonico `.../results/<year>/races/<meetingKey>/<slug>/...`, cosi' qualifying, race-result e sprint-results tornano ad aggiornarsi correttamente anche per i weekend futuri.
+- **Riepilogo Risultati Hero Piu' Leggibile**: Nel riquadro dei risultati del weekend selezionato i piloti sono mostrati come `Nome Cognome`, mantenuti su una sola riga quando il viewport desktop lo consente e con fallback responsive sicuro su mobile.
+- **Regressioni Coperte da Test Mirati**: Estesi i test backend sugli URL ufficiali esatti di Formula1.com e i test UI sul hero card dei risultati selezionati, mantenendo invariato il formato `Cognome Nome` nel resto dell'app.
+- **Release Validation Completa**: Validati `lint`, suite `vitest`, `build`, `test:ui-responsive` e `test:save-local` sullo stack locale di sviluppo prima della preparazione della release `v1.3.9`.
+
 ## v1.3.8
 
 - **Sincronizzazione Pronostici per Weekend**: I pronostici e i risultati correnti vengono ora persistiti per `meetingKey` tramite `weekendStateByMeetingKey`, cosi' il cambio weekend riallinea subito tutta la UI al draft corretto del weekend selezionato.
