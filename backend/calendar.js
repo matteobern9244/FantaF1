@@ -18,8 +18,8 @@ const MONTH_INDEX = {
 const RACE_RESULTS_CACHE_TTL_MS = 30_000;
 const raceResultsCache = new Map();
 
-function decodeHtmlEntities(value) {
-  return String(value ?? '')
+function decodeHtmlEntities(value = '') {
+  return String(value)
     .replaceAll('&amp;', '&')
     .replaceAll('&quot;', '"')
     .replaceAll('&#39;', "'")
@@ -27,8 +27,8 @@ function decodeHtmlEntities(value) {
     .replaceAll('&nbsp;', ' ');
 }
 
-function normalizeText(value) {
-  return decodeHtmlEntities(String(value ?? '').replace(/<[^>]+>/g, ' '))
+function normalizeText(value = '') {
+  return decodeHtmlEntities(String(value).replace(/<[^>]+>/g, ' '))
     .replace(/\s+/g, ' ')
     .trim();
 }
@@ -158,8 +158,8 @@ function normalizeDateRangeLabel(value) {
     .replace(/\b([A-Za-z]{3})\b/g, (match) => match.toUpperCase());
 }
 
-function extractTextFragments(value) {
-  return [...String(value ?? '').matchAll(/>([^<>]+)</g)]
+function extractTextFragments(value = '') {
+  return [...String(value).matchAll(/>([^<>]+)</g)]
     .map((match) => normalizeText(match[1]))
     .filter(Boolean);
 }
@@ -226,7 +226,7 @@ function parseSeasonCalendarPage(rawContent, year = currentYear) {
 
   for (const match of rawContent.matchAll(anchorPattern)) {
     const [anchorHtml, href] = match;
-    const slug = href.split('/').at(-1) ?? '';
+    const slug = href.split('/').at(-1);
     if (!slug || slug.startsWith('pre-season-testing')) {
       continue;
     }
@@ -417,13 +417,13 @@ async function syncCalendarFromOfficialSource({
               detailHtml,
               weekend.meetingName,
               weekend.meetingKey,
-              weekend.endDate || weekend.startDate,
+              weekend.endDate,
             );
 
             return {
               ...weekend,
-              meetingKey: detailData.meetingKey || weekend.meetingKey,
-              grandPrixTitle: detailData.grandPrixTitle || weekend.grandPrixTitle,
+              meetingKey: detailData.meetingKey,
+              grandPrixTitle: detailData.grandPrixTitle,
               heroImageUrl: detailData.heroImageUrl || weekend.heroImageUrl,
               trackOutlineUrl: detailData.trackOutlineUrl || weekend.trackOutlineUrl,
               isSprintWeekend: detailData.isSprintWeekend,

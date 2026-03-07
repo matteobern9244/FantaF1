@@ -37,7 +37,6 @@ export function splitHeroTitle(title: string, baseTitle: string): HeroTitleLines
 
   return {
     primaryLine: normalizedBaseTitle,
-    secondaryLine: prefixedTitleMatch[1].trim() || null,
+    secondaryLine: prefixedTitleMatch[1].trim(),
   };
 }
-

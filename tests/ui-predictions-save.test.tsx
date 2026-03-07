@@ -44,6 +44,7 @@ function createAppData(predictions) {
     gpName: '',
     raceResults: createEmptyPrediction(),
     selectedMeetingKey: '',
+    weekendStateByMeetingKey: {},
   };
 }
 

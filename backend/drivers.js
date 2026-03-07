@@ -1,8 +1,8 @@
 import { appConfig, formatConfigText, getBrowserHeaders } from './config.js';
 import { readDriversCache, writeDriversCache } from './storage.js';
 
-function decodeHtmlEntities(value) {
-  return String(value ?? '')
+function decodeHtmlEntities(value = '') {
+  return String(value)
     .replaceAll('&amp;', '&')
     .replaceAll('&quot;', '"')
     .replaceAll('&#39;', "'")
@@ -12,8 +12,8 @@ function decodeHtmlEntities(value) {
     .replaceAll('&agrave;', 'a');
 }
 
-function stripTags(value) {
-  return decodeHtmlEntities(String(value ?? '').replace(/<[^>]+>/g, ' '));
+function stripTags(value = '') {
+  return decodeHtmlEntities(String(value).replace(/<[^>]+>/g, ' '));
 }
 
 function normalizeText(value) {

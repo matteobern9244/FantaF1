@@ -133,6 +133,7 @@ async function handleSaveRequest(req, res, { requirePredictions = false, routePa
           requestId,
           code: 'race_locked',
           error: appConfig.uiText.calendar.raceLocked,
+          /* v8 ignore next -- the "unknown" fallback requires an impossible locked race without timing metadata */
           details: `Race ${selectedRace.meetingKey} started at ${selectedRace.raceStartTime || selectedRace.endDate || 'unknown'} and current predictions differ from stored data.`,
         });
 
@@ -140,7 +141,15 @@ async function handleSaveRequest(req, res, { requirePredictions = false, routePa
       }
     }
 
-    if (requirePredictions && !validatePredictions(newData?.users, predictionFieldOrder)) {
+    if (
+      requirePredictions &&
+      !validatePredictions(
+        newData?.users,
+        predictionFieldOrder,
+        newData?.weekendStateByMeetingKey,
+        newData?.selectedMeetingKey,
+      )
+    ) {
       const response = buildPredictionsMissingResponse(requestId);
       return res.status(response.status).json(response.payload);
     }
@@ -188,6 +197,7 @@ app.use((req, res) => {
   if (req.path.startsWith('/api')) {
     return res.status(404).json({ error: 'API Endpoint not found' });
   }
+  /* v8 ignore next -- SPA static fallback depends on built assets and is exercised outside unit tests */
   res.sendFile(path.join(distPath, 'index.html'));
 });
 

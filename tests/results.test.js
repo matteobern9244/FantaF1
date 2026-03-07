@@ -1,5 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { clearRaceResultsCache, fetchRaceResults } from '../backend/calendar.js';
+import {
+  clearRaceResultsCache,
+  fetchRaceResults,
+  parseDateRangeLabel,
+  parseSeasonCalendarPage,
+} from '../backend/calendar.js';
 import * as storage from '../backend/storage.js';
 
 vi.mock('../backend/storage.js', () => ({
@@ -50,6 +55,14 @@ function buildResultsTable(rows) {
       <tbody>
         ${rows.join('')}
       </tbody>
+    </table>
+  `;
+}
+
+function buildTableWithoutTbody(rows) {
+  return `
+    <table class="Table-module_table__cKsW2">
+      ${rows.join('')}
     </table>
   `;
 }
@@ -226,8 +239,158 @@ describe('fetchRaceResults', () => {
     expect(global.fetch).toHaveBeenCalledTimes(2);
   });
 
+  it('normalizes full driver names, skips malformed rows and refreshes expired cache entries', async () => {
+    vi.mocked(storage.readCalendarCache).mockResolvedValue([
+      {
+        meetingKey: 'alias-race',
+        meetingName: 'Alias GP',
+        detailUrl: 'https://www.formula1.com/en/racing/2026/alias-gp',
+        isSprintWeekend: false,
+      },
+    ]);
+
+    const raceHtml = buildTableWithoutTbody([
+      '<tr><td>1</td><td>4</td></tr>',
+      '<tr><td>1</td><td>99</td><td>Mystery Racer</td></tr>',
+      '<tr><td>2</td><td>23</td><td>Alex Albon</td></tr>',
+      '<tr><td>3</td><td>87</td><td>Ollie Bearman</td></tr>',
+      '<tr><td>4</td><td>16</td><td>Charles Leclerc</td></tr>',
+    ]);
+    const qualifyingHtml = buildTableWithoutTbody([
+      '<tr><td>1</td><td>23</td><td>Alex Albon</td></tr>',
+    ]);
+
+    global.fetch = vi.fn((url) => {
+      if (url.includes('race-result')) {
+        return Promise.resolve({
+          ok: true,
+          text: () => Promise.resolve(raceHtml),
+        });
+      }
+
+      if (url.includes('qualifying')) {
+        return Promise.resolve({
+          ok: true,
+          text: () => Promise.resolve(qualifyingHtml),
+        });
+      }
+
+      return Promise.reject(new Error('Unknown URL'));
+    });
+
+    const nowSpy = vi.spyOn(Date, 'now');
+    nowSpy.mockReturnValue(0);
+
+    await expect(fetchRaceResults('alias-race')).resolves.toEqual({
+      first: '',
+      second: 'alb',
+      third: 'bea',
+      pole: 'alb',
+    });
+
+    nowSpy.mockReturnValue(31_000);
+
+    await fetchRaceResults('alias-race');
+
+    expect(global.fetch).toHaveBeenCalledTimes(4);
+    nowSpy.mockRestore();
+  });
+
   it('throws error if race is not found', async () => {
     vi.mocked(storage.readCalendarCache).mockResolvedValue([]);
     await expect(fetchRaceResults('9999')).rejects.toThrow('Race not found');
+  });
+
+  it('parses plain fallback tables and ignores result pages without any table markup', async () => {
+    vi.mocked(storage.readCalendarCache).mockResolvedValue([
+      {
+        meetingKey: 'fallback-table',
+        meetingName: 'Fallback Table GP',
+        detailUrl: 'https://www.formula1.com/en/racing/2026/fallback-table',
+        isSprintWeekend: false,
+      },
+    ]);
+
+    global.fetch = vi.fn((url) => {
+      if (url.includes('race-result')) {
+        return Promise.resolve({
+          ok: true,
+          text: () =>
+            Promise.resolve(
+              `
+                <table>
+                  <tbody>
+                    <tr><td>1</td><td>4</td><td>Lando Norris</td></tr>
+                    <tr><td>2</td><td>1</td><td>Max Verstappen</td></tr>
+                    <tr><td>3</td><td>16</td><td>Charles Leclerc</td></tr>
+                  </tbody>
+                </table>
+              `,
+            ),
+        });
+      }
+
+      if (url.includes('qualifying')) {
+        return Promise.resolve({
+          ok: true,
+          text: () => Promise.resolve('<section>Results not published yet</section>'),
+        });
+      }
+
+      return Promise.reject(new Error('Unknown URL'));
+    });
+
+    await expect(fetchRaceResults('fallback-table')).resolves.toEqual({
+      first: 'nor',
+      second: 'ver',
+      third: 'lec',
+      pole: '',
+    });
+  });
+
+  it('handles empty date fragments, missing images and fallback hero images when parsing the season page', () => {
+    const year = new Date().getFullYear();
+
+    expect(parseDateRangeLabel(undefined, year)).toEqual({
+      startDate: '',
+      endDate: '',
+    });
+
+    const calendar = parseSeasonCalendarPage(
+      `
+        <a href="/en/racing/${year}/pre-season-testing">
+          <span>ROUND 0</span>
+          <span>Ignored</span>
+        </a>
+        <a href="/en/racing/${year}/monaco">
+          <span>ROUND 7</span>
+          <span>Monaco</span>
+          <img src="https://example.com/monaco-fallback.webp" />
+        </a>
+        <a href="/en/racing/${year}/spa">
+          <span>ROUND 8</span>
+          <span>Spa</span>
+        </a>
+      `,
+      year,
+    );
+
+    expect(calendar).toEqual([
+      expect.objectContaining({
+        meetingKey: 'monaco',
+        meetingName: 'Monaco',
+        grandPrixTitle: `Monaco Grand Prix ${year}`,
+        dateRangeLabel: '',
+        heroImageUrl: 'https://example.com/monaco-fallback.webp',
+        startDate: '',
+        endDate: '',
+      }),
+      expect.objectContaining({
+        meetingKey: 'spa',
+        meetingName: 'Spa',
+        grandPrixTitle: `Spa Grand Prix ${year}`,
+        heroImageUrl: '',
+      }),
+    ]);
   });
 });

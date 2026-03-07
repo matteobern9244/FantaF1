@@ -1,14 +1,14 @@
 import { AppData, Driver, Weekend } from './models.js';
 import { appConfig } from './config.js';
-
-function createEmptyPrediction() {
-  return {
-    first: '',
-    second: '',
-    third: '',
-    pole: '',
-  };
-}
+import {
+  buildWeekendStateFromUsers,
+  createEmptyPrediction,
+  getSelectedWeekendState,
+  hydrateUsersForSelectedWeekend,
+  sanitizePrediction,
+  sanitizeWeekendStateByMeetingKey,
+  upsertSelectedWeekendState,
+} from './weekend-state.js';
 
 function createInitialUsers() {
   return appConfig.participants.map((name) => ({
@@ -16,15 +16,6 @@ function createInitialUsers() {
     predictions: createEmptyPrediction(),
     points: 0,
   }));
-}
-
-function sanitizePrediction(value) {
-  return {
-    first: typeof value?.first === 'string' ? value.first : '',
-    second: typeof value?.second === 'string' ? value.second : '',
-    third: typeof value?.third === 'string' ? value.third : '',
-    pole: typeof value?.pole === 'string' ? value.pole : '',
-  };
 }
 
 function sanitizeUser(user, fallbackName) {
@@ -146,10 +137,11 @@ function createDefaultAppData(calendar = []) {
     gpName: selectedMeeting?.grandPrixTitle ?? selectedMeeting?.meetingName ?? '',
     raceResults: createEmptyPrediction(),
     selectedMeetingKey: selectedMeeting?.meetingKey ?? '',
+    weekendStateByMeetingKey: {},
   };
 }
 
-function sanitizeAppData(value, calendar = []) {
+function sanitizeAppData(value, calendar = [], { preferPayloadSelectedWeekend = false } = {}) {
   const defaultData = createDefaultAppData(calendar);
   const incomingUsers = Array.isArray(value?.users) ? value.users : [];
   
@@ -178,13 +170,37 @@ function sanitizeAppData(value, calendar = []) {
     typeof value?.selectedMeetingKey === 'string'
       ? value.selectedMeetingKey
       : defaultData.selectedMeetingKey;
+  const resolvedMeetingKey = selectedMeeting?.meetingKey ?? fallbackMeetingKey;
+  const incomingWeekendStateByMeetingKey = sanitizeWeekendStateByMeetingKey(
+    value?.weekendStateByMeetingKey,
+  );
+  const fallbackSelectedWeekendState = buildWeekendStateFromUsers(
+    normalizedUsers,
+    sanitizePrediction(value?.raceResults),
+  );
+  const hasPersistedSelectedWeekendState =
+    typeof resolvedMeetingKey === 'string' &&
+    resolvedMeetingKey.trim() &&
+    Object.hasOwn(incomingWeekendStateByMeetingKey, resolvedMeetingKey);
+  const selectedWeekendState =
+    preferPayloadSelectedWeekend || !hasPersistedSelectedWeekendState
+      ? fallbackSelectedWeekendState
+      : getSelectedWeekendState(incomingWeekendStateByMeetingKey, resolvedMeetingKey);
+  const weekendStateByMeetingKey = upsertSelectedWeekendState(
+    incomingWeekendStateByMeetingKey,
+    resolvedMeetingKey,
+    hydrateUsersForSelectedWeekend(normalizedUsers, selectedWeekendState),
+    selectedWeekendState.raceResults,
+  );
+  const hydratedUsers = hydrateUsersForSelectedWeekend(normalizedUsers, selectedWeekendState);
 
   return {
-    users: normalizedUsers,
+    users: hydratedUsers,
     history,
     gpName: selectedMeeting?.grandPrixTitle ?? selectedMeeting?.meetingName ?? fallbackGpName,
-    raceResults: sanitizePrediction(value?.raceResults),
-    selectedMeetingKey: selectedMeeting?.meetingKey ?? fallbackMeetingKey,
+    raceResults: selectedWeekendState.raceResults,
+    selectedMeetingKey: resolvedMeetingKey,
+    weekendStateByMeetingKey,
   };
 }
 
@@ -205,7 +221,9 @@ async function readAppData(calendarPromise) {
 
 async function writeAppData(appData, calendarPromise) {
   const calendar = await (calendarPromise || readCalendarCache());
-  const sanitizedData = sanitizeAppData(appData, calendar);
+  const sanitizedData = sanitizeAppData(appData, calendar, {
+    preferPayloadSelectedWeekend: true,
+  });
   
   try {
     // Upsert the single document

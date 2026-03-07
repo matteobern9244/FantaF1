@@ -63,6 +63,27 @@ describe('UI save error helpers', () => {
     expect(error.details).toBe('hidden details');
   });
 
+  it('keeps the production alert fully generic when the backend does not return a request id', async () => {
+    const response = new Response(
+      JSON.stringify({
+        error: 'I pronostici sono bloccati.',
+        code: 'race_locked',
+      }),
+      {
+        status: 403,
+        headers: { 'Content-Type': 'application/json' },
+      },
+    );
+
+    const error = await createSaveRequestError(response, {
+      fallbackMessage: 'Impossibile salvare i dati.',
+      environment: 'production',
+    });
+
+    expect(error.userMessage).toBe('Impossibile salvare i dati.');
+    expect(error.requestId).toBeUndefined();
+  });
+
   it('returns the userMessage directly if the error is a SaveRequestError', () => {
     const saveError = new SaveRequestError('Backend error', {
       status: 500,
@@ -93,6 +114,16 @@ describe('UI save error helpers', () => {
         error: new Error('Failed to fetch'),
         fallbackMessage: 'Impossibile salvare i dati.',
         environment: 'production',
+      }),
+    ).toBe('Impossibile salvare i dati.');
+  });
+
+  it('formats nullish non-Error values as empty details in development', () => {
+    expect(
+      getSaveErrorAlertMessage({
+        error: null,
+        fallbackMessage: 'Impossibile salvare i dati.',
+        environment: 'development',
       }),
     ).toBe('Impossibile salvare i dati.');
   });

@@ -4,7 +4,15 @@ Cronologia sintetica delle release documentate del progetto Fanta Formula 1.
 
 ## In sviluppo
 
-- Nessuna voce documentata al momento.
+- Nessuna modifica documentata.
+
+## v1.3.8
+
+- **Sincronizzazione Pronostici per Weekend**: I pronostici e i risultati correnti vengono ora persistiti per `meetingKey` tramite `weekendStateByMeetingKey`, cosi' il cambio weekend riallinea subito tutta la UI al draft corretto del weekend selezionato.
+- **Preservazione Dati Legacy e Race Lock Corretto**: Backend, storage e validazione ricostruiscono i dati legacy nel weekend corretto e applicano save manuale e race lock solo al weekend selezionato, senza sovrascrivere i draft degli altri weekend.
+- **Placeholder e Reset Coerenti per Weekend Vuoti**: Un weekend senza pronostici salvati mostra nuovamente `Seleziona un pilota`, mentre il reset pulisce e salva solo il weekend attivo.
+- **Launcher Locale Stabilizzato**: Il launcher integrato non chiude piu' backend e frontend per falsi negativi sul rilevamento della finestra Chrome, eliminando i `Failed to fetch` intermittenti durante il lavoro locale.
+- **Suite di Test e Smoke Estesa**: Aggiunti test regressivi su stato per-weekend, migrazione backend, launcher locale e switch weekend; lo smoke responsive copre anche il cambio weekend e il viewport iPhone 16 Pro Max.
 
 ## v1.3.7
 

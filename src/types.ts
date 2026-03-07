@@ -16,6 +16,13 @@ export interface Prediction {
   pole: string;
 }
 
+export interface WeekendPredictionState {
+  userPredictions: Record<string, Prediction>;
+  raceResults: Prediction;
+}
+
+export type WeekendStateByMeetingKey = Record<string, WeekendPredictionState>;
+
 export interface RaceRecord {
   gpName: string;
   meetingKey?: string;
@@ -63,6 +70,7 @@ export interface AppData {
   gpName: string;
   raceResults: Prediction;
   selectedMeetingKey: string;
+  weekendStateByMeetingKey?: WeekendStateByMeetingKey;
 }
 
 export interface PointsConfig {

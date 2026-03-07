@@ -266,6 +266,26 @@ describe('game utils', () => {
         ),
       ).toBe(11);
     });
+
+    it('treats nullish prediction and result fields as empty strings', () => {
+      expect(
+        calculatePointsEarned(
+          {
+            first: null as unknown as string,
+            second: undefined as unknown as string,
+            third: ' C ',
+            pole: ' D ',
+          },
+          {
+            first: 'A',
+            second: undefined as unknown as string,
+            third: 'c',
+            pole: 'd',
+          },
+          config,
+        ),
+      ).toBe(3);
+    });
   });
 
   describe('live scoring helpers', () => {

@@ -113,4 +113,26 @@ describe('backend http helpers', () => {
     expect(response.payload.details).toBeUndefined();
     expect(response.status).toBe(500);
   });
+
+  it('falls back to error.message when an Error instance has an empty stack and uses status 500 for unknown codes', () => {
+    const error = new Error('Only message remains');
+    error.stack = '';
+
+    expect(extractErrorDetails(error)).toBe('Only message remains');
+    expect(
+      buildSaveErrorResponse({
+        environment: 'development',
+        requestId: 'req-unknown',
+        code: 'not_mapped',
+        error: 'Generic save failure',
+      }),
+    ).toEqual({
+      status: 500,
+      payload: {
+        error: 'Generic save failure',
+        code: 'not_mapped',
+        requestId: 'req-unknown',
+      },
+    });
+  });
 });
