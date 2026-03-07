@@ -97,6 +97,24 @@ function createAppData() {
     gpName: 'Australian Grand Prix 2099',
     raceResults: createEmptyPrediction(),
     selectedMeetingKey: 'race-1',
+    weekendStateByMeetingKey: {
+      'race-1': {
+        userPredictions: {
+          Matteo: { first: 'ver', second: 'nor', third: 'lec', pole: 'pia' },
+          Fabio: { first: 'ham', second: 'ver', third: 'lec', pole: 'nor' },
+          Adriano: { first: 'ver', second: 'ham', third: 'lec', pole: 'pia' },
+        },
+        raceResults: createEmptyPrediction(),
+      },
+      'race-2': {
+        userPredictions: {
+          Matteo: { first: 'ver', second: 'nor', third: 'lec', pole: 'pia' },
+          Fabio: { first: 'ham', second: 'ver', third: 'lec', pole: 'nor' },
+          Adriano: { first: 'ver', second: 'ham', third: 'lec', pole: 'pia' },
+        },
+        raceResults: createEmptyPrediction(),
+      },
+    },
   };
 }
 

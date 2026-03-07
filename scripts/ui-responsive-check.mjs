@@ -7,6 +7,7 @@ const sessionName = `ui-${Date.now().toString(36)}`;
 const outputDir = path.resolve(process.cwd(), 'output/playwright/ui-responsive');
 const breakpoints = [
   { label: 'mobile', width: 390, height: 844 },
+  { label: 'iphone-16-pro-max', width: 440, height: 956 },
   { label: 'tablet', width: 768, height: 1024 },
   { label: 'laptop', width: 1280, height: 800 },
   { label: 'desktop', width: 1600, height: 900 },
@@ -94,6 +95,11 @@ const inspectStateExpression = `() => {
         element.position !== 'fixed',
     )
     .slice(0, 20);
+  const selectedCalendarCard = document.querySelector('.calendar-card.selected');
+  const selectedRaceBanner = document.querySelector('.selected-race-banner');
+  const firstUserCard = document.querySelector('.predictions-grid .user-card');
+  const firstPredictionSelect = firstUserCard?.querySelector('select');
+  const firstResultSelect = document.querySelector('.results-grid select');
 
   return {
     viewport: { width: viewportWidth, height: viewportHeight },
@@ -147,6 +153,18 @@ const inspectStateExpression = `() => {
         (button) =>
           button.left < (historyPanelRect?.left ?? 0) - 1 ||
           button.right > (historyPanelRect?.right ?? viewportWidth) + 1,
+      ),
+    },
+    selectedWeekend: {
+      cardText: normalizeText(selectedCalendarCard?.textContent),
+      bannerTitle: normalizeText(selectedRaceBanner?.querySelector('strong')?.textContent),
+      firstPredictionValue: firstPredictionSelect?.value ?? '',
+      firstPredictionText: normalizeText(
+        firstPredictionSelect?.selectedOptions?.[0]?.textContent || firstPredictionSelect?.value,
+      ),
+      firstResultValue: firstResultSelect?.value ?? '',
+      firstResultText: normalizeText(
+        firstResultSelect?.selectedOptions?.[0]?.textContent || firstResultSelect?.value,
       ),
     },
     unauthorizedOverflow,
@@ -331,7 +349,34 @@ function openTooltipIfPresent() {
   runCli(['run-code', 'await page.waitForTimeout(100);']);
 }
 
-function validateState(state, { expectSprintBadge = false, expectVisibleTooltip = false } = {}) {
+function switchWeekend() {
+  const result = evaluateJson(`() => {
+    const cards = [...document.querySelectorAll('.calendar-card')];
+    const currentIndex = cards.findIndex((card) => card.classList.contains('selected'));
+    const nextCard = cards.find((_, index) => index !== currentIndex) || null;
+
+    if (!nextCard) {
+      return { clicked: false };
+    }
+
+    nextCard.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    return {
+      clicked: true,
+      text: nextCard.textContent?.replace(/\\s+/g, ' ').trim() ?? '',
+    };
+  }`);
+
+  if (!result.clicked) {
+    fail('Impossibile selezionare un weekend alternativo nel calendario UI.');
+  }
+
+  runCli(['run-code', 'await page.waitForTimeout(150);']);
+}
+
+function validateState(
+  state,
+  { expectSprintBadge = false, expectVisibleTooltip = false, expectedWeekendChangeFrom = null } = {},
+) {
   const failures = [];
   const usesFormula1 = (fontFamily) => /(?:^|,)\s*["']?Formula1["']?\s*(?:,|$)/i.test(fontFamily);
 
@@ -418,6 +463,16 @@ function validateState(state, { expectSprintBadge = false, expectVisibleTooltip 
     failures.push('Storico senza card ma anche senza empty state visibile.');
   }
 
+  if (expectedWeekendChangeFrom) {
+    if (state.selectedWeekend.cardText === expectedWeekendChangeFrom.cardText) {
+      failures.push('La card calendario selezionata non e\' cambiata dopo il click su un altro weekend.');
+    }
+
+    if (state.selectedWeekend.bannerTitle === expectedWeekendChangeFrom.bannerTitle) {
+      failures.push('Il banner del weekend selezionato non si e\' aggiornato dopo il cambio gara.');
+    }
+  }
+
   if (state.unauthorizedOverflow.length > 0) {
     failures.push(
       `Overflow orizzontale non consentito: ${JSON.stringify(state.unauthorizedOverflow.slice(0, 5))}`,
@@ -453,6 +508,21 @@ async function main() {
         viewport: breakpoint,
         state: 'default',
         failures: defaultFailures,
+        screenshotPath,
+      });
+    }
+
+    switchWeekend();
+    const switchedState = inspectState();
+    const switchedFailures = validateState(switchedState, {
+      expectedWeekendChangeFrom: defaultState.selectedWeekend,
+    });
+    if (switchedFailures.length > 0) {
+      const screenshotPath = captureScreenshot(`${breakpoint.label}-weekend-switch`);
+      allFailures.push({
+        viewport: breakpoint,
+        state: 'weekend-switch',
+        failures: switchedFailures,
         screenshotPath,
       });
     }

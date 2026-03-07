@@ -85,6 +85,34 @@ describe('storage sanitization', () => {
     });
     expect(sanitized.history[0].meetingKey).toBe('legacy-meeting');
     expect(sanitized.history[0].userPredictions['TestUser 3'].pointsEarned).toBe(2);
+    expect(sanitized.weekendStateByMeetingKey['1280']).toEqual({
+      userPredictions: {
+        'TestUser 3': {
+          first: 'ver',
+          second: 'nor',
+          third: 'lec',
+          pole: 'pia',
+        },
+        'TestUser 2': {
+          first: 'ham',
+          second: '',
+          third: '',
+          pole: '',
+        },
+        'TestUser 1': {
+          first: '',
+          second: '',
+          third: '',
+          pole: '',
+        },
+      },
+      raceResults: {
+        first: 'ver',
+        second: '',
+        third: '',
+        pole: '',
+      },
+    });
     expect(sanitized).not.toHaveProperty('drivers');
     expect(sanitized).not.toHaveProperty('calendar');
   });
@@ -93,6 +121,7 @@ describe('storage sanitization', () => {
     it('handles empty calendar in getNextUpcomingMeeting via createDefaultAppData', () => {
       const defaultData = sanitizeAppData({}, []);
       expect(defaultData.selectedMeetingKey).toBe('');
+      expect(defaultData.weekendStateByMeetingKey).toEqual({});
     });
     it('sorts calendar by round delta', () => {
       const calendar = [

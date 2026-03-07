@@ -3,6 +3,7 @@ import net from 'net';
 import path from 'path';
 import { spawn, spawnSync } from 'child_process';
 import { fileURLToPath } from 'url';
+import { getChromeWindowLifecycleState } from './dev-launcher-lifecycle.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -310,9 +311,14 @@ async function main() {
 
   await sleep(1800);
 
+  let chromeWindowSeen = false;
+
   while (!shuttingDown) {
     const chromeWindowOpen = isChromeAppWindowOpen(launcherConfig.frontendUrl);
-    if (!chromeWindowOpen) {
+    const lifecycleState = getChromeWindowLifecycleState(chromeWindowSeen, chromeWindowOpen);
+    chromeWindowSeen = lifecycleState.chromeWindowSeen;
+
+    if (lifecycleState.shouldShutdown) {
       await shutdown(0);
       return;
     }

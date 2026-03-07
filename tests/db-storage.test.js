@@ -45,6 +45,49 @@ describe('MongoDB Storage Functions', () => {
       expect(data.gpName).toBe('Test GP');
     });
 
+    it('prefers the persisted selected weekend state when it already exists', async () => {
+      AppData.findOne.mockReturnValue({
+        sort: vi.fn().mockResolvedValue({
+          toObject: () => ({
+            gpName: 'Australia',
+            selectedMeetingKey: 'australia',
+            users: [
+              { name: 'Player 1', points: 4, predictions: { first: 'legacy' } },
+              { name: 'Player 2', points: 3, predictions: {} },
+              { name: 'Player 3', points: 2, predictions: {} },
+            ],
+            raceResults: { first: 'legacy' },
+            weekendStateByMeetingKey: {
+              australia: {
+                userPredictions: {
+                  'Player 1': { first: 'ver', second: '', third: '', pole: '' },
+                  'Player 2': { first: '', second: '', third: '', pole: '' },
+                  'Player 3': { first: '', second: '', third: '', pole: '' },
+                },
+                raceResults: { first: '', second: '', third: '', pole: 'pia' },
+              },
+            },
+          }),
+        }),
+      });
+
+      const data = await readAppData(
+        Promise.resolve([
+          {
+            meetingKey: 'australia',
+            meetingName: 'Australia',
+            grandPrixTitle: 'Australian Grand Prix',
+            roundNumber: 1,
+            startDate: '2026-03-08',
+            endDate: '2026-03-08',
+          },
+        ]),
+      );
+
+      expect(data.users[0].predictions.first).toBe('ver');
+      expect(data.raceResults.pole).toBe('pia');
+    });
+
     it('returns default data if record is null', async () => {
       AppData.findOne.mockReturnValue({
         sort: vi.fn().mockResolvedValue(null),
@@ -128,6 +171,14 @@ describe('MongoDB Storage Functions', () => {
         },
       ]);
       expect(data.history[0].userPredictions['Player 1'].pointsEarned).toBe(0);
+      expect(data.weekendStateByMeetingKey.monaco).toEqual({
+        userPredictions: {
+          Unknown: { first: '', second: 'ham', third: '', pole: '' },
+          'Valid User': { first: 'ver', second: '', third: '', pole: '' },
+          'Player 3': { first: '', second: '', third: '', pole: '' },
+        },
+        raceResults: { first: '', second: '', third: '', pole: '' },
+      });
     });
 
     it('trims the list to the first three users when more are stored', async () => {
@@ -188,7 +239,53 @@ describe('MongoDB Storage Functions', () => {
 
       expect(result.selectedMeetingKey).toBe('australia');
       expect(result.users[0].name).toBe('Unknown');
+      expect(result.weekendStateByMeetingKey.australia.userPredictions.Unknown).toEqual({
+        first: '',
+        second: '',
+        third: '',
+        pole: '',
+      });
       expect(AppData.findOneAndUpdate).toHaveBeenCalled();
+    });
+
+    it('preserves non-selected weekend drafts while updating the selected one', async () => {
+      AppData.findOneAndUpdate.mockResolvedValue();
+
+      const result = await writeAppData(
+        {
+          users: [
+            { name: 'Player 1', points: 4, predictions: { first: 'ver', second: '', third: '', pole: '' } },
+            { name: 'Player 2', points: 3, predictions: { first: '', second: '', third: '', pole: '' } },
+            { name: 'Player 3', points: 2, predictions: { first: '', second: '', third: '', pole: '' } },
+          ],
+          history: [],
+          gpName: 'Australian Grand Prix',
+          raceResults: { first: '', second: '', third: '', pole: 'pia' },
+          selectedMeetingKey: 'australia',
+          weekendStateByMeetingKey: {
+            monaco: {
+              userPredictions: {
+                'Player 1': { first: 'ham', second: '', third: '', pole: '' },
+              },
+              raceResults: { first: 'ham', second: '', third: '', pole: '' },
+            },
+          },
+        },
+        Promise.resolve([
+          {
+            meetingKey: 'australia',
+            meetingName: 'Australia',
+            grandPrixTitle: 'Australian Grand Prix',
+            roundNumber: 1,
+            startDate: '2026-03-08',
+            endDate: '2026-03-08',
+          },
+        ]),
+      );
+
+      expect(result.weekendStateByMeetingKey.monaco.userPredictions['Player 1'].first).toBe('ham');
+      expect(result.weekendStateByMeetingKey.australia.raceResults.pole).toBe('pia');
+      expect(result.users[0].predictions.first).toBe('ver');
     });
   });
 

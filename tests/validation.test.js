@@ -77,6 +77,131 @@ describe('Validation Logic', () => {
       const after = new Date(`${currentYear}-03-03T14:00:01Z`);
       expect(isRaceLocked(raceInvalid, newDataChanged, oldData, after)).toBe(false);
     });
+
+    it('should compare only the selected weekend predictions when per-weekend drafts are present', () => {
+      const after = new Date(`${currentYear}-03-03T14:00:01Z`);
+      const currentData = {
+        selectedMeetingKey: 'test',
+        users: [{ name: 'A', predictions: { first: 'legacy' } }],
+        weekendStateByMeetingKey: {
+          test: {
+            userPredictions: {
+              A: { first: 'VER', second: '', third: '', pole: '' },
+            },
+            raceResults: { first: '', second: '', third: '', pole: '' },
+          },
+          other: {
+            userPredictions: {
+              A: { first: 'NOR', second: '', third: '', pole: '' },
+            },
+            raceResults: { first: '', second: '', third: '', pole: '' },
+          },
+        },
+      };
+      const newData = {
+        selectedMeetingKey: 'test',
+        users: [{ name: 'A', predictions: { first: 'legacy' } }],
+        weekendStateByMeetingKey: {
+          test: {
+            userPredictions: {
+              A: { first: 'HAM', second: '', third: '', pole: '' },
+            },
+            raceResults: { first: '', second: '', third: '', pole: '' },
+          },
+          other: {
+            userPredictions: {
+              A: { first: 'NOR', second: '', third: '', pole: '' },
+            },
+            raceResults: { first: '', second: '', third: '', pole: '' },
+          },
+        },
+      };
+
+      expect(isRaceLocked(race, newData, currentData, after)).toBe(true);
+    });
+
+    it('should fall back to the current data selectedMeetingKey when the new payload omits it', () => {
+      const after = new Date(`${currentYear}-03-03T14:00:01Z`);
+      const currentData = {
+        selectedMeetingKey: 'test',
+        users: [{ name: 'A', predictions: { first: '' } }],
+        weekendStateByMeetingKey: {
+          test: {
+            userPredictions: {
+              A: { first: 'VER', second: '', third: '', pole: '' },
+            },
+            raceResults: { first: '', second: '', third: '', pole: '' },
+          },
+        },
+      };
+      const newData = {
+        users: [{ name: 'A', predictions: { first: '' } }],
+        weekendStateByMeetingKey: {
+          test: {
+            userPredictions: {
+              A: { first: 'HAM', second: '', third: '', pole: '' },
+            },
+            raceResults: { first: '', second: '', third: '', pole: '' },
+          },
+        },
+      };
+
+      expect(isRaceLocked(race, newData, currentData, after)).toBe(true);
+    });
+
+    it('should fall back to the race meetingKey when no selectedMeetingKey is present in either payload', () => {
+      const after = new Date(`${currentYear}-03-03T14:00:01Z`);
+      const currentData = {
+        users: [{ name: 'A', predictions: {} }],
+        weekendStateByMeetingKey: {
+          test: {
+            userPredictions: {
+              A: { first: 'VER', second: '', third: '', pole: '' },
+            },
+            raceResults: { first: '', second: '', third: '', pole: '' },
+          },
+        },
+      };
+      const newData = {
+        users: [{ name: 'A', predictions: {} }],
+        weekendStateByMeetingKey: {
+          test: {
+            userPredictions: {
+              A: { first: 'HAM', second: '', third: '', pole: '' },
+            },
+            raceResults: { first: '', second: '', third: '', pole: '' },
+          },
+        },
+      };
+
+      expect(isRaceLocked(race, newData, currentData, after)).toBe(true);
+    });
+
+    it('should handle payloads without users by reading the selected weekend map only', () => {
+      const after = new Date(`${currentYear}-03-03T14:00:01Z`);
+      const currentData = {
+        weekendStateByMeetingKey: {
+          test: {
+            userPredictions: {
+              A: { first: 'VER', second: '', third: '', pole: '' },
+            },
+            raceResults: { first: '', second: '', third: '', pole: '' },
+          },
+        },
+      };
+      const newData = {
+        weekendStateByMeetingKey: {
+          test: {
+            userPredictions: {
+              A: { first: 'HAM', second: '', third: '', pole: '' },
+            },
+            raceResults: { first: '', second: '', third: '', pole: '' },
+          },
+        },
+      };
+
+      expect(isRaceLocked(race, newData, currentData, after)).toBe(false);
+    });
   });
 
   describe('validatePredictions', () => {
@@ -149,6 +274,27 @@ describe('Validation Logic', () => {
       ];
 
       expect(validatePredictions(users, fields)).toBe(false);
+    });
+
+    it('should validate only the selected weekend entry when a weekend map is present', () => {
+      const users = [{ name: 'A', predictions: { first: '', second: '', third: '', pole: '' } }];
+      const weekendStateByMeetingKey = {
+        'race-1': {
+          userPredictions: {
+            A: { first: '', second: '', third: '', pole: '' },
+          },
+          raceResults: { first: '', second: '', third: '', pole: '' },
+        },
+        'race-2': {
+          userPredictions: {
+            A: { first: 'VER', second: '', third: '', pole: '' },
+          },
+          raceResults: { first: '', second: '', third: '', pole: '' },
+        },
+      };
+
+      expect(validatePredictions(users, fields, weekendStateByMeetingKey, 'race-1')).toBe(false);
+      expect(validatePredictions(users, fields, weekendStateByMeetingKey, 'race-2')).toBe(true);
     });
   });
 });

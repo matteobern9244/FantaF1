@@ -116,6 +116,12 @@ Quando l'app carica o sanitizza lo stato:
 
 Questo comportamento vale sia lato frontend sia lato backend quando viene ricostruito lo stato persistito.
 
+I pronostici correnti e i risultati correnti sono persistiti per weekend tramite `weekendStateByMeetingKey`.
+Quando si cambia weekend, la UI rilegge immediatamente i dati del weekend selezionato:
+
+- se esiste un draft salvato per quel weekend, mostra quel draft;
+- se non esiste alcun draft, i campi tornano vuoti e la select mostra `Seleziona un pilota`.
+
 ### Reset pronostici
 
 L'azione `Reset pronostici correnti`:
@@ -285,7 +291,8 @@ Restituisce lo stato globale del gioco:
 - storico;
 - GP selezionato;
 - risultati correnti;
-- `selectedMeetingKey`.
+- `selectedMeetingKey`;
+- `weekendStateByMeetingKey`.
 
 ### `POST /api/data`
 
@@ -340,6 +347,7 @@ Lo stato persistito contiene:
 - `gpName`
 - `raceResults`
 - `selectedMeetingKey`
+- `weekendStateByMeetingKey`
 
 Ogni utente contiene:
 
@@ -438,7 +446,7 @@ Lo script integrato:
 - attende gli health check locali;
 - apre Chrome in modalita' app sul frontend;
 - prova a massimizzare la finestra;
-- chiude i processi se uno dei child fallisce o se la finestra Chrome viene chiusa.
+- chiude i processi se uno dei child fallisce o, quando la finestra Chrome e' rilevabile, se la finestra viene chiusa.
 
 ## Deploy su Render
 

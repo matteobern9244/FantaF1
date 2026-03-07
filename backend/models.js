@@ -13,6 +13,18 @@ const UserSchema = new mongoose.Schema({
   points: { type: Number, default: 0 },
 });
 
+const WeekendPredictionStateSchema = new mongoose.Schema(
+  {
+    userPredictions: {
+      type: Map,
+      of: PredictionSchema,
+      default: () => ({}),
+    },
+    raceResults: { type: PredictionSchema, default: () => ({}) },
+  },
+  { _id: false },
+);
+
 const RaceResultSchema = new mongoose.Schema({
   gpName: { type: String, required: true },
   meetingKey: { type: String },
@@ -64,6 +76,11 @@ const AppDataSchema = new mongoose.Schema({
   gpName: String,
   raceResults: PredictionSchema,
   selectedMeetingKey: String,
+  weekendStateByMeetingKey: {
+    type: Map,
+    of: WeekendPredictionStateSchema,
+    default: () => ({}),
+  },
   lastUpdated: { type: Date, default: Date.now },
 }, { timestamps: true });
 
