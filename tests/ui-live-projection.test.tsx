@@ -269,15 +269,18 @@ describe('Live projection UI', () => {
 
     render(<App />);
 
-    await waitFor(() => {
-      expect(screen.getByRole('button', { name: /guarda highlights/i })).toBeInTheDocument();
-    });
+    const highlightsButton = await screen.findByRole(
+      'button',
+      { name: /guarda highlights/i },
+      { timeout: 5000 },
+    );
 
     const selectedRaceHeroCard = getSelectedRaceHeroCard();
     expect(selectedRaceHeroCard).not.toBeNull();
     expect(
       within(selectedRaceHeroCard as HTMLElement).getByRole('button', { name: /guarda highlights/i }),
     ).toBeEnabled();
+    expect(highlightsButton).toBeEnabled();
   });
 
   it('opens the YouTube highlights outside the app when the CTA is clicked', async () => {

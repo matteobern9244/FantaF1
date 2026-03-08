@@ -348,6 +348,18 @@ describe('calendar parsing and fallback', () => {
     };
 
     expect(buildHighlightsSearchQuery(race)).toContain('Sky Sport Italia F1');
+    expect(
+      buildHighlightsSearchQuery({
+        meetingName: 'Australia',
+        detailUrl: 'https://www.formula1.com/en/racing/2025/australia',
+      }),
+    ).toContain('2025');
+    expect(
+      buildHighlightsSearchQuery({
+        meetingName: 'Australia',
+        grandPrixTitle: 'FORMULA 1 AUSTRALIAN GRAND PRIX 2024',
+      }),
+    ).toContain('2024');
     expect(buildHighlightsSearchQuery({ meetingName: 'Monza' })).toContain('Monza');
     expect(buildHighlightsSearchQuery({ meetingKey: 'spa' })).toContain('spa');
     expect(buildHighlightsSearchQuery({})).toBe('highlights Sky Sport Italia F1');
@@ -357,6 +369,25 @@ describe('calendar parsing and fallback', () => {
       'https://www.youtube.com/watch?v=skyf1clip',
     );
     expect(normalizeYoutubeWatchUrl('/channel/not-a-watch-link')).toBe('');
+    expect(
+      extractHighlightsVideoUrlFromSearchHtml(
+        `{"contents":[${buildYoutubeVideoRenderer({
+          videoId: 'wrong-year',
+          title: `F1, GP d'Australia, gli highlights della gara 2026`,
+          authorName: 'Sky Sport F1',
+        })},${buildYoutubeVideoRenderer({
+          videoId: 'correct-year',
+          title: `F1, GP d'Australia, gli highlights della gara 2025`,
+          authorName: 'Sky Sport F1',
+        })}]}`,
+        {
+          meetingKey: 'australia',
+          meetingName: 'Australia',
+          grandPrixTitle: 'FORMULA 1 AUSTRALIAN GRAND PRIX 2025',
+          detailUrl: 'https://www.formula1.com/en/racing/2025/australia',
+        },
+      ),
+    ).toBe('https://www.youtube.com/watch?v=correct-year');
     expect(
       extractHighlightsVideoUrlFromSearchHtml(
         `{"contents":[${buildYoutubeVideoRenderer({

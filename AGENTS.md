@@ -49,10 +49,11 @@ Optional helper commands already supported by the repository:
 
 ### Development Conventions
 
-- Prefer focused modules, pure helpers, and explicit data flow over oversized orchestration blocks.
+- Prefer focused domain objects, explicit collaborators, and clear data flow over oversized orchestration blocks.
 - Keep runtime wiring and environment/bootstrap concerns in entry points and bootstrap modules such as `app.js`, `server.js`, and backend startup code.
 - Avoid hidden dependencies and service-locator style access patterns; pass dependencies explicitly or keep them within the owning module boundary.
-- Do not introduce class-based abstractions unless the repository clearly benefits from them; the current codebase is predominantly module-oriented.
+- Prefer object-oriented abstractions when they improve separation of responsibilities, state management, or external-source orchestration; keep classes small, explicit, and easy to test.
+- Use pure helper modules to support those objects when stateful behavior is not needed, but avoid collapsing non-trivial domain workflows back into oversized procedural modules.
 - Centralize repeated rules, labels, and configuration in the existing config/constants layers instead of scattering literals.
 - Never leave application or runtime-facing strings hard coded inside components, backend flows, helpers, or scripts when they can be centralized safely; place them in dedicated config/constants modules grouped by domain area.
 - This rule is mandatory for fixes, modifications, and new implementations in this repository.
@@ -199,7 +200,7 @@ Where applicable this includes:
 
 - Main automated test stack: Vitest, React Testing Library, and Supertest.
 - Coverage provider: V8.
-- Current verified merged baseline for the configured official application-code scope is **100% statements (3972 / 3972)**, **100% functions (299 / 299)**, **100% branches (1761 / 1761)**, and **100% lines (3972 / 3972)**, aligned with the thresholds currently documented in `README.md`.
+- Current verified merged baseline for the configured official application-code scope is **100% statements (4185 / 4185)**, **100% functions (318 / 318)**, **100% branches (1817 / 1817)**, and **100% lines (4185 / 4185)**, aligned with the thresholds currently documented in `README.md`.
 - Whenever a task produces a new verified merged Release coverage result, update this baseline in `AGENTS.md` to the new numbers.
 - If a task produces a new verified merged coverage result for the tracked scope, update the baseline in `AGENTS.md` and never accept a regression below that verified baseline.
 

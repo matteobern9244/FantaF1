@@ -437,6 +437,10 @@ button.interactive-surface:focus-visible {
   margin-top: 4px;
   text-align: center;
   width: 100%;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  line-height: 1.35;
 }
 
 .next-race-card {
