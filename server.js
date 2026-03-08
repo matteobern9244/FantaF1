@@ -19,7 +19,7 @@ import {
   ServerBootstrapService,
 } from './backend/server-bootstrap-service.js';
 
-const PORT = process.env.PORT || appConfig.server.port;
+const PORT = String(process.env.PORT || appConfig.server.port);
 const HOST = '0.0.0.0'; // Bind to all interfaces for Render
 const runtimeEnvironment = normalizeRuntimeEnvironment(process.env.NODE_ENV);
 const mongoDatabaseNameOverride = process.env[MONGO_DATABASE_NAME_OVERRIDE_ENV_VAR];
