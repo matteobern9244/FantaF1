@@ -4,6 +4,12 @@ Cronologia sintetica delle release documentate del progetto Fanta Formula 1.
 
 ## In sviluppo
 
+- **Installazione PWA Mobile Riallineata**: la CTA `INSTALLA APPLICAZIONE` e' ora gestita in modo contestuale sulla shell frontend e compare in vista mobile solo quando l'app non risulta gia' installata o aperta in modalita' standalone.
+- **Prompt Nativo e Flusso Guidato iOS Distinti**: sui browser che espongono `beforeinstallprompt` il pulsante usa il prompt nativo di installazione, mentre su `iPhone` e `iPad` con `Safari` apre un dialog guidato con i passaggi `Condividi -> Aggiungi a Home`, evitando percorsi morti sui browser mobile non supportati.
+- **Detection Installazione Centralizzata e Sicura**: il frontend usa ora una risoluzione esplicita e testata di `display-mode: standalone`, `navigator.standalone`, viewport mobile e compatibilita' iOS Safari, azzerando la CTA anche dopo l'evento `appinstalled` senza toccare backend, persistence o logica punteggi.
+- **Copy PWA e Dialog Mobile Centralizzati**: label `INSTALLA APPLICAZIONE`, messaggi toast e contenuti del dialog iOS sono stati spostati in configurazione applicativa, mantenendo il vincolo repository di assenza di stringhe applicative hardcoded nei componenti.
+- **TDD Regressivo sulla PWA Mobile**: estesi i test UI per coprire prompt nativo mobile, flusso guidato iOS/Safari, assenza della CTA quando la PWA e' gia' installata e assenza della CTA su browser mobile non supportati, mantenendo coverage V8 al `100%` su statements, branches, functions e lines.
+- **Documentazione README Allineata alla PWA Mobile**: il `README.md` descrive ora in modo esplicito il comportamento della CTA di installazione su Android/Chrome, iPhone/iPad Safari, stato standalone e browser mobili non compatibili.
 - **Chip Stato Weekend Corretta Post-Qualifica**: la chip `PRONOSTICI ANCORA APERTI` nello strip alto viene ora nascosta per il weekend selezionato quando Formula1.com ha gia' pubblicato il risultato ufficiale di qualifica o sprint (`pole`), anche se `racePhase` e' ancora `open`.
 - **Regola UI Centralizzata sul Weekend Selezionato**: il frontend usa ora un helper dedicato per distinguere il solo caso `open` realmente pre-qualifica dal caso post-qualifica del `selectedMeetingKey`, senza modificare lock server-side, flussi di salvataggio o banner `live`/`finished`.
 - **TDD Regressivo Sullo Strip Alto**: estesi i test helper e UI per coprire visibilita' della chip, cambio weekend, assenza di contaminazione tra meeting diversi e protezione da risposte stale dell'endpoint risultati.

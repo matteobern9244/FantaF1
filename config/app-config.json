@@ -138,8 +138,9 @@
       "savePredictions": "Salva dati inseriti",
       "publicView": "Vista pubblica",
       "adminView": "Modalita' admin",
-      "installApp": "Installa app",
-      "logout": "Logout"
+      "installApp": "INSTALLA APPLICAZIONE",
+      "logout": "Logout",
+      "closeDialog": "Chiudi"
     },
     "headings": {
       "seasonTag": "Fanta Formula 1",
@@ -222,9 +223,19 @@
       "predictionsSaved": "Pronostici salvati.",
       "pwaInstalled": "App installata correttamente.",
       "pwaInstallHint": "Installa FantaF1 sul dispositivo per una home-screen experience piu' rapida.",
+      "pwaInstallInstructionsOpened": "Segui le istruzioni per aggiungere FantaF1 alla Home.",
       "adminLoginSuccess": "Modalita' admin attiva.",
       "adminLogoutSuccess": "Logout completato. Modalita' pubblica attiva.",
       "shareLinkCopied": "Link della vista corrente copiato."
+    },
+    "installDialog": {
+      "title": "Aggiungi FantaF1 alla Home",
+      "description": "Su iPhone e iPad l'installazione avviene da Safari. Apri il menu Condividi e scegli Aggiungi a Home.",
+      "steps": [
+        "Tocca il pulsante Condividi di Safari.",
+        "Seleziona Aggiungi a Home.",
+        "Conferma con Aggiungi per installare la PWA."
+      ]
     },
     "calendar": {
       "empty": "Calendario non disponibile.",

@@ -197,6 +197,15 @@ Se il database non contiene ancora stato applicativo, il backend costruisce uno 
 - Dashboard KPI per utente, analytics deep-dive, pannello `Analisi stagione`, riepilogo `Weekend pulse`, guida pubblica, storico mobile piu' compatto, status strip, toast operativi e CTA installazione PWA.
 - Loader iniziale con splash logo `FantaF1`, set icone browser/PWA dedicato (`favicon`, `apple-touch-icon`, `192x192`, `512x512`, `maskable`) e layout responsive desktop/mobile.
 
+### Installazione PWA mobile
+
+La shell frontend espone il pulsante `INSTALLA APPLICAZIONE` in vista mobile solo quando l'app non risulta gia' installata o aperta in modalita' standalone.
+
+- Su browser mobile che espongono `beforeinstallprompt` (per esempio Chrome Android), il pulsante apre il prompt di installazione nativo della PWA.
+- Su `iPhone` e `iPad` con `Safari`, dove il prompt nativo non e' disponibile, il pulsante apre un dialog guidato con i passaggi `Condividi -> Aggiungi a Home`.
+- Se l'app e' gia' installata o sta girando in `display-mode: standalone`, la CTA non viene mostrata.
+- Browser mobile senza prompt nativo e senza flusso supportato non mostrano la CTA, evitando percorsi morti lato utente.
+
 ### URL condivisibile della vista
 
 La shell frontend mantiene sincronizzato nell'URL lo stato consultivo della vista corrente, cosi' da poter condividere direttamente il contesto aperto.

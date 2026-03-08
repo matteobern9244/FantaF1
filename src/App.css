@@ -1323,6 +1323,17 @@ select:focus {
   gap: 16px;
 }
 
+.install-instructions-modal {
+  text-align: left;
+}
+
+.install-instructions-list {
+  margin: 0;
+  padding-left: 20px;
+  display: grid;
+  gap: 8px;
+}
+
 .toast-success {
   border-color: rgba(255, 184, 0, 0.25);
   color: var(--gold);

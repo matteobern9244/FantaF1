@@ -20,6 +20,33 @@ Object.defineProperty(window, 'matchMedia', {
   })),
 });
 
+function mockMediaMatches(matchesByQuery: Record<string, boolean>) {
+  (window.matchMedia as ReturnType<typeof vi.fn>).mockImplementation((query) => ({
+    matches: matchesByQuery[query] ?? false,
+    media: query,
+    onchange: null,
+    addListener: vi.fn(),
+    removeListener: vi.fn(),
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+    dispatchEvent: vi.fn(),
+  }));
+}
+
+function setUserAgent(userAgent: string) {
+  Object.defineProperty(window.navigator, 'userAgent', {
+    configurable: true,
+    value: userAgent,
+  });
+}
+
+function setNavigatorStandalone(value: boolean) {
+  Object.defineProperty(window.navigator, 'standalone', {
+    configurable: true,
+    value,
+  });
+}
+
 function createEmptyPrediction() {
   return {
     first: '',
@@ -252,6 +279,9 @@ describe('Mockup roadmap UI features', () => {
     vi.clearAllMocks();
     vi.spyOn(window, 'alert').mockImplementation(() => {});
     window.history.replaceState({}, '', '/');
+    mockMediaMatches({});
+    setUserAgent('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)');
+    setNavigatorStandalone(false);
     Object.defineProperty(HTMLElement.prototype, 'scrollIntoView', {
       configurable: true,
       value: vi.fn(),
@@ -374,6 +404,7 @@ describe('Mockup roadmap UI features', () => {
 
   it('shows install CTA when the browser exposes the PWA install prompt', async () => {
     setupFetch();
+    mockMediaMatches({ '(max-width: 767px)': true });
 
     render(<App />);
 
@@ -399,6 +430,65 @@ describe('Mockup roadmap UI features', () => {
     await waitFor(() => {
       expect(prompt).toHaveBeenCalled();
     });
+  });
+
+  it('shows the mobile install CTA on iOS Safari when not already installed and opens guided instructions', async () => {
+    setupFetch();
+    mockMediaMatches({ '(max-width: 767px)': true });
+    setUserAgent(
+      'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1',
+    );
+
+    render(<App />);
+
+    await waitFor(() => {
+      expect(screen.queryByTestId('pitstop-loader')).not.toBeInTheDocument();
+    });
+
+    const installButton = screen.getByRole('button', { name: /installa/i });
+    expect(installButton).toBeInTheDocument();
+
+    fireEvent.click(installButton);
+
+    expect(screen.getByRole('dialog')).toBeInTheDocument();
+    expect(screen.getByText(/aggiungi fantaf1 alla home/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/condividi/i).length).toBeGreaterThan(0);
+  });
+
+  it('hides the mobile install CTA when the app is already running in standalone mode', async () => {
+    setupFetch();
+    mockMediaMatches({
+      '(max-width: 767px)': true,
+      '(display-mode: standalone)': true,
+    });
+    setUserAgent(
+      'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1',
+    );
+    setNavigatorStandalone(true);
+
+    render(<App />);
+
+    await waitFor(() => {
+      expect(screen.queryByTestId('pitstop-loader')).not.toBeInTheDocument();
+    });
+
+    expect(screen.queryByRole('button', { name: /installa/i })).not.toBeInTheDocument();
+  });
+
+  it('hides the mobile install CTA on unsupported mobile browsers without native prompt or iOS flow', async () => {
+    setupFetch();
+    mockMediaMatches({ '(max-width: 767px)': true });
+    setUserAgent(
+      'Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Firefox/124.0 Mobile Safari/537.36',
+    );
+
+    render(<App />);
+
+    await waitFor(() => {
+      expect(screen.queryByTestId('pitstop-loader')).not.toBeInTheDocument();
+    });
+
+    expect(screen.queryByRole('button', { name: /installa/i })).not.toBeInTheDocument();
   });
 
   it('hydrates the shared public url state from query params and preserves the hash when copying the link', async () => {

@@ -126,6 +126,12 @@ type DeferredInstallPromptEvent = Event & {
   userChoice: Promise<{ outcome: 'accepted' | 'dismissed'; platform: string }>;
 };
 
+type NavigatorWithStandalone = Navigator & {
+  standalone?: boolean;
+};
+
+type InstallCtaMode = 'hidden' | 'native' | 'ios';
+
 type ToastTone = 'info' | 'success';
 
 interface ToastState {
@@ -150,6 +156,46 @@ function normalizeOfficialResultsResponse(payload: OfficialResultsResponse | Pre
       pole: payload.pole ?? '',
     },
   };
+}
+
+function isStandaloneInstallContext() {
+  const standaloneMediaQuery = window.matchMedia('(display-mode: standalone)');
+  const navigatorWithStandalone = navigator as NavigatorWithStandalone;
+  return standaloneMediaQuery.matches || navigatorWithStandalone.standalone === true;
+}
+
+function isIosSafariInstallableBrowser() {
+  const userAgent = window.navigator.userAgent;
+  const isAppleMobileDevice = /iPad|iPhone|iPod/.test(userAgent);
+  const isSafariEngine = /Safari/.test(userAgent);
+  const isUnsupportedBrowser = /CriOS|FxiOS|EdgiOS|OPiOS/.test(userAgent);
+  return isAppleMobileDevice && isSafariEngine && !isUnsupportedBrowser;
+}
+
+function resolveInstallCtaMode({
+  isAppInstalled,
+  hasInstallPrompt,
+  isMobileViewport,
+  isIosSafari,
+}: {
+  isAppInstalled: boolean;
+  hasInstallPrompt: boolean;
+  isMobileViewport: boolean;
+  isIosSafari: boolean;
+}): InstallCtaMode {
+  if (isAppInstalled) {
+    return 'hidden';
+  }
+
+  if (hasInstallPrompt) {
+    return 'native';
+  }
+
+  if (isMobileViewport && isIosSafari) {
+    return 'ios';
+  }
+
+  return 'hidden';
 }
 
 /* v8 ignore next -- static SVG exercised by integration and browser smoke tests */
@@ -214,6 +260,9 @@ function App() {
   const [selectedInsightsUser, setSelectedInsightsUser] = useState('');
   const [toast, setToast] = useState<ToastState | null>(null);
   const [installPromptEvent, setInstallPromptEvent] = useState<DeferredInstallPromptEvent | null>(null);
+  const [isAppInstalled, setIsAppInstalled] = useState(() => isStandaloneInstallContext());
+  const [isMobileViewport, setIsMobileViewport] = useState(() => window.matchMedia('(max-width: 767px)').matches);
+  const [showInstallInstructions, setShowInstallInstructions] = useState(false);
   const [showAdminLogin, setShowAdminLogin] = useState(false);
   const [adminPassword, setAdminPassword] = useState('');
   const [adminLoginError, setAdminLoginError] = useState('');
@@ -261,6 +310,12 @@ function App() {
     ? buildUserAnalytics(history, selectedInsightsUserName)
     : null;
   const seasonAnalytics = buildSeasonAnalytics(users, history, sortedCalendar);
+  const installCtaMode = resolveInstallCtaMode({
+    isAppInstalled,
+    hasInstallPrompt: Boolean(installPromptEvent),
+    isMobileViewport,
+    isIosSafari: isIosSafariInstallableBrowser(),
+  });
   const weekendStartTime = getRaceStartTime(selectedRace);
   const shouldShowOpenPredictionsStrip =
     selectedRacePhase === 'open' && !hasQualifyingOrSprintResult(raceResults);
@@ -325,6 +380,30 @@ function App() {
   }, [selectedInsightsUser, users]);
 
   useEffect(() => {
+    const mobileViewportQuery = window.matchMedia('(max-width: 767px)');
+    const standaloneModeQuery = window.matchMedia('(display-mode: standalone)');
+
+    function handleMobileViewportChange(event: MediaQueryListEvent) {
+      setIsMobileViewport(event.matches);
+    }
+
+    function handleStandaloneChange(event: MediaQueryListEvent) {
+      setIsAppInstalled(event.matches || (navigator as NavigatorWithStandalone).standalone === true);
+    }
+
+    setIsMobileViewport(mobileViewportQuery.matches);
+    setIsAppInstalled(standaloneModeQuery.matches || (navigator as NavigatorWithStandalone).standalone === true);
+
+    mobileViewportQuery.addEventListener('change', handleMobileViewportChange);
+    standaloneModeQuery.addEventListener('change', handleStandaloneChange);
+
+    return () => {
+      mobileViewportQuery.removeEventListener('change', handleMobileViewportChange);
+      standaloneModeQuery.removeEventListener('change', handleStandaloneChange);
+    };
+  }, []);
+
+  useEffect(() => {
     function handleBeforeInstallPrompt(event: Event) {
       event.preventDefault();
       setInstallPromptEvent(event as DeferredInstallPromptEvent);
@@ -332,6 +411,8 @@ function App() {
 
     function handleAppInstalled() {
       setInstallPromptEvent(null);
+      setIsAppInstalled(true);
+      setShowInstallInstructions(false);
       showToastMessage(uiText.status.pwaInstalled, 'success');
     }
 
@@ -1074,6 +1155,12 @@ function App() {
   }
 
   async function handleInstallApp() {
+    if (installCtaMode === 'ios') {
+      setShowInstallInstructions(true);
+      showToastMessage(uiText.status.pwaInstallInstructionsOpened, 'info');
+      return;
+    }
+
     if (!installPromptEvent) {
       return;
     }
@@ -1247,7 +1334,7 @@ function App() {
                 {uiText.buttons.logout}
               </button>
             ) : null}
-            {installPromptEvent ? (
+            {installCtaMode !== 'hidden' ? (
               <button className="secondary-button install-button" onClick={handleInstallApp} type="button">
                 <Download size={16} />
                 {uiText.buttons.installApp}
@@ -1856,6 +1943,32 @@ function App() {
                 {uiText.buttons.adminView}
               </button>
             </div>
+          </div>
+        </div>
+      ) : null}
+
+      {showInstallInstructions ? (
+        <div className="auth-modal-backdrop" role="presentation" onClick={() => setShowInstallInstructions(false)}>
+          <div
+            className="auth-modal install-instructions-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="install-instructions-title"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="section-title">
+              <Download size={20} />
+              <h2 id="install-instructions-title">{uiText.installDialog.title}</h2>
+            </div>
+            <p>{uiText.installDialog.description}</p>
+            <ol className="install-instructions-list">
+              {uiText.installDialog.steps.map((step) => (
+                <li key={step}>{step}</li>
+              ))}
+            </ol>
+            <button className="secondary-button" onClick={() => setShowInstallInstructions(false)} type="button">
+              {uiText.buttons.closeDialog}
+            </button>
           </div>
         </div>
       ) : null}
