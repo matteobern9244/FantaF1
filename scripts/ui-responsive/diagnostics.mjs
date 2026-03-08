@@ -86,6 +86,7 @@ function loadRuntimeEnv({
     ...env,
     ...loadEnvFile(pathImpl.join(projectRootPath, '.env'), { fsImpl }),
     ...loadEnvFile(pathImpl.join(projectRootPath, '.env.local'), { fsImpl }),
+    NODE_ENV: 'development',
   };
 }
 

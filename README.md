@@ -481,6 +481,7 @@ Il backend verifica in startup che `MONGODB_URI` sia allineata con `fantaf1_dev`
 
 Lo script integrato:
 
+- forza esplicitamente `NODE_ENV=development` per mantenere allineati environment locale e target database `fantaf1_dev`;
 - esegue `npm run lint`, `npm run test`, `npm run build`, `npm run test:ui-responsive` e `npm run test:save-local`;
 - avvia uno stack locale temporaneo solo per il controllo responsive e lo chiude se i test passano;
 - esegue uno smoke reale di lettura/scrittura su `fantaf1_dev` prima dell'avvio finale;

@@ -2,7 +2,7 @@ import fs from 'fs';
 import net from 'net';
 import path from 'path';
 import { spawn, spawnSync } from 'child_process';
-import { fileURLToPath } from 'url';
+import { fileURLToPath, pathToFileURL } from 'url';
 import { getChromeWindowLifecycleState } from './dev-launcher-lifecycle.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -31,11 +31,24 @@ const launcherText = {
   popupTitle: 'Fanta Formula 1',
 };
 
-const env = {
-  ...process.env,
-  ...loadEnvFile(path.join(projectRoot, '.env')), // Load base .env to override system vars
-  ...loadEnvFile(path.join(projectRoot, '.env.local')), // Local overrides take final precedence
-};
+function buildLauncherEnv({
+  baseEnv = process.env,
+  envFiles,
+} = {}) {
+  const resolvedEnvFiles = envFiles ?? {
+    base: loadEnvFile(path.join(projectRoot, '.env')),
+    local: loadEnvFile(path.join(projectRoot, '.env.local')),
+  };
+
+  return {
+    ...baseEnv,
+    ...resolvedEnvFiles.base,
+    ...resolvedEnvFiles.local,
+    NODE_ENV: 'development',
+  };
+}
+
+const env = buildLauncherEnv();
 
 let backendProcess = null;
 let frontendProcess = null;
@@ -327,4 +340,12 @@ async function main() {
   }
 }
 
-void main();
+const isMainModule =
+  typeof process.argv[1] === 'string' &&
+  import.meta.url === pathToFileURL(process.argv[1]).href;
+
+if (isMainModule) {
+  void main();
+}
+
+export { buildLauncherEnv, main };
