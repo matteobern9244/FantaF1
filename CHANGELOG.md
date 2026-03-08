@@ -9,6 +9,9 @@ Cronologia sintetica delle release documentate del progetto Fanta Formula 1.
 - **Smoke Responsive Stabilizzato**: `npm run test:ui-responsive` usa ora un adapter Playwright CLI con timeout espliciti, navigazione nativa verificata, preflight fail-fast su sessioni `ui-*` residue e teardown piu' robusto senza killare processi non creati dal comando.
 - **Diagnostica UI Responsive Potenziata**: in caso di shell bloccata o navigazione incoerente il comando salva summary, stato pagina, tab-list, screenshot se disponibile, log console e network in `output/playwright/ui-responsive/`, evitando timeout opachi.
 - **TDD Sul Tooling Responsive**: estesa la suite `tests/ui-responsive-check.test.js` per coprire dirty-state Playwright, timeout CLI, uso di `goto`, separazione tra readiness minima e assert responsive, raccolta artefatti e ordering del cleanup.
+- **Hover/Focus Surface Unificati**: i nuovi riquadri KPI, analytics, storico e confronto stagione riusano ora lo stesso feedback visuale interattivo gia' presente negli altri riquadri dell'app, con coerenza tra vista admin e vista pubblica.
+- **Coverage Estesa Allo Scope Applicativo Ufficiale**: il perimetro coverage include ora `app.js`, `server.js`, tutto `backend/**/*.js` e tutti i file applicativi `src/**/*.ts(x)`, mantenendo il 100% su statements, functions, branches e lines.
+- **Hardening Browser Admin/Public/Mobile/Desktop**: il controllo responsive valida ora anche la sanita' delle API di bootstrap, distingue stack locale parziale da stack realmente pronta e verifica il toggle admin/public su tutti i breakpoint principali.
 
 ## v1.3.12
 

@@ -1224,7 +1224,7 @@ function App() {
         </div>
 
         <div className="hero-summary-grid">
-          <section className="hero-card rules-panel">
+          <section className="hero-card rules-panel interactive-surface">
             <div className="card-heading">
               <ShieldCheck size={18} />
               <span>{uiText.headings.rules}</span>
@@ -1241,7 +1241,7 @@ function App() {
             </div>
           </section>
 
-          <section className="hero-card next-race-card">
+          <section className="hero-card next-race-card interactive-surface">
             <div className="card-heading">
               <CalendarDays size={18} />
               <span>
@@ -1315,7 +1315,7 @@ function App() {
             weekendStatusLabel={weekendStatusLabel}
           />
 
-          <section className="hero-card">
+          <section className="hero-card interactive-surface">
             <div className="card-heading">
               <Trophy size={18} />
               <span>{uiText.headings.live}</span>
@@ -1339,7 +1339,7 @@ function App() {
             ) : null}
           </section>
 
-          <section className="hero-card">
+          <section className="hero-card interactive-surface">
             <div className="card-heading">
               <Flag size={18} />
               <span>{selectedRace?.meetingName ?? uiText.labels.selectedRace}</span>
@@ -1397,7 +1397,7 @@ function App() {
                   {sortedCalendar.map((weekend) => (
                     <button
                       key={weekend.meetingKey}
-                      className={`calendar-card ${
+                      className={`calendar-card interactive-surface ${
                         weekend.meetingKey === selectedRace?.meetingKey ? 'selected' : ''
                       } ${weekend.isSprintWeekend ? 'sprint' : ''}`}
                       onClick={() => handleRaceSelection(weekend.meetingKey)}
@@ -1444,19 +1444,19 @@ function App() {
             </div>
             {selectedKpiSummary ? (
               <div className="kpi-grid" data-testid="user-kpi-dashboard">
-                <article className="kpi-card">
+                <article className="kpi-card interactive-surface">
                   <strong>{selectedKpiSummary.seasonPoints}</strong>
                   <span>{uiText.labels.seasonPoints}</span>
                 </article>
-                <article className="kpi-card">
+                <article className="kpi-card interactive-surface">
                   <strong>{formatAverageValue(selectedKpiSummary.averagePosition, 1)}</strong>
                   <span>{uiText.labels.averagePosition}</span>
                 </article>
-                <article className="kpi-card">
+                <article className="kpi-card interactive-surface">
                   <strong>{selectedKpiSummary.poleAccuracy}%</strong>
                   <span>{uiText.labels.poleAccuracy}</span>
                 </article>
-                <article className="kpi-card">
+                <article className="kpi-card interactive-surface">
                   <strong>{formatAverageValue(selectedKpiSummary.averagePointsPerRace, 2)}</strong>
                   <span>{uiText.labels.averagePointsPerRace}</span>
                 </article>
@@ -1474,21 +1474,21 @@ function App() {
             {selectedAnalyticsSummary ? (
               <>
                 <div className="analytics-summary-grid">
-                  <article className="analytics-card">
+                  <article className="analytics-card interactive-surface">
                     <span className="analytics-label">{uiText.labels.bestWeekend}</span>
                     <strong>{selectedAnalyticsSummary.bestWeekend?.gpName ?? uiText.history.unknownDriver}</strong>
                     <small>
                       {selectedAnalyticsSummary.bestWeekend?.points ?? 0} {uiText.pointsSuffix}
                     </small>
                   </article>
-                  <article className="analytics-card">
+                  <article className="analytics-card interactive-surface">
                     <span className="analytics-label">{uiText.labels.worstWeekend}</span>
                     <strong>{selectedAnalyticsSummary.worstWeekend?.gpName ?? uiText.history.unknownDriver}</strong>
                     <small>
                       {selectedAnalyticsSummary.worstWeekend?.points ?? 0} {uiText.pointsSuffix}
                     </small>
                   </article>
-                  <article className="analytics-card">
+                  <article className="analytics-card interactive-surface">
                     <span className="analytics-label">{uiText.labels.mostPickedDriver}</span>
                     <strong>{formatTrendDriver(selectedAnalyticsSummary.mostPickedDriverId)}</strong>
                     <small>{selectedInsightsUserName}</small>
@@ -1496,7 +1496,7 @@ function App() {
                 </div>
 
                 <div className="analytics-columns">
-                  <div className="analytics-subpanel">
+                  <div className="analytics-subpanel interactive-surface">
                     <h3>{uiText.labels.fieldAccuracy}</h3>
                     <div className="field-accuracy-list">
                       {selectedAnalyticsSummary.fieldAccuracy.map((entry) => (
@@ -1507,7 +1507,7 @@ function App() {
                       ))}
                     </div>
                   </div>
-                  <div className="analytics-subpanel">
+                  <div className="analytics-subpanel interactive-surface">
                     <h3>{uiText.labels.pointsTrend}</h3>
                     {selectedAnalyticsSummary.trend.length > 0 ? (
                       <div className="trend-chart" data-testid="user-points-trend">
@@ -1579,7 +1579,7 @@ function App() {
 
             <div className="predictions-grid">
               {users.map((user) => (
-                <article key={user.name} className="user-card">
+                <article key={user.name} className="user-card interactive-surface">
                   <div className="user-card-head">
                     <h3>{user.name}</h3>
                     <span className="points-preview">
@@ -1645,7 +1645,7 @@ function App() {
               <p className="locked-banner">{uiText.history.publicReadonly}</p>
               <div className="predictions-grid readonly-grid">
                 {users.map((user) => (
-                  <article key={`readonly-${user.name}`} className="user-card readonly-card">
+                  <article key={`readonly-${user.name}`} className="user-card readonly-card interactive-surface">
                     <div className="user-card-head">
                       <h3>{user.name}</h3>
                       <span className="points-preview">

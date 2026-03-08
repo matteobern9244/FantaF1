@@ -6,7 +6,13 @@ const appVersion = pkg.version;
 const currentYear = new Date().getFullYear();
 const backendOrigin = ''; // Use relative path for production compatibility
 const frontendOrigin = ''; // Use relative path for production compatibility
-const visibleAppTitle = (import.meta.env.VITE_APP_LOCAL_NAME ?? '').trim() || rawConfig.app.title;
+
+function resolveVisibleAppTitle(localAppName: string | undefined, fallbackTitle: string) {
+  const normalizedLocalAppName = typeof localAppName === 'string' ? localAppName.trim() : '';
+  return normalizedLocalAppName.length > 0 ? normalizedLocalAppName : fallbackTitle;
+}
+
+const visibleAppTitle = resolveVisibleAppTitle(import.meta.env.VITE_APP_LOCAL_NAME, rawConfig.app.title);
 const genericAppTitle = rawConfig.app.title;
 
 const appConfig = {
@@ -54,5 +60,6 @@ export {
   healthApiUrl,
   predictionsApiUrl,
   predictionFieldOrder,
+  resolveVisibleAppTitle,
   visibleAppTitle,
 };

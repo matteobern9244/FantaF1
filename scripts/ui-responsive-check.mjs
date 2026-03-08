@@ -12,6 +12,7 @@ const pollIntervalMs = 750;
 const cliCommandTimeoutMs = 30000;
 const cliStartupTimeoutMs = 30000;
 const cliCleanupTimeoutMs = 30000;
+const cliRetryTimeoutMs = 90000;
 const uiShellTimeoutMs = 30000;
 const uiShellPollIntervalMs = 250;
 const responsiveSessionPrefix = 'ui-';
@@ -169,6 +170,30 @@ const inspectStateExpression = `() => {
           button.left < (historyPanelRect?.left ?? 0) - 1 ||
           button.right > (historyPanelRect?.right ?? viewportWidth) + 1,
       ),
+    },
+    viewMode: {
+      current: (() => {
+        const activeButton = [...document.querySelectorAll('.view-mode-toggle button')]
+          .find((button) => button.getAttribute('aria-pressed') === 'true');
+        const activeLabel = normalizeText(activeButton?.textContent);
+        if (/pubblica/i.test(activeLabel)) {
+          return 'public';
+        }
+        if (/admin/i.test(activeLabel)) {
+          return 'admin';
+        }
+        return '';
+      })(),
+      readonlyBannerPresent: Boolean(document.querySelector('.public-readonly-panel .locked-banner')),
+      adminLoginPresent: Boolean(document.querySelector('.auth-overlay')),
+      adminControlsPresent: Boolean(document.querySelector('.accent-panel .results-grid')),
+      publicControlsPresent: Boolean(document.querySelector('.public-readonly-panel')),
+    },
+    interactiveSurfaces: {
+      total: document.querySelectorAll('.interactive-surface').length,
+      analytics: document.querySelectorAll(
+        '.kpi-card.interactive-surface, .analytics-card.interactive-surface, .analytics-subpanel.interactive-surface, .history-user-card.interactive-surface, .season-comparison-row.interactive-surface',
+      ).length,
     },
     selectedWeekend: {
       calendarCardCount: document.querySelectorAll('.calendar-card').length,
@@ -340,6 +365,44 @@ async function probeUrl(url, { fetchImpl = fetch } = {}) {
   }
 }
 
+async function waitForApiReadiness(
+  urls,
+  {
+    fetchImpl = fetch,
+    timeoutMs = startupTimeoutMs,
+    pollInterval = pollIntervalMs,
+    sleepImpl = sleep,
+  } = {},
+) {
+  const pendingUrls = new Set(urls);
+  const startedAt = Date.now();
+
+  while (pendingUrls.size > 0 && Date.now() - startedAt < timeoutMs) {
+    const probes = await Promise.all(
+      [...pendingUrls].map(async (url) => ({
+        url,
+        ok: await probeUrl(url, { fetchImpl }),
+      })),
+    );
+
+    for (const probe of probes) {
+      if (probe.ok) {
+        pendingUrls.delete(probe.url);
+      }
+    }
+
+    if (pendingUrls.size === 0) {
+      return;
+    }
+
+    await sleepImpl(pollInterval);
+  }
+
+  fail(
+    `API applicative non pronte entro il timeout previsto: ${[...pendingUrls].join(', ')}`,
+  );
+}
+
 function startChild(command, args, {
   cwd = projectRoot,
   env = loadRuntimeEnv(),
@@ -381,6 +444,12 @@ async function stopChild(child, { sleepImpl = sleep } = {}) {
 async function ensureLocalAppStack({
   frontendUrl = baseUrl,
   backendUrl = backendHealthUrl,
+  appProbeUrls = [
+    `${baseUrl}/api/session`,
+    `${baseUrl}/api/data`,
+    `${baseUrl}/api/drivers`,
+    `${baseUrl}/api/calendar`,
+  ],
   fetchImpl = fetch,
   spawnImpl = spawn,
   sleepImpl = sleep,
@@ -395,12 +464,29 @@ async function ensureLocalAppStack({
   frontendArgs = ['run', 'dev:frontend'],
 } = {}) {
   const resolvedPollInterval = pollIntervalOverride ?? pollInterval;
+  const frontendReachable = await probeUrl(frontendUrl, { fetchImpl });
+  const backendReachable = await probeUrl(backendUrl, { fetchImpl });
 
-  if (await probeUrl(frontendUrl, { fetchImpl })) {
+  if (frontendReachable && backendReachable) {
+    await waitForApiReadiness(appProbeUrls, {
+      fetchImpl,
+      timeoutMs,
+      pollInterval: resolvedPollInterval,
+      sleepImpl,
+    });
+
     return {
       started: false,
       stop: async () => {},
     };
+  }
+
+  if (frontendReachable !== backendReachable) {
+    fail(
+      frontendReachable
+        ? `Frontend raggiungibile su ${frontendUrl} ma backend non pronto su ${backendUrl}. Chiudi lo stack locale parziale e riesegui il controllo responsive.`
+        : `Backend raggiungibile su ${backendUrl} ma frontend non pronto su ${frontendUrl}. Chiudi lo stack locale parziale e riesegui il controllo responsive.`,
+    );
   }
 
   const backendChild = startChild(backendCommand, backendArgs, {
@@ -432,6 +518,13 @@ async function ensureLocalAppStack({
         pollInterval: resolvedPollInterval,
         label: frontendUrl,
         failureMessage: `Frontend non raggiungibile su ${frontendUrl}.`,
+        sleepImpl,
+      });
+
+      await waitForApiReadiness(appProbeUrls, {
+        fetchImpl,
+        timeoutMs,
+        pollInterval: resolvedPollInterval,
         sleepImpl,
       });
 
@@ -623,33 +716,55 @@ function createPlaywrightCliAdapter({
   fsImpl = fs,
   pathImpl = path,
 } = {}) {
+  function shouldRetryTimedOutCommand(args, { timeoutMs }) {
+    const command = args[0] ?? '';
+    return timeoutMs < cliRetryTimeoutMs && ['list', 'tab-list'].includes(command);
+  }
+
   function run(args, {
     allowFailure = false,
     timeoutMs = cliTimeoutMs,
     sessionScoped = true,
   } = {}) {
-    const result = spawnSyncImpl('npx', buildCliArgs(args, {
-      sessionId: sessionScoped ? sessionId : undefined,
-    }), {
-      cwd,
-      encoding: 'utf8',
-      timeout: timeoutMs,
-    });
-    const output = extractProcessOutput(result);
+    const timeouts = shouldRetryTimedOutCommand(args, { timeoutMs })
+      ? [timeoutMs, cliRetryTimeoutMs]
+      : [timeoutMs];
+    let lastResult;
+    let lastOutput = '';
 
-    if (result.error) {
-      if (result.error.code === 'ETIMEDOUT') {
-        fail(`Comando Playwright scaduto dopo ${timeoutMs}ms: ${args.join(' ')}`, output || result.error.message);
+    for (const resolvedTimeout of timeouts) {
+      const result = spawnSyncImpl('npx', buildCliArgs(args, {
+        sessionId: sessionScoped ? sessionId : undefined,
+      }), {
+        cwd,
+        encoding: 'utf8',
+        timeout: resolvedTimeout,
+      });
+      const output = extractProcessOutput(result);
+
+      lastResult = result;
+      lastOutput = output;
+
+      if (result.error?.code === 'ETIMEDOUT' && resolvedTimeout !== timeouts[timeouts.length - 1]) {
+        continue;
       }
 
-      fail(`Comando Playwright fallito: ${args.join(' ')}`, output || result.error.message);
+      break;
     }
 
-    if (!allowFailure && result.status !== 0) {
-      fail(`Comando Playwright fallito: ${args.join(' ')}`, output);
+    if (lastResult?.error) {
+      if (lastResult.error.code === 'ETIMEDOUT') {
+        fail(`Comando Playwright scaduto dopo ${timeoutMs}ms: ${args.join(' ')}`, lastOutput || lastResult.error.message);
+      }
+
+      fail(`Comando Playwright fallito: ${args.join(' ')}`, lastOutput || lastResult.error.message);
     }
 
-    return output;
+    if (!allowFailure && lastResult?.status !== 0) {
+      fail(`Comando Playwright fallito: ${args.join(' ')}`, lastOutput);
+    }
+
+    return lastOutput;
   }
 
   function safeRun(args, options) {
@@ -1090,14 +1205,70 @@ function switchWeekend({
   sleepSyncImpl(150);
 }
 
+function switchViewMode(targetView, {
+  evaluateJsonImpl,
+  sleepSyncImpl = sleepSync,
+} = {}) {
+  const result = evaluateJsonImpl(`() => {
+    const buttons = [...document.querySelectorAll('.view-mode-toggle button')];
+    const matcher = ${JSON.stringify(targetView)} === 'public' ? /pubblica/i : /admin/i;
+    const targetButton = buttons.find((button) => matcher.test(button.textContent || ''));
+
+    if (!targetButton) {
+      return { clicked: false };
+    }
+
+    targetButton.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    return { clicked: true };
+  }`);
+
+  if (!result.clicked) {
+    fail(`Impossibile cambiare vista verso ${targetView}.`);
+  }
+
+  waitForEvaluatedCondition(
+    `() => {
+      const activeButton = [...document.querySelectorAll('.view-mode-toggle button')]
+        .find((button) => button.getAttribute('aria-pressed') === 'true');
+      const label = String(activeButton?.textContent || '');
+      return ${JSON.stringify(targetView)} === 'public'
+        ? /pubblica/i.test(label)
+        : /admin/i.test(label);
+    }`,
+    {
+      evaluateJsonImpl,
+      sleepSyncImpl,
+      timeoutMs: 10000,
+      failureMessage: `Vista ${targetView} non attiva dopo il toggle UI.`,
+    },
+  );
+
+  sleepSyncImpl(150);
+}
+
 function validateState(
   state,
-  { expectSprintBadge = false, expectVisibleTooltip = false, expectedWeekendChangeFrom = null } = {},
+  {
+    expectSprintBadge = false,
+    expectVisibleTooltip = false,
+    expectedViewMode = null,
+    expectedWeekendChangeFrom = null,
+  } = {},
 ) {
   const failures = [];
   const usesFormula1 = (fontFamily) => /(?:^|,)\s*["']?Formula1["']?\s*(?:,|$)/i.test(fontFamily);
+  const isPublicView = expectedViewMode === 'public';
 
-  if (!Object.values(state.mainSections).every(Boolean)) {
+  const requiredSections = {
+    hero: state.mainSections.hero,
+    summary: state.mainSections.summary,
+    calendar: state.mainSections.calendar,
+    predictions: state.mainSections.predictions,
+    footer: state.mainSections.footer,
+    ...(isPublicView ? {} : { results: state.mainSections.results }),
+  };
+
+  if (!Object.values(requiredSections).every(Boolean)) {
     failures.push(`Sezioni principali mancanti: ${JSON.stringify(state.mainSections)}`);
   }
 
@@ -1170,7 +1341,7 @@ function validateState(
     failures.push('Pannello storico non trovato.');
   }
 
-  if (state.history.hasCards && state.history.actionButtonCount === 0) {
+  if (!isPublicView && state.history.hasCards && state.history.actionButtonCount === 0) {
     failures.push('Storico presente ma senza action buttons.');
   }
 
@@ -1198,6 +1369,32 @@ function validateState(
     failures.push(
       `Overflow orizzontale non consentito: ${JSON.stringify(state.unauthorizedOverflow.slice(0, 5))}`,
     );
+  }
+
+  if (expectedViewMode && state.viewMode?.current !== expectedViewMode) {
+    failures.push(`Vista corrente inattesa: attesa ${expectedViewMode}, rilevata ${state.viewMode?.current || '(vuota)'}.`);
+  }
+
+  if (isPublicView) {
+    if (!state.viewMode?.readonlyBannerPresent) {
+      failures.push('Vista pubblica senza banner readonly.');
+    }
+
+    if (!state.viewMode?.publicControlsPresent) {
+      failures.push('Vista pubblica senza pannello readonly dedicato.');
+    }
+  } else if (expectedViewMode === 'admin' && !state.viewMode?.adminControlsPresent) {
+    failures.push('Vista admin senza controlli risultati/modifica.');
+  }
+
+  if (state.interactiveSurfaces) {
+    if (state.interactiveSurfaces.total <= 0) {
+      failures.push('Nessuna interactive surface rilevata nella pagina.');
+    }
+
+    if (state.interactiveSurfaces.analytics <= 0) {
+      failures.push('Nessuna interactive surface analytics rilevata nei riquadri UI.');
+    }
   }
 
   return failures;
@@ -1279,13 +1476,53 @@ async function main() {
       const defaultState = inspectState({
         evaluateJsonImpl: cli.evaluateJson,
       });
-      const defaultFailures = validateState(defaultState);
+      const defaultFailures = validateState(defaultState, {
+        expectedViewMode: 'admin',
+      });
       if (defaultFailures.length > 0) {
         const screenshotPath = cli.captureScreenshot(`${breakpoint.label}-default`);
         allFailures.push({
           viewport: breakpoint,
           state: 'default',
           failures: defaultFailures,
+          screenshotPath,
+        });
+      }
+
+      switchViewMode('public', {
+        evaluateJsonImpl: cli.evaluateJson,
+      });
+      const publicState = inspectState({
+        evaluateJsonImpl: cli.evaluateJson,
+      });
+      const publicFailures = validateState(publicState, {
+        expectedViewMode: 'public',
+      });
+      if (publicFailures.length > 0) {
+        const screenshotPath = cli.captureScreenshot(`${breakpoint.label}-public-view`);
+        allFailures.push({
+          viewport: breakpoint,
+          state: 'public-view',
+          failures: publicFailures,
+          screenshotPath,
+        });
+      }
+
+      switchViewMode('admin', {
+        evaluateJsonImpl: cli.evaluateJson,
+      });
+      const adminReturnState = inspectState({
+        evaluateJsonImpl: cli.evaluateJson,
+      });
+      const adminReturnFailures = validateState(adminReturnState, {
+        expectedViewMode: 'admin',
+      });
+      if (adminReturnFailures.length > 0) {
+        const screenshotPath = cli.captureScreenshot(`${breakpoint.label}-admin-return`);
+        allFailures.push({
+          viewport: breakpoint,
+          state: 'admin-return',
+          failures: adminReturnFailures,
           screenshotPath,
         });
       }

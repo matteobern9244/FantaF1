@@ -29,7 +29,7 @@ function WeekendLivePanel({
       </div>
       <div className="analytics-summary-grid">
         {weekendComparison.map((entry) => (
-          <article key={`weekend-${entry.userName}`} className="analytics-card">
+          <article key={`weekend-${entry.userName}`} className="analytics-card interactive-surface">
             <span className="analytics-label">{entry.userName}</span>
             <strong>{entry.liveTotal} pt live</strong>
             <small>Match confermati: {entry.matchedFields.length}</small>

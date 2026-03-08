@@ -13,11 +13,22 @@ import {
 
 describe('responsive UI local stack bootstrap', () => {
   it('starts backend and frontend when the frontend is initially unreachable and stops them afterwards', async () => {
-    let fetchCalls = 0;
-    const fetchImpl = vi.fn().mockImplementation(async () => {
-      fetchCalls += 1;
+    const urlState = new Map([
+      ['http://127.0.0.1:5173', { calls: 0, okAfter: 3 }],
+      ['http://127.0.0.1:3001/api/health', { calls: 0, okAfter: 2 }],
+      ['http://127.0.0.1:5173/api/session', { calls: 0, okAfter: 4 }],
+      ['http://127.0.0.1:5173/api/data', { calls: 0, okAfter: 4 }],
+      ['http://127.0.0.1:5173/api/drivers', { calls: 0, okAfter: 4 }],
+      ['http://127.0.0.1:5173/api/calendar', { calls: 0, okAfter: 4 }],
+    ]);
+    const fetchImpl = vi.fn().mockImplementation(async (url) => {
+      const state = urlState.get(url);
+      if (!state) {
+        throw new Error(`unexpected url ${url}`);
+      }
 
-      if (fetchCalls === 1) {
+      state.calls += 1;
+      if (state.calls < state.okAfter) {
         throw new Error('offline');
       }
 
@@ -65,12 +76,13 @@ describe('responsive UI local stack bootstrap', () => {
     expect(backendKill).toHaveBeenCalledWith('SIGTERM');
   });
 
-  it('reuses an already reachable frontend without spawning child processes', async () => {
+  it('reuses an already healthy frontend and backend without spawning child processes', async () => {
     const fetchImpl = vi.fn().mockResolvedValue({ ok: true });
     const spawnImpl = vi.fn();
 
     const stack = await ensureLocalAppStack({
       frontendUrl: 'http://127.0.0.1:5173',
+      backendUrl: 'http://127.0.0.1:3001/api/health',
       fetchImpl,
       spawnImpl,
       sleepImpl: async () => {},
@@ -84,6 +96,28 @@ describe('responsive UI local stack bootstrap', () => {
     expect(spawnImpl).not.toHaveBeenCalled();
 
     await expect(stack.stop()).resolves.toBeUndefined();
+  });
+
+  it('fails fast when only one side of the local stack is reachable', async () => {
+    const fetchImpl = vi.fn().mockImplementation(async (url) => {
+      if (url === 'http://127.0.0.1:5173') {
+        return { ok: true };
+      }
+
+      throw new Error('offline');
+    });
+
+    await expect(
+      ensureLocalAppStack({
+        frontendUrl: 'http://127.0.0.1:5173',
+        backendUrl: 'http://127.0.0.1:3001/api/health',
+        fetchImpl,
+        spawnImpl: vi.fn(),
+        sleepImpl: async () => {},
+        timeoutMs: 100,
+        pollInterval: 10,
+      }),
+    ).rejects.toThrow(/stack locale parziale/i);
   });
 
   it('skips the weekend-switch scenario when fewer than two calendar cards are available', () => {
@@ -134,6 +168,32 @@ describe('responsive UI playwright preflight', () => {
     expect(spawnSyncImpl.mock.calls[0][1]).not.toContain('close-all');
     expect(spawnSyncImpl.mock.calls[0][1]).not.toContain('kill-all');
     expect(spawnSyncImpl.mock.calls[0][2]).toEqual(expect.objectContaining({ timeout: 30000 }));
+  });
+
+  it('retries a slow Playwright list command before failing the preflight', () => {
+    const timeoutError = Object.assign(new Error('timed out'), { code: 'ETIMEDOUT' });
+    const spawnSyncImpl = vi
+      .fn()
+      .mockReturnValueOnce({
+        status: null,
+        stdout: '',
+        stderr: '',
+        error: timeoutError,
+      })
+      .mockReturnValueOnce({
+        status: 0,
+        stdout: '### Browsers\n  (no browsers)\n',
+        stderr: '',
+      });
+    const adapter = createPlaywrightCliAdapter({
+      sessionId: 'ui-current',
+      spawnSyncImpl,
+    });
+
+    expect(() => adapter.assertCleanEnvironment()).not.toThrow();
+    expect(spawnSyncImpl).toHaveBeenCalledTimes(2);
+    expect(spawnSyncImpl.mock.calls[0][2]).toEqual(expect.objectContaining({ timeout: 30000 }));
+    expect(spawnSyncImpl.mock.calls[1][2]).toEqual(expect.objectContaining({ timeout: 90000 }));
   });
 });
 
@@ -417,6 +477,74 @@ describe('responsive UI app shell gating', () => {
         'Target tipografico mancante: valore proiezione gara.',
       ]),
     );
+  });
+
+  it('accepts the public view when admin-only controls are intentionally absent', () => {
+    const validationState = {
+      mainSections: {
+        hero: true,
+        summary: true,
+        calendar: true,
+        predictions: true,
+        results: false,
+        footer: true,
+      },
+      nextRace: {
+        cardPresent: true,
+        badgeText: 'Weekend Standard',
+        hasSessions: false,
+        rowCount: 0,
+        clippedRows: [],
+        noteText: '',
+        noteFits: true,
+      },
+      typography: {
+        sessionDay: { present: false, fontFamily: '', text: '' },
+        sessionDate: { present: false, fontFamily: '', text: '' },
+        sessionClock: { present: false, fontFamily: '', text: '' },
+        liveScoreValue: { present: true, fontFamily: 'Formula1, sans-serif', text: '12' },
+        projectionValue: { present: true, fontFamily: 'Formula1, sans-serif', text: '9' },
+      },
+      tooltip: {
+        wrapperPresent: false,
+        disabledWrapperPresent: false,
+        present: false,
+        visible: false,
+        fitsViewport: true,
+        text: '',
+      },
+      history: {
+        present: true,
+        hasCards: true,
+        emptyStateVisible: false,
+        actionButtonCount: 0,
+        clippedButtons: [],
+      },
+      selectedWeekend: {
+        calendarCardCount: 2,
+        sprintCardCount: 1,
+        cardText: 'Round 1 Australia',
+        bannerTitle: 'Australian Grand Prix 2026',
+        firstPredictionValue: '',
+        firstPredictionText: '',
+        firstResultValue: '',
+        firstResultText: '',
+      },
+      viewMode: {
+        current: 'public',
+        readonlyBannerPresent: true,
+        adminLoginPresent: false,
+        adminControlsPresent: false,
+        publicControlsPresent: true,
+      },
+      interactiveSurfaces: {
+        total: 12,
+        analytics: 5,
+      },
+      unauthorizedOverflow: [],
+    };
+
+    expect(validateState(validationState, { expectedViewMode: 'public' })).toEqual([]);
   });
 });
 

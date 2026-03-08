@@ -13,7 +13,7 @@ function WeekendPulseHeroCard({
   weekendStatusLabel,
 }: WeekendPulseHeroCardProps) {
   return (
-    <section className="hero-card">
+    <section className="hero-card interactive-surface">
       <div className="card-heading">
         <Gauge size={18} />
         <span>Weekend pulse</span>

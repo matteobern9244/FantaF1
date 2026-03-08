@@ -293,12 +293,21 @@ describe('Mockup roadmap UI features', () => {
     expect(within(kpiPanel).getByText('1.5')).toBeInTheDocument();
     expect(within(kpiPanel).getByText('100%')).toBeInTheDocument();
     expect(within(kpiPanel).getByText('10')).toBeInTheDocument();
+    expect(within(kpiPanel).getAllByRole('article').every((card) => card.classList.contains('interactive-surface'))).toBe(
+      true,
+    );
 
     const analyticsPanel = screen.getByRole('heading', { name: /deep-dive kpi dashboard/i }).closest('section');
     expect(analyticsPanel).not.toBeNull();
     expect(within(analyticsPanel as HTMLElement).getByText(/hamilton lewis/i)).toBeInTheDocument();
     expect(within(analyticsPanel as HTMLElement).getAllByText(/chinese grand prix 2099/i).length).toBeGreaterThan(0);
     expect(within(analyticsPanel as HTMLElement).getAllByText(/australian grand prix 2099/i).length).toBeGreaterThan(0);
+    expect(
+      (analyticsPanel as HTMLElement).querySelectorAll('.analytics-card.interactive-surface').length,
+    ).toBeGreaterThan(0);
+    expect(
+      (analyticsPanel as HTMLElement).querySelectorAll('.analytics-subpanel.interactive-surface').length,
+    ).toBeGreaterThan(0);
   });
 
   it('renders season analysis, public guide, share action and history drill-down', async () => {
@@ -313,11 +322,27 @@ describe('Mockup roadmap UI features', () => {
     expect(screen.getByRole('heading', { name: /analisi stagione/i })).toBeInTheDocument();
     expect(screen.getByText(/chi tiene il passo del leader/i)).toBeInTheDocument();
     expect(screen.getByText(/recap ultimo gp/i)).toBeInTheDocument();
+    const seasonPanel = screen.getByRole('heading', { name: /analisi stagione/i }).closest('section');
+    expect(seasonPanel).not.toBeNull();
+    expect((seasonPanel as HTMLElement).querySelectorAll('.analytics-card.interactive-surface').length).toBeGreaterThan(0);
+    expect((seasonPanel as HTMLElement).querySelectorAll('.analytics-subpanel.interactive-surface').length).toBeGreaterThan(0);
+    expect((seasonPanel as HTMLElement).querySelectorAll('.season-comparison-row.interactive-surface').length).toBeGreaterThan(0);
+
+    const weekendPulseHeroCard = screen.getByText(/countdown lock/i).closest('section');
+    expect(weekendPulseHeroCard).not.toBeNull();
+    expect(weekendPulseHeroCard).toHaveClass('interactive-surface');
+
+    const weekendPulsePanel = screen.getByRole('heading', { name: /weekend pulse/i }).closest('section');
+    expect(weekendPulsePanel).not.toBeNull();
+    expect((weekendPulsePanel as HTMLElement).querySelectorAll('.analytics-card.interactive-surface').length).toBeGreaterThan(0);
 
     fireEvent.click(screen.getByRole('button', { name: /vista pubblica/i }));
 
     expect(screen.getByRole('heading', { name: /come funziona/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /copia link vista corrente/i })).toBeInTheDocument();
+    expect(
+      screen.getAllByRole('article').some((card) => card.classList.contains('interactive-surface')),
+    ).toBe(true);
 
     fireEvent.click(screen.getByRole('button', { name: /copia link vista corrente/i }));
     await waitFor(() => {
@@ -332,6 +357,9 @@ describe('Mockup roadmap UI features', () => {
     fireEvent.click(screen.getByRole('button', { name: /dettaglio australian grand prix 2099/i }));
     expect(screen.getByText(/pronostici dettagliati/i)).toBeInTheDocument();
     expect(screen.getAllByText(/marco/i).length).toBeGreaterThan(0);
+    expect(document.querySelectorAll('.history-card.interactive-surface').length).toBeGreaterThan(0);
+    expect(document.querySelectorAll('.history-user-card.interactive-surface').length).toBeGreaterThan(0);
+    expect(document.querySelectorAll('.history-detail-panel .analytics-subpanel.interactive-surface').length).toBeGreaterThan(0);
   });
 
   it('shows install CTA when the browser exposes the PWA install prompt', async () => {

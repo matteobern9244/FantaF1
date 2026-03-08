@@ -174,10 +174,6 @@ function buildPointsByField(userName: string, history: RaceRecord[]) {
 }
 
 function calculateAverage(values: number[]) {
-  if (values.length === 0) {
-    return 0;
-  }
-
   return values.reduce((sum, value) => sum + value, 0) / values.length;
 }
 
@@ -303,6 +299,16 @@ function buildRaceRecap(history: RaceRecord[]): RaceRecapSummary | null {
 
     return firstEntry[0].localeCompare(secondEntry[0], 'it');
   });
+  if (ranking.length === 0) {
+    return {
+      gpName: lastRecord.gpName,
+      winnerName: '',
+      winnerPoints: 0,
+      swingLabel: 'Weekend senza inseguitori diretti',
+      decisiveField: trackedFields[0],
+    };
+  }
+
   const winnerEntry = ranking[0];
   const runnerUpEntry = ranking[1];
   const fieldHits = trackedFields.map((field) => ({
@@ -320,12 +326,12 @@ function buildRaceRecap(history: RaceRecord[]): RaceRecapSummary | null {
 
   return {
     gpName: lastRecord.gpName,
-    winnerName: winnerEntry?.[0] ?? '',
-    winnerPoints: winnerEntry?.[1].pointsEarned ?? 0,
+    winnerName: winnerEntry[0],
+    winnerPoints: winnerEntry[1].pointsEarned,
     swingLabel: runnerUpEntry
-      ? `Gap sul secondo: ${(winnerEntry?.[1].pointsEarned ?? 0) - runnerUpEntry[1].pointsEarned} pt`
+      ? `Gap sul secondo: ${winnerEntry[1].pointsEarned - runnerUpEntry[1].pointsEarned} pt`
       : 'Weekend senza inseguitori diretti',
-    decisiveField: fieldHits[0]?.hits === 0 ? fieldHits[0]?.field ?? null : fieldHits[0]?.field ?? null,
+    decisiveField: fieldHits[0].field,
   };
 }
 

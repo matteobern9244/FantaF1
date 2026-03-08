@@ -33,7 +33,7 @@ function SeasonAnalysisPanel({
       </div>
       <div className="analytics-summary-grid">
         {seasonAnalytics.narratives.map((entry) => (
-          <article key={entry.slug} className="analytics-card">
+          <article key={entry.slug} className="analytics-card interactive-surface">
             <span className="analytics-label">{entry.title}</span>
             <strong>{entry.userName}</strong>
             <small>{entry.description}</small>
@@ -42,7 +42,7 @@ function SeasonAnalysisPanel({
       </div>
       <div className="season-comparison-table">
         {seasonAnalytics.comparison.map((entry) => (
-          <div key={entry.userName} className="season-comparison-row">
+          <div key={entry.userName} className="season-comparison-row interactive-surface">
             <strong>{entry.userName}</strong>
             <span>{entry.seasonPoints} pt</span>
             <span>Gap leader {entry.leaderGap}</span>
@@ -52,7 +52,7 @@ function SeasonAnalysisPanel({
         ))}
       </div>
       <div className="analytics-columns">
-        <div className="analytics-subpanel">
+        <div className="analytics-subpanel interactive-surface">
           <h3>Trend cumulato</h3>
           <div className="trend-chart" data-testid="season-cumulative-trend">
             {seasonAnalytics.comparison.map((entry) => {
@@ -76,7 +76,7 @@ function SeasonAnalysisPanel({
             })}
           </div>
         </div>
-        <div className="analytics-subpanel">
+        <div className="analytics-subpanel interactive-surface">
           <h3>Recap ultimo GP</h3>
           {seasonAnalytics.recap ? (
             <div className="weekend-pulse-summary">

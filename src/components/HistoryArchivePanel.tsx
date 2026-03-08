@@ -101,7 +101,7 @@ function HistoryArchivePanel({
             const isExpanded = expandedHistoryKey === historyKey;
 
             return (
-              <article key={`${record.gpName}-${record.date}-${index}`} className="history-card">
+              <article key={`${record.gpName}-${record.date}-${index}`} className="history-card interactive-surface">
                 <div className="history-top">
                   <div className="history-top-row">
                     <div>
@@ -146,7 +146,7 @@ function HistoryArchivePanel({
 
                 <div className="history-grid history-grid-compact">
                   {Object.entries(record.userPredictions).map(([name, result]) => (
-                    <div key={name} className="history-user-card">
+                    <div key={name} className="history-user-card interactive-surface">
                       <strong>{name}</strong>
                       <span>
                         {result.pointsEarned} {pointsSuffix}
@@ -159,7 +159,7 @@ function HistoryArchivePanel({
                   <div className="history-detail-panel" id={`history-detail-${index}`}>
                     <h3>Pronostici dettagliati</h3>
                     {Object.entries(record.userPredictions).map(([name]) => (
-                      <div key={`detail-${record.gpName}-${name}`} className="analytics-subpanel">
+                      <div key={`detail-${record.gpName}-${name}`} className="analytics-subpanel interactive-surface">
                         <strong>{name}</strong>
                         <div className="field-accuracy-list compact-list">
                           {predictionFieldOrder.map((field) => (

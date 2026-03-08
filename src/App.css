@@ -360,10 +360,21 @@ select,
   transition: var(--transition);
 }
 
-.hero-card:hover {
+.interactive-surface {
+  transition: var(--transition);
+}
+
+.interactive-surface:hover,
+.interactive-surface:focus-within,
+button.interactive-surface:focus-visible {
+  background: rgba(255, 255, 255, 0.04);
   border-color: var(--line-strong);
   transform: translateY(-4px);
   box-shadow: var(--shadow-lg);
+}
+
+button.interactive-surface:focus-visible {
+  outline: 0;
 }
 
 .rules-panel {
@@ -695,12 +706,6 @@ select:focus {
   transition: var(--transition);
 }
 
-.calendar-card:hover {
-  transform: translateY(-4px);
-  background: rgba(255, 255, 255, 0.08);
-  border-color: var(--line-strong);
-}
-
 .calendar-card.selected {
   border-color: var(--red);
   background: rgba(225, 6, 0, 0.05);
@@ -986,11 +991,6 @@ select:focus {
   transition: var(--transition);
 }
 
-.user-card:hover {
-  background: rgba(255, 255, 255, 0.04);
-  border-color: var(--line-strong);
-}
-
 .user-card-head {
   min-width: 0;
   display: flex;
@@ -1112,11 +1112,6 @@ select:focus {
 .history-user-card {
   display: grid;
   gap: 6px;
-}
-
-.history-card:hover {
-  background: rgba(255, 255, 255, 0.04);
-  border-color: var(--line-strong);
 }
 
 .history-top-row {

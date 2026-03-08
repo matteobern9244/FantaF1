@@ -17,8 +17,8 @@ export default defineConfig({
     globals: true,
     coverage: {
       provider: 'v8',
-      include: ['backend/**/*.js', 'src/utils/**/*.ts'],
-      exclude: ['backend/config.js', 'backend/models.js'],
+      include: ['app.js', 'server.js', 'backend/**/*.js', 'src/**/*.ts', 'src/**/*.tsx'],
+      exclude: ['backend/config.js', 'backend/models.js', 'src/types.ts', 'src/vite-env.d.ts'],
       thresholds: {
         lines: 100,
         functions: 100,

@@ -117,6 +117,11 @@ Rules:
 - preserve the current visual style
 - do not introduce utility-first CSS frameworks
 - keep centralized configuration patterns already used by the project
+- every new component that introduces cards, panels, boxes, or secondary sub-panels must reuse the existing interactive visual feedback already present in the application instead of introducing isolated hover/focus variants
+- visual interaction consistency for those surfaces must remain aligned across both admin view and public view
+- every UI-affecting task must be verified in real browser behavior across admin view, public view, desktop breakpoints, and mobile breakpoints before the task is considered complete
+- a missing or failing responsive/browser verification is a blocker, not a documentation note or an optional follow-up
+- new fixes, modifications, and implementations must preserve end-to-end browser behavior without regressions across admin/public/mobile/desktop flows
 - preserve alphabetical ordering of drivers as `LastName FirstName`
 - the footer must display `Application created by Matteo Bernardini©` and this is the only allowed explicit personal name reference in repository UI content
 
@@ -151,4 +156,6 @@ A task is complete only if:
 - no UI regression is introduced
 - no API contract mismatch is introduced
 - all relevant tests pass
+- browser and responsive checks pass for the affected admin/public flows
+- coverage for the official application-code scope remains at 100% for lines, branches, functions, and statements
 - production-sensitive logic remains safe
