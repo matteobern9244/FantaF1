@@ -20,6 +20,19 @@ const raceResultsCache = new Map();
 const youtubeSearchBaseUrl = appConfig.calendarSource.highlightsSearchBaseUrl;
 const highlightsPublisherKeywords = appConfig.calendarSource.highlightsPublisherKeywords;
 const highlightsRequiredKeywords = appConfig.calendarSource.highlightsRequiredKeywords;
+const highlightsPositiveKeywords = appConfig.calendarSource.highlightsPositiveKeywords;
+const highlightsSecondaryKeywords = appConfig.calendarSource.highlightsSecondaryKeywords;
+const highlightsNegativeKeywords = appConfig.calendarSource.highlightsNegativeKeywords;
+const highlightsChannelHandle = appConfig.calendarSource.highlightsChannelHandle;
+const highlightsChannelId = appConfig.calendarSource.highlightsChannelId;
+const highlightsChannelSearchBaseUrl = appConfig.calendarSource.highlightsChannelSearchBaseUrl;
+const highlightsChannelVideosUrl = appConfig.calendarSource.highlightsChannelVideosUrl;
+const highlightsFeedUrl = appConfig.calendarSource.highlightsFeedUrl;
+const highlightsOEmbedBaseUrl = appConfig.calendarSource.highlightsOEmbedBaseUrl;
+const highlightsLookupMissingTtlMs =
+  Number(appConfig.calendarSource.highlightsLookupMissingTtlHours) * 60 * 60 * 1000;
+const highlightsLookupMaxVideoPages = Number(appConfig.calendarSource.highlightsLookupMaxVideoPages);
+const highlightsRaceAliases = appConfig.calendarSource.highlightsRaceAliases;
 
 function decodeHtmlEntities(value = '') {
   return String(value)
@@ -59,15 +72,38 @@ function buildHighlightsSearchQuery(race = {}) {
   return normalizeText(`${titleSeed} highlights Sky Sport Italia F1`);
 }
 
+function normalizeLookupText(value = '') {
+  return normalizeText(value)
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase();
+}
+
 function normalizeYoutubeWatchUrl(href = '') {
   const value = String(href).trim();
   const watchMatch = value.match(/(?:https:\/\/www\.youtube\.com)?\/watch\?v=([A-Za-z0-9_-]{6,})/i);
+  const shortMatch = value.match(/(?:https:\/\/www\.youtube\.com)?\/shorts\/([A-Za-z0-9_-]{6,})/i);
 
   if (watchMatch?.[1]) {
     return `https://www.youtube.com/watch?v=${watchMatch[1]}`;
   }
 
+  if (shortMatch?.[1]) {
+    return `https://www.youtube.com/watch?v=${shortMatch[1]}`;
+  }
+
   return '';
+}
+
+function tokenizeLookupTerms(value = '') {
+  return normalizeLookupText(value)
+    .split(/[^a-z0-9]+/i)
+    .filter(
+      (token) =>
+        token.length >= 3 &&
+        !/^\d+$/.test(token) &&
+        !['grand', 'prix', 'formula'].includes(token),
+    );
 }
 
 function buildRaceMatchTerms(race = {}) {
@@ -80,55 +116,286 @@ function buildRaceMatchTerms(race = {}) {
   ];
 
   values.forEach((value) => {
-    normalizeText(value)
-      .toLowerCase()
-      .split(/[^a-z0-9]+/i)
-      .filter((token) => token.length >= 3 && !['grand', 'prix', 'formula'].includes(token))
-      .forEach((token) => terms.add(token));
+    const normalizedValue = normalizeLookupText(value);
+    tokenizeLookupTerms(value).forEach((token) => terms.add(token));
+
+    for (const [canonicalTerm, aliases] of Object.entries(highlightsRaceAliases)) {
+      const normalizedCanonicalTerm = normalizeLookupText(canonicalTerm);
+      if (!normalizedValue || !normalizedValue.includes(normalizedCanonicalTerm)) {
+        continue;
+      }
+
+      tokenizeLookupTerms(canonicalTerm).forEach((token) => terms.add(token));
+      aliases.forEach((alias) => {
+        tokenizeLookupTerms(alias).forEach((token) => terms.add(token));
+      });
+    }
   });
 
   return [...terms];
 }
 
 function isHighlightsPublisherMatch(value = '') {
-  const normalizedValue = normalizeText(value).toLowerCase();
-  return highlightsPublisherKeywords.some((keyword) => normalizedValue.includes(keyword));
-}
-
-function hasHighlightsRequiredKeyword(value = '') {
-  const normalizedValue = normalizeText(value).toLowerCase();
-  return highlightsRequiredKeywords.some((keyword) => normalizedValue.includes(keyword));
-}
-
-function isRaceHighlightsCandidateMatch(title = '', race = {}) {
-  const normalizedTitle = normalizeText(title).toLowerCase();
-  const raceMatchTerms = buildRaceMatchTerms(race);
-
+  const normalizedValue = normalizeLookupText(value);
   return (
-    isHighlightsPublisherMatch(normalizedTitle) &&
-    hasHighlightsRequiredKeyword(normalizedTitle) &&
-    raceMatchTerms.some((term) => normalizedTitle.includes(term))
+    highlightsPublisherKeywords.some((keyword) => normalizedValue.includes(normalizeLookupText(keyword))) ||
+    normalizedValue.includes(normalizeLookupText(highlightsChannelHandle)) ||
+    normalizedValue.includes(normalizeLookupText(highlightsChannelId))
   );
 }
 
-function extractHighlightsVideoUrlFromSearchHtml(rawContent, race = {}) {
-  const anchorMatches = [...String(rawContent).matchAll(/<a[^>]+href="([^"]+)"[^>]*>([\s\S]*?)<\/a>/gi)];
+function hasHighlightsRequiredKeyword(value = '') {
+  const normalizedValue = normalizeLookupText(value);
+  return highlightsRequiredKeywords.some((keyword) => normalizedValue.includes(normalizeLookupText(keyword)));
+}
 
-  for (const [, href, anchorHtml] of anchorMatches) {
-    const videoUrl = normalizeYoutubeWatchUrl(href);
-    if (!videoUrl) {
+function findMatchingBraceIndex(value, startIndex) {
+  let depth = 0;
+  let inString = false;
+  let isEscaped = false;
+
+  for (let index = startIndex; index < value.length; index += 1) {
+    const char = value[index];
+
+    if (inString) {
+      if (isEscaped) {
+        isEscaped = false;
+        continue;
+      }
+
+      if (char === '\\') {
+        isEscaped = true;
+        continue;
+      }
+
+      if (char === '"') {
+        inString = false;
+      }
       continue;
     }
 
-    const title = normalizeText(anchorHtml);
-    if (!isRaceHighlightsCandidateMatch(title, race)) {
+    if (char === '"') {
+      inString = true;
       continue;
     }
 
-    return videoUrl;
+    if (char === '{') {
+      depth += 1;
+      continue;
+    }
+
+    if (char === '}') {
+      depth -= 1;
+      if (depth === 0) {
+        return index;
+      }
+    }
+  }
+
+  return -1;
+}
+
+function extractJsonVideoRenderers(rawContent = '') {
+  const content = String(rawContent);
+  const renderers = [];
+  const pattern = /{"videoRenderer":{/g;
+
+  for (const match of content.matchAll(pattern)) {
+    const startIndex = match.index;
+    /* v8 ignore next 3 */
+    if (typeof startIndex !== 'number' || startIndex < 0) {
+      continue;
+    }
+    const endIndex = findMatchingBraceIndex(content, startIndex);
+    if (endIndex < 0) {
+      continue;
+    }
+
+    try {
+      const parsedValue = JSON.parse(content.slice(startIndex, endIndex + 1));
+      if (parsedValue?.videoRenderer) {
+        renderers.push(parsedValue.videoRenderer);
+      }
+    } catch {
+      // Ignore malformed candidate blocks and continue scanning.
+    }
+  }
+
+  return renderers;
+}
+
+function extractRendererText(value) {
+  if (typeof value?.simpleText === 'string') {
+    return normalizeText(value.simpleText);
+  }
+
+  if (Array.isArray(value?.runs)) {
+    return normalizeText(value.runs.map((run) => run?.text ?? '').join(' '));
   }
 
   return '';
+}
+
+function extractInnertubeConfig(rawContent = '') {
+  const content = String(rawContent);
+  const apiKey = content.match(/INNERTUBE_API_KEY":"([^"]+)"/)?.[1] ?? '';
+  const clientVersion = content.match(/INNERTUBE_CLIENT_VERSION":"([^"]+)"/)?.[1] ?? '';
+
+  return { apiKey, clientVersion };
+}
+
+function extractContinuationTokens(rawContent = '') {
+  return [...String(rawContent).matchAll(/"continuationCommand":\{"token":"([^"]+)"/g)]
+    .map((match) => match[1])
+    .filter(Boolean);
+}
+
+function buildHighlightsCandidate(renderer = {}, source = 'global-search') {
+  const videoId = normalizeText(renderer?.videoId || renderer?.navigationEndpoint?.watchEndpoint?.videoId);
+  const rawVideoUrl = renderer?.navigationEndpoint?.commandMetadata?.webCommandMetadata?.url || '';
+
+  return {
+    videoId,
+    videoUrl: normalizeYoutubeWatchUrl(rawVideoUrl || (videoId ? `/watch?v=${videoId}` : '')),
+    title: extractRendererText(renderer?.title),
+    authorName: extractRendererText(renderer?.longBylineText || renderer?.ownerText || renderer?.shortBylineText),
+    authorUrl: '',
+    publishedAt: '',
+    source,
+  };
+}
+
+function extractHighlightsCandidatesFromMarkup(rawContent, source = 'global-search', defaultAuthorName = '', defaultAuthorUrl = '') {
+  const jsonCandidates = extractJsonVideoRenderers(rawContent).map((renderer) => {
+    const candidate = buildHighlightsCandidate(renderer, source);
+    return {
+      ...candidate,
+      authorName: candidate.authorName || defaultAuthorName,
+      authorUrl: defaultAuthorUrl,
+    };
+  });
+
+  if (jsonCandidates.length > 0) {
+    return jsonCandidates;
+  }
+
+  return [...String(rawContent).matchAll(/<a[^>]+href="([^"]+)"[^>]*>([\s\S]*?)<\/a>/gi)]
+    .map(([, href, anchorHtml]) => ({
+      videoId: '',
+      videoUrl: normalizeYoutubeWatchUrl(href),
+      title: normalizeText(anchorHtml),
+      authorName: defaultAuthorName,
+      authorUrl: defaultAuthorUrl,
+      publishedAt: '',
+      source,
+    }))
+    .filter((candidate) => candidate.videoUrl);
+}
+
+function extractHighlightsCandidatesFromFeedXml(rawContent = '') {
+  return [...String(rawContent).matchAll(/<entry>([\s\S]*?)<\/entry>/gi)].map((match) => {
+    const entry = match[1];
+    const videoId = entry.match(/<yt:videoId>([^<]+)<\/yt:videoId>/i)?.[1] ?? '';
+    const title = normalizeText(entry.match(/<title>([\s\S]*?)<\/title>/i)?.[1] ?? '');
+    const authorName = normalizeText(entry.match(/<name>([\s\S]*?)<\/name>/i)?.[1] ?? '');
+    const authorUrl = normalizeText(entry.match(/<uri>([\s\S]*?)<\/uri>/i)?.[1] ?? '');
+    const publishedAt = normalizeText(entry.match(/<published>([\s\S]*?)<\/published>/i)?.[1] ?? '');
+
+    return {
+      videoId,
+      videoUrl: normalizeYoutubeWatchUrl(`/watch?v=${videoId}`),
+      title,
+      authorName,
+      authorUrl,
+      publishedAt,
+      source: 'feed',
+    };
+  }).filter((candidate) => candidate.videoUrl);
+}
+
+function buildHighlightsCandidateScore(candidate, race = {}) {
+  const title = normalizeLookupText(candidate?.title);
+  const author = normalizeLookupText(candidate?.authorName || candidate?.author || '');
+  const authorUrl = normalizeLookupText(candidate?.authorUrl || '');
+  const combinedSource = `${title} ${author} ${authorUrl}`;
+  const raceMatchTerms = buildRaceMatchTerms(race);
+
+  if (!candidate?.videoUrl) {
+    return Number.NEGATIVE_INFINITY;
+  }
+
+  if (candidate?.source === 'global-search' && !isHighlightsPublisherMatch(combinedSource)) {
+    return Number.NEGATIVE_INFINITY;
+  }
+
+  if (!raceMatchTerms.some((term) => title.includes(term))) {
+    return Number.NEGATIVE_INFINITY;
+  }
+
+  let score = 0;
+
+  if (highlightsPositiveKeywords.some((keyword) => title.includes(normalizeLookupText(keyword)))) {
+    score += 20;
+  }
+
+  if (hasHighlightsRequiredKeyword(title)) {
+    score += 8;
+  }
+
+  if (highlightsSecondaryKeywords.some((keyword) => title.includes(normalizeLookupText(keyword)))) {
+    score += 6;
+  }
+
+  if (title.includes('gp')) {
+    score += 3;
+  }
+
+  if (title.includes('gara') || title.includes('race')) {
+    score += 2;
+  }
+
+  score += raceMatchTerms.reduce((total, term) => total + (title.includes(term) ? 2 : 0), 0);
+
+  if (highlightsNegativeKeywords.some((keyword) => title.includes(normalizeLookupText(keyword)))) {
+    score -= 12;
+  }
+
+  if (candidate?.publishedAt) {
+    const publishedAtValue = Date.parse(candidate.publishedAt);
+    const raceStartValue = Date.parse(race?.startDate || race?.endDate || '');
+    if (!Number.isNaN(publishedAtValue) && !Number.isNaN(raceStartValue) && publishedAtValue >= raceStartValue) {
+      score += 1;
+    }
+  }
+
+  return score;
+}
+
+function sortHighlightsCandidates(candidates, race = {}) {
+  return candidates
+    .map((candidate) => ({
+      ...candidate,
+      score: buildHighlightsCandidateScore(candidate, race),
+    }))
+    .filter((candidate) => Number.isFinite(candidate.score) && candidate.score > 0)
+    .sort((firstCandidate, secondCandidate) => {
+      if (secondCandidate.score !== firstCandidate.score) {
+        return secondCandidate.score - firstCandidate.score;
+      }
+
+      const firstPublishedAt = Date.parse(firstCandidate.publishedAt || '');
+      const secondPublishedAt = Date.parse(secondCandidate.publishedAt || '');
+
+      if (!Number.isNaN(secondPublishedAt) && !Number.isNaN(firstPublishedAt) && secondPublishedAt !== firstPublishedAt) {
+        return secondPublishedAt - firstPublishedAt;
+      }
+
+      return 0;
+    });
+}
+
+function extractHighlightsVideoUrlFromSearchHtml(rawContent, race = {}) {
+  return sortHighlightsCandidates(extractHighlightsCandidatesFromMarkup(rawContent), race)[0]?.videoUrl ?? '';
 }
 
 function shouldLookupFinishedRaceHighlights(race = {}, now = Date.now()) {
@@ -136,28 +403,264 @@ function shouldLookupFinishedRaceHighlights(race = {}, now = Date.now()) {
     return false;
   }
 
-  const endDateValue = Date.parse(race?.endDate || race?.startDate || '');
+  const endDateValue = Date.parse(race?.endDate || race?.startDate || race?.raceStartTime || '');
   if (Number.isNaN(endDateValue)) {
     return false;
   }
 
-  return endDateValue <= now;
-}
-
-async function fetchHighlightsVideoUrl(race, fetchHtmlImpl = fetchHtml) {
-  if (!race || !youtubeSearchBaseUrl) {
-    return '';
+  if (endDateValue > now) {
+    return false;
   }
 
-  const query = buildHighlightsSearchQuery(race);
-  const searchUrl = `${youtubeSearchBaseUrl}${encodeURIComponent(query)}`;
-  const searchHtml = await fetchHtmlImpl(searchUrl, getBrowserHeaders()).catch(() => '');
+  if (normalizeText(race?.highlightsLookupStatus) !== 'missing') {
+    return true;
+  }
 
-  return searchHtml ? extractHighlightsVideoUrlFromSearchHtml(searchHtml, race) : '';
+  const checkedAtValue = Date.parse(race?.highlightsLookupCheckedAt || '');
+  if (Number.isNaN(checkedAtValue)) {
+    return true;
+  }
+
+  return checkedAtValue + highlightsLookupMissingTtlMs <= now;
 }
 
-async function persistRaceHighlightsVideoUrl(calendar, meetingKey, highlightsVideoUrl) {
-  if (!Array.isArray(calendar) || !normalizeText(highlightsVideoUrl)) {
+function normalizeHighlightsLookupOptions(optionsOrFetchHtmlImpl = fetchHtml) {
+  if (typeof optionsOrFetchHtmlImpl === 'function') {
+    return {
+      fetchHtmlImpl: optionsOrFetchHtmlImpl,
+      fetchImpl: fetch,
+      now: new Date(),
+    };
+  }
+
+  return {
+    fetchHtmlImpl: optionsOrFetchHtmlImpl.fetchHtmlImpl ?? fetchHtml,
+    fetchImpl: optionsOrFetchHtmlImpl.fetchImpl ?? fetch,
+    now: optionsOrFetchHtmlImpl.now ?? new Date(),
+  };
+}
+
+async function fetchTextWithFetchImpl(url, {
+  fetchImpl = fetch,
+  method = 'GET',
+  headers = {},
+  body,
+} = {}) {
+  const response = await fetchImpl(url, { method, headers, body });
+
+  if (!response || typeof response.ok !== 'boolean' || typeof response.text !== 'function') {
+    throw new Error(`Invalid response received from ${url}`);
+  }
+
+  if (!response.ok) {
+    throw new Error(`${response.status}`);
+  }
+
+  return response.text();
+}
+
+async function validateHighlightsCandidate(candidate, race, fetchImpl = fetch) {
+  /* v8 ignore next 3 */
+  if (!candidate?.videoUrl || !highlightsOEmbedBaseUrl) {
+    return null;
+  }
+
+  try {
+    const oEmbedText = await fetchTextWithFetchImpl(
+      `${highlightsOEmbedBaseUrl}${encodeURIComponent(candidate.videoUrl)}`,
+      { fetchImpl, headers: getBrowserHeaders() },
+    );
+    const oEmbedPayload = JSON.parse(oEmbedText);
+    const validatedCandidate = {
+      ...candidate,
+      title: oEmbedPayload.title || candidate.title,
+      authorName: oEmbedPayload.author_name || candidate.authorName,
+      authorUrl: oEmbedPayload.author_url || candidate.authorUrl,
+    };
+
+    return isHighlightsPublisherMatch(
+      `${validatedCandidate.authorName} ${validatedCandidate.authorUrl}`,
+    ) && Number.isFinite(buildHighlightsCandidateScore(validatedCandidate, race))
+      ? validatedCandidate
+      : null;
+  } catch {
+    return null;
+  }
+}
+
+async function validateCandidatesInOrder(candidates, race, fetchImpl = fetch) {
+  for (const candidate of sortHighlightsCandidates(candidates, race)) {
+    const validatedCandidate = await validateHighlightsCandidate(candidate, race, fetchImpl);
+    if (validatedCandidate?.videoUrl) {
+      return validatedCandidate;
+    }
+  }
+
+  return null;
+}
+
+async function fetchHighlightsCandidatesFromFeed(fetchHtmlImpl) {
+  /* v8 ignore next 3 */
+  if (!highlightsFeedUrl) {
+    return [];
+  }
+
+  const feedXml = await fetchHtmlImpl(highlightsFeedUrl, getBrowserHeaders()).catch(() => '');
+  return feedXml ? extractHighlightsCandidatesFromFeedXml(feedXml) : [];
+}
+
+async function fetchHighlightsCandidatesFromChannelSearch(race, fetchHtmlImpl) {
+  /* v8 ignore next 3 */
+  if (!highlightsChannelSearchBaseUrl) {
+    return [];
+  }
+
+  const channelSearchHtml = await fetchHtmlImpl(
+    `${highlightsChannelSearchBaseUrl}${encodeURIComponent(buildHighlightsSearchQuery(race))}`,
+    getBrowserHeaders(),
+  ).catch(() => '');
+
+  return channelSearchHtml
+    ? extractHighlightsCandidatesFromMarkup(
+        channelSearchHtml,
+        'channel-search',
+        'Sky Sport F1',
+        `https://www.youtube.com/${highlightsChannelHandle}`,
+      )
+    : [];
+}
+
+async function fetchHighlightsCandidatesFromChannelVideos(race, fetchHtmlImpl, fetchImpl) {
+  /* v8 ignore next 3 */
+  if (!highlightsChannelVideosUrl) {
+    return [];
+  }
+
+  const channelVideosHtml = await fetchHtmlImpl(highlightsChannelVideosUrl, getBrowserHeaders()).catch(() => '');
+  if (!channelVideosHtml) {
+    return [];
+  }
+
+  const candidates = extractHighlightsCandidatesFromMarkup(
+    channelVideosHtml,
+    'channel-videos',
+    'Sky Sport F1',
+    `https://www.youtube.com/${highlightsChannelHandle}`,
+  );
+  const { apiKey, clientVersion } = extractInnertubeConfig(channelVideosHtml);
+  let continuationTokens = extractContinuationTokens(channelVideosHtml);
+  let page = 1;
+
+  while (continuationTokens.length > 0 && apiKey && clientVersion && page < highlightsLookupMaxVideoPages) {
+    const continuationToken = continuationTokens.shift();
+    /* v8 ignore next 3 */
+    if (!continuationToken) {
+      break;
+    }
+
+    const continuationPayload = await fetchTextWithFetchImpl(
+      `https://www.youtube.com/youtubei/v1/browse?key=${encodeURIComponent(apiKey)}`,
+      {
+        fetchImpl,
+        method: 'POST',
+        headers: {
+          ...getBrowserHeaders(),
+          'content-type': 'application/json',
+          'x-youtube-client-name': '1',
+          'x-youtube-client-version': clientVersion,
+        },
+        body: JSON.stringify({
+          context: {
+            client: {
+              clientName: 'WEB',
+              clientVersion,
+            },
+          },
+          continuation: continuationToken,
+        }),
+      },
+    ).catch(() => '');
+
+    if (!continuationPayload) {
+      break;
+    }
+
+    candidates.push(
+      ...extractHighlightsCandidatesFromMarkup(
+        continuationPayload,
+        'channel-videos',
+        'Sky Sport F1',
+        `https://www.youtube.com/${highlightsChannelHandle}`,
+      ),
+    );
+    continuationTokens = continuationTokens.concat(extractContinuationTokens(continuationPayload));
+    page += 1;
+  }
+
+  return candidates;
+}
+
+async function fetchHighlightsCandidatesFromGlobalSearch(race, fetchHtmlImpl) {
+  /* v8 ignore next 3 */
+  if (!youtubeSearchBaseUrl) {
+    return [];
+  }
+
+  const searchHtml = await fetchHtmlImpl(
+    `${youtubeSearchBaseUrl}${encodeURIComponent(buildHighlightsSearchQuery(race))}`,
+    getBrowserHeaders(),
+  ).catch(() => '');
+
+  return searchHtml ? extractHighlightsCandidatesFromMarkup(searchHtml, 'global-search') : [];
+}
+
+async function resolveSkySportHighlightsVideo(race, optionsOrFetchHtmlImpl = fetchHtml) {
+  const { fetchHtmlImpl, fetchImpl, now } = normalizeHighlightsLookupOptions(optionsOrFetchHtmlImpl);
+
+  if (!race) {
+    return {
+      highlightsVideoUrl: '',
+      highlightsLookupCheckedAt: new Date(now).toISOString(),
+      highlightsLookupStatus: 'missing',
+      highlightsLookupSource: '',
+    };
+  }
+
+  const sourceLoaders = [
+    ['feed', () => fetchHighlightsCandidatesFromFeed(fetchHtmlImpl)],
+    ['channel-search', () => fetchHighlightsCandidatesFromChannelSearch(race, fetchHtmlImpl)],
+    ['channel-videos', () => fetchHighlightsCandidatesFromChannelVideos(race, fetchHtmlImpl, fetchImpl)],
+    ['global-search', () => fetchHighlightsCandidatesFromGlobalSearch(race, fetchHtmlImpl)],
+  ];
+
+  for (const [sourceName, loadCandidates] of sourceLoaders) {
+    const candidates = await loadCandidates();
+    const validatedCandidate = await validateCandidatesInOrder(candidates, race, fetchImpl);
+
+    if (validatedCandidate?.videoUrl) {
+      return {
+        highlightsVideoUrl: validatedCandidate.videoUrl,
+        highlightsLookupCheckedAt: new Date(now).toISOString(),
+        highlightsLookupStatus: 'found',
+        highlightsLookupSource: sourceName,
+      };
+    }
+  }
+
+  return {
+    highlightsVideoUrl: '',
+    highlightsLookupCheckedAt: new Date(now).toISOString(),
+    highlightsLookupStatus: 'missing',
+    highlightsLookupSource: '',
+  };
+}
+
+async function fetchHighlightsVideoUrl(race, optionsOrFetchHtmlImpl = fetchHtml) {
+  return (await resolveSkySportHighlightsVideo(race, optionsOrFetchHtmlImpl)).highlightsVideoUrl;
+}
+
+async function persistRaceHighlightsLookup(calendar, meetingKey, lookupPayload = {}) {
+  if (!Array.isArray(calendar)) {
     return calendar;
   }
 
@@ -168,12 +671,28 @@ async function persistRaceHighlightsVideoUrl(calendar, meetingKey, highlightsVid
 
     return {
       ...weekend,
-      highlightsVideoUrl,
+      highlightsVideoUrl: normalizeText(lookupPayload.highlightsVideoUrl),
+      highlightsLookupCheckedAt: normalizeText(lookupPayload.highlightsLookupCheckedAt),
+      highlightsLookupStatus: normalizeText(lookupPayload.highlightsLookupStatus),
+      highlightsLookupSource: normalizeText(lookupPayload.highlightsLookupSource),
     };
   });
 
   await writeCalendarCache(updatedCalendar);
   return updatedCalendar;
+}
+
+async function persistRaceHighlightsVideoUrl(calendar, meetingKey, highlightsVideoUrl) {
+  if (!Array.isArray(calendar) || !normalizeText(highlightsVideoUrl)) {
+    return calendar;
+  }
+
+  return persistRaceHighlightsLookup(calendar, meetingKey, {
+    highlightsVideoUrl,
+    highlightsLookupCheckedAt: new Date().toISOString(),
+    highlightsLookupStatus: 'found',
+    highlightsLookupSource: 'legacy',
+  });
 }
 
 function clearRaceResultsCache() {
@@ -597,16 +1116,23 @@ async function syncCalendarFromOfficialSource({
               isSprintWeekend: detailData.isSprintWeekend,
               raceStartTime: detailData.raceStartTime,
               sessions: detailData.sessions,
-              highlightsVideoUrl:
-                shouldLookupFinishedRaceHighlights(weekend)
-                  ? await fetchHighlightsVideoUrl(
-                      {
-                        ...weekend,
-                        ...detailData,
-                      },
+              ...(shouldLookupFinishedRaceHighlights({ ...weekend, ...detailData })
+                ? await resolveSkySportHighlightsVideo(
+                    {
+                      ...weekend,
+                      ...detailData,
+                    },
+                    {
                       fetchHtmlImpl,
-                    )
-                  : weekend.highlightsVideoUrl ?? '',
+                      now: new Date(),
+                    },
+                  )
+                : {
+                    highlightsVideoUrl: weekend.highlightsVideoUrl ?? '',
+                    highlightsLookupCheckedAt: weekend.highlightsLookupCheckedAt ?? '',
+                    highlightsLookupStatus: weekend.highlightsLookupStatus ?? '',
+                    highlightsLookupSource: weekend.highlightsLookupSource ?? '',
+                  }),
             };
           } catch {
             return {
@@ -719,12 +1245,10 @@ async function fetchRaceResultsWithStatus(meetingKey, now = new Date()) {
   const racePhase = resolveRacePhase(race, results, now);
   let highlightsVideoUrl = normalizeText(race?.highlightsVideoUrl);
 
-  if (racePhase === 'finished' && !highlightsVideoUrl) {
-    highlightsVideoUrl = await fetchHighlightsVideoUrl(race);
-
-    if (highlightsVideoUrl) {
-      calendar = await persistRaceHighlightsVideoUrl(calendar, meetingKey, highlightsVideoUrl);
-    }
+  if (racePhase === 'finished' && shouldLookupFinishedRaceHighlights(race, now.getTime())) {
+    const lookupResult = await resolveSkySportHighlightsVideo(race, { now });
+    highlightsVideoUrl = lookupResult.highlightsVideoUrl;
+    calendar = await persistRaceHighlightsLookup(calendar, meetingKey, lookupResult);
   }
 
   return {
@@ -747,7 +1271,9 @@ export {
   parseDateRangeLabel,
   parseRaceDetailPage,
   parseSeasonCalendarPage,
+  persistRaceHighlightsLookup,
   persistRaceHighlightsVideoUrl,
+  resolveSkySportHighlightsVideo,
   resolveRacePhase,
   shouldLookupFinishedRaceHighlights,
   sortCalendarByRound,

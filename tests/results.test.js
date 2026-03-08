@@ -70,16 +70,44 @@ function buildTableWithoutTbody(rows) {
   `;
 }
 
-function buildYoutubeSearchHtml(videoId, title) {
-  return `
-    <html>
-      <body>
-        <a href="/watch?v=${videoId}&pp=ygUPc2t5IHNwb3J0IGYx">
-          <span>${title}</span>
-        </a>
-      </body>
-    </html>
-  `;
+function buildYoutubeVideoRenderer({ videoId, title, authorName }) {
+  return `{"videoRenderer":{"videoId":"${videoId}","title":{"runs":[{"text":"${title}"}]},"longBylineText":{"runs":[{"text":"${authorName}"}]},"navigationEndpoint":{"watchEndpoint":{"videoId":"${videoId}"}}}}`;
+}
+
+function buildYoutubeFeedXml(entries) {
+  return `<?xml version="1.0" encoding="UTF-8"?><feed xmlns:yt="http://www.youtube.com/xml/schemas/2015" xmlns="http://www.w3.org/2005/Atom">${entries.map((entry) => `
+    <entry>
+      <yt:videoId>${entry.videoId}</yt:videoId>
+      <title>${entry.title}</title>
+      <link rel="alternate" href="https://www.youtube.com/watch?v=${entry.videoId}" />
+      <author>
+        <name>${entry.authorName}</name>
+        <uri>${entry.authorUrl ?? 'https://www.youtube.com/@skysportf1'}</uri>
+      </author>
+      <published>${entry.publishedAt ?? '2026-03-01T12:00:00+00:00'}</published>
+    </entry>
+  `).join('')}</feed>`;
+}
+
+function createFetchResponse(body, status = 200) {
+  return Promise.resolve({
+    ok: status >= 200 && status < 300,
+    status,
+    text: () => Promise.resolve(body),
+  });
+}
+
+function buildYoutubeOEmbedPayload({
+  title,
+  authorName = 'Sky Sport F1',
+  authorUrl = 'https://www.youtube.com/@skysportf1',
+}) {
+  return JSON.stringify({
+    title,
+    author_name: authorName,
+    author_url: authorUrl,
+    provider_name: 'YouTube',
+  });
 }
 
 describe('fetchRaceResults', () => {
@@ -554,17 +582,41 @@ describe('fetchRaceResults', () => {
         });
       }
 
-      if (url.includes('youtube.com/results?search_query=')) {
+      if (url.includes('/feeds/videos.xml?channel_id=')) {
         return Promise.resolve({
           ok: true,
           text: () =>
             Promise.resolve(
-              buildYoutubeSearchHtml(
-                'skyf1-finished',
-                'HIGHLIGHTS F1 GP Australia 2026 | Sky Sport F1',
-              ),
+              buildYoutubeFeedXml([
+                {
+                  videoId: 'skyf1-interview',
+                  title: "F1, GP d'Australia, l'intervista a Leclerc dopo il podio",
+                  authorName: 'Sky Sport F1',
+                },
+                {
+                  videoId: 'skyf1-finished',
+                  title: "F1, GP d'Australia, gli highlights della prima gara della stagione 2026 a Melbourne",
+                  authorName: 'Sky Sport F1',
+                },
+              ]),
             ),
         });
+      }
+
+      if (url.includes('/oembed?') && url.includes('skyf1-interview')) {
+        return createFetchResponse(
+          buildYoutubeOEmbedPayload({
+            title: "F1, GP d'Australia, l'intervista a Leclerc dopo il podio",
+          }),
+        );
+      }
+
+      if (url.includes('/oembed?') && url.includes('skyf1-finished')) {
+        return createFetchResponse(
+          buildYoutubeOEmbedPayload({
+            title: "F1, GP d'Australia, gli highlights della prima gara della stagione 2026 a Melbourne",
+          }),
+        );
       }
 
       return Promise.reject(new Error(`Unknown URL ${url}`));
@@ -585,11 +637,13 @@ describe('fetchRaceResults', () => {
       expect.objectContaining({
         meetingKey: 'finished-race',
         highlightsVideoUrl: 'https://www.youtube.com/watch?v=skyf1-finished',
+        highlightsLookupStatus: 'found',
+        highlightsLookupSource: 'feed',
       }),
     ]);
   });
 
-  it('skips persisting highlights when the public YouTube search has no valid Sky Sport Italia F1 match', async () => {
+  it('persists a missing highlights lookup and skips repeated checks until the missing TTL expires', async () => {
     vi.mocked(storage.readCalendarCache).mockResolvedValue([
       {
         meetingKey: 'finished-race',
@@ -599,6 +653,8 @@ describe('fetchRaceResults', () => {
         isSprintWeekend: false,
         raceStartTime: '2026-03-01T14:00:00Z',
         highlightsVideoUrl: '',
+        highlightsLookupStatus: '',
+        highlightsLookupCheckedAt: '',
       },
     ]);
 
@@ -624,17 +680,36 @@ describe('fetchRaceResults', () => {
         });
       }
 
-      if (url.includes('youtube.com/results?search_query=')) {
+      if (url.includes('/feeds/videos.xml?channel_id=')) {
+        return Promise.resolve({
+          ok: true,
+          text: () =>
+            Promise.resolve(buildYoutubeFeedXml([])),
+        });
+      }
+
+      if (url.includes('/@skysportf1/search?query=')) {
         return Promise.resolve({
           ok: true,
           text: () =>
             Promise.resolve(
-              buildYoutubeSearchHtml(
-                'wrong-channel',
-                'Highlights Formula 1 GP Australia 2026 | Altro canale',
-              ),
+              `{"contents":[${buildYoutubeVideoRenderer({
+                videoId: 'wrong-channel',
+                title: "F1, GP d'Australia, gli highlights della gara",
+                authorName: 'Altro canale',
+              })}]}`,
             ),
         });
+      }
+
+      if (url.includes('/oembed?') && url.includes('wrong-channel')) {
+        return createFetchResponse(
+          buildYoutubeOEmbedPayload({
+            title: "F1, GP d'Australia, gli highlights della gara",
+            authorName: 'Altro canale',
+            authorUrl: 'https://www.youtube.com/@altrocanale',
+          }),
+        );
       }
 
       return Promise.reject(new Error(`Unknown URL ${url}`));
@@ -642,6 +717,67 @@ describe('fetchRaceResults', () => {
 
     await expect(
       fetchRaceResultsWithStatus('finished-race', new Date('2026-03-01T15:00:00Z')),
+    ).resolves.toEqual({
+      first: 'nor',
+      second: 'ver',
+      third: 'lec',
+      pole: 'pia',
+      racePhase: 'finished',
+      highlightsVideoUrl: '',
+    });
+
+    expect(storage.writeCalendarCache).toHaveBeenCalledWith([
+      expect.objectContaining({
+        meetingKey: 'finished-race',
+        highlightsVideoUrl: '',
+        highlightsLookupStatus: 'missing',
+        highlightsLookupSource: '',
+      }),
+    ]);
+
+    vi.clearAllMocks();
+    clearRaceResultsCache();
+    vi.mocked(storage.readCalendarCache).mockResolvedValue([
+      {
+        meetingKey: 'finished-race',
+        meetingName: 'Australia',
+        grandPrixTitle: 'FORMULA 1 AUSTRALIAN GRAND PRIX 2026',
+        detailUrl: 'https://www.formula1.com/en/racing/2026/australia',
+        isSprintWeekend: false,
+        raceStartTime: '2026-03-01T14:00:00Z',
+        highlightsVideoUrl: '',
+        highlightsLookupStatus: 'missing',
+        highlightsLookupCheckedAt: '2026-03-01T15:00:00.000Z',
+      },
+    ]);
+
+    global.fetch = vi.fn((url) => {
+      if (url.includes('race-result')) {
+        return Promise.resolve({
+          ok: true,
+          text: () =>
+            Promise.resolve(
+              buildResultsTable([
+                buildTableRow(1, 4, 'Lando', 'Norris', 'NOR'),
+                buildTableRow(2, 1, 'Max', 'Verstappen', 'VER'),
+                buildTableRow(3, 16, 'Charles', 'Leclerc', 'LEC'),
+              ]),
+            ),
+        });
+      }
+
+      if (url.includes('qualifying')) {
+        return Promise.resolve({
+          ok: true,
+          text: () => Promise.resolve(buildResultsTable([buildTableRow(1, 81, 'Oscar', 'Piastri', 'PIA')])),
+        });
+      }
+
+      return Promise.reject(new Error(`Unexpected URL ${url}`));
+    });
+
+    await expect(
+      fetchRaceResultsWithStatus('finished-race', new Date('2026-03-01T18:00:00Z')),
     ).resolves.toEqual({
       first: 'nor',
       second: 'ver',

@@ -76,6 +76,7 @@ Optional helper commands already supported by the repository:
 ## 1. Prime Directive
 
 Every change must be:
+
 - correct
 - minimal in scope
 - deterministic
@@ -160,6 +161,7 @@ Any behavioral change, fix, or implementation must follow strict TDD:
 3. **REFACTOR**: clean the implementation while keeping all tests green.
 
 Rules:
+
 - A behavioral fix is not complete without tests.
 - A regression fix is not complete without a regression test.
 - New logic must be covered by automated tests.
@@ -177,6 +179,7 @@ Rules:
 
 Before declaring completion, run the relevant validation pipeline supported by the repository.
 Where applicable this includes:
+
 - lint
 - unit/integration tests
 - build
@@ -196,17 +199,19 @@ Where applicable this includes:
 
 - Main automated test stack: Vitest, React Testing Library, and Supertest.
 - Coverage provider: V8.
-- Current verified merged baseline for the configured official application-code scope is **100% statements (3554 / 3554)**, **100% functions (277 / 277)**, **100% branches (1557 / 1557)**, and **100% lines (3554 / 3554)**, aligned with the thresholds currently documented in `README.md`.
+- Current verified merged baseline for the configured official application-code scope is **100% statements (3972 / 3972)**, **100% functions (299 / 299)**, **100% branches (1761 / 1761)**, and **100% lines (3972 / 3972)**, aligned with the thresholds currently documented in `README.md`.
 - Whenever a task produces a new verified merged Release coverage result, update this baseline in `AGENTS.md` to the new numbers.
 - If a task produces a new verified merged coverage result for the tracked scope, update the baseline in `AGENTS.md` and never accept a regression below that verified baseline.
 
 A task is not complete if:
+
 - the project does not compile
 - any relevant test fails
 - the behavior was changed without automated test coverage
 - coverage for the official repository/application scope is below 100% statements, functions, branches, or lines
 
 If a validation step cannot be executed, explicitly state:
+
 - what was not executed
 - why it was not executed
 - what residual risk remains because of it
@@ -218,6 +223,7 @@ Never fabricate validation results.
 ## 9. Regression Prevention Policy
 
 For every task:
+
 - identify the flows that may be affected
 - check adjacent logic, shared helpers, selectors, services, mappers, and API contracts
 - verify that unchanged user flows still behave as before
@@ -231,6 +237,7 @@ If the task touches scoring, projections, locking, historical recalculation, syn
 
 Never perform git operations unless explicitly authorized by the user.
 This includes:
+
 - commit
 - push
 - pull
@@ -240,6 +247,7 @@ This includes:
 - branch creation/deletion
 
 When the user explicitly authorizes commit-related operations:
+
 - update `README.md` if the real implemented changes require documentation updates
 - always update `CHANGELOG.md` before commit
 - preserve the existing documentation structure and history
@@ -271,6 +279,7 @@ If the user writes exactly `deploya`, treat that as explicit authorization to ru
 16. Return to the original branch from which the deployment workflow started.
 
 Failure policy for `deploya`:
+
 - stop immediately if any critical step fails
 - do not bypass Pull Request requirements, required checks, or branch protection on `main`
 - do not create tags unless GitHub completed the merge to `main` successfully through the protected Pull Request flow
@@ -281,6 +290,7 @@ Failure policy for `deploya`:
 ## 11. Final Response Protocol
 
 Before editing:
+
 - provide a comprehensive and detailed plan that always includes checks to ensure no regression on desktop browser view or mobile view for both environments: development and production
 - in every plan, explicitly state which programming/design principles will be applied for the specific task
 - in every plan, explicitly state that `AGENTS.md` instructions are being applied and will be followed
@@ -292,6 +302,7 @@ Before editing:
 - no plan is valid or complete if it omits the explicit 100% total coverage requirement
 
 After editing:
+
 - summarize what changed
 - list touched files
 - list tests added or updated
@@ -300,6 +311,7 @@ After editing:
 - state residual risks, blockers, or skipped checks if any
 
 If blocked:
+
 - state the blocker clearly
 - propose the best next action
 

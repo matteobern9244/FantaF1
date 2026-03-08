@@ -47,16 +47,58 @@
     "referenceArticleUrl": "https://www.formula1.com/en/latest/article/formula-1-reveals-calendar-for-2026-season.YctbMZWqBvrgyddrnauo8.YctbMZWqBvrgyddrnauo8/",
     "sortLocale": "it",
     "expectedMinimumWeekends": 20,
+    "highlightsChannelHandle": "@skysportf1",
+    "highlightsChannelId": "UCMQ7Gx6v-pQy_gsRoMJYzOA",
+    "highlightsChannelSearchBaseUrl": "https://www.youtube.com/@skysportf1/search?query=",
+    "highlightsChannelVideosUrl": "https://www.youtube.com/@skysportf1/videos",
+    "highlightsFeedUrl": "https://www.youtube.com/feeds/videos.xml?channel_id=UCMQ7Gx6v-pQy_gsRoMJYzOA",
+    "highlightsOEmbedBaseUrl": "https://www.youtube.com/oembed?format=json&url=",
+    "highlightsLookupMissingTtlHours": 6,
+    "highlightsLookupMaxVideoPages": 3,
     "highlightsSearchBaseUrl": "https://www.youtube.com/results?search_query=",
     "highlightsPublisherKeywords": [
       "sky sport f1",
       "sky sport formula 1",
       "sky sport italia f1"
     ],
+    "highlightsPositiveKeywords": [
+      "gli highlights",
+      "highlights gara",
+      "highlights"
+    ],
+    "highlightsSecondaryKeywords": [
+      "sintesi",
+      "sintesi lunga"
+    ],
     "highlightsRequiredKeywords": [
       "highlight",
-      "highlights"
-    ]
+      "highlights",
+      "sintesi"
+    ],
+    "highlightsNegativeKeywords": [
+      "intervista",
+      "interviste",
+      "commento",
+      "analisi",
+      "qualifiche",
+      "prove libere",
+      "fp1",
+      "fp2",
+      "fp3",
+      "notebook",
+      "ultimo giro"
+    ],
+    "highlightsRaceAliases": {
+      "emilia romagna": ["imola"],
+      "great britain": ["silverstone"],
+      "azerbaijan": ["baku"],
+      "spain": ["barcelona"],
+      "canada": ["montreal"],
+      "usa": ["austin"],
+      "mexico": ["mexico city"],
+      "las vegas": ["vegas"],
+      "abu dhabi": ["yas marina"]
+    }
   },
   "driverAliases": {
     "Alex Albon": "Alexander Albon",

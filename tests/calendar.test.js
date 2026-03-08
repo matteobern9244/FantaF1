@@ -10,6 +10,7 @@ import {
   extractHighlightsVideoUrlFromSearchHtml,
   fetchHighlightsVideoUrl,
   normalizeYoutubeWatchUrl,
+  persistRaceHighlightsLookup,
   persistRaceHighlightsVideoUrl,
   shouldLookupFinishedRaceHighlights,
   syncCalendarFromOfficialSource,
@@ -25,6 +26,72 @@ const detailFixture = fs.readFileSync(
 );
 
 const currentYear = new Date().getFullYear();
+
+function buildYoutubeVideoRenderer({ videoId, title, authorName }) {
+  return `{"videoRenderer":{"videoId":"${videoId}","title":{"runs":[{"text":"${title}"}]},"longBylineText":{"runs":[{"text":"${authorName}"}]},"navigationEndpoint":{"watchEndpoint":{"videoId":"${videoId}"}}}}`;
+}
+
+function buildYoutubeSimpleTextVideoRenderer({ videoId, title, authorName }) {
+  return `{"videoRenderer":{"videoId":"${videoId}","title":{"simpleText":"${title}"},"ownerText":{"simpleText":"${authorName}"},"navigationEndpoint":{"watchEndpoint":{"videoId":"${videoId}"}}}}`;
+}
+
+function buildYoutubeFeedXml(entries) {
+  return `<?xml version="1.0" encoding="UTF-8"?><feed xmlns:yt="http://www.youtube.com/xml/schemas/2015" xmlns="http://www.w3.org/2005/Atom">${entries.map((entry) => `
+    <entry>
+      <yt:videoId>${entry.videoId}</yt:videoId>
+      <title>${entry.title}</title>
+      <link rel="alternate" href="https://www.youtube.com/watch?v=${entry.videoId}" />
+      <author>
+        <name>${entry.authorName}</name>
+        <uri>${entry.authorUrl ?? 'https://www.youtube.com/@skysportf1'}</uri>
+      </author>
+      <published>${entry.publishedAt ?? `${currentYear}-03-01T12:00:00+00:00`}</published>
+    </entry>
+  `).join('')}</feed>`;
+}
+
+function buildYoutubeChannelHtml({
+  videos = [],
+  continuationToken = '',
+  apiKey = 'test-youtube-api-key',
+  clientVersion = '2.20260308.01.00',
+} = {}) {
+  return `
+    <html>
+      <script>
+        var ytInitialData = {"contents":[${videos.join(',')}],"continuationCommand":{"token":"${continuationToken}"}};
+      </script>
+      <script>
+        var ytcfg = {"INNERTUBE_API_KEY":"${apiKey}","INNERTUBE_CLIENT_VERSION":"${clientVersion}"};
+      </script>
+    </html>
+  `;
+}
+
+function buildYoutubeContinuationPayload({ videos = [], continuationToken = '' } = {}) {
+  return `{"onResponseReceivedActions":[{"appendContinuationItemsAction":{"continuationItems":[${videos.join(',')}]}}],"continuationCommand":{"token":"${continuationToken}"}}`;
+}
+
+function createFetchResponse(body, status = 200) {
+  return Promise.resolve({
+    ok: status >= 200 && status < 300,
+    status,
+    text: () => Promise.resolve(body),
+  });
+}
+
+function buildYoutubeOEmbedPayload({
+  title,
+  authorName = 'Sky Sport F1',
+  authorUrl = 'https://www.youtube.com/@skysportf1',
+}) {
+  return JSON.stringify({
+    title,
+    author_name: authorName,
+    author_url: authorUrl,
+    provider_name: 'YouTube',
+  });
+}
 
 describe('calendar parsing and fallback', () => {
   beforeEach(() => {
@@ -155,6 +222,17 @@ describe('calendar parsing and fallback', () => {
 
     const writeCacheSpy = vi.fn();
     let requestCount = 0;
+    global.fetch = vi.fn((url) => {
+      if (String(url).includes('/oembed?')) {
+        return createFetchResponse(
+          buildYoutubeOEmbedPayload({
+            title: `F1, GP d'Australia, gli highlights della prima gara della stagione ${currentYear}`,
+          }),
+        );
+      }
+
+      return Promise.reject(new Error(`Unexpected fetch ${url}`));
+    });
 
     const result = await syncCalendarFromOfficialSource({
       fetchHtmlImpl: async (url) => {
@@ -164,15 +242,17 @@ describe('calendar parsing and fallback', () => {
           return fakeSeasonHtml;
         }
 
-        if (url.includes('youtube.com/results?search_query=')) {
-          return `
-            <a href="/watch?v=skyf1-finished">
-              <span>Highlights Detail GP ${currentYear} | Sky Sport F1</span>
-            </a>
-          `;
+        if (url.includes('/feeds/videos.xml?channel_id=')) {
+          return buildYoutubeFeedXml([
+            {
+              videoId: 'skyf1-finished',
+              title: `F1, GP d'Australia, gli highlights della prima gara della stagione ${currentYear}`,
+              authorName: 'Sky Sport F1',
+            },
+          ]);
         }
 
-        return '<title>Detail GP - F1 Race</title>';
+        return `<title>Australia GP - F1 Race</title>`;
       },
       readCache: async () => [],
       writeCache: writeCacheSpy,
@@ -272,26 +352,147 @@ describe('calendar parsing and fallback', () => {
     expect(buildHighlightsSearchQuery({ meetingKey: 'spa' })).toContain('spa');
     expect(buildHighlightsSearchQuery({})).toBe('highlights Sky Sport Italia F1');
     expect(normalizeYoutubeWatchUrl('/watch?v=skyf1clip')).toBe('https://www.youtube.com/watch?v=skyf1clip');
+    expect(normalizeYoutubeWatchUrl('/shorts/skyf1clip')).toBe('https://www.youtube.com/watch?v=skyf1clip');
     expect(normalizeYoutubeWatchUrl('https://www.youtube.com/watch?v=skyf1clip')).toBe(
       'https://www.youtube.com/watch?v=skyf1clip',
     );
     expect(normalizeYoutubeWatchUrl('/channel/not-a-watch-link')).toBe('');
     expect(
       extractHighlightsVideoUrlFromSearchHtml(
-        `
-          <a href="/channel/sky-sport-f1"><span>Canale Sky Sport F1</span></a>
-          <a href="/watch?v=wrongvideo"><span>Highlights Formula 1 Australia | Altro canale</span></a>
-          <a href="/watch?v=skyf1clip"><span>Highlights F1 Australia | Sky Sport F1</span></a>
-        `,
+        `{"contents":[${buildYoutubeVideoRenderer({
+          videoId: 'wrongvideo',
+          title: `Highlights Formula 1 Australia ${currentYear}`,
+          authorName: 'Altro canale',
+        })},${buildYoutubeVideoRenderer({
+          videoId: 'sky-interview',
+          title: `F1, GP d'Australia, l'intervista a Leclerc dopo il podio ${currentYear}`,
+          authorName: 'Sky Sport F1',
+        })},${buildYoutubeVideoRenderer({
+          videoId: 'skyf1clip',
+          title: `F1, GP d'Australia, gli highlights della gara ${currentYear}`,
+          authorName: 'Sky Sport F1',
+        })}]}`,
         race,
       ),
     ).toBe('https://www.youtube.com/watch?v=skyf1clip');
     expect(
       extractHighlightsVideoUrlFromSearchHtml(
-        '<a href="/watch?v=wrongvideo"><span>Highlights Formula 1 Australia | Altro canale</span></a>',
+        `{"contents":[${buildYoutubeSimpleTextVideoRenderer({
+          videoId: 'skyf1-simpletext',
+          title: `F1, GP d'Australia, highlights gara ${currentYear}`,
+          authorName: 'Sky Sport F1',
+        })}]}`,
+        race,
+      ),
+    ).toBe('https://www.youtube.com/watch?v=skyf1-simpletext');
+    expect(
+      extractHighlightsVideoUrlFromSearchHtml(
+        `{"contents":[${buildYoutubeSimpleTextVideoRenderer({
+          videoId: 'skyf1-sintesi',
+          title: `F1, GP d'Australia, la sintesi lunga della gara ${currentYear}`,
+          authorName: 'Sky Sport F1',
+        })}]}`,
+        race,
+      ),
+    ).toBe('https://www.youtube.com/watch?v=skyf1-sintesi');
+    expect(
+      extractHighlightsVideoUrlFromSearchHtml(
+        `{"contents":[{"videoRenderer":{"navigationEndpoint":{"watchEndpoint":{"videoId":"nav-only-highlight"},"commandMetadata":{"webCommandMetadata":{"url":"/watch?v=nav-only-highlight"}}},"title":{"runs":[{"text":"F1, GP d'Australia, gli highlights della gara"}]},"ownerText":{"simpleText":"Sky Sport F1"}}}]}`,
+        race,
+      ),
+    ).toBe('https://www.youtube.com/watch?v=nav-only-highlight');
+    expect(
+      extractHighlightsVideoUrlFromSearchHtml(
+        `{"contents":[${buildYoutubeVideoRenderer({
+          videoId: 'wrongvideo',
+          title: `Highlights Formula 1 Australia ${currentYear}`,
+          authorName: 'Altro canale',
+        })}]}`,
         race,
       ),
     ).toBe('');
+    expect(
+      extractHighlightsVideoUrlFromSearchHtml(
+        `{"contents":[${buildYoutubeVideoRenderer({
+          videoId: 'imola-highlight',
+          title: `F1, GP di Imola, gli highlights della gara ${currentYear}`,
+          authorName: 'Sky Sport F1',
+        })}]}`,
+        {
+          meetingKey: 'emilia-romagna',
+          meetingName: 'Emilia Romagna',
+          grandPrixTitle: `FORMULA 1 GRAN PREMIO DELL'EMILIA ROMAGNA ${currentYear}`,
+          detailUrl: `https://www.formula1.com/en/racing/${currentYear}/emilia-romagna`,
+        },
+      ),
+    ).toBe('https://www.youtube.com/watch?v=imola-highlight');
+    expect(
+      extractHighlightsVideoUrlFromSearchHtml(
+        `{"contents":[${buildYoutubeVideoRenderer({
+          videoId: 'wrong-race',
+          title: `F1, GP del Bahrain, highlights gara ${currentYear}`,
+          authorName: 'Sky Sport F1',
+        })}]}`,
+        race,
+      ),
+    ).toBe('');
+    expect(
+      extractHighlightsVideoUrlFromSearchHtml(
+        `{"contents":[${buildYoutubeVideoRenderer({
+          videoId: 'first-best',
+          title: `F1, GP d'Australia, highlights gara ${currentYear}`,
+          authorName: 'Sky Sport F1',
+        })},${buildYoutubeVideoRenderer({
+          videoId: 'second-best',
+          title: `F1, GP d'Australia, highlights gara ${currentYear}`,
+          authorName: 'Sky Sport F1',
+        })}]}`,
+        race,
+      ),
+    ).toBe('https://www.youtube.com/watch?v=first-best');
+    expect(
+      extractHighlightsVideoUrlFromSearchHtml(
+        `{"contents":[{"videoRenderer":{"videoId":"broken","title":{"simpleText":"bad\\qjson"}}},${buildYoutubeSimpleTextVideoRenderer({
+          videoId: 'after-broken',
+          title: `F1, GP d'Australia, highlights gara ${currentYear}`,
+          authorName: 'Sky Sport F1',
+        })}]}`,
+        race,
+      ),
+    ).toBe('https://www.youtube.com/watch?v=after-broken');
+    expect(
+      extractHighlightsVideoUrlFromSearchHtml(
+        `{"contents":[{"videoRenderer":{"videoId":"truncated","title":{"simpleText":"F1, GP d'Australia"}}`,
+        race,
+      ),
+    ).toBe('');
+    expect(
+      extractHighlightsVideoUrlFromSearchHtml(
+        `{"contents":[{"videoRenderer":{"title":{"runs":[{"text":"F1, GP d'Australia, highlights gara ${currentYear}"}]}}}]}`,
+        race,
+      ),
+    ).toBe('');
+    expect(
+      extractHighlightsVideoUrlFromSearchHtml(
+        `{"contents":[{"videoRenderer":{"videoId":"no-text-fields"}}]}`,
+        race,
+      ),
+    ).toBe('');
+    expect(
+      extractHighlightsVideoUrlFromSearchHtml(
+        `{"contents":[{"videoRenderer":{"videoId":"sparse-runs","title":{"runs":[{"text":"F1, GP d'Australia, highlights gara ${currentYear}"},{}]},"ownerText":{"simpleText":"Sky Sport F1"}}}]}`,
+        race,
+      ),
+    ).toBe('https://www.youtube.com/watch?v=sparse-runs');
+    expect(
+      extractHighlightsVideoUrlFromSearchHtml(
+        `
+          <a href="/channel/not-a-watch-link"><span>Sky Sport F1 non valido</span></a>
+          <a href="/watch?v=anchor-highlight"><span>F1, GP d'Australia, highlights gara ${currentYear} | Sky Sport F1</span></a>
+        `,
+        race,
+      ),
+    ).toBe('https://www.youtube.com/watch?v=anchor-highlight');
   });
 
   it('handles highlights lookup guards, fetch fallback and cache persistence helpers', async () => {
@@ -310,6 +511,45 @@ describe('calendar parsing and fallback', () => {
     expect(shouldLookupFinishedRaceHighlights(race, Date.parse(`${currentYear}-03-08T00:00:00Z`))).toBe(true);
     expect(shouldLookupFinishedRaceHighlights({ startDate: `${currentYear}-01-01` }, Date.parse(`${currentYear}-03-08T00:00:00Z`))).toBe(true);
     expect(shouldLookupFinishedRaceHighlights({}, Date.parse(`${currentYear}-03-08T00:00:00Z`))).toBe(false);
+    expect(
+      shouldLookupFinishedRaceHighlights(
+        {
+          ...race,
+          highlightsLookupStatus: 'missing',
+          highlightsLookupCheckedAt: `${currentYear}-03-08T08:00:00.000Z`,
+        },
+        Date.parse(`${currentYear}-03-08T10:00:00Z`),
+      ),
+    ).toBe(false);
+    expect(
+      shouldLookupFinishedRaceHighlights(
+        {
+          ...race,
+          highlightsLookupStatus: 'missing',
+          highlightsLookupCheckedAt: `${currentYear}-03-08T00:00:00.000Z`,
+        },
+        Date.parse(`${currentYear}-03-08T10:00:00Z`),
+      ),
+    ).toBe(true);
+    expect(
+      shouldLookupFinishedRaceHighlights(
+        {
+          ...race,
+          highlightsLookupStatus: 'missing',
+          highlightsLookupCheckedAt: 'not-a-date',
+        },
+        Date.parse(`${currentYear}-03-08T10:00:00Z`),
+      ),
+    ).toBe(true);
+    expect(
+      shouldLookupFinishedRaceHighlights(
+        {
+          ...race,
+          highlightsLookupStatus: 'missing',
+        },
+        Date.parse(`${currentYear}-03-08T10:00:00Z`),
+      ),
+    ).toBe(true);
 
     await expect(fetchHighlightsVideoUrl(null, async () => {
       throw new Error('should not run');
@@ -321,14 +561,282 @@ describe('calendar parsing and fallback', () => {
       }),
     ).resolves.toBe('');
 
+    const fetchImpl = vi.fn((url, options = {}) => {
+      if (String(url).includes('/oembed?') && String(url).includes('skyf1clip')) {
+        return createFetchResponse(
+          buildYoutubeOEmbedPayload({
+            title: `F1, GP d'Australia, gli highlights della prima gara della stagione ${currentYear}`,
+          }),
+        );
+      }
+
+      if (String(url).includes('/oembed?') && String(url).includes('sky-interview')) {
+        return createFetchResponse(
+          buildYoutubeOEmbedPayload({
+            title: `F1, GP d'Australia, l'intervista a Leclerc dopo il podio ${currentYear}`,
+          }),
+        );
+      }
+
+      if (String(url).includes('/youtubei/v1/browse?key=test-youtube-api-key')) {
+        expect(options.method).toBe('POST');
+        return createFetchResponse(
+          buildYoutubeContinuationPayload({
+            videos: [
+              buildYoutubeVideoRenderer({
+                videoId: 'skyf1clip',
+                title: `F1, GP d'Australia, gli highlights della prima gara della stagione ${currentYear}`,
+                authorName: 'Sky Sport F1',
+              }),
+            ],
+          }),
+        );
+      }
+
+      return Promise.reject(new Error(`Unexpected fetch ${url}`));
+    });
+
+    const fetchHtmlImpl = vi.fn(async (url) => {
+      if (String(url).includes('/feeds/videos.xml?channel_id=')) {
+        return buildYoutubeFeedXml([
+          {
+            videoId: 'feed-interview',
+            title: `F1, GP d'Australia, l'intervista a Leclerc dopo il podio ${currentYear}`,
+            authorName: 'Sky Sport F1',
+          },
+        ]);
+      }
+
+      if (String(url).includes('/@skysportf1/search?query=')) {
+        return buildYoutubeChannelHtml({
+          videos: [
+            buildYoutubeVideoRenderer({
+              videoId: 'sky-interview',
+              title: `F1, GP d'Australia, l'intervista a Leclerc dopo il podio ${currentYear}`,
+              authorName: 'Sky Sport F1',
+            }),
+          ],
+        });
+      }
+
+      if (String(url).includes('/@skysportf1/videos')) {
+        return buildYoutubeChannelHtml({
+          videos: [
+            buildYoutubeVideoRenderer({
+              videoId: 'sky-quali',
+              title: `F1, GP d'Australia: gli highlights delle qualifiche di Melbourne ${currentYear}`,
+              authorName: 'Sky Sport F1',
+            }),
+          ],
+          continuationToken: 'videos-continuation-token',
+        });
+      }
+
+      if (String(url).includes('youtube.com/results?search_query=')) {
+        return buildYoutubeChannelHtml({
+          videos: [
+            buildYoutubeVideoRenderer({
+              videoId: 'legacy-global',
+              title: `F1, GP d'Australia, gli highlights della gara ${currentYear}`,
+              authorName: 'Sky Sport F1',
+            }),
+          ],
+        });
+      }
+
+      throw new Error(`Unexpected html ${url}`);
+    });
+
     await expect(
-      fetchHighlightsVideoUrl(race, async () => `
-        <a href="/watch?v=skyf1clip"><span>Highlights F1 Australia | Sky Sport F1</span></a>
-      `),
+      fetchHighlightsVideoUrl(race, { fetchHtmlImpl, fetchImpl }),
     ).resolves.toBe('https://www.youtube.com/watch?v=skyf1clip');
+    expect(fetchHtmlImpl).not.toHaveBeenCalledWith(
+      expect.stringContaining('youtube.com/results?search_query='),
+      expect.anything(),
+    );
+
+    await expect(
+      fetchHighlightsVideoUrl(race, {
+        fetchHtmlImpl: async () => buildYoutubeFeedXml([
+          {
+            videoId: 'invalid-oembed',
+            title: `F1, GP d'Australia, gli highlights della gara ${currentYear}`,
+            authorName: 'Sky Sport F1',
+          },
+        ]),
+        fetchImpl: async () => ({}),
+      }),
+    ).resolves.toBe('');
+
+    await expect(
+      fetchHighlightsVideoUrl(race, {
+        fetchHtmlImpl: async () => buildYoutubeFeedXml([
+          {
+            videoId: 'http-error-oembed',
+            title: `F1, GP d'Australia, gli highlights della gara ${currentYear}`,
+            authorName: 'Sky Sport F1',
+          },
+        ]),
+        fetchImpl: async () => ({
+          ok: false,
+          status: 500,
+          text: async () => '',
+        }),
+      }),
+    ).resolves.toBe('');
+
+    await expect(
+      fetchHighlightsVideoUrl(race, {
+        fetchHtmlImpl: async () => buildYoutubeFeedXml([
+          {
+            videoId: 'candidate-fallback-values',
+            title: `F1, GP d'Australia, gli highlights della gara ${currentYear}`,
+            authorName: 'Sky Sport F1',
+          },
+        ]),
+        fetchImpl: async () => createFetchResponse('{}'),
+      }),
+    ).resolves.toBe('https://www.youtube.com/watch?v=candidate-fallback-values');
+
+    await expect(
+      fetchHighlightsVideoUrl(race, {
+        fetchHtmlImpl: async (url) => {
+          if (String(url).includes('/feeds/videos.xml?channel_id=')) {
+            return buildYoutubeFeedXml([]);
+          }
+
+          if (String(url).includes('/@skysportf1/search?query=')) {
+            return buildYoutubeChannelHtml({ videos: [] });
+          }
+
+          if (String(url).includes('/@skysportf1/videos')) {
+            return buildYoutubeChannelHtml({
+              videos: [],
+              continuationToken: 'videos-continuation-token',
+            });
+          }
+
+          if (String(url).includes('youtube.com/results?search_query=')) {
+            return buildYoutubeChannelHtml({
+              videos: [
+                buildYoutubeVideoRenderer({
+                  videoId: 'legacy-global',
+                  title: `F1, GP d'Australia, gli highlights della gara ${currentYear}`,
+                  authorName: 'Sky Sport F1',
+                }),
+              ],
+            });
+          }
+
+          throw new Error(`Unexpected html ${url}`);
+        },
+        fetchImpl: vi.fn((url, options = {}) => {
+          if (String(url).includes('/youtubei/v1/browse?key=test-youtube-api-key')) {
+            expect(options.method).toBe('POST');
+            return createFetchResponse('');
+          }
+
+          if (String(url).includes('/oembed?') && String(url).includes('legacy-global')) {
+            return createFetchResponse(
+              buildYoutubeOEmbedPayload({
+                title: `F1, GP d'Australia, gli highlights della gara ${currentYear}`,
+              }),
+            );
+          }
+
+          return Promise.reject(new Error(`Unexpected fetch ${url}`));
+        }),
+      }),
+    ).resolves.toBe('https://www.youtube.com/watch?v=legacy-global');
+
+    await expect(
+      fetchHighlightsVideoUrl(race, {
+        fetchHtmlImpl: async (url) => {
+          if (String(url).includes('/feeds/videos.xml?channel_id=')) {
+            return '<?xml version="1.0" encoding="UTF-8"?><feed xmlns:yt="http://www.youtube.com/xml/schemas/2015" xmlns="http://www.w3.org/2005/Atom"><entry><yt:videoId>missing-tags</yt:videoId></entry><entry><title>Missing video id</title></entry></feed>';
+          }
+
+          if (String(url).includes('/@skysportf1/search?query=')) {
+            return buildYoutubeChannelHtml({
+              videos: [
+                buildYoutubeVideoRenderer({
+                  videoId: 'fallback-after-malformed-feed',
+                  title: `F1, GP d'Australia, gli highlights della gara ${currentYear}`,
+                  authorName: 'Sky Sport F1',
+                }),
+              ],
+            });
+          }
+
+          if (String(url).includes('/@skysportf1/videos')) {
+            return buildYoutubeChannelHtml({ videos: [] });
+          }
+
+          if (String(url).includes('youtube.com/results?search_query=')) {
+            return buildYoutubeChannelHtml({ videos: [] });
+          }
+
+          throw new Error(`Unexpected html ${url}`);
+        },
+        fetchImpl: async (url) => {
+          if (String(url).includes('/oembed?') && String(url).includes('fallback-after-malformed-feed')) {
+            return createFetchResponse(
+              buildYoutubeOEmbedPayload({
+                title: `F1, GP d'Australia, gli highlights della gara ${currentYear}`,
+              }),
+            );
+          }
+
+          return Promise.reject(new Error(`Unexpected fetch ${url}`));
+        },
+      }),
+    ).resolves.toBe('https://www.youtube.com/watch?v=fallback-after-malformed-feed');
+
+    await expect(
+      fetchHighlightsVideoUrl(race, {
+        fetchHtmlImpl: async () => buildYoutubeFeedXml([
+          {
+            videoId: 'older-highlight',
+            title: `F1, GP d'Australia, gli highlights della gara ${currentYear}`,
+            authorName: 'Sky Sport F1',
+            publishedAt: `${currentYear}-03-01T08:00:00+00:00`,
+          },
+          {
+            videoId: 'newer-highlight',
+            title: `F1, GP d'Australia, gli highlights della gara ${currentYear}`,
+            authorName: 'Sky Sport F1',
+            publishedAt: `${currentYear}-03-01T12:00:00+00:00`,
+          },
+        ]),
+        fetchImpl: vi.fn((url) => {
+          if (String(url).includes('/oembed?') && String(url).includes('newer-highlight')) {
+            return createFetchResponse(
+              buildYoutubeOEmbedPayload({
+                title: `F1, GP d'Australia, gli highlights della gara ${currentYear}`,
+              }),
+            );
+          }
+
+          if (String(url).includes('/oembed?') && String(url).includes('older-highlight')) {
+            return createFetchResponse(
+              buildYoutubeOEmbedPayload({
+                title: `F1, GP d'Australia, gli highlights della gara ${currentYear}`,
+              }),
+            );
+          }
+
+          return Promise.reject(new Error(`Unexpected fetch ${url}`));
+        }),
+      }),
+    ).resolves.toBe('https://www.youtube.com/watch?v=newer-highlight');
 
     const calendar = [{ meetingKey: 'australia', highlightsVideoUrl: '' }, { meetingKey: 'monza', highlightsVideoUrl: '' }];
     await expect(persistRaceHighlightsVideoUrl(null, 'australia', 'https://www.youtube.com/watch?v=skyf1clip')).resolves.toBeNull();
+    await expect(
+      persistRaceHighlightsLookup(null, 'australia', {
+        highlightsLookupStatus: 'missing',
+      }),
+    ).resolves.toBeNull();
 
     const persisted = await persistRaceHighlightsVideoUrl(
       calendar,
@@ -336,7 +844,11 @@ describe('calendar parsing and fallback', () => {
       'https://www.youtube.com/watch?v=skyf1clip',
     );
     expect(persisted).toEqual([
-      { meetingKey: 'australia', highlightsVideoUrl: 'https://www.youtube.com/watch?v=skyf1clip' },
+      expect.objectContaining({
+        meetingKey: 'australia',
+        highlightsVideoUrl: 'https://www.youtube.com/watch?v=skyf1clip',
+        highlightsLookupStatus: 'found',
+      }),
       { meetingKey: 'monza', highlightsVideoUrl: '' },
     ]);
 
@@ -346,5 +858,24 @@ describe('calendar parsing and fallback', () => {
       'https://www.youtube.com/watch?v=skyf1clip',
     );
     expect(untouched).toEqual(calendar);
+
+    const missingLookupCalendar = await persistRaceHighlightsLookup(
+      calendar,
+      'australia',
+      {
+        highlightsVideoUrl: '',
+        highlightsLookupCheckedAt: `${currentYear}-03-08T10:00:00.000Z`,
+        highlightsLookupStatus: 'missing',
+        highlightsLookupSource: '',
+      },
+    );
+    expect(missingLookupCalendar).toEqual([
+      expect.objectContaining({
+        meetingKey: 'australia',
+        highlightsLookupCheckedAt: `${currentYear}-03-08T10:00:00.000Z`,
+        highlightsLookupStatus: 'missing',
+      }),
+      { meetingKey: 'monza', highlightsVideoUrl: '' },
+    ]);
   });
 });

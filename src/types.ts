@@ -65,6 +65,9 @@ export interface RaceWeekend {
   raceStartTime?: string;
   sessions?: Session[];
   highlightsVideoUrl?: string;
+  highlightsLookupCheckedAt?: string;
+  highlightsLookupStatus?: string;
+  highlightsLookupSource?: string;
 }
 
 export interface UserData {
