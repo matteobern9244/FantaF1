@@ -4,6 +4,7 @@ Cronologia sintetica delle release documentate del progetto Fanta Formula 1.
 
 ## In sviluppo
 
+- **Coverage Race Lock Portata al 100%**: estesi i test API sul fallback `endDate` del messaggio `race_locked` e aggiunta una suite isolata per coprire il fallback difensivo `unknown` in `app.js`, mantenendo invariato il comportamento runtime e il baseline coverage ufficiale a `100%`.
 - **Cleanup Conservativo con Snapshot Locale Integrale**: creata una snapshot completa del working tree locale prima del cleanup operativo e rimossi i residui locali rigenerabili (`.playwright-cli`, `output`, `screenshot`, log locali, `.DS_Store`) insieme ai residui file-based legacy in `F1Result/`.
 - **Launcher Locale Forzato in Development**: `start_fantaf1.command` e `scripts/dev-launcher.mjs` impongono ora esplicitamente `NODE_ENV=development`, cosi' il bootstrap locale resta allineato in modo deterministico a `fantaf1_dev` anche quando l'ambiente chiamante o `.env` espongono valori incoerenti.
 - **Hardening TDD dello Stack Responsive Locale**: `scripts/ui-responsive/diagnostics.mjs` forza a sua volta `development` per il bootstrap del check browser reale; aggiunti test dedicati sul launcher e sul caricamento env del tooling responsive per coprire il caso regressivo `production` ereditato dal parent process.

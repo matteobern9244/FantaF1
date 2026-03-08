@@ -320,6 +320,35 @@ describe('API Integration - Routes', () => {
     expect(writeAppData).not.toHaveBeenCalled();
   });
 
+  it('POST /api/predictions should report the race end date when the lock message has no race start time', async () => {
+    const payload = createPayload([
+      { first: 'ver', second: '', third: '', pole: '' },
+      createEmptyPrediction(),
+      createEmptyPrediction(),
+    ]);
+
+    readCalendarCache.mockResolvedValue([
+      {
+        meetingKey: 'race-1',
+        endDate: '2026-03-01',
+      },
+    ]);
+    readAppData.mockResolvedValue(
+      createPayload([
+        { first: 'ham', second: '', third: '', pole: '' },
+        createEmptyPrediction(),
+        createEmptyPrediction(),
+      ]),
+    );
+
+    const response = await request(app).post('/api/predictions').send(payload);
+
+    expect(response.status).toBe(403);
+    expect(response.body.code).toBe('race_locked');
+    expect(response.body.details).toContain('2026-03-01');
+    expect(writeAppData).not.toHaveBeenCalled();
+  });
+
   it('POST /api/data should return the generic save error payload when persistence fails', async () => {
     mongoose.connection.db = { databaseName: 'fantaf1_dev' };
     writeAppData.mockRejectedValueOnce(new Error('mongo write failed'));
