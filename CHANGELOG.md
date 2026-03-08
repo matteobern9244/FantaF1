@@ -4,6 +4,7 @@ Cronologia sintetica delle release documentate del progetto Fanta Formula 1.
 
 ## In sviluppo
 
+- **Recap Gara Finita con Titolo GP Corretto**: il parser calendario ignora ora badge Formula 1 come `Chequered Flag` e frammenti di classifica quando risolve `meetingName`; inoltre il recap del weekend concluso mostra il `grandPrixTitle` completo invece del nome breve, con test regressivi backend/UI e coverage V8 mantenuta al `100%`.
 - **Workflow Post-Merge Health Corretto**: il job GitHub Actions `post-merge-health` usa ora `RENDER_HEALTHCHECK_URL` come variabile `env` a livello job per pilotare le condizioni `if:` in modo compatibile con GitHub Actions, eliminando l'errore di validazione del workflow su push e mantenendo invariato il controllo `curl` verso Render.
 - **Hardening Highlights Multi-Source con Anno Stagione Dinamico**: il resolver YouTube Sky Sport F1 usa ora una pipeline OO dedicata con `feed`, `channel search`, `channel videos`, `continuation` e fallback globale, includendo l'anno della stagione della gara nella query e nel ranking per evitare match cross-season.
 - **Refactor OO dell'Area Highlights**: introdotto il modulo `backend/highlights.js` con oggetti espliciti per query building, ranking candidati, validation service, lookup policy e source strategy, mantenendo invariato il contratto pubblico `highlightsVideoUrl` verso frontend e API risultati.

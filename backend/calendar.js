@@ -251,6 +251,37 @@ function extractTextFragments(value = '') {
     .filter(Boolean);
 }
 
+function isMeetingNameFragment(fragment = '') {
+  const normalizedFragment = normalizeDateRangeLabel(fragment);
+
+  /* v8 ignore next 3 -- extractTextFragments() already drops empty fragments */
+  if (!fragment) {
+    return false;
+  }
+
+  if (/^ROUND\s*\d+$/i.test(fragment)) {
+    return false;
+  }
+
+  if (/^(NEXT RACE|UPCOMING|CHEQUERED FLAG)$/i.test(fragment)) {
+    return false;
+  }
+
+  if (/^FLAG OF /i.test(fragment)) {
+    return false;
+  }
+
+  if (/^(\d{2}\s*(?:[A-Za-z]{3}\s*)?-\s*\d{2}\s*[A-Za-z]{3})$/i.test(normalizedFragment)) {
+    return false;
+  }
+
+  if (/^\d+(?:ST|ND|RD|TH)?$/i.test(fragment) || /^[A-Z]{3}$/.test(fragment)) {
+    return false;
+  }
+
+  return !fragment.includes('FORMULA 1');
+}
+
 function buildIsoDate(year, monthLabel, dayLabel) {
   const monthIndex = MONTH_INDEX[String(monthLabel).slice(0, 3).toUpperCase()];
   /* v8 ignore next 3 */
@@ -333,20 +364,7 @@ function parseSeasonCalendarPage(rawContent, year = currentYear) {
       ),
     );
     const dateRangeLabel = normalizeDateRangeLabel(dateFragment ?? '');
-    const meetingName =
-      fragments.find((fragment) => {
-        const normalizedFragment = normalizeDateRangeLabel(fragment);
-        return (
-          !/^ROUND\s*\d+$/i.test(fragment) &&
-          !/^NEXT RACE$/i.test(fragment) &&
-          !/^UPCOMING$/i.test(fragment) &&
-          !/^FLAG OF /i.test(fragment) &&
-          !/^(\d{2}\s*(?:[A-Za-z]{3}\s*)?-\s*\d{2}\s*[A-Za-z]{3})$/i.test(
-            normalizedFragment,
-          ) &&
-          !fragment.includes('FORMULA 1')
-        );
-      }) ?? '';
+    const meetingName = fragments.find((fragment) => isMeetingNameFragment(fragment)) ?? '';
     const grandPrixTitle =
       fragments.find((fragment) => fragment.includes('FORMULA 1')) ??
       `${meetingName} Grand Prix ${year}`;

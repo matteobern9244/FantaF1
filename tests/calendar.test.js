@@ -123,6 +123,46 @@ describe('calendar parsing and fallback', () => {
     expect(chinaDetail.trackOutlineUrl).toContain('track/2026trackshanghaidetailed.webp'); // Fixed fixture reference
   });
 
+  it('ignores finished-race status badges when selecting the meeting name', () => {
+    const seasonHtml = `
+      <a href="/en/racing/${currentYear}/australia" class="group">
+        <span>ROUND 1</span>
+        <span>Chequered Flag</span>
+        <span>06 - 08 Mar</span>
+        <span>Flag of Australia</span>
+        <span>Australia</span>
+        <span>FORMULA 1 QATAR AIRWAYS AUSTRALIAN GRAND PRIX ${currentYear}</span>
+        <img src="https://media.formula1.com/image/upload/races/card/australia.webp" />
+      </a>
+    `;
+
+    const [weekend] = parseSeasonCalendarPage(seasonHtml, currentYear);
+
+    expect(weekend).toMatchObject({
+      meetingKey: 'australia',
+      meetingName: 'Australia',
+      grandPrixTitle: `FORMULA 1 QATAR AIRWAYS AUSTRALIAN GRAND PRIX ${currentYear}`,
+    });
+  });
+
+  it('ignores classification fragments before the semantic meeting name', () => {
+    const seasonHtml = `
+      <a href="/en/racing/${currentYear}/australia" class="group">
+        <span>ROUND 1</span>
+        <span>06 - 08 Mar</span>
+        <span>1</span>
+        <span>RUS</span>
+        <span>Australia</span>
+        <span>FORMULA 1 QATAR AIRWAYS AUSTRALIAN GRAND PRIX ${currentYear}</span>
+        <img src="https://media.formula1.com/image/upload/races/card/australia.webp" />
+      </a>
+    `;
+
+    const [weekend] = parseSeasonCalendarPage(seasonHtml, currentYear);
+
+    expect(weekend.meetingName).toBe('Australia');
+  });
+
   it('handles raceStartTime parsing and fallback', () => {
     const htmlWithTime = `
       <title>Test GP - F1 Race</title>

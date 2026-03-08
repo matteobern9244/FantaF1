@@ -283,6 +283,31 @@ describe('Live projection UI', () => {
     expect(highlightsButton).toBeEnabled();
   });
 
+  it('shows the official grand prix title in the selected race recap when the race is finished', async () => {
+    mockAppFetches({
+      resultsByMeetingKey: {
+        'race-1': {
+          racePhase: 'finished',
+          results: { first: 'nor', second: 'ver', third: 'lec', pole: 'pia' },
+          highlightsVideoUrl: 'https://www.youtube.com/watch?v=skyf1-finished',
+        },
+      },
+    });
+
+    render(<App />);
+
+    await screen.findByRole('button', { name: /guarda highlights/i }, { timeout: 5000 });
+
+    const selectedRaceHeroCard = getSelectedRaceHeroCard();
+    expect(selectedRaceHeroCard).not.toBeNull();
+    expect(
+      within(selectedRaceHeroCard as HTMLElement).getByText('Australian Grand Prix 2099'),
+    ).toBeInTheDocument();
+    expect(
+      within(selectedRaceHeroCard as HTMLElement).queryByText('Australia'),
+    ).not.toBeInTheDocument();
+  });
+
   it('opens the YouTube highlights outside the app when the CTA is clicked', async () => {
     mockAppFetches({
       resultsByMeetingKey: {

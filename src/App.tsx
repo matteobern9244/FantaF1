@@ -329,6 +329,11 @@ function App() {
       : selectedRacePhase === 'live'
         ? appText.shell.weekendStatus.live
         : appText.shell.weekendStatus.open;
+  const selectedRaceRecapTitle = !selectedRace
+    ? uiText.labels.selectedRace
+    : selectedRacePhase === 'finished'
+      ? selectedRace.grandPrixTitle || selectedRace.meetingName
+      : selectedRace.meetingName;
   const weekendCountdownLabel = weekendStartTime
     ? new Intl.RelativeTimeFormat('it', { numeric: 'auto' }).format(
         Math.round((weekendStartTime.getTime() - Date.now()) / (1000 * 60 * 60)),
@@ -1489,7 +1494,7 @@ function App() {
           <section className="hero-card interactive-surface">
             <div className="card-heading">
               <Flag size={18} />
-              <span>{selectedRace?.meetingName ?? uiText.labels.selectedRace}</span>
+              <span>{selectedRaceRecapTitle}</span>
             </div>
             {selectedRace ? (
               <div className="driver-spotlight">
