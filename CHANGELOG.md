@@ -4,6 +4,9 @@ Cronologia sintetica delle release documentate del progetto Fanta Formula 1.
 
 ## In sviluppo
 
+- **Dropdown Windows Resi Leggibili**: i `select` condivisi usano ora token dedicati, fondo opaco, `color-scheme: dark` e regole esplicite per `option`/`optgroup`, evitando testo invisibile o contrasto instabile nei menu nativi su Windows e PWA standalone.
+- **Controlli Responsive Estesi ai Form Control**: il tooling `ui-responsive` ispeziona ora anche i dropdown chiave della UI e fallisce quando rileva testo o sfondi trasparenti sui `select` condivisi.
+- **TDD Regressivo sui Dropdown Cross-Platform**: aggiunti test UI e validazioni dedicate per coprire la presenza dei dropdown nelle viste admin/public e impedire regressioni di stile sui controlli nativi.
 - **Installazione PWA Mobile Riallineata**: la CTA `INSTALLA APPLICAZIONE` e' ora gestita in modo contestuale sulla shell frontend e compare in vista mobile solo quando l'app non risulta gia' installata o aperta in modalita' standalone.
 - **Prompt Nativo e Flusso Guidato iOS Distinti**: sui browser che espongono `beforeinstallprompt` il pulsante usa il prompt nativo di installazione, mentre su `iPhone` e `iPad` con `Safari` apre un dialog guidato con i passaggi `Condividi -> Aggiungi a Home`, evitando percorsi morti sui browser mobile non supportati.
 - **Detection Installazione Centralizzata e Sicura**: il frontend usa ora una risoluzione esplicita e testata di `display-mode: standalone`, `navigator.standalone`, viewport mobile e compatibilita' iOS Safari, azzerando la CTA anche dopo l'evento `appinstalled` senza toccare backend, persistence o logica punteggi.

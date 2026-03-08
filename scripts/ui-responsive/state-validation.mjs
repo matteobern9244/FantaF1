@@ -83,6 +83,18 @@ function validateState(
 ) {
   const failures = [];
   const usesFormula1 = (fontFamily) => /(?:^|,)\s*["']?Formula1["']?\s*(?:,|$)/i.test(fontFamily);
+  const isTransparentColor = (value) => {
+    if (!value) {
+      return true;
+    }
+
+    const normalizedValue = String(value).replace(/\s+/g, '').toLowerCase();
+    return (
+      normalizedValue === 'transparent' ||
+      normalizedValue === 'rgba(0,0,0,0)' ||
+      normalizedValue === 'hsla(0,0%,0%,0)'
+    );
+  };
   const isPublicView = expectedViewMode === 'public';
 
   const requiredSections = {
@@ -140,6 +152,49 @@ function validateState(
 
     if (!usesFormula1(details.fontFamily)) {
       failures.push(`${label} non usa Formula1: ${JSON.stringify(details)}`);
+    }
+  }
+
+  for (const [label, details] of Object.entries({
+    'select weekend': state.selects?.meeting,
+    'select KPI utente': state.selects?.insights,
+    'select pronostici': state.selects?.prediction,
+    'select risultati': state.selects?.result,
+    'select filtro storico': state.selects?.historyFilter,
+  })) {
+    if (!details?.present) {
+      failures.push(`Controllo select mancante: ${label}.`);
+      continue;
+    }
+
+    if (!usesFormula1(details.fontFamily)) {
+      failures.push(`${label} non usa Formula1: ${JSON.stringify(details)}`);
+    }
+
+    if (isTransparentColor(details.color)) {
+      failures.push(`${label} con colore testo trasparente o non definito: ${JSON.stringify(details)}`);
+    }
+
+    if (isTransparentColor(details.backgroundColor)) {
+      failures.push(`${label} con sfondo trasparente o non definito: ${JSON.stringify(details)}`);
+    }
+  }
+
+  for (const [label, details] of Object.entries({
+    'option pronostici': state.selects?.predictionOption,
+    'option risultati': state.selects?.resultOption,
+  })) {
+    if (!details?.present) {
+      failures.push(`Controllo option mancante: ${label}.`);
+      continue;
+    }
+
+    if (isTransparentColor(details.color)) {
+      failures.push(`${label} con colore testo trasparente o non definito: ${JSON.stringify(details)}`);
+    }
+
+    if (isTransparentColor(details.backgroundColor)) {
+      failures.push(`${label} con sfondo trasparente o non definito: ${JSON.stringify(details)}`);
     }
   }
 

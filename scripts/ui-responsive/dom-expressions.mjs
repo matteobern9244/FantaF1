@@ -2,6 +2,21 @@ const inspectStateExpression = `() => {
   const viewportWidth = window.innerWidth;
   const viewportHeight = window.innerHeight;
   const normalizeText = (value) => String(value || '').replace(/\\s+/g, ' ').trim();
+  const readElementStyles = (element) => {
+    const styles = element ? getComputedStyle(element) : null;
+
+    return {
+      present: Boolean(element),
+      color: styles?.color ?? '',
+      backgroundColor: styles?.backgroundColor ?? '',
+      fontFamily: styles?.fontFamily ?? '',
+      disabled: element ? Boolean(element.disabled) : false,
+      text: normalizeText(
+        element?.selectedOptions?.[0]?.textContent ||
+        element?.textContent,
+      ),
+    };
+  };
   const readFontFamily = (selector) => {
     const element = document.querySelector(selector);
     return {
@@ -86,6 +101,11 @@ const inspectStateExpression = `() => {
   const firstUserCard = document.querySelector('.predictions-grid .user-card');
   const firstPredictionSelect = firstUserCard?.querySelector('select');
   const firstResultSelect = document.querySelector('.results-grid select');
+  const meetingSelector = document.querySelector('#meeting-selector');
+  const insightsSelector = document.querySelector('#insights-user-selector');
+  const historyFilterSelect = document.querySelector('#history-user-filter');
+  const firstPredictionOption = firstPredictionSelect?.querySelector('option');
+  const firstResultOption = firstResultSelect?.querySelector('option');
 
   return {
     viewport: { width: viewportWidth, height: viewportHeight },
@@ -180,6 +200,15 @@ const inspectStateExpression = `() => {
       firstResultText: normalizeText(
         firstResultSelect?.selectedOptions?.[0]?.textContent || firstResultSelect?.value,
       ),
+    },
+    selects: {
+      meeting: readElementStyles(meetingSelector),
+      insights: readElementStyles(insightsSelector),
+      prediction: readElementStyles(firstPredictionSelect),
+      result: readElementStyles(firstResultSelect),
+      historyFilter: readElementStyles(historyFilterSelect),
+      predictionOption: readElementStyles(firstPredictionOption),
+      resultOption: readElementStyles(firstResultOption),
     },
     unauthorizedOverflow,
   };
