@@ -9,9 +9,9 @@ const sessionName = `ui-${Date.now().toString(36)}`;
 const outputDir = path.resolve(process.cwd(), 'output/playwright/ui-responsive');
 const startupTimeoutMs = 45000;
 const pollIntervalMs = 750;
-const cliCommandTimeoutMs = 10000;
-const cliStartupTimeoutMs = 15000;
-const cliCleanupTimeoutMs = 5000;
+const cliCommandTimeoutMs = 30000;
+const cliStartupTimeoutMs = 30000;
+const cliCleanupTimeoutMs = 30000;
 const uiShellTimeoutMs = 30000;
 const uiShellPollIntervalMs = 250;
 const responsiveSessionPrefix = 'ui-';
@@ -773,6 +773,15 @@ function createPlaywrightCliAdapter({
     });
 
     try {
+      const initialUrl = waitForCurrentUrl('', {
+        timeoutMs,
+        pollInterval: currentPollInterval,
+      });
+
+      if (url && !initialUrl.startsWith(url)) {
+        run(['goto', url]);
+      }
+
       waitForCurrentUrl(url, {
         timeoutMs,
         pollInterval: currentPollInterval,

@@ -9,6 +9,67 @@ All three files are mandatory and complementary.
 
 ---
 
+## Repository Profile
+
+### Project Overview
+
+- Private full-stack Fanta Formula 1 application with an admin-managed predictions and results workflow.
+- The application always manages exactly 3 participants and keeps live projections plus historical standings.
+- The repository contains production-facing business logic and persistent data constraints that must remain safe.
+- `PROJECT.md` remains the source of truth for business rules, critical flows, and domain invariants.
+
+### Main Technologies
+
+- Frontend: React 18 + TypeScript + Vite
+- Backend: Express 5 on Node.js
+- Persistence: MongoDB Atlas via Mongoose
+- Testing: Vitest, React Testing Library, Supertest
+- Supporting libraries: Lucide React, jsdom, dotenv, cors
+
+### Architecture
+
+- `src/`: SPA frontend, UI shell, feature panels, and shared frontend utilities in `src/utils`.
+- `backend/`: REST API, validation, persistence access, and external Formula 1 synchronization logic.
+- `app.js` and `server.js`: Express composition, database bootstrap, and runtime startup.
+- `tests/`: unit, integration, API, and UI regression coverage across frontend and backend flows.
+
+### Building and Running
+
+- `npm run lint`
+- `npm run test`
+- `npm run build`
+- `npm run start:local`
+
+Optional helper commands already supported by the repository:
+
+- `npm run test:save-local`
+- `npm run test:ui-responsive`
+- `npm run preview`
+- `npm run migrate:remove-weekend-boost`
+
+### Development Conventions
+
+- Prefer focused modules, pure helpers, and explicit data flow over oversized orchestration blocks.
+- Keep runtime wiring and environment/bootstrap concerns in entry points and bootstrap modules such as `app.js`, `server.js`, and backend startup code.
+- Avoid hidden dependencies and service-locator style access patterns; pass dependencies explicitly or keep them within the owning module boundary.
+- Do not introduce class-based abstractions unless the repository clearly benefits from them; the current codebase is predominantly module-oriented.
+- Centralize repeated rules, labels, and configuration in the existing config/constants layers instead of scattering literals.
+- Preserve the current visual language, full-width layout, and UI configuration/localization patterns already used by the project.
+- Route persistent state through the defined persistence layer and keep synchronization/import flows explicit about whether they are read-only, idempotent, or mutating.
+- Keep implementations and scripts portable across supported environments; avoid OS-specific assumptions unless the repository already requires them.
+
+### Key Files
+
+- `AGENTS.md`
+- `PROJECT.md`
+- `GEMINI.md`
+- `package.json`
+- `README.md`
+- `app.js`
+- `server.js`
+
+---
+
 ## 1. Prime Directive
 
 Every change must be:
@@ -70,6 +131,7 @@ Do not jump directly into editing without understanding the current implementati
 - Validate external or unsafe input before use.
 - Never swallow errors silently.
 - Fail clearly when invariants are broken.
+- If code or tests appear brittle, inconsistent, or overengineered, surface that explicitly instead of silently working around it.
 
 ---
 
@@ -78,6 +140,7 @@ Do not jump directly into editing without understanding the current implementati
 - Avoid time-dependent behavior unless explicitly guarded.
 - Avoid randomness unless explicitly required.
 - Tests must be deterministic and repeatable.
+- Tests must not rely on uncontrolled system clock values, ambient locale differences, machine-specific paths, or uncontrolled network availability unless the scenario is explicitly guarded behind a controlled seam.
 - Avoid implicit global state mutations.
 - Avoid introducing behavior that depends on execution order unless already part of the design.
 
@@ -97,6 +160,7 @@ Rules:
 - New logic must be covered by automated tests.
 - Related edge cases must be considered and covered when relevant.
 - Never claim TDD was applied if tests were added only after coding without first reproducing the issue.
+- Use the repository's established Vitest/React Testing Library/Supertest patterns, and mock only collaborators outside the actual intent of the test.
 
 ---
 
@@ -108,6 +172,23 @@ Where applicable this includes:
 - unit/integration tests
 - build
 - local application startup
+
+### Current verification stack
+
+- Lint: `npm run lint`
+- Tests: `npm run test`
+- Build: `npm run build`
+- Local smoke startup when relevant: `npm run start:local`
+- Additional targeted checks when relevant:
+  - `npm run test:save-local`
+  - `npm run test:ui-responsive` for responsive/UI-impacting changes
+
+### Test stack and coverage profile
+
+- Main automated test stack: Vitest, React Testing Library, and Supertest.
+- Coverage provider: V8.
+- Current verified merged baseline for the configured coverage scope is **100% line coverage (2170 / 2170)** and **100% branch coverage (919 / 919)**, aligned with the thresholds currently documented in `README.md`.
+- If a task produces a new verified merged coverage result for the tracked scope, update the baseline in `AGENTS.md` and never accept a regression below that verified baseline.
 
 A task is not complete if:
 - the project does not compile

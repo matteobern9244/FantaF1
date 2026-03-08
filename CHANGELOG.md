@@ -4,6 +4,8 @@ Cronologia sintetica delle release documentate del progetto Fanta Formula 1.
 
 ## In sviluppo
 
+- **Vista Pubblica Condivisibile e Insight Stagionali**: la UI espone ora `Weekend pulse`, `Analisi stagione`, guida pubblica, filtri storico e drill-down dei GP; `meeting`, `view`, `historyUser`, `historySearch` e `hash` vengono idratati dall'URL e riscritti in modo coerente per condividere la vista corrente senza concedere accesso admin via query string.
+- **Analytics Stagionali Tipizzate**: introdotti summary derivati per gap leader, costanza, rendimento Sprint e recap dell'ultimo GP, calcolati dal solo storico gia' persistito senza mutare i dati di gioco.
 - **Smoke Responsive Stabilizzato**: `npm run test:ui-responsive` usa ora un adapter Playwright CLI con timeout espliciti, navigazione nativa verificata, preflight fail-fast su sessioni `ui-*` residue e teardown piu' robusto senza killare processi non creati dal comando.
 - **Diagnostica UI Responsive Potenziata**: in caso di shell bloccata o navigazione incoerente il comando salva summary, stato pagina, tab-list, screenshot se disponibile, log console e network in `output/playwright/ui-responsive/`, evitando timeout opachi.
 - **TDD Sul Tooling Responsive**: estesa la suite `tests/ui-responsive-check.test.js` per coprire dirty-state Playwright, timeout CLI, uso di `goto`, separazione tra readiness minima e assert responsive, raccolta artefatti e ordering del cleanup.

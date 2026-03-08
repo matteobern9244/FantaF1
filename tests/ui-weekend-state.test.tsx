@@ -207,6 +207,7 @@ describe('Weekend draft synchronization UI', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.spyOn(window, 'alert').mockImplementation(() => {});
+    window.history.replaceState({}, '', '/');
   });
 
   it('updates predictions and weekend results when changing the selected race and shows placeholders for empty drafts', async () => {

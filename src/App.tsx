@@ -37,6 +37,7 @@ import {
   formatText,
   getNextRaceAfter,
   getOfficialResultsAvailability,
+  getRaceStartTime,
   hasPredictionValue,
   isRaceFinished,
   isRaceStarted,
@@ -78,9 +79,14 @@ import {
   getDriverDisplayNameById,
   sortDriversBySurname,
 } from './utils/drivers';
-import { buildUserAnalytics, buildUserKpiSummaries, trackedFields } from './utils/analytics';
+import { buildSeasonAnalytics, buildUserAnalytics, buildUserKpiSummaries, trackedFields } from './utils/analytics';
 import { createSaveRequestError, getSaveErrorAlertMessage } from './utils/save';
 import { splitHeroTitle } from './utils/title';
+import HistoryArchivePanel from './components/HistoryArchivePanel';
+import PublicGuidePanel from './components/PublicGuidePanel';
+import SeasonAnalysisPanel from './components/SeasonAnalysisPanel';
+import WeekendLivePanel from './components/WeekendLivePanel';
+import WeekendPulseHeroCard from './components/WeekendPulseHeroCard';
 import {
   getWeekendPredictionState,
   hydrateAppDataForWeekend,
@@ -189,8 +195,12 @@ function App() {
   const [showAdminLogin, setShowAdminLogin] = useState(false);
   const [adminPassword, setAdminPassword] = useState('');
   const [adminLoginError, setAdminLoginError] = useState('');
+  const [historySearch, setHistorySearch] = useState('');
+  const [historyUserFilter, setHistoryUserFilter] = useState('all');
+  const [expandedHistoryKey, setExpandedHistoryKey] = useState('');
   const selectedMeetingKeyRef = useRef(selectedMeetingKey);
   const toastTimeoutRef = useRef<number | null>(null);
+  const initialHashHandledRef = useRef(false);
 
   // Derived state (declared before effects to avoid TS errors)
   const sortedDrivers = sortDriversBySurname(drivers, driversSource.sortLocale);
@@ -202,6 +212,11 @@ function App() {
   const officialResultsAvailability = shouldShowOfficialResultsStatus
     ? getOfficialResultsAvailability(raceResults)
     : null;
+  const raceLocked = isRaceStarted(selectedRace);
+  const isFinished = isRaceFinished(selectedRace);
+  const allResultsFilled = allLiveResultsFilled;
+  const canAssignPoints = isFinished && allResultsFilled;
+  const isPublicView = viewMode === 'public';
   const liveResultsStatusMessage =
     officialResultsAvailability === 'none'
       ? uiText.status.liveNoOfficialResults
@@ -221,6 +236,41 @@ function App() {
   const selectedAnalyticsSummary = selectedInsightsUserName
     ? buildUserAnalytics(history, selectedInsightsUserName)
     : null;
+  const seasonAnalytics = buildSeasonAnalytics(users, history, sortedCalendar);
+  const weekendStartTime = getRaceStartTime(selectedRace);
+  const weekendStatusLabel = !selectedRace
+    ? 'Weekend non disponibile'
+    : isFinished
+      ? 'Concluso'
+      : raceLocked
+        ? 'In corso'
+        : 'Pronostici aperti';
+  const weekendCountdownLabel = weekendStartTime
+    ? new Intl.RelativeTimeFormat('it', { numeric: 'auto' }).format(
+        Math.round((weekendStartTime.getTime() - Date.now()) / (1000 * 60 * 60)),
+        'hour',
+      )
+    : uiText.placeholders.emptyOption;
+  const weekendComparison = users
+    .map((user) => {
+      const matchedFields = predictionFieldOrder.filter(
+        (field) => hasPredictionValue(raceResults[field]) && user.predictions[field] === raceResults[field],
+      );
+
+      return {
+        userName: user.name,
+        projection: calculatePotentialPoints(user.predictions),
+        liveTotal: calculateLiveTotal(user, raceResults, points),
+        matchedFields,
+      };
+    })
+    .sort((firstEntry, secondEntry) => secondEntry.liveTotal - firstEntry.liveTotal);
+  const filteredHistoryEntries = history.map((record, index) => ({ record, index })).filter(({ record }) => {
+    const matchesSearch = historySearch.trim().length === 0
+      || record.gpName.toLowerCase().includes(historySearch.trim().toLowerCase());
+    const matchesUser = historyUserFilter === 'all' || Boolean(record.userPredictions[historyUserFilter]);
+    return matchesSearch && matchesUser;
+  });
 
   useEffect(() => {
     selectedMeetingKeyRef.current = selectedMeetingKey;
@@ -276,6 +326,11 @@ function App() {
     let isCancelled = false;
 
     async function loadAppState() {
+      const initialUrlSearchParams = new URLSearchParams(window.location.search);
+      const requestedMeetingKey = initialUrlSearchParams.get('meeting');
+      const requestedView = initialUrlSearchParams.get('view');
+      const requestedHistoryUser = initialUrlSearchParams.get('historyUser');
+      const requestedHistorySearch = initialUrlSearchParams.get('historySearch')?.trim() ?? '';
       setLoadingMessage('Sincronizzazione telemetria e piloti in corso...');
       const [sessionResult, dataResult, driversResult, calendarResult] = await Promise.allSettled([
         fetchWithRetry<SessionState>(sessionApiUrl),
@@ -306,7 +361,7 @@ function App() {
               defaultViewMode: saveRuntimeEnvironment === 'development' ? 'admin' : 'public',
             };
       const resolvedRace =
-        resolveSelectedRace(loadedCalendar, incomingData.selectedMeetingKey) ??
+        resolveSelectedRace(loadedCalendar, requestedMeetingKey || incomingData.selectedMeetingKey) ??
         getNextUpcomingRace(loadedCalendar);
       const resolvedMeetingKey = resolvedRace?.meetingKey ?? fallbackData.selectedMeetingKey;
       const initialWeekendStateByMeetingKey = resolvedMeetingKey
@@ -330,6 +385,10 @@ function App() {
             ...incomingData,
             weekendStateByMeetingKey: initialWeekendStateByMeetingKey,
           };
+      const resolvedHistoryUserFilter =
+        requestedHistoryUser && hydratedIncomingData.users.some((user) => user.name === requestedHistoryUser)
+          ? requestedHistoryUser
+          : 'all';
 
       setDrivers(loadedDrivers);
       setCalendar(loadedCalendar);
@@ -340,7 +399,15 @@ function App() {
       setWeekendStateByMeetingKey(initialWeekendStateByMeetingKey);
       setSelectedMeetingKey(resolvedMeetingKey);
       setGpName(resolvedRace?.grandPrixTitle ?? fallbackData.gpName);
-      setViewMode(resolvedSessionState.isAdmin ? 'admin' : resolvedSessionState.defaultViewMode);
+      setHistoryUserFilter(resolvedHistoryUserFilter);
+      setHistorySearch(requestedHistorySearch);
+      setViewMode(
+        requestedView === 'public'
+          ? 'public'
+          : resolvedSessionState.isAdmin
+            ? 'admin'
+            : resolvedSessionState.defaultViewMode,
+      );
 
       if (driversResult.status === 'rejected' || calendarResult.status === 'rejected') {
         setLoadError(uiText.loadError);
@@ -368,6 +435,50 @@ function App() {
       isCancelled = true;
     };
   }, []);
+
+  useEffect(() => {
+    if (loading || initialHashHandledRef.current) {
+      return;
+    }
+
+    const targetId = window.location.hash.replace(/^#/, '');
+    if (!targetId) {
+      initialHashHandledRef.current = true;
+      return;
+    }
+
+    const targetElement = document.getElementById(targetId);
+    if (!targetElement) {
+      initialHashHandledRef.current = true;
+      return;
+    }
+
+    targetElement.scrollIntoView();
+    initialHashHandledRef.current = true;
+  }, [loading, viewMode]);
+
+  useEffect(() => {
+    if (loading) {
+      return;
+    }
+
+    const params = new URLSearchParams(window.location.search);
+    params.set('meeting', selectedMeetingKey);
+    params.set('view', viewMode);
+    if (historyUserFilter !== 'all') {
+      params.set('historyUser', historyUserFilter);
+    } else {
+      params.delete('historyUser');
+    }
+    if (historySearch.trim()) {
+      params.set('historySearch', historySearch.trim());
+    } else {
+      params.delete('historySearch');
+    }
+
+    const nextUrl = `${window.location.pathname}?${params.toString()}${window.location.hash}`;
+    window.history.replaceState({}, '', nextUrl);
+  }, [historySearch, historyUserFilter, loading, selectedMeetingKey, viewMode]);
 
   useEffect(() => {
     if (!selectedRace || editingSession || allLiveResultsFilled) {
@@ -941,6 +1052,42 @@ function App() {
     }
   }
 
+  async function handleShareCurrentView() {
+    const shareUrl = window.location.href;
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      showToastMessage('Link della vista corrente copiato.', 'success');
+    } catch (error) {
+      console.error(error);
+      window.alert(shareUrl);
+    }
+  }
+
+  function getExpandedHistoryKey(record: AppData['history'][number], index: number) {
+    return `${record.gpName}-${record.date}-${index}`;
+  }
+
+  function getHistoryFieldHitLabel(record: AppData['history'][number], userName: string, field: PredictionKey) {
+    const entry = record.userPredictions[userName];
+    if (!entry) {
+      return uiText.placeholders.emptyOption;
+    }
+
+    const driverName = getDriverDisplayNameById(drivers, entry.prediction[field], uiText.history.unknownDriver);
+    const isHit = entry.prediction[field] && entry.prediction[field] === record.results[field];
+    return `${driverName} ${isHit ? '✓' : '•'}`;
+  }
+
+  function getWeekendLiveDriverName(field: PredictionKey) {
+    return getDriverDisplayNameById(drivers, raceResults[field], uiText.placeholders.emptyOption);
+  }
+
+  function getHistoryWinnerDriverName(record: AppData['history'][number], userName: string) {
+    const winnerDriverId = record.userPredictions[userName]?.prediction.first ?? '';
+    const winnerDriver = getDriverById(drivers, winnerDriverId);
+    return winnerDriver ? formatDriverDisplayName(winnerDriver.name) : uiText.history.unknownDriver;
+  }
+
   if (loading) {
     return (
       <div className="loading-shell">
@@ -963,11 +1110,6 @@ function App() {
     );
   }
 
-  const raceLocked = isRaceStarted(selectedRace);
-  const isFinished = isRaceFinished(selectedRace);
-  const allResultsFilled = allLiveResultsFilled;
-  const canAssignPoints = isFinished && allResultsFilled;
-  const isPublicView = viewMode === 'public';
   const todayLabel = new Intl.DateTimeFormat('it-IT', {
     day: '2-digit',
     month: '2-digit',
@@ -1166,6 +1308,12 @@ function App() {
               <span>{uiText.calendar.empty}</span>
             )}
           </section>
+
+          <WeekendPulseHeroCard
+            officialResultsAvailability={officialResultsAvailability}
+            weekendCountdownLabel={weekendCountdownLabel}
+            weekendStatusLabel={weekendStatusLabel}
+          />
 
           <section className="hero-card">
             <div className="card-heading">
@@ -1394,6 +1542,25 @@ function App() {
             )}
           </section>
 
+          <SeasonAnalysisPanel
+            analyticsEmptyLabel={uiText.history.analyticsEmpty}
+            emptyOptionLabel={uiText.placeholders.emptyOption}
+            onShare={handleShareCurrentView}
+            predictionLabels={predictionLabels}
+            seasonAnalytics={seasonAnalytics}
+          />
+
+          <WeekendLivePanel
+            getDriverName={getWeekendLiveDriverName}
+            predictionFieldOrder={predictionFieldOrder}
+            predictionLabels={predictionLabels}
+            weekendComparison={weekendComparison}
+          />
+
+          {isPublicView ? (
+            <PublicGuidePanel points={points} pointsSuffix={uiText.pointsSuffix} />
+          ) : null}
+
           {!isPublicView ? (
           <section className="panel">
             <div className="panel-head">
@@ -1581,71 +1748,29 @@ function App() {
           </section>
           ) : null}
 
-          <section className="panel">
-            <div className="section-title">
-              <Trophy size={20} />
-              <h2>{uiText.headings.history}</h2>
-            </div>
-            {history.length === 0 ? (
-              <p className="empty-copy">{uiText.history.empty}</p>
-            ) : (
-              <div className="history-stack">
-                {history.map((record, index) => (
-                  <article key={`${record.gpName}-${record.date}-${index}`} className="history-card">
-                    <div className="history-top">
-                      <div className="history-top-row">
-                        <div>
-                          <strong>{record.gpName}</strong>
-                          <span>{record.date}</span>
-                        </div>
-                        {!isPublicView ? (
-                          <div className="history-actions">
-                            <button
-                              className="secondary-button compact-button"
-                              onClick={() => handleEditHistoryRace(index)}
-                              type="button"
-                              disabled={Boolean(editingSession)}
-                            >
-                              {uiText.buttons.editRace}
-                            </button>
-                            <button
-                              className="secondary-button compact-button danger-button"
-                              onClick={() => handleDeleteHistoryRace(index)}
-                              type="button"
-                              disabled={Boolean(editingSession)}
-                            >
-                              {uiText.buttons.deleteRace}
-                            </button>
-                          </div>
-                        ) : null}
-                      </div>
-                      <span className="history-summary">{renderHistoryResults(record)}</span>
-                    </div>
-
-                    <div className="history-grid history-grid-compact">
-                      {Object.entries(record.userPredictions).map(([name, result]) => {
-                        const winnerDriver = getDriverById(drivers, result.prediction.first);
-
-                        return (
-                          <div key={name} className="history-user-card">
-                            <strong>{name}</strong>
-                            <span>
-                              {result.pointsEarned} {uiText.pointsSuffix}
-                            </span>
-                            <small>
-                              {winnerDriver
-                                ? formatDriverDisplayName(winnerDriver.name)
-                                : uiText.history.unknownDriver}
-                            </small>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </article>
-                ))}
-              </div>
-            )}
-          </section>
+          <HistoryArchivePanel
+            editingSession={editingSession}
+            expandedHistoryKey={expandedHistoryKey}
+            filteredHistoryEntries={filteredHistoryEntries}
+            getHistoryFieldHitLabel={getHistoryFieldHitLabel}
+            getHistoryKey={getExpandedHistoryKey}
+            historyEmptyLabel={uiText.history.empty}
+            historySearch={historySearch}
+            historyUserFilter={historyUserFilter}
+            isPublicView={isPublicView}
+            onDeleteHistoryRace={handleDeleteHistoryRace}
+            onEditHistoryRace={handleEditHistoryRace}
+            onHistorySearchChange={setHistorySearch}
+            onHistoryUserFilterChange={setHistoryUserFilter}
+            onToggleExpanded={setExpandedHistoryKey}
+            pointsSuffix={uiText.pointsSuffix}
+            predictionFieldOrder={predictionFieldOrder}
+            predictionLabels={predictionLabels}
+            renderHistoryResults={renderHistoryResults}
+            unknownDriverLabel={uiText.history.unknownDriver}
+            userDisplayNameForWinner={getHistoryWinnerDriverName}
+            users={users}
+          />
         </section>
       </main>
 

@@ -1,6 +1,11 @@
 import type {
   PredictionKey,
   RaceRecord,
+  RaceWeekend,
+  RaceRecapSummary,
+  SeasonAnalyticsSummary,
+  SeasonComparisonPoint,
+  SeasonNarrative,
   UserAnalyticsSummary,
   UserFieldAccuracy,
   UserGpTrendPoint,
@@ -168,6 +173,173 @@ function buildPointsByField(userName: string, history: RaceRecord[]) {
   return pointsByField;
 }
 
+function calculateAverage(values: number[]) {
+  if (values.length === 0) {
+    return 0;
+  }
+
+  return values.reduce((sum, value) => sum + value, 0) / values.length;
+}
+
+function calculateConsistencyIndex(values: number[]) {
+  if (values.length <= 1) {
+    return 100;
+  }
+
+  const average = calculateAverage(values);
+  const variance = values.reduce((sum, value) => sum + ((value - average) ** 2), 0) / values.length;
+  const deviation = Math.sqrt(variance);
+  return Math.max(0, Math.round(100 - deviation * 10));
+}
+
+function buildSeasonComparison(users: UserData[], history: RaceRecord[], calendar: RaceWeekend[]): SeasonComparisonPoint[] {
+  const weekendByMeetingKey = new Map(calendar.map((weekend) => [weekend.meetingKey, weekend]));
+  const summaries = buildUserKpiSummaries(users, history);
+  const leaderPoints = Math.max(...summaries.map((summary) => summary.seasonPoints), 0);
+
+  return summaries
+    .map((summary) => {
+      const userRacePoints = history.map((record) => record.userPredictions[summary.userName]?.pointsEarned ?? 0);
+      const sprintPoints = history.reduce((sum, record) => {
+        const isSprintWeekend = record.meetingKey
+          ? weekendByMeetingKey.get(record.meetingKey)?.isSprintWeekend
+          : false;
+        return sum + (isSprintWeekend ? (record.userPredictions[summary.userName]?.pointsEarned ?? 0) : 0);
+      }, 0);
+      const standardPoints = summary.seasonPoints - sprintPoints;
+
+      return {
+        userName: summary.userName,
+        seasonPoints: summary.seasonPoints,
+        averagePointsPerRace: summary.averagePointsPerRace,
+        totalHitRate: summary.totalHitRate,
+        sprintPoints,
+        standardPoints,
+        consistencyIndex: calculateConsistencyIndex(userRacePoints),
+        leaderGap: leaderPoints - summary.seasonPoints,
+      };
+    })
+    .sort((firstEntry, secondEntry) => {
+      if (secondEntry.seasonPoints !== firstEntry.seasonPoints) {
+        return secondEntry.seasonPoints - firstEntry.seasonPoints;
+      }
+
+      return firstEntry.userName.localeCompare(secondEntry.userName, 'it');
+    });
+}
+
+function buildSeasonNarratives(comparison: SeasonComparisonPoint[]): SeasonNarrative[] {
+  if (comparison.length === 0) {
+    return [];
+  }
+
+  const bestCharge = [...comparison].sort((firstEntry, secondEntry) => {
+    if (firstEntry.leaderGap !== secondEntry.leaderGap) {
+      return firstEntry.leaderGap - secondEntry.leaderGap;
+    }
+
+    return secondEntry.averagePointsPerRace - firstEntry.averagePointsPerRace;
+  })[0];
+  const mostConsistent = [...comparison].sort((firstEntry, secondEntry) => {
+    if (secondEntry.consistencyIndex !== firstEntry.consistencyIndex) {
+      return secondEntry.consistencyIndex - firstEntry.consistencyIndex;
+    }
+
+    return secondEntry.seasonPoints - firstEntry.seasonPoints;
+  })[0];
+  const sprintLeader = [...comparison].sort((firstEntry, secondEntry) => {
+    if (secondEntry.sprintPoints !== firstEntry.sprintPoints) {
+      return secondEntry.sprintPoints - firstEntry.sprintPoints;
+    }
+
+    return secondEntry.totalHitRate - firstEntry.totalHitRate;
+  })[0];
+  const mostPrecise = [...comparison].sort((firstEntry, secondEntry) => {
+    if (secondEntry.totalHitRate !== firstEntry.totalHitRate) {
+      return secondEntry.totalHitRate - firstEntry.totalHitRate;
+    }
+
+    return secondEntry.seasonPoints - firstEntry.seasonPoints;
+  })[0];
+
+  return [
+    {
+      slug: 'charge',
+      title: 'Chi tiene il passo del leader',
+      description: `${bestCharge.userName} ha il gap piu' basso dalla vetta.`,
+      userName: bestCharge.userName,
+    },
+    {
+      slug: 'consistency',
+      title: "Il piu' costante",
+      description: `${mostConsistent.userName} mantiene il rendimento piu' stabile GP dopo GP.`,
+      userName: mostConsistent.userName,
+    },
+    {
+      slug: 'sprint',
+      title: 'Specialista Sprint',
+      description: `${sprintLeader.userName} converte meglio i weekend Sprint.`,
+      userName: sprintLeader.userName,
+    },
+    {
+      slug: 'precision',
+      title: "Il piu' preciso",
+      description: `${mostPrecise.userName} ha l'hit rate migliore sui pronostici.`,
+      userName: mostPrecise.userName,
+    },
+  ];
+}
+
+function buildRaceRecap(history: RaceRecord[]): RaceRecapSummary | null {
+  const lastRecord = history[0];
+  if (!lastRecord) {
+    return null;
+  }
+
+  const ranking = Object.entries(lastRecord.userPredictions).sort((firstEntry, secondEntry) => {
+    if (secondEntry[1].pointsEarned !== firstEntry[1].pointsEarned) {
+      return secondEntry[1].pointsEarned - firstEntry[1].pointsEarned;
+    }
+
+    return firstEntry[0].localeCompare(secondEntry[0], 'it');
+  });
+  const winnerEntry = ranking[0];
+  const runnerUpEntry = ranking[1];
+  const fieldHits = trackedFields.map((field) => ({
+    field,
+    hits: ranking.reduce((sum, [, value]) => {
+      return sum + (value.prediction[field] && value.prediction[field] === lastRecord.results[field] ? 1 : 0);
+    }, 0),
+  })).sort((firstEntry, secondEntry) => {
+    if (firstEntry.hits !== secondEntry.hits) {
+      return firstEntry.hits - secondEntry.hits;
+    }
+
+    return trackedFields.indexOf(firstEntry.field) - trackedFields.indexOf(secondEntry.field);
+  });
+
+  return {
+    gpName: lastRecord.gpName,
+    winnerName: winnerEntry?.[0] ?? '',
+    winnerPoints: winnerEntry?.[1].pointsEarned ?? 0,
+    swingLabel: runnerUpEntry
+      ? `Gap sul secondo: ${(winnerEntry?.[1].pointsEarned ?? 0) - runnerUpEntry[1].pointsEarned} pt`
+      : 'Weekend senza inseguitori diretti',
+    decisiveField: fieldHits[0]?.hits === 0 ? fieldHits[0]?.field ?? null : fieldHits[0]?.field ?? null,
+  };
+}
+
+function buildSeasonAnalytics(users: UserData[], history: RaceRecord[], calendar: RaceWeekend[]): SeasonAnalyticsSummary {
+  const comparison = buildSeasonComparison(users, history, calendar);
+
+  return {
+    comparison,
+    leaderName: comparison[0]?.userName ?? '',
+    narratives: buildSeasonNarratives(comparison),
+    recap: buildRaceRecap(history),
+  };
+}
+
 function buildUserAnalytics(history: RaceRecord[], userName: string): UserAnalyticsSummary {
   const trend = buildTrend(userName, history);
   const cumulativeTrend = buildCumulativeTrend(trend);
@@ -196,6 +368,7 @@ function buildUserAnalytics(history: RaceRecord[], userName: string): UserAnalyt
 }
 
 export {
+  buildSeasonAnalytics,
   buildUserAnalytics,
   buildUserKpiSummaries,
   trackedFields,

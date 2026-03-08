@@ -1158,6 +1158,45 @@ select:focus {
   gap: 10px;
 }
 
+.history-filters,
+.weekend-pulse-summary,
+.history-detail-panel {
+  display: grid;
+  gap: 16px;
+}
+
+.history-filters {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-bottom: 12px;
+}
+
+.compact-list .field-accuracy-row:last-child,
+.history-detail-panel .field-accuracy-row:last-child {
+  border-bottom: 0;
+}
+
+.season-comparison-table {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.season-comparison-row {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 16px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.history-detail-panel {
+  margin-top: 18px;
+  padding-top: 18px;
+  border-top: 1px solid var(--line);
+}
+
 .compact-button {
   min-height: 40px;
   padding: 10px 16px;
@@ -1360,7 +1399,9 @@ select:focus {
   .kpi-grid,
   .analytics-summary-grid,
   .analytics-columns,
-  .history-grid-compact {
+  .history-grid-compact,
+  .history-filters,
+  .season-comparison-row {
     grid-template-columns: 1fr;
   }
 
@@ -1394,7 +1435,9 @@ select:focus {
   .kpi-grid,
   .analytics-summary-grid,
   .analytics-columns,
-  .history-grid-compact {
+  .history-grid-compact,
+  .history-filters,
+  .season-comparison-row {
     grid-template-columns: 1fr;
   }
 

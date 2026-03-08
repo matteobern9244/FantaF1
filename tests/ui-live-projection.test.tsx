@@ -198,6 +198,7 @@ function getSelectedRaceHeroCard() {
 describe('Live projection UI', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    window.history.replaceState({}, '', '/');
   });
 
   it('shows explicit waiting messages when the selected weekend has no official results yet', async () => {
@@ -346,5 +347,25 @@ describe('Live projection UI', () => {
       { name: 'Matteo', score: '10' },
       { name: 'Adriano', score: '6' },
     ]);
+  });
+
+  it('renders enriched weekend comparison insights for the selected GP', async () => {
+    mockAppFetches({
+      resultsByMeetingKey: {
+        'race-1': { first: 'ver', second: '', third: '', pole: 'pia' },
+      },
+    });
+
+    render(<App />);
+
+    await waitFor(() => {
+      expect(screen.queryByTestId('pitstop-loader')).not.toBeInTheDocument();
+    });
+
+    expect(screen.getByRole('heading', { name: /weekend pulse/i })).toBeInTheDocument();
+    expect(screen.getAllByText(/match confermati/i).length).toBeGreaterThan(0);
+    expect(screen.getByText(/risultati ufficiali parziali/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/verstappen max/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/piastri oscar/i).length).toBeGreaterThan(0);
   });
 });

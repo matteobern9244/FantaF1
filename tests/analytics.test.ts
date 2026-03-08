@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildUserAnalytics, buildUserKpiSummaries } from '../src/utils/analytics';
+import { buildSeasonAnalytics, buildUserAnalytics, buildUserKpiSummaries } from '../src/utils/analytics';
 import { createEmptyPrediction } from '../src/utils/game';
 
 describe('analytics utils', () => {
@@ -49,6 +49,30 @@ describe('analytics utils', () => {
           pointsEarned: 3,
         },
       },
+    },
+  ];
+  const calendar = [
+    {
+      meetingKey: 'race-1',
+      meetingName: 'Australia',
+      grandPrixTitle: 'Australian Grand Prix 2099',
+      roundNumber: 1,
+      dateRangeLabel: '13 - 15 MAR',
+      detailUrl: '',
+      heroImageUrl: '',
+      trackOutlineUrl: '',
+      isSprintWeekend: false,
+    },
+    {
+      meetingKey: 'race-2',
+      meetingName: 'China',
+      grandPrixTitle: 'Chinese Grand Prix 2099',
+      roundNumber: 2,
+      dateRangeLabel: '20 - 22 MAR',
+      detailUrl: '',
+      heroImageUrl: '',
+      trackOutlineUrl: '',
+      isSprintWeekend: true,
     },
   ];
 
@@ -128,6 +152,69 @@ describe('analytics utils', () => {
       pole: 2,
     });
     expect(summary.weekendsAboveLeader).toBe(1);
+  });
+
+  it('builds season comparison narratives and recap without touching persisted data', () => {
+    const season = buildSeasonAnalytics(users, history, calendar);
+
+    expect(season.leaderName).toBe('Marco');
+    expect(season.comparison).toEqual([
+      {
+        userName: 'Marco',
+        seasonPoints: 20,
+        averagePointsPerRace: 10,
+        totalHitRate: 88,
+        sprintPoints: 11,
+        standardPoints: 9,
+        consistencyIndex: 90,
+        leaderGap: 0,
+      },
+      {
+        userName: 'Sara',
+        seasonPoints: 14,
+        averagePointsPerRace: 7,
+        totalHitRate: 75,
+        sprintPoints: 3,
+        standardPoints: 11,
+        consistencyIndex: 60,
+        leaderGap: 6,
+      },
+      {
+        userName: 'Luca',
+        seasonPoints: 11,
+        averagePointsPerRace: 5.5,
+        totalHitRate: 50,
+        sprintPoints: 9,
+        standardPoints: 2,
+        consistencyIndex: 65,
+        leaderGap: 9,
+      },
+    ]);
+    expect(season.narratives.map((entry) => entry.slug)).toEqual([
+      'charge',
+      'consistency',
+      'sprint',
+      'precision',
+    ]);
+    expect(season.recap).toEqual({
+      gpName: 'Australian Grand Prix 2099',
+      winnerName: 'Sara',
+      winnerPoints: 11,
+      swingLabel: 'Gap sul secondo: 2 pt',
+      decisiveField: 'first',
+    });
+  });
+
+  it('uses the most recent prepended history entry for the season recap', () => {
+    const newestFirstHistory = [history[1], history[0]];
+
+    expect(buildSeasonAnalytics(users, newestFirstHistory, calendar).recap).toEqual({
+      gpName: 'Chinese Grand Prix 2099',
+      winnerName: 'Marco',
+      winnerPoints: 11,
+      swingLabel: 'Gap sul secondo: 2 pt',
+      decisiveField: 'first',
+    });
   });
 
   it('returns stable empty summaries when history is missing', () => {

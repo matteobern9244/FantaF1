@@ -185,14 +185,25 @@ Se il database non contiene ancora stato applicativo, il backend costruisce uno 
 - Il titolo hero usa un fit basato sulla larghezza reale del contenitore: sui desktop wide mantiene il massimo visivo corrente, mentre su viewport piu' strette riduce il `font-size` solo quanto necessario per restare interamente visibile senza clipping.
 - Card "Prossimo weekend" con badge Sprint/Standard, programma sessioni e orari formattati in italiano.
 - Classifica live calcolata come punti storici piu' proiezione del weekend selezionato, con stato esplicito per risultati ufficiali assenti o parziali.
-- Modalita' `public` e `admin` separate, con login admin via sessione e pannelli operativi esposti solo quando la sessione e' valida.
+- Modalita' `public` e `admin` separate, con login admin via sessione, link condivisibile della vista corrente e pannelli operativi esposti solo quando la sessione e' valida.
 - Calendario stagionale con selettore e strip orizzontale dei weekend.
 - Griglia pronostici per i 3 partecipanti con selezione piloti ordinati per cognome e visualizzati come `Cognome Nome`.
 - Hero results card del weekend selezionato con nomi pilota visualizzati come `Nome Cognome`; dropdown e liste di selezione restano invece in formato `Cognome Nome`.
 - Sezione risultati del weekend con track map, recupero automatico read-only dei risultati ufficiali, merge solo dei campi mancanti e pulsante conferma con tooltip di stato.
-- Storico gare modificabile con ricalcolo dei punteggi.
-- Dashboard KPI per utente, analytics deep-dive, storico mobile piu' compatto, status strip, toast operativi e CTA installazione PWA.
+- Storico gare modificabile con ricalcolo dei punteggi, filtri per giocatore/GP e drill-down dei pronostici dettagliati.
+- Dashboard KPI per utente, analytics deep-dive, pannello `Analisi stagione`, riepilogo `Weekend pulse`, guida pubblica, storico mobile piu' compatto, status strip, toast operativi e CTA installazione PWA.
 - Loader iniziale con splash logo `FantaF1`, set icone browser/PWA dedicato (`favicon`, `apple-touch-icon`, `192x192`, `512x512`, `maskable`) e layout responsive desktop/mobile.
+
+### URL condivisibile della vista
+
+La shell frontend mantiene sincronizzato nell'URL lo stato consultivo della vista corrente, cosi' da poter condividere direttamente il contesto aperto.
+
+- `meeting` seleziona il weekend attivo.
+- `view=public` forza solo la vista pubblica; una query `view=admin` non concede accesso operativo se la sessione non e' admin.
+- `historyUser` e `historySearch` ripristinano i filtri dello storico.
+- L'eventuale `hash` viene preservato e usato per lo scroll iniziale alla sezione richiesta.
+
+Quando l'utente cambia weekend, vista o filtri storico, il frontend aggiorna l'URL via `history.replaceState` senza ricaricare la pagina.
 
 ### Logica di gioco
 

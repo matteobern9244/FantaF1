@@ -133,6 +133,7 @@ describe('responsive UI playwright preflight', () => {
     expect(spawnSyncImpl.mock.calls[0][1]).toContain('list');
     expect(spawnSyncImpl.mock.calls[0][1]).not.toContain('close-all');
     expect(spawnSyncImpl.mock.calls[0][1]).not.toContain('kill-all');
+    expect(spawnSyncImpl.mock.calls[0][2]).toEqual(expect.objectContaining({ timeout: 30000 }));
   });
 });
 
@@ -154,7 +155,7 @@ describe('responsive UI playwright adapter', () => {
     expect(spawnSyncImpl).toHaveBeenCalledWith(
       'npx',
       expect.arrayContaining(['playwright-cli', '-s=ui-timeout', 'tab-list']),
-      expect.objectContaining({ timeout: 10000 }),
+      expect.objectContaining({ timeout: 30000 }),
     );
   });
 
@@ -189,6 +190,56 @@ describe('responsive UI playwright adapter', () => {
     expect(gotoCall[1]).toContain('goto');
     expect(gotoCall[1]).toContain('http://127.0.0.1:5173');
     expect(gotoCall[1]).not.toContain('run-code');
+  });
+
+  it('forces a goto when the opened browser session starts on about:blank', async () => {
+    let navigated = false;
+    const spawnImpl = vi.fn().mockReturnValue({ killed: false, kill: vi.fn() });
+    const spawnSyncImpl = vi.fn().mockImplementation((_command, args) => {
+      if (args.includes('goto')) {
+        navigated = true;
+        return { status: 0, stdout: '', stderr: '' };
+      }
+
+      if (args.includes('tab-list')) {
+        return {
+          status: 0,
+          stdout: navigated
+            ? '### Result\n- 0: (current) [FantaF1 2026](http://127.0.0.1:5173/)'
+            : '### Result\n- 0: (current) [about:blank](about:blank)',
+          stderr: '',
+        };
+      }
+
+      if (args.includes('close')) {
+        return { status: 0, stdout: '', stderr: '' };
+      }
+
+      if (args.includes('list')) {
+        return { status: 0, stdout: '### Browsers\n  (no browsers)\n', stderr: '' };
+      }
+
+      return { status: 0, stdout: '', stderr: '' };
+    });
+    const adapter = createPlaywrightCliAdapter({
+      sessionId: 'ui-about-blank',
+      spawnImpl,
+      spawnSyncImpl,
+      sleepImpl: async () => {},
+      sleepSyncImpl: () => {},
+    });
+
+    await expect(
+      adapter.startSession({
+        url: 'http://127.0.0.1:5173',
+        timeoutMs: 25,
+        pollInterval: 0,
+      }),
+    ).resolves.toEqual(expect.objectContaining({ sessionId: 'ui-about-blank' }));
+
+    const gotoCall = spawnSyncImpl.mock.calls.find(([, args]) => args.includes('goto'));
+    expect(gotoCall).toBeTruthy();
+    expect(gotoCall[1]).toContain('http://127.0.0.1:5173');
   });
 
   it('collects diagnostic artifacts for a shell timeout', () => {

@@ -146,10 +146,15 @@ function createResponse(payload: unknown) {
 function setupFetch() {
   const fetchMock = global.fetch as ReturnType<typeof vi.fn>;
   const appData = createAppData();
+  const sessionState = { isAdmin: true, defaultViewMode: 'admin' };
+  const calendar = createCalendar();
+  const resultsByMeetingKey = {
+    'race-1': createEmptyPrediction(),
+  } as Record<string, ReturnType<typeof createEmptyPrediction>>;
 
   fetchMock.mockImplementation((url: string, options?: RequestInit) => {
     if (url.includes('/api/session')) {
-      return Promise.resolve(createResponse({ isAdmin: true, defaultViewMode: 'admin' }));
+      return Promise.resolve(createResponse(sessionState));
     }
 
     if (url.includes('/api/data') && (!options || options.method !== 'POST')) {
@@ -161,15 +166,69 @@ function setupFetch() {
     }
 
     if (url.includes('/api/calendar')) {
-      return Promise.resolve(createResponse(createCalendar()));
+      return Promise.resolve(createResponse(calendar));
     }
 
     if (url.includes('/api/predictions')) {
       return Promise.resolve(createResponse({ message: 'Dati salvati correttamente.' }));
     }
 
-    if (url.includes('/api/results/race-1')) {
-      return Promise.resolve(createResponse(createEmptyPrediction()));
+    const resultsEntry = Object.entries(resultsByMeetingKey).find(([meetingKey]) =>
+      url.includes(`/api/results/${meetingKey}`),
+    );
+
+    if (resultsEntry) {
+      return Promise.resolve(createResponse(resultsEntry[1]));
+    }
+
+    return Promise.reject(new Error(`Unhandled fetch to ${url}`));
+  });
+
+  return fetchMock;
+}
+
+function setupFetchWithOverrides({
+  appData = createAppData(),
+  calendar = createCalendar(),
+  sessionState = { isAdmin: true, defaultViewMode: 'admin' as const },
+  resultsByMeetingKey = {
+    'race-1': createEmptyPrediction(),
+  } as Record<string, ReturnType<typeof createEmptyPrediction>>,
+}: {
+  appData?: ReturnType<typeof createAppData>;
+  calendar?: ReturnType<typeof createCalendar>;
+  sessionState?: { isAdmin: boolean; defaultViewMode: 'admin' | 'public' };
+  resultsByMeetingKey?: Record<string, ReturnType<typeof createEmptyPrediction>>;
+}) {
+  const fetchMock = global.fetch as ReturnType<typeof vi.fn>;
+
+  fetchMock.mockImplementation((url: string, options?: RequestInit) => {
+    if (url.includes('/api/session')) {
+      return Promise.resolve(createResponse(sessionState));
+    }
+
+    if (url.includes('/api/data') && (!options || options.method !== 'POST')) {
+      return Promise.resolve(createResponse(appData));
+    }
+
+    if (url.includes('/api/drivers')) {
+      return Promise.resolve(createResponse(createDrivers()));
+    }
+
+    if (url.includes('/api/calendar')) {
+      return Promise.resolve(createResponse(calendar));
+    }
+
+    if (url.includes('/api/predictions')) {
+      return Promise.resolve(createResponse({ message: 'Dati salvati correttamente.' }));
+    }
+
+    const resultsEntry = Object.entries(resultsByMeetingKey).find(([meetingKey]) =>
+      url.includes(`/api/results/${meetingKey}`),
+    );
+
+    if (resultsEntry) {
+      return Promise.resolve(createResponse(resultsEntry[1]));
     }
 
     return Promise.reject(new Error(`Unhandled fetch to ${url}`));
@@ -182,6 +241,16 @@ describe('Mockup roadmap UI features', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.spyOn(window, 'alert').mockImplementation(() => {});
+    window.history.replaceState({}, '', '/');
+    Object.defineProperty(HTMLElement.prototype, 'scrollIntoView', {
+      configurable: true,
+      value: vi.fn(),
+    });
+    Object.assign(navigator, {
+      clipboard: {
+        writeText: vi.fn().mockResolvedValue(undefined),
+      },
+    });
   });
 
   it('switches between public and admin modes and keeps editing controls admin-only', async () => {
@@ -232,6 +301,39 @@ describe('Mockup roadmap UI features', () => {
     expect(within(analyticsPanel as HTMLElement).getAllByText(/australian grand prix 2099/i).length).toBeGreaterThan(0);
   });
 
+  it('renders season analysis, public guide, share action and history drill-down', async () => {
+    setupFetch();
+
+    render(<App />);
+
+    await waitFor(() => {
+      expect(screen.queryByTestId('pitstop-loader')).not.toBeInTheDocument();
+    });
+
+    expect(screen.getByRole('heading', { name: /analisi stagione/i })).toBeInTheDocument();
+    expect(screen.getByText(/chi tiene il passo del leader/i)).toBeInTheDocument();
+    expect(screen.getByText(/recap ultimo gp/i)).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: /vista pubblica/i }));
+
+    expect(screen.getByRole('heading', { name: /come funziona/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /copia link vista corrente/i })).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: /copia link vista corrente/i }));
+    await waitFor(() => {
+      expect(navigator.clipboard.writeText).toHaveBeenCalled();
+    });
+
+    fireEvent.change(screen.getByLabelText(/filtra per giocatore/i), {
+      target: { value: 'Marco' },
+    });
+    expect(screen.getByText(/2 gran premi mostrati/i)).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: /dettaglio australian grand prix 2099/i }));
+    expect(screen.getByText(/pronostici dettagliati/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/marco/i).length).toBeGreaterThan(0);
+  });
+
   it('shows install CTA when the browser exposes the PWA install prompt', async () => {
     setupFetch();
 
@@ -259,5 +361,113 @@ describe('Mockup roadmap UI features', () => {
     await waitFor(() => {
       expect(prompt).toHaveBeenCalled();
     });
+  });
+
+  it('hydrates the shared public url state from query params and preserves the hash when copying the link', async () => {
+    const scrollIntoView = vi.fn();
+    Object.defineProperty(HTMLElement.prototype, 'scrollIntoView', {
+      configurable: true,
+      value: scrollIntoView,
+    });
+
+    const appData = createAppData();
+    appData.weekendStateByMeetingKey['race-2'] = {
+      userPredictions: {
+        Marco: { first: 'ham', second: 'nor', third: 'lec', pole: 'ver' },
+        Luca: { first: 'ham', second: 'nor', third: 'pia', pole: 'ver' },
+        Sara: { first: 'nor', second: 'ham', third: 'lec', pole: 'ver' },
+      },
+      raceResults: createEmptyPrediction(),
+    };
+
+    const calendar = [
+      ...createCalendar(),
+      {
+        meetingKey: 'race-2',
+        meetingName: 'China',
+        grandPrixTitle: 'Chinese Grand Prix 2099',
+        roundNumber: 2,
+        dateRangeLabel: '20 - 22 MAR',
+        detailUrl: 'https://www.formula1.com/en/racing/2099/china',
+        heroImageUrl: '',
+        trackOutlineUrl: '',
+        isSprintWeekend: true,
+        startDate: '2099-03-20',
+        endDate: '2099-03-22',
+        raceStartTime: '2099-03-22T14:00:00Z',
+        sessions: [],
+      },
+    ];
+
+    window.history.replaceState(
+      {},
+      '',
+      '/?meeting=race-2&view=public&historyUser=Marco&historySearch=Chinese#history-archive',
+    );
+
+    setupFetchWithOverrides({
+      appData,
+      calendar,
+      resultsByMeetingKey: {
+        'race-1': createEmptyPrediction(),
+        'race-2': createEmptyPrediction(),
+      },
+    });
+
+    render(<App />);
+
+    await waitFor(() => {
+      expect(screen.queryByTestId('pitstop-loader')).not.toBeInTheDocument();
+    });
+
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: /come funziona/i })).toBeInTheDocument();
+    });
+
+    expect(screen.queryByRole('button', { name: /salva dati inseriti/i })).not.toBeInTheDocument();
+    expect(screen.getByLabelText(/filtra per giocatore/i)).toHaveValue('Marco');
+    expect(screen.getByLabelText(/cerca gp/i)).toHaveValue('Chinese');
+    expect(screen.getByDisplayValue(/2\.\s+Chinese Grand Prix 2099/i)).toBeInTheDocument();
+    expect(screen.getByText(/1 gran premi mostrati/i)).toBeInTheDocument();
+    expect(scrollIntoView).toHaveBeenCalled();
+
+    fireEvent.click(screen.getByRole('button', { name: /copia link vista corrente/i }));
+
+    await waitFor(() => {
+      expect(navigator.clipboard.writeText).toHaveBeenCalledWith(
+        expect.stringContaining('meeting=race-2'),
+      );
+    });
+
+    expect(navigator.clipboard.writeText).toHaveBeenCalledWith(
+      expect.stringContaining('view=public'),
+    );
+    expect(navigator.clipboard.writeText).toHaveBeenCalledWith(
+      expect.stringContaining('historyUser=Marco'),
+    );
+    expect(navigator.clipboard.writeText).toHaveBeenCalledWith(
+      expect.stringContaining('historySearch=Chinese'),
+    );
+    expect(navigator.clipboard.writeText).toHaveBeenCalledWith(
+      expect.stringContaining('#history-archive'),
+    );
+  });
+
+  it('does not grant admin access from a shared admin url when the session is not admin', async () => {
+    window.history.replaceState({}, '', '/?meeting=race-1&view=admin');
+    setupFetchWithOverrides({
+      sessionState: { isAdmin: false, defaultViewMode: 'public' },
+    });
+
+    render(<App />);
+
+    await waitFor(() => {
+      expect(screen.queryByTestId('pitstop-loader')).not.toBeInTheDocument();
+    });
+
+    expect(screen.getByRole('button', { name: /vista pubblica/i })).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByRole('button', { name: /modalita' admin/i })).toHaveAttribute('aria-pressed', 'false');
+    expect(screen.queryByRole('button', { name: /salva dati inseriti/i })).not.toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /come funziona/i })).toBeInTheDocument();
   });
 });

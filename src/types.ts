@@ -119,6 +119,39 @@ export interface UserAnalyticsSummary {
   weekendsAboveLeader: number;
 }
 
+export interface SeasonComparisonPoint {
+  userName: string;
+  seasonPoints: number;
+  averagePointsPerRace: number;
+  totalHitRate: number;
+  sprintPoints: number;
+  standardPoints: number;
+  consistencyIndex: number;
+  leaderGap: number;
+}
+
+export interface SeasonNarrative {
+  slug: 'charge' | 'consistency' | 'sprint' | 'precision';
+  title: string;
+  description: string;
+  userName: string;
+}
+
+export interface RaceRecapSummary {
+  gpName: string;
+  winnerName: string;
+  winnerPoints: number;
+  swingLabel: string;
+  decisiveField: PredictionKey | null;
+}
+
+export interface SeasonAnalyticsSummary {
+  comparison: SeasonComparisonPoint[];
+  leaderName: string;
+  narratives: SeasonNarrative[];
+  recap: RaceRecapSummary | null;
+}
+
 export interface SessionState {
   isAdmin: boolean;
   defaultViewMode: ViewMode;
