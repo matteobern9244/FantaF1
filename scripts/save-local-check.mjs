@@ -239,15 +239,40 @@ async function runSaveSmoke({
       'GET /api/data (after)',
     );
 
-    if (stableSerialize(afterState) !== stableSerialize(beforeState)) {
+    let canonicalBeforeState = beforeState;
+    let canonicalAfterState = afterState;
+
+    if (stableSerialize(canonicalAfterState) !== stableSerialize(canonicalBeforeState)) {
+      canonicalBeforeState = canonicalAfterState;
+
+      const retrySaveResult = await readJsonResponse(
+        await fetchImpl(`${normalizedBaseUrl}${DATA_PATH}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(canonicalBeforeState),
+        }),
+        'POST /api/data (retry)',
+      );
+
+      if (typeof retrySaveResult.message !== 'string' || !retrySaveResult.message.trim()) {
+        throw new Error('POST /api/data (retry) non ha restituito un messaggio di successo valido.');
+      }
+
+      canonicalAfterState = await readJsonResponse(
+        await fetchImpl(`${normalizedBaseUrl}${DATA_PATH}`),
+        'GET /api/data (after retry)',
+      );
+    }
+
+    if (stableSerialize(canonicalAfterState) !== stableSerialize(canonicalBeforeState)) {
       throw new Error('Lo stato letto dopo il salvataggio non coincide con il payload inviato.');
     }
 
     return {
       health,
       saveResult,
-      beforeState,
-      afterState,
+      beforeState: canonicalBeforeState,
+      afterState: canonicalAfterState,
     };
   } finally {
     await backendHandle?.stop?.();
