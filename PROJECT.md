@@ -108,6 +108,7 @@ Rules:
 - secrets must not be committed
 - the targeted database/environment must always be explicitly identified when running locally
 - local fixes must not introduce production-only or local-only scoring divergence
+- `start_fantaf1.command` is the canonical local launcher: it must remain valid, executable, and aligned with the real mandatory startup flow, including preflight checks and final application boot
 
 ---
 

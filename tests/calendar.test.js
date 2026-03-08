@@ -95,6 +95,7 @@ function buildYoutubeOEmbedPayload({
 
 describe('calendar parsing and fallback', () => {
   beforeEach(() => {
+    vi.restoreAllMocks();
     vi.spyOn(console, 'error').mockImplementation(() => {});
     vi.spyOn(console, 'warn').mockImplementation(() => {});
     vi.spyOn(storage, 'writeCalendarCache').mockResolvedValue([]);
@@ -305,6 +306,51 @@ describe('calendar parsing and fallback', () => {
       }),
     );
     expect(writeCacheSpy).toHaveBeenCalledWith(result);
+  });
+
+  it('preserves detail data when the highlights lookup fails for a finished weekend', async () => {
+    const fakeSeasonHtml = Array.from({ length: 20 }).map((_, i) => `
+      <a href="/en/racing/${currentYear}/race-${i}" class="group">
+        <span>ROUND ${i + 1}</span>
+        <span>01 - 03 JAN</span>
+        <span>FORMULA 1 RACE ${i} ${currentYear}</span>
+        <img src="card.webp" />
+      </a>
+    `).join('');
+
+    const result = await syncCalendarFromOfficialSource({
+      fetchHtmlImpl: (url) => {
+        if (new RegExp(`/racing/${currentYear}/?$`).test(String(url))) {
+          return Promise.resolve(fakeSeasonHtml);
+        }
+
+        if (String(url).includes('youtube.com')) {
+          throw new Error('youtube offline');
+        }
+
+        return Promise.resolve(`
+          <title>Race 0 GP - F1 Race</title>
+          <a href="/en/results/${currentYear}/races/1279/race-0/race-result">2026 Season</a>
+          <meta property="og:image" content="https://media.formula1.com/race-0.webp" />
+          <script>
+            { "@type": "SportsEvent", "name": "Race - Race 0 GP", "startDate": "${currentYear}-01-03T14:00:00Z" }
+          </script>
+        `);
+      },
+      readCache: async () => [],
+      writeCache: async () => {},
+    });
+
+    expect(result[0]).toEqual(
+      expect.objectContaining({
+        meetingKey: '1279',
+        grandPrixTitle: 'Race 0 GP',
+        heroImageUrl: 'https://media.formula1.com/race-0.webp',
+        raceStartTime: `${currentYear}-01-03T14:00:00Z`,
+        highlightsVideoUrl: '',
+        highlightsLookupStatus: '',
+      }),
+    );
   });
 
   describe('parseDateRangeLabel edge cases', () => {

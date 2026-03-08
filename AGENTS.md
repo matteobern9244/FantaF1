@@ -39,6 +39,7 @@ All three files are mandatory and complementary.
 - `npm run test`
 - `npm run build`
 - `npm run start:local`
+- `./start_fantaf1.command` as the canonical monitored local app launcher when the user asks to `avvia l'app`
 
 Optional helper commands already supported by the repository:
 
@@ -195,6 +196,21 @@ Where applicable this includes:
 - Additional targeted checks when relevant:
   - `npm run test:save-local`
   - `npm run test:ui-responsive` for responsive/UI-impacting changes
+
+### Mandatory launcher rule
+
+- When the user asks to `avvia l'app`, always use `./start_fantaf1.command` instead of invoking `npm run start:local` directly.
+- That launcher must be treated as the repository's monitored startup entrypoint and must remain valid.
+- If the launcher or startup flow reports any error, stop the full execution immediately.
+- On any startup failure, terminate all active application-related processes and any active Playwright or Playwright-MCP processes started for the flow before responding.
+- Report the concrete error or errors observed to the user; never claim a successful startup when any monitored step failed.
+
+### Mandatory CI/CD workflow rule
+
+- GitHub Actions workflows under `.github/workflows/` must stay aligned with the repository's current and future real implementation, scripts, validation stack, branch strategy, and required secrets.
+- If a workflow is no longer coherent with the repository state, adapt it as part of the same task with the smallest safe change.
+- When workflows are changed, or when their coherence is explicitly questioned, validate them locally before completion using the closest available local checks for syntax and for the commands they execute.
+- Never push directly to `main`. Do not use direct push-to-main as a delivery path for CI/CD changes or any other change.
 
 ### Test stack and coverage profile
 

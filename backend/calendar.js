@@ -468,6 +468,29 @@ function parseRaceDetailPage(rawContent, fallbackMeetingName = '', fallbackSlug 
   };
 }
 
+function buildWeekendWithDetailData(weekend, detailData) {
+  return {
+    ...weekend,
+    meetingKey: detailData.meetingKey,
+    grandPrixTitle: detailData.grandPrixTitle,
+    heroImageUrl: detailData.heroImageUrl || weekend.heroImageUrl,
+    trackOutlineUrl: detailData.trackOutlineUrl || weekend.trackOutlineUrl,
+    isSprintWeekend: detailData.isSprintWeekend,
+    raceStartTime: detailData.raceStartTime,
+    sessions: detailData.sessions,
+  };
+}
+
+function buildWeekendWithHighlightsFallback(weekend) {
+  return {
+    ...weekend,
+    highlightsVideoUrl: weekend.highlightsVideoUrl ?? '',
+    highlightsLookupCheckedAt: weekend.highlightsLookupCheckedAt ?? '',
+    highlightsLookupStatus: weekend.highlightsLookupStatus ?? '',
+    highlightsLookupSource: weekend.highlightsLookupSource ?? '',
+  };
+}
+
 function sortCalendarByRound(calendar) {
   return [...calendar].sort((firstWeekend, secondWeekend) => {
     return firstWeekend.roundNumber - secondWeekend.roundNumber;
@@ -524,34 +547,28 @@ async function syncCalendarFromOfficialSource({
               weekend.meetingKey,
               weekend.endDate,
             );
+            const weekendWithDetailData = buildWeekendWithDetailData(weekend, detailData);
 
-            return {
-              ...weekend,
-              meetingKey: detailData.meetingKey,
-              grandPrixTitle: detailData.grandPrixTitle,
-              heroImageUrl: detailData.heroImageUrl || weekend.heroImageUrl,
-              trackOutlineUrl: detailData.trackOutlineUrl || weekend.trackOutlineUrl,
-              isSprintWeekend: detailData.isSprintWeekend,
-              raceStartTime: detailData.raceStartTime,
-              sessions: detailData.sessions,
-              ...(shouldLookupFinishedRaceHighlights({ ...weekend, ...detailData })
-                ? await resolveSkySportHighlightsVideo(
-                    {
-                      ...weekend,
-                      ...detailData,
-                    },
-                    {
-                      fetchHtmlImpl,
-                      now: new Date(),
-                    },
-                  )
-                : {
-                    highlightsVideoUrl: weekend.highlightsVideoUrl ?? '',
-                    highlightsLookupCheckedAt: weekend.highlightsLookupCheckedAt ?? '',
-                    highlightsLookupStatus: weekend.highlightsLookupStatus ?? '',
-                    highlightsLookupSource: weekend.highlightsLookupSource ?? '',
-                  }),
-            };
+            if (!shouldLookupFinishedRaceHighlights(weekendWithDetailData)) {
+              return buildWeekendWithHighlightsFallback(weekendWithDetailData);
+            }
+
+            try {
+              const highlightsLookup = await resolveSkySportHighlightsVideo(
+                weekendWithDetailData,
+                {
+                  fetchHtmlImpl,
+                  now: new Date(),
+                },
+              );
+
+              return {
+                ...weekendWithDetailData,
+                ...highlightsLookup,
+              };
+            } catch {
+              return buildWeekendWithHighlightsFallback(weekendWithDetailData);
+            }
           } catch {
             return {
               ...weekend,
@@ -664,9 +681,13 @@ async function fetchRaceResultsWithStatus(meetingKey, now = new Date()) {
   let highlightsVideoUrl = normalizeText(race?.highlightsVideoUrl);
 
   if (racePhase === 'finished' && shouldLookupFinishedRaceHighlights(race, now.getTime())) {
-    const lookupResult = await resolveSkySportHighlightsVideo(race, { now });
-    highlightsVideoUrl = lookupResult.highlightsVideoUrl;
-    calendar = await persistRaceHighlightsLookup(calendar, meetingKey, lookupResult);
+    try {
+      const lookupResult = await resolveSkySportHighlightsVideo(race, { now });
+      highlightsVideoUrl = lookupResult.highlightsVideoUrl;
+      calendar = await persistRaceHighlightsLookup(calendar, meetingKey, lookupResult);
+    } catch {
+      highlightsVideoUrl = normalizeText(race?.highlightsVideoUrl);
+    }
   }
 
   return {

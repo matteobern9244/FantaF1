@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import * as highlights from '../backend/highlights.js';
 import {
   clearRaceResultsCache,
   fetchRaceResults,
@@ -114,6 +115,7 @@ describe('fetchRaceResults', () => {
   beforeEach(() => {
     clearRaceResultsCache();
     vi.clearAllMocks();
+    vi.restoreAllMocks();
     vi.mocked(storage.writeCalendarCache).mockResolvedValue([]);
   });
 
@@ -258,6 +260,58 @@ describe('fetchRaceResults', () => {
       second: '',
       third: '',
       pole: '',
+    });
+  });
+
+  it('keeps returning official results when the highlights lookup fails after race finish', async () => {
+    vi.spyOn(highlights, 'resolveSkySportHighlightsVideo').mockRejectedValue(new Error('youtube offline'));
+    vi.mocked(storage.readCalendarCache).mockResolvedValue([
+      {
+        meetingKey: '1279',
+        meetingName: 'Australia',
+        detailUrl: 'https://www.formula1.com/en/racing/2026/australia',
+        isSprintWeekend: false,
+        startDate: '2026-03-06',
+        endDate: '2026-03-08',
+        highlightsVideoUrl: '',
+      },
+    ]);
+
+    global.fetch = vi.fn((url) => {
+      if (url === 'https://www.formula1.com/en/results/2026/races/1279/australia/race-result') {
+        return Promise.resolve({
+          ok: true,
+          text: () =>
+            Promise.resolve(
+              buildResultsTable([
+                buildTableRow(1, 63, 'George', 'Russell', 'RUS'),
+                buildTableRow(2, 12, 'Kimi', 'Antonelli', 'ANT'),
+                buildTableRow(3, 16, 'Charles', 'Leclerc', 'LEC'),
+              ]),
+            ),
+        });
+      }
+
+      if (url === 'https://www.formula1.com/en/results/2026/races/1279/australia/qualifying') {
+        return Promise.resolve({
+          ok: true,
+          text: () =>
+            Promise.resolve(buildResultsTable([buildTableRow(1, 4, 'Lando', 'Norris', 'NOR')])),
+        });
+      }
+
+      return Promise.reject(new Error(`Unknown URL ${url}`));
+    });
+
+    await expect(
+      fetchRaceResultsWithStatus('1279', new Date('2026-03-08T18:00:00Z')),
+    ).resolves.toEqual({
+      first: 'rus',
+      second: 'ant',
+      third: 'lec',
+      pole: 'nor',
+      racePhase: 'finished',
+      highlightsVideoUrl: '',
     });
   });
 
