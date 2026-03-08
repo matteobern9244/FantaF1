@@ -5,6 +5,7 @@ import { syncCalendarFromOfficialSource } from './backend/calendar.js';
 import { appConfig } from './backend/config.js';
 import {
   determineExpectedMongoDatabaseName,
+  MONGO_DATABASE_NAME_OVERRIDE_ENV_VAR,
   normalizeRuntimeEnvironment,
   resolveMongoDatabaseName,
   verifyMongoDatabaseName,
@@ -16,7 +17,10 @@ import { backendText, formatBackendText } from './backend/text.js';
 const PORT = process.env.PORT || appConfig.server.port;
 const HOST = '0.0.0.0'; // Bind to all interfaces for Render
 const runtimeEnvironment = normalizeRuntimeEnvironment(process.env.NODE_ENV);
-const databaseTargetName = determineExpectedMongoDatabaseName(process.env.NODE_ENV);
+const mongoDatabaseNameOverride = process.env[MONGO_DATABASE_NAME_OVERRIDE_ENV_VAR];
+const databaseTargetName = determineExpectedMongoDatabaseName(process.env.NODE_ENV, {
+  mongoDatabaseNameOverride,
+});
 
 async function connectToDatabase() {
   const uri = process.env.MONGODB_URI;
@@ -28,6 +32,7 @@ async function connectToDatabase() {
     const targetDatabaseName = resolveMongoDatabaseName({
       nodeEnv: process.env.NODE_ENV,
       mongoUri: uri,
+      mongoDatabaseNameOverride,
     });
 
     await mongoose.connect(uri, {

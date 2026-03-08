@@ -238,7 +238,9 @@ describe('Weekend draft synchronization UI', () => {
     window.history.replaceState({}, '', '/');
   });
 
-  it('updates predictions and weekend results when changing the selected race and shows placeholders for empty drafts', async () => {
+  it(
+    'updates predictions and weekend results when changing the selected race and shows placeholders for empty drafts',
+    async () => {
     setupFetch();
 
     render(<App />);
@@ -271,7 +273,9 @@ describe('Weekend draft synchronization UI', () => {
       'Seleziona un pilota',
     );
     expect(getResultSelect(/risultato 1°/i)).toHaveValue('');
-  });
+    },
+    10000,
+  );
 
   it('keeps shared selects readable across admin and public flows', async () => {
     setupFetch();

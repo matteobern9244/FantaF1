@@ -4,6 +4,13 @@ Cronologia sintetica delle release documentate del progetto Fanta Formula 1.
 
 ## In sviluppo
 
+- **Pipeline CI/CD Pre-Merge su Main**: introdotti i workflow GitHub `pr-ci`, `pr-auto-merge` e `post-merge-health`, con check stabili `lint`, `coverage`, `build`, `responsive-dev` e `smoke-ci-db` per bloccare il merge su `main` finche' la PR non risulta completamente verde.
+- **Protezione Branch Main e Auto-Merge GitHub**: formalizzato il flusso protetto verso `main` con auto-merge via Pull Request, required checks dedicati e documentazione repository allineata al deploy post-merge su Render.
+- **CI MongoDB Isolata e Smoke Parametrico**: introdotto l'override centralizzato `MONGODB_DB_NAME_OVERRIDE` e reso parametrico lo smoke di persistenza per eseguire i controlli CI su un database dedicato senza toccare `fantaf1_dev` o `fantaf1`.
+- **Regola `deploya` Riallineata al Flusso PR-Protetto**: `AGENTS.md` richiede ora che il deploy passi da branch push, apertura/aggiornamento PR verso `main`, attivazione dell'auto-merge e prosecuzione con tag/release solo dopo il merge completato da GitHub.
+- **Validator Responsive Corretto per Vista Pubblica**: il tooling `ui-responsive` distingue ora i controlli comuni da quelli admin-only, evitando falsi positivi nella vista pubblica readonly e mantenendo obbligatorie le `select` editabili nella vista admin.
+- **TDD Regressivo Sul Validator Responsive e CI**: estesi i test su risoluzione database, smoke parametrico, export server-side e validazione responsive admin/public, mantenendo il baseline coverage V8 al `100%` su statements, branches, functions e lines.
+
 - **Dropdown Windows Resi Leggibili**: i `select` condivisi usano ora token dedicati, fondo opaco, `color-scheme: dark` e regole esplicite per `option`/`optgroup`, evitando testo invisibile o contrasto instabile nei menu nativi su Windows e PWA standalone.
 - **Controlli Responsive Estesi ai Form Control**: il tooling `ui-responsive` ispeziona ora anche i dropdown chiave della UI e fallisce quando rileva testo o sfondi trasparenti sui `select` condivisi.
 - **TDD Regressivo sui Dropdown Cross-Platform**: aggiunti test UI e validazioni dedicate per coprire la presenza dei dropdown nelle viste admin/public e impedire regressioni di stile sui controlli nativi.

@@ -537,6 +537,7 @@ Lo script integrato:
 
 - `npm run lint`
 - `npm run test`
+- `npm run test:coverage`
 - `npm run test:save-local`
 - `npm run test:ui-responsive`
 - `npm run build`
@@ -577,7 +578,39 @@ Per la UI e' disponibile anche `npm run test:ui-responsive`, che usa Playwright 
 Il comando esegue un preflight fail-fast sull'ambiente Playwright: se trova sessioni responsive residue (`ui-*`) o una CLI non reattiva, interrompe il run senza killare processi non creati da lui e riporta le istruzioni di bonifica manuale.
 Su errori di navigazione o shell UI bloccata raccoglie artefatti diagnostici in `output/playwright/ui-responsive/` (summary, stato pagina, tab-list, screenshot se disponibile, console e network log) per distinguere facilmente tra regressione UI, splash bloccata e sessione Playwright incoerente.
 Per il salvataggio locale e' disponibile `npm run test:save-local`, che legge `/api/data`, re-invia lo stesso payload su `POST /api/data`, verifica `environment=development`, `databaseTarget=fantaf1_dev` e controlla che lo stato resti invariato dopo il round-trip. Questo smoke test copre il canale di persistenza generica, non il salvataggio manuale dei pronostici su `POST /api/predictions`.
+Per la CI e' disponibile anche `npm run test:coverage`, mentre lo smoke di persistenza puo' essere eseguito sul database isolato di pipeline impostando `MONGODB_DB_NAME_OVERRIDE`, `SAVE_SMOKE_EXPECTED_ENVIRONMENT` e `SAVE_SMOKE_EXPECTED_DATABASE_TARGET` senza toccare `fantaf1_dev` o `fantaf1`.
 Per ripulire documenti legacy che contengono ancora campi del `Weekend Boost` e' disponibile `npm run migrate:remove-weekend-boost`, script idempotente che riscrive gli `AppData` del database corrente in forma sanificata.
+
+## CI/CD GitHub
+
+### Obiettivo
+
+- `main` e' il branch protetto di rilascio.
+- Ogni integrazione verso `main` deve passare da Pull Request.
+- L'auto-merge GitHub puo' chiudere la Pull Request solo quando tutti i check richiesti sono verdi.
+- Il deploy Render resta post-merge su `main`, quindi non parte da workflow di PR.
+
+### Workflow previsti
+
+- `.github/workflows/pr-ci.yml`: esegue `lint`, `coverage`, `build`, `responsive-dev` e `smoke-ci-db` sulle Pull Request verso `main`.
+- `.github/workflows/pr-auto-merge.yml`: arma l'auto-merge `squash` per PR non draft verso `main` provenienti dallo stesso repository, senza bypassare la protezione del branch.
+- `.github/workflows/post-merge-health.yml`: esegue un controllo health opzionale dopo i push su `main`.
+
+### Secret e variabili GitHub richiesti
+
+- `MONGODB_URI_CI`: URI MongoDB dedicata alla pipeline CI.
+- `ADMIN_SESSION_SECRET_CI`: secret admin dedicato alla pipeline CI.
+- `RENDER_HEALTHCHECK_URL`: URL health pubblico del deploy Render, usato solo dal workflow post-merge opzionale.
+
+### Protezione richiesta per `main`
+
+- push diretti bloccati;
+- merge consentito solo via Pull Request;
+- required status checks allineati ai job `lint`, `coverage`, `build`, `responsive-dev`, `smoke-ci-db`;
+- branch up-to-date richiesta prima del merge;
+- conversation resolution richiesta;
+- auto-merge attivo;
+- force-push e deletion disattivati.
 
 ## Struttura del repository
 

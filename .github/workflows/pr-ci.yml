@@ -1,0 +1,102 @@
+name: PR CI
+
+on:
+  pull_request:
+    branches:
+      - main
+    types:
+      - opened
+      - reopened
+      - synchronize
+      - ready_for_review
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pr-ci-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    name: lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+      - run: npm run lint
+
+  coverage:
+    name: coverage
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+      - run: npm run test:coverage
+
+  build:
+    name: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+      - run: npm run build
+
+  responsive-dev:
+    name: responsive-dev
+    runs-on: ubuntu-latest
+    env:
+      ADMIN_SESSION_SECRET: ${{ secrets.ADMIN_SESSION_SECRET_CI }}
+      CI: true
+      MONGODB_DB_NAME_OVERRIDE: fantaf1_ci
+      MONGODB_URI: ${{ secrets.MONGODB_URI_CI }}
+      SAVE_SMOKE_EXPECTED_DATABASE_TARGET: fantaf1_ci
+      SAVE_SMOKE_EXPECTED_ENVIRONMENT: development
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+      - run: xvfb-run -a npm run test:ui-responsive
+
+  smoke-ci-db:
+    name: smoke-ci-db
+    runs-on: ubuntu-latest
+    env:
+      ADMIN_SESSION_SECRET: ${{ secrets.ADMIN_SESSION_SECRET_CI }}
+      MONGODB_DB_NAME_OVERRIDE: fantaf1_ci
+      MONGODB_URI: ${{ secrets.MONGODB_URI_CI }}
+      SAVE_SMOKE_EXPECTED_DATABASE_TARGET: fantaf1_ci
+      SAVE_SMOKE_EXPECTED_ENVIRONMENT: development
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+      - run: npm run test:save-local

@@ -179,4 +179,36 @@ describe('local save smoke runner', () => {
   it('serializes objects deterministically before comparing them', () => {
     expect(stableSerialize({ second: 2, first: 1 })).toBe(stableSerialize({ first: 1, second: 2 }));
   });
+
+  it('supports CI-specific expected environment and database target values', async () => {
+    const state = {
+      users: [{ name: 'Player 1', predictions: { first: '', second: '', third: '', pole: '' }, points: 0 }],
+      history: [],
+      gpName: 'Australian Grand Prix 2026',
+      raceResults: { first: '', second: '', third: '', pole: '' },
+      selectedMeetingKey: '2026-australia',
+    };
+    const fetchImpl = vi
+      .fn()
+      .mockResolvedValueOnce(
+        createJsonResponse({
+          status: 'ok',
+          environment: 'ci',
+          databaseTarget: 'fantaf1_ci',
+        }),
+      )
+      .mockResolvedValueOnce(createJsonResponse(state))
+      .mockResolvedValueOnce(createJsonResponse({ message: 'Dati salvati correttamente.' }))
+      .mockResolvedValueOnce(createJsonResponse(state));
+
+    const result = await runSaveSmoke({
+      baseUrl: 'http://127.0.0.1:3001',
+      expectedEnvironment: 'ci',
+      expectedDatabaseTarget: 'fantaf1_ci',
+      fetchImpl,
+    });
+
+    expect(result.health.environment).toBe('ci');
+    expect(result.health.databaseTarget).toBe('fantaf1_ci');
+  });
 });

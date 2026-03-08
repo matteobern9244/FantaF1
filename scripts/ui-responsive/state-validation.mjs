@@ -96,6 +96,23 @@ function validateState(
     );
   };
   const isPublicView = expectedViewMode === 'public';
+  const selectChecks = {
+    common: {
+      'select weekend': state.selects?.meeting,
+      'select KPI utente': state.selects?.insights,
+      'select filtro storico': state.selects?.historyFilter,
+    },
+    adminOnly: {
+      'select pronostici': state.selects?.prediction,
+      'select risultati': state.selects?.result,
+    },
+  };
+  const optionChecks = {
+    adminOnly: {
+      'option pronostici': state.selects?.predictionOption,
+      'option risultati': state.selects?.resultOption,
+    },
+  };
 
   const requiredSections = {
     hero: state.mainSections.hero,
@@ -155,13 +172,14 @@ function validateState(
     }
   }
 
-  for (const [label, details] of Object.entries({
-    'select weekend': state.selects?.meeting,
-    'select KPI utente': state.selects?.insights,
-    'select pronostici': state.selects?.prediction,
-    'select risultati': state.selects?.result,
-    'select filtro storico': state.selects?.historyFilter,
-  })) {
+  const selectsToValidate = isPublicView
+    ? selectChecks.common
+    : {
+        ...selectChecks.common,
+        ...selectChecks.adminOnly,
+      };
+
+  for (const [label, details] of Object.entries(selectsToValidate)) {
     if (!details?.present) {
       failures.push(`Controllo select mancante: ${label}.`);
       continue;
@@ -180,10 +198,9 @@ function validateState(
     }
   }
 
-  for (const [label, details] of Object.entries({
-    'option pronostici': state.selects?.predictionOption,
-    'option risultati': state.selects?.resultOption,
-  })) {
+  const optionsToValidate = isPublicView ? {} : optionChecks.adminOnly;
+
+  for (const [label, details] of Object.entries(optionsToValidate)) {
     if (!details?.present) {
       failures.push(`Controllo option mancante: ${label}.`);
       continue;

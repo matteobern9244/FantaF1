@@ -8,6 +8,7 @@ import { syncCalendarFromOfficialSource, sortCalendarByRound, fetchRaceResultsWi
 import { appConfig, currentYear } from './backend/config.js';
 import {
   determineExpectedMongoDatabaseName,
+  MONGO_DATABASE_NAME_OVERRIDE_ENV_VAR,
   normalizeRuntimeEnvironment,
 } from './backend/database.js';
 import {
@@ -41,7 +42,9 @@ const __dirname = path.dirname(__filename);
 
 const app = express();
 const runtimeEnvironment = normalizeRuntimeEnvironment(process.env.NODE_ENV);
-const databaseTargetName = determineExpectedMongoDatabaseName(process.env.NODE_ENV);
+const databaseTargetName = determineExpectedMongoDatabaseName(process.env.NODE_ENV, {
+  mongoDatabaseNameOverride: process.env[MONGO_DATABASE_NAME_OVERRIDE_ENV_VAR],
+});
 const predictionFieldOrder = ['first', 'second', 'third', 'pole'];
 const participantSlots = Number.isFinite(Number(appConfig.participantSlots))
   ? Number(appConfig.participantSlots)

@@ -262,15 +262,18 @@ If the user writes exactly `deploya`, treat that as explicit authorization to ru
 7. Create an intelligent commit message that accurately summarizes the work performed.
 8. Commit all required changes.
 9. Push the current working branch to its remote branch.
-10. Merge the current branch into `main`.
-11. Create a tag on `main` that matches the new version.
-12. Create a GitHub Release based on that tag, coherent with the version and delivered changes.
-13. Return to the original branch from which the deployment workflow started.
+10. Create or update a Pull Request from the current branch into `main`.
+11. Enable auto-merge on that Pull Request using the repository's configured merge method, without bypassing branch protection on `main`.
+12. Wait until the Pull Request is either merged by GitHub after all required checks pass or remains open because at least one required check failed or stayed pending.
+13. If the Pull Request is not merged successfully into `main`, stop immediately and do not create tags or releases.
+14. After GitHub has merged the Pull Request into `main`, create a tag on `main` that matches the new version.
+15. Create a GitHub Release based on that tag, coherent with the version and delivered changes.
+16. Return to the original branch from which the deployment workflow started.
 
 Failure policy for `deploya`:
 - stop immediately if any critical step fails
-- do not merge into `main` unless all previous required steps completed successfully
-- do not create tags unless the merge to `main` completed successfully
+- do not bypass Pull Request requirements, required checks, or branch protection on `main`
+- do not create tags unless GitHub completed the merge to `main` successfully through the protected Pull Request flow
 - do not create a GitHub Release unless the tag was created successfully and all previous steps completed successfully
 
 ---

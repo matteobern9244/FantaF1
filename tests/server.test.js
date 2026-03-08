@@ -82,6 +82,7 @@ async function loadServerModule({
   }));
 
   vi.doMock('../backend/database.js', () => ({
+    MONGO_DATABASE_NAME_OVERRIDE_ENV_VAR: 'MONGODB_DB_NAME_OVERRIDE',
     determineExpectedMongoDatabaseName: vi.fn(() => 'fantaf1_dev'),
     normalizeRuntimeEnvironment: vi.fn(() => 'development'),
     resolveMongoDatabaseName: resolveMongoDatabaseNameImpl,
