@@ -205,6 +205,10 @@ function getSelectedRaceHeroCard() {
   return document.querySelector('.driver-spotlight')?.closest('section') ?? null;
 }
 
+function queryOpenPredictionsStrip() {
+  return screen.queryByText(/pronostici ancora aperti/i);
+}
+
 describe('Live projection UI', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -236,12 +240,13 @@ describe('Live projection UI', () => {
     expect(getProjectionValue('Matteo')).toBe('0');
     expect(getProjectionValue('Fabio')).toBe('0');
     expect(getProjectionValue('Adriano')).toBe('0');
+    expect(queryOpenPredictionsStrip()).toBeInTheDocument();
   });
 
   it('shows partial-result messages and awards only the published official fields', async () => {
     mockAppFetches({
       resultsByMeetingKey: {
-        'race-1': { racePhase: 'live', results: { first: '', second: '', third: '', pole: 'pia' } },
+        'race-1': { racePhase: 'open', results: { first: '', second: '', third: '', pole: 'pia' } },
       },
     });
 
@@ -274,6 +279,7 @@ describe('Live projection UI', () => {
     expect(
       within(selectedRaceHeroCard as HTMLElement).queryByText('Piastri Oscar'),
     ).not.toBeInTheDocument();
+    expect(queryOpenPredictionsStrip()).not.toBeInTheDocument();
   });
 
   it('fetches the selected weekend results before race finish and updates projections plus live standings', async () => {
@@ -323,7 +329,7 @@ describe('Live projection UI', () => {
     const fetchMock = mockAppFetches({
       resultsByMeetingKey: {
         'race-1': { racePhase: 'open', results: createEmptyPrediction() },
-        'race-2': { racePhase: 'live', results: { first: '', second: '', third: '', pole: 'nor' } },
+        'race-2': { racePhase: 'open', results: { first: '', second: '', third: '', pole: 'nor' } },
       },
     });
 
@@ -336,6 +342,7 @@ describe('Live projection UI', () => {
     await waitFor(() => {
       expect(screen.getByText(/nessun risultato ufficiale disponibile ancora/i)).toBeInTheDocument();
     });
+    expect(queryOpenPredictionsStrip()).toBeInTheDocument();
 
     fireEvent.change(screen.getByLabelText(/weekend selezionato/i), {
       target: { value: 'race-2' },
@@ -360,6 +367,20 @@ describe('Live projection UI', () => {
       { name: 'Matteo', score: '10' },
       { name: 'Adriano', score: '6' },
     ]);
+    expect(queryOpenPredictionsStrip()).not.toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText(/weekend selezionato/i), {
+      target: { value: 'race-1' },
+    });
+
+    await waitFor(() => {
+      expect(fetchMock).toHaveBeenCalledWith('/api/results/race-1');
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText(/nessun risultato ufficiale disponibile ancora/i)).toBeInTheDocument();
+    });
+    expect(queryOpenPredictionsStrip()).toBeInTheDocument();
   });
 
   it('renders enriched weekend comparison insights for the selected GP', async () => {
@@ -430,5 +451,86 @@ describe('Live projection UI', () => {
       expect(screen.getByLabelText(/risultato 1°/i)).toHaveValue('');
     });
     expect(screen.queryByText('Gara in corso: pronostici bloccati.')).not.toBeInTheDocument();
+  });
+
+  it('keeps the strip hidden for the selected weekend when a stale response from another weekend resolves later', async () => {
+    let resolveRace1: ((value: Response) => void) | null = null;
+    const race1Promise = new Promise<Response>((resolve) => {
+      resolveRace1 = resolve;
+    });
+    const fetchMock = global.fetch as ReturnType<typeof vi.fn>;
+
+    fetchMock.mockImplementation((url: string) => {
+      if (url.includes('/api/session')) {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({ isAdmin: true, defaultViewMode: 'admin' }),
+        } as Response);
+      }
+      if (url.includes('/api/data')) {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve(createAppData()),
+        } as Response);
+      }
+      if (url.includes('/api/drivers')) {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve(createDrivers()),
+        } as Response);
+      }
+      if (url.includes('/api/calendar')) {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve(createCalendar()),
+        } as Response);
+      }
+      if (url.includes('/api/results/race-1')) {
+        return race1Promise;
+      }
+      if (url.includes('/api/results/race-2')) {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({
+            first: '',
+            second: '',
+            third: '',
+            pole: 'nor',
+            racePhase: 'open',
+          }),
+        } as Response);
+      }
+
+      return Promise.reject(new Error(`Unhandled fetch to ${url}`));
+    });
+
+    render(<App />);
+
+    await waitFor(() => {
+      expect(screen.queryByTestId('pitstop-loader')).not.toBeInTheDocument();
+    });
+
+    fireEvent.change(screen.getByLabelText(/weekend selezionato/i), {
+      target: { value: 'race-2' },
+    });
+
+    await waitFor(() => {
+      expect(fetchMock).toHaveBeenCalledWith('/api/results/race-2');
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText(/risultati ufficiali parziali per il weekend selezionato/i)).toBeInTheDocument();
+    });
+    expect(queryOpenPredictionsStrip()).not.toBeInTheDocument();
+
+    resolveRace1?.({
+      ok: true,
+      json: () => Promise.resolve({ first: '', second: '', third: '', pole: '', racePhase: 'open' }),
+    } as Response);
+
+    await waitFor(() => {
+      expect(screen.getByText(/risultati ufficiali parziali per il weekend selezionato/i)).toBeInTheDocument();
+    });
+    expect(queryOpenPredictionsStrip()).not.toBeInTheDocument();
   });
 });

@@ -42,6 +42,10 @@ function getOfficialResultsAvailability(raceResults: Prediction): OfficialResult
   return 'partial';
 }
 
+function hasQualifyingOrSprintResult(raceResults: Prediction) {
+  return hasPredictionValue(raceResults.pole);
+}
+
 async function fetchJson<T>(url: string): Promise<T> {
   const response = await fetch(url);
 
@@ -172,6 +176,7 @@ export {
   getOfficialResultsAvailability,
   getRaceFinishTime,
   getRaceStartTime,
+  hasQualifyingOrSprintResult,
   hasPredictionValue,
   isRaceFinished,
   isRaceStarted,

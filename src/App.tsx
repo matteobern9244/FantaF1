@@ -38,6 +38,7 @@ import {
   getNextRaceAfter,
   getOfficialResultsAvailability,
   getRaceStartTime,
+  hasQualifyingOrSprintResult,
   hasPredictionValue,
   isRaceStarted,
   isWeekendActive,
@@ -261,6 +262,8 @@ function App() {
     : null;
   const seasonAnalytics = buildSeasonAnalytics(users, history, sortedCalendar);
   const weekendStartTime = getRaceStartTime(selectedRace);
+  const shouldShowOpenPredictionsStrip =
+    selectedRacePhase === 'open' && !hasQualifyingOrSprintResult(raceResults);
   const weekendStatusLabel = !selectedRace
     ? appText.shell.weekendStatus.unavailable
     : selectedRacePhase === 'finished'
@@ -1156,16 +1159,20 @@ function App() {
       key: 'season',
       label: `${uiText.labels.seasonStatus} ${currentYear}`,
     },
-    {
-      key: 'lock',
-      label:
-        selectedRacePhase === 'finished'
-          ? uiText.status.raceFinishedStrip
-          : selectedRacePhase === 'live'
-            ? uiText.status.raceLiveStrip
-            : uiText.status.raceOpenStrip,
-      tone: selectedRacePhase === 'open' ? 'default' : 'alert',
-    },
+    ...(
+      selectedRacePhase === 'open' && !shouldShowOpenPredictionsStrip
+        ? []
+        : [{
+            key: 'lock',
+            label:
+              selectedRacePhase === 'finished'
+                ? uiText.status.raceFinishedStrip
+                : selectedRacePhase === 'live'
+                  ? uiText.status.raceLiveStrip
+                  : uiText.status.raceOpenStrip,
+            tone: selectedRacePhase === 'open' ? 'default' as const : 'alert' as const,
+          }]
+    ),
     ...(officialResultsAvailability === 'complete'
       ? [{ key: 'results', label: uiText.status.resultsReadyStrip, tone: 'success' as const }]
       : []),

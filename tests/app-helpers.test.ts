@@ -12,6 +12,7 @@ import {
   getOfficialResultsAvailability,
   getRaceFinishTime,
   getRaceStartTime,
+  hasQualifyingOrSprintResult,
   hasPredictionValue,
   isRaceFinished,
   isRaceStarted,
@@ -40,6 +41,8 @@ describe('App helpers', () => {
   it('detects prediction values and official result availability', () => {
     expect(hasPredictionValue(' ver ')).toBe(true);
     expect(hasPredictionValue('   ')).toBe(false);
+    expect(hasQualifyingOrSprintResult({ first: '', second: '', third: '', pole: '' })).toBe(false);
+    expect(hasQualifyingOrSprintResult({ first: '', second: '', third: '', pole: ' pia ' })).toBe(true);
 
     expect(getOfficialResultsAvailability({ first: '', second: '', third: '', pole: '' })).toBe(
       'none',

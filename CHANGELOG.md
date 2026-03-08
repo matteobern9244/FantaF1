@@ -4,6 +4,9 @@ Cronologia sintetica delle release documentate del progetto Fanta Formula 1.
 
 ## In sviluppo
 
+- **Chip Stato Weekend Corretta Post-Qualifica**: la chip `PRONOSTICI ANCORA APERTI` nello strip alto viene ora nascosta per il weekend selezionato quando Formula1.com ha gia' pubblicato il risultato ufficiale di qualifica o sprint (`pole`), anche se `racePhase` e' ancora `open`.
+- **Regola UI Centralizzata sul Weekend Selezionato**: il frontend usa ora un helper dedicato per distinguere il solo caso `open` realmente pre-qualifica dal caso post-qualifica del `selectedMeetingKey`, senza modificare lock server-side, flussi di salvataggio o banner `live`/`finished`.
+- **TDD Regressivo Sullo Strip Alto**: estesi i test helper e UI per coprire visibilita' della chip, cambio weekend, assenza di contaminazione tra meeting diversi e protezione da risposte stale dell'endpoint risultati.
 - **Stato Gara Dinamico End-to-End**: `GET /api/results/:meetingKey` restituisce ora anche `racePhase` (`open`, `live`, `finished`) mantenendo il payload flatten dei risultati ufficiali; il frontend usa lo stato backend per distinguere correttamente gara in corso e gara terminata senza alterare il lock server-side dei pronostici.
 - **Backend Risultati Riallineato e Ottimizzato**: centralizzata la risoluzione di stato gara sul weekend selezionato e rimossa la lettura duplicata del calendario nel flusso risultati ufficiali, preservando compatibilita', cache e sicurezza dei flussi production-facing.
 - **Copy Readonly Admin Aggiornato**: il banner della vista non admin mostra ora `Solo gli admin possono modificare i pronostici.` tramite configurazione centralizzata, senza introdurre stringhe inline o modifiche ai flussi di business.
