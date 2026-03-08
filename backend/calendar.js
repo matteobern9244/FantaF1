@@ -1,4 +1,13 @@
 import { appConfig, currentYear, formatConfigText, getBrowserHeaders } from './config.js';
+import {
+  buildHighlightsSearchQuery,
+  extractHighlightsVideoUrlFromSearchHtml,
+  fetchHighlightsVideoUrl,
+  normalizeYoutubeWatchUrl,
+  resolveSkySportHighlightsVideo,
+  shouldLookupFinishedRaceHighlights,
+} from './highlights.js';
+import { RaceResultsCache, RaceResultsService } from './race-results-service.js';
 import { readCalendarCache, writeCalendarCache } from './storage.js';
 
 const MONTH_INDEX = {
@@ -15,9 +24,6 @@ const MONTH_INDEX = {
   NOV: 10,
   DEC: 11,
 };
-const RACE_RESULTS_CACHE_TTL_MS = 30_000;
-const raceResultsCache = new Map();
-
 function decodeHtmlEntities(value = '') {
   return String(value)
     .replaceAll('&amp;', '&')
@@ -51,31 +57,40 @@ function canonicalizeDriverName(name) {
   return appConfig.driverAliases[normalizedName] ?? normalizedName;
 }
 
-function clearRaceResultsCache() {
-  raceResultsCache.clear();
-}
-
-function getCachedRaceResults(meetingKey) {
-  const cachedEntry = raceResultsCache.get(meetingKey);
-  if (!cachedEntry) {
-    return null;
+async function persistRaceHighlightsLookup(calendar, meetingKey, lookupPayload = {}) {
+  if (!Array.isArray(calendar)) {
+    return calendar;
   }
 
-  if (Date.now() - cachedEntry.timestamp > RACE_RESULTS_CACHE_TTL_MS) {
-    raceResultsCache.delete(meetingKey);
-    return null;
-  }
+  const updatedCalendar = calendar.map((weekend) => {
+    if (weekend?.meetingKey !== meetingKey) {
+      return weekend;
+    }
 
-  return { ...cachedEntry.results };
-}
-
-function setCachedRaceResults(meetingKey, results) {
-  raceResultsCache.set(meetingKey, {
-    timestamp: Date.now(),
-    results: { ...results },
+    return {
+      ...weekend,
+      highlightsVideoUrl: normalizeText(lookupPayload.highlightsVideoUrl),
+      highlightsLookupCheckedAt: normalizeText(lookupPayload.highlightsLookupCheckedAt),
+      highlightsLookupStatus: normalizeText(lookupPayload.highlightsLookupStatus),
+      highlightsLookupSource: normalizeText(lookupPayload.highlightsLookupSource),
+    };
   });
 
-  return { ...results };
+  await writeCalendarCache(updatedCalendar);
+  return updatedCalendar;
+}
+
+async function persistRaceHighlightsVideoUrl(calendar, meetingKey, highlightsVideoUrl) {
+  if (!Array.isArray(calendar) || !normalizeText(highlightsVideoUrl)) {
+    return calendar;
+  }
+
+  return persistRaceHighlightsLookup(calendar, meetingKey, {
+    highlightsVideoUrl,
+    highlightsLookupCheckedAt: new Date().toISOString(),
+    highlightsLookupStatus: 'found',
+    highlightsLookupSource: 'legacy',
+  });
 }
 
 function buildOfficialResultsBaseUrl(detailUrl = '', meetingKey = '') {
@@ -167,6 +182,34 @@ function parseBonusDriver(rawContent) {
   return parseOrderedDriversFromResultsTable(rawContent, 1)[0] ?? '';
 }
 
+function getRaceStartTime(race) {
+  const startTimeStr = race?.raceStartTime || (race?.endDate ? `${race.endDate}T14:00:00Z` : null);
+  if (!startTimeStr) {
+    return null;
+  }
+
+  const normalizedTime = String(startTimeStr).replace(' ', 'T');
+  const startTime = new Date(normalizedTime);
+  return Number.isNaN(startTime.getTime()) ? null : startTime;
+}
+
+function hasOfficialRaceClassification(results = {}) {
+  return ['first', 'second', 'third'].every((field) => normalizeText(results?.[field]).length > 0);
+}
+
+function resolveRacePhase(race, results, now = new Date()) {
+  if (hasOfficialRaceClassification(results)) {
+    return 'finished';
+  }
+
+  const startTime = getRaceStartTime(race);
+  if (!startTime) {
+    return 'open';
+  }
+
+  return now >= startTime ? 'live' : 'open';
+}
+
 function normalizeDateRangeLabel(value) {
   return normalizeText(value)
     .replace(/\s*-\s*/g, ' - ')
@@ -177,6 +220,37 @@ function extractTextFragments(value = '') {
   return [...String(value).matchAll(/>([^<>]+)</g)]
     .map((match) => normalizeText(match[1]))
     .filter(Boolean);
+}
+
+function isMeetingNameFragment(fragment = '') {
+  const normalizedFragment = normalizeDateRangeLabel(fragment);
+
+  /* v8 ignore next 3 -- extractTextFragments() already drops empty fragments */
+  if (!fragment) {
+    return false;
+  }
+
+  if (/^ROUND\s*\d+$/i.test(fragment)) {
+    return false;
+  }
+
+  if (/^(NEXT RACE|UPCOMING|CHEQUERED FLAG)$/i.test(fragment)) {
+    return false;
+  }
+
+  if (/^FLAG OF /i.test(fragment)) {
+    return false;
+  }
+
+  if (/^(\d{2}\s*(?:[A-Za-z]{3}\s*)?-\s*\d{2}\s*[A-Za-z]{3})$/i.test(normalizedFragment)) {
+    return false;
+  }
+
+  if (/^\d+(?:ST|ND|RD|TH)?$/i.test(fragment) || /^[A-Z]{3}$/.test(fragment)) {
+    return false;
+  }
+
+  return !fragment.includes('FORMULA 1');
 }
 
 function buildIsoDate(year, monthLabel, dayLabel) {
@@ -261,20 +335,7 @@ function parseSeasonCalendarPage(rawContent, year = currentYear) {
       ),
     );
     const dateRangeLabel = normalizeDateRangeLabel(dateFragment ?? '');
-    const meetingName =
-      fragments.find((fragment) => {
-        const normalizedFragment = normalizeDateRangeLabel(fragment);
-        return (
-          !/^ROUND\s*\d+$/i.test(fragment) &&
-          !/^NEXT RACE$/i.test(fragment) &&
-          !/^UPCOMING$/i.test(fragment) &&
-          !/^FLAG OF /i.test(fragment) &&
-          !/^(\d{2}\s*(?:[A-Za-z]{3}\s*)?-\s*\d{2}\s*[A-Za-z]{3})$/i.test(
-            normalizedFragment,
-          ) &&
-          !fragment.includes('FORMULA 1')
-        );
-      }) ?? '';
+    const meetingName = fragments.find((fragment) => isMeetingNameFragment(fragment)) ?? '';
     const grandPrixTitle =
       fragments.find((fragment) => fragment.includes('FORMULA 1')) ??
       `${meetingName} Grand Prix ${year}`;
@@ -378,6 +439,29 @@ function parseRaceDetailPage(rawContent, fallbackMeetingName = '', fallbackSlug 
   };
 }
 
+function buildWeekendWithDetailData(weekend, detailData) {
+  return {
+    ...weekend,
+    meetingKey: detailData.meetingKey,
+    grandPrixTitle: detailData.grandPrixTitle,
+    heroImageUrl: detailData.heroImageUrl || weekend.heroImageUrl,
+    trackOutlineUrl: detailData.trackOutlineUrl || weekend.trackOutlineUrl,
+    isSprintWeekend: detailData.isSprintWeekend,
+    raceStartTime: detailData.raceStartTime,
+    sessions: detailData.sessions,
+  };
+}
+
+function buildWeekendWithHighlightsFallback(weekend) {
+  return {
+    ...weekend,
+    highlightsVideoUrl: weekend.highlightsVideoUrl ?? '',
+    highlightsLookupCheckedAt: weekend.highlightsLookupCheckedAt ?? '',
+    highlightsLookupStatus: weekend.highlightsLookupStatus ?? '',
+    highlightsLookupSource: weekend.highlightsLookupSource ?? '',
+  };
+}
+
 function sortCalendarByRound(calendar) {
   return [...calendar].sort((firstWeekend, secondWeekend) => {
     return firstWeekend.roundNumber - secondWeekend.roundNumber;
@@ -434,17 +518,28 @@ async function syncCalendarFromOfficialSource({
               weekend.meetingKey,
               weekend.endDate,
             );
+            const weekendWithDetailData = buildWeekendWithDetailData(weekend, detailData);
 
-            return {
-              ...weekend,
-              meetingKey: detailData.meetingKey,
-              grandPrixTitle: detailData.grandPrixTitle,
-              heroImageUrl: detailData.heroImageUrl || weekend.heroImageUrl,
-              trackOutlineUrl: detailData.trackOutlineUrl || weekend.trackOutlineUrl,
-              isSprintWeekend: detailData.isSprintWeekend,
-              raceStartTime: detailData.raceStartTime,
-              sessions: detailData.sessions,
-            };
+            if (!shouldLookupFinishedRaceHighlights(weekendWithDetailData)) {
+              return buildWeekendWithHighlightsFallback(weekendWithDetailData);
+            }
+
+            try {
+              const highlightsLookup = await resolveSkySportHighlightsVideo(
+                weekendWithDetailData,
+                {
+                  fetchHtmlImpl,
+                  now: new Date(),
+                },
+              );
+
+              return {
+                ...weekendWithDetailData,
+                ...highlightsLookup,
+              };
+            } catch {
+              return buildWeekendWithHighlightsFallback(weekendWithDetailData);
+            }
           } catch {
             return {
               ...weekend,
@@ -490,71 +585,54 @@ async function syncCalendarFromOfficialSource({
   return [];
 }
 
+const raceResultsService = new RaceResultsService({
+  readCalendarCache,
+  fetchHtmlImpl: fetchHtml,
+  cache: new RaceResultsCache(),
+  buildOfficialResultsBaseUrl,
+  parseRaceClassification,
+  parseBonusDriver,
+  resolveRacePhase,
+  shouldLookupFinishedRaceHighlights,
+  resolveSkySportHighlightsVideo,
+  persistRaceHighlightsLookup,
+});
+
+function clearRaceResultsCache() {
+  raceResultsService.clearCache();
+}
+
 async function fetchRaceResults(meetingKey) {
-  const cachedResults = getCachedRaceResults(meetingKey);
-  if (cachedResults) {
-    return cachedResults;
-  }
-
-  // official results URL pattern: https://www.formula1.com/en/results/<year>/races/<meetingKey>/<slug>/race-result
-  // meetingKey might be the numeric ID or the slug depending on how it's stored.
-  // We'll search for the weekend in cache to get the detailUrl.
-  const calendar = await readCalendarCache();
-  const race = calendar.find(r => r.meetingKey === meetingKey);
-  
-  /* v8 ignore next 3 */
-  if (!race || !race.detailUrl) {
-    throw new Error('Race not found in calendar');
-  }
-
-  const resultsBaseUrl = buildOfficialResultsBaseUrl(race.detailUrl, race.meetingKey);
-
-  /* v8 ignore next 3 */
-  if (!resultsBaseUrl) {
-    throw new Error('Race results URL could not be derived from calendar data');
-  }
-
-  const resultsUrl = `${resultsBaseUrl}/race-result`;
-  const poleUrl = race.isSprintWeekend
-    ? `${resultsBaseUrl}/sprint-results`
-    : `${resultsBaseUrl}/qualifying`;
-
   try {
-    const [raceHtml, poleHtml] = await Promise.all([
-      fetchHtml(resultsUrl, getBrowserHeaders()).catch(() => ''),
-      fetchHtml(poleUrl, getBrowserHeaders()).catch(() => '')
-    ]);
-
-    const results = {
-      first: '',
-      second: '',
-      third: '',
-      pole: ''
-    };
-
-    if (raceHtml) {
-      Object.assign(results, parseRaceClassification(raceHtml));
-    }
-
-    if (poleHtml) {
-      results.pole = parseBonusDriver(poleHtml);
-    }
-
-    return setCachedRaceResults(meetingKey, results);
-  /* v8 ignore next 4 */
+    return await raceResultsService.fetchRaceResults(meetingKey);
   } catch (error) {
     console.error('Error fetching race results:', error);
     throw error;
   }
 }
 
+async function fetchRaceResultsWithStatus(meetingKey, now = new Date()) {
+  return raceResultsService.fetchRaceResultsWithStatus(meetingKey, now);
+}
+
 export {
+  buildHighlightsSearchQuery,
   buildOfficialResultsBaseUrl,
   clearRaceResultsCache,
+  extractHighlightsVideoUrlFromSearchHtml,
   fetchRaceResults,
+  fetchRaceResultsWithStatus,
+  fetchHighlightsVideoUrl,
+  hasOfficialRaceClassification,
+  normalizeYoutubeWatchUrl,
   parseDateRangeLabel,
   parseRaceDetailPage,
   parseSeasonCalendarPage,
+  persistRaceHighlightsLookup,
+  persistRaceHighlightsVideoUrl,
+  resolveSkySportHighlightsVideo,
+  resolveRacePhase,
+  shouldLookupFinishedRaceHighlights,
   sortCalendarByRound,
   syncCalendarFromOfficialSource,
 };

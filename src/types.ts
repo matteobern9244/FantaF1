@@ -16,6 +16,14 @@ export interface Prediction {
   pole: string;
 }
 
+export type RacePhase = 'open' | 'live' | 'finished';
+
+export type OfficialResultsResponse = Prediction & {
+  racePhase: RacePhase;
+  results?: Prediction;
+  highlightsVideoUrl?: string;
+};
+
 export interface WeekendPredictionState {
   userPredictions: Record<string, Prediction>;
   raceResults: Prediction;
@@ -56,6 +64,10 @@ export interface RaceWeekend {
   endDate?: string;
   raceStartTime?: string;
   sessions?: Session[];
+  highlightsVideoUrl?: string;
+  highlightsLookupCheckedAt?: string;
+  highlightsLookupStatus?: string;
+  highlightsLookupSource?: string;
 }
 
 export interface UserData {
@@ -117,6 +129,39 @@ export interface UserAnalyticsSummary {
   cumulativeTrend: UserGpTrendPoint[];
   pointsByField: Record<PredictionKey, number>;
   weekendsAboveLeader: number;
+}
+
+export interface SeasonComparisonPoint {
+  userName: string;
+  seasonPoints: number;
+  averagePointsPerRace: number;
+  totalHitRate: number;
+  sprintPoints: number;
+  standardPoints: number;
+  consistencyIndex: number;
+  leaderGap: number;
+}
+
+export interface SeasonNarrative {
+  slug: 'charge' | 'consistency' | 'sprint' | 'precision';
+  title: string;
+  description: string;
+  userName: string;
+}
+
+export interface RaceRecapSummary {
+  gpName: string;
+  winnerName: string;
+  winnerPoints: number;
+  swingLabel: string;
+  decisiveField: PredictionKey | null;
+}
+
+export interface SeasonAnalyticsSummary {
+  comparison: SeasonComparisonPoint[];
+  leaderName: string;
+  narratives: SeasonNarrative[];
+  recap: RaceRecapSummary | null;
 }
 
 export interface SessionState {

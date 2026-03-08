@@ -9,7 +9,7 @@ import {
   readPersistedParticipantRoster,
   writeAppData,
 } from '../backend/storage.js';
-import { fetchRaceResults } from '../backend/calendar.js';
+import { fetchRaceResultsWithStatus } from '../backend/calendar.js';
 import app from '../app.js';
 
 // Mocking storage so we don't hit the DB during integration tests for routes
@@ -26,7 +26,7 @@ vi.mock('../backend/calendar.js', async () => {
 
   return {
     ...actual,
-    fetchRaceResults: vi.fn(),
+    fetchRaceResultsWithStatus: vi.fn(),
     sortCalendarByRound: vi.fn((calendar) => calendar),
     syncCalendarFromOfficialSource: vi.fn(),
   };
@@ -78,7 +78,14 @@ describe('API Integration - Routes', () => {
     readDriversCache.mockResolvedValue([]);
     readPersistedParticipantRoster.mockResolvedValue(['Player 1', 'Player 2', 'Player 3']);
     writeAppData.mockResolvedValue();
-    fetchRaceResults.mockResolvedValue(createEmptyPrediction());
+    fetchRaceResultsWithStatus.mockResolvedValue({
+      first: '',
+      second: '',
+      third: '',
+      pole: '',
+      racePhase: 'open',
+      highlightsVideoUrl: '',
+    });
   });
 
   it('GET /api/health should return ok and environment metadata', async () => {
@@ -149,7 +156,7 @@ describe('API Integration - Routes', () => {
   });
 
   it('GET /api/results/:meetingKey should return 500 when official results fetch fails', async () => {
-    fetchRaceResults.mockRejectedValueOnce(new Error('Result error'));
+    fetchRaceResultsWithStatus.mockRejectedValueOnce(new Error('Result error'));
 
     const response = await request(app).get('/api/results/race-1');
 
@@ -157,6 +164,29 @@ describe('API Integration - Routes', () => {
     expect(response.body).toEqual({
       error: 'Failed to fetch results',
       details: 'Result error',
+    });
+  });
+
+  it('GET /api/results/:meetingKey should include highlightsVideoUrl when available', async () => {
+    fetchRaceResultsWithStatus.mockResolvedValueOnce({
+      first: 'nor',
+      second: 'ver',
+      third: 'lec',
+      pole: 'pia',
+      racePhase: 'finished',
+      highlightsVideoUrl: 'https://www.youtube.com/watch?v=skyf1-finished',
+    });
+
+    const response = await request(app).get('/api/results/race-1');
+
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual({
+      first: 'nor',
+      second: 'ver',
+      third: 'lec',
+      pole: 'pia',
+      racePhase: 'finished',
+      highlightsVideoUrl: 'https://www.youtube.com/watch?v=skyf1-finished',
     });
   });
 
@@ -317,6 +347,65 @@ describe('API Integration - Routes', () => {
 
     expect(response.status).toBe(403);
     expect(response.body.code).toBe('race_locked');
+    expect(writeAppData).not.toHaveBeenCalled();
+  });
+
+  it('POST /api/predictions should keep the race lock active even after the race is finished', async () => {
+    const payload = createPayload([
+      { first: 'ver', second: '', third: '', pole: '' },
+      createEmptyPrediction(),
+      createEmptyPrediction(),
+    ]);
+
+    readCalendarCache.mockResolvedValue([
+      {
+        meetingKey: 'race-1',
+        raceStartTime: '2026-03-01T14:00:00Z',
+      },
+    ]);
+    readAppData.mockResolvedValue(
+      createPayload([
+        { first: 'ham', second: '', third: '', pole: '' },
+        createEmptyPrediction(),
+        createEmptyPrediction(),
+      ]),
+    );
+
+    vi.setSystemTime(new Date('2026-03-01T19:00:00Z'));
+
+    const response = await request(app).post('/api/predictions').send(payload);
+
+    expect(response.status).toBe(403);
+    expect(response.body.code).toBe('race_locked');
+    expect(writeAppData).not.toHaveBeenCalled();
+  });
+
+  it('POST /api/predictions should report the race end date when the lock message has no race start time', async () => {
+    const payload = createPayload([
+      { first: 'ver', second: '', third: '', pole: '' },
+      createEmptyPrediction(),
+      createEmptyPrediction(),
+    ]);
+
+    readCalendarCache.mockResolvedValue([
+      {
+        meetingKey: 'race-1',
+        endDate: '2026-03-01',
+      },
+    ]);
+    readAppData.mockResolvedValue(
+      createPayload([
+        { first: 'ham', second: '', third: '', pole: '' },
+        createEmptyPrediction(),
+        createEmptyPrediction(),
+      ]),
+    );
+
+    const response = await request(app).post('/api/predictions').send(payload);
+
+    expect(response.status).toBe(403);
+    expect(response.body.code).toBe('race_locked');
+    expect(response.body.details).toContain('2026-03-01');
     expect(writeAppData).not.toHaveBeenCalled();
   });
 

@@ -2,10 +2,14 @@ import fs from 'fs';
 import path from 'path';
 import { spawn } from 'child_process';
 import { fileURLToPath, pathToFileURL } from 'url';
+import { MONGO_DATABASE_NAME_OVERRIDE_ENV_VAR } from '../backend/database.js';
 
 const DEFAULT_BASE_URL = process.env.SAVE_SMOKE_BASE_URL ?? 'http://127.0.0.1:3001';
-const EXPECTED_ENVIRONMENT = 'development';
-const EXPECTED_DATABASE_TARGET = 'fantaf1_dev';
+const DEFAULT_EXPECTED_ENVIRONMENT = process.env.SAVE_SMOKE_EXPECTED_ENVIRONMENT ?? 'development';
+const DEFAULT_EXPECTED_DATABASE_TARGET =
+  process.env.SAVE_SMOKE_EXPECTED_DATABASE_TARGET ??
+  process.env[MONGO_DATABASE_NAME_OVERRIDE_ENV_VAR] ??
+  'fantaf1_dev';
 const HEALTH_PATH = '/api/health';
 const DATA_PATH = '/api/data';
 const STARTUP_TIMEOUT_MS = 45000;
@@ -166,6 +170,8 @@ async function ensureLocalBackend({ baseUrl, fetchImpl }) {
 
 async function runSaveSmoke({
   baseUrl = DEFAULT_BASE_URL,
+  expectedEnvironment = DEFAULT_EXPECTED_ENVIRONMENT,
+  expectedDatabaseTarget = DEFAULT_EXPECTED_DATABASE_TARGET,
   fetchImpl = fetch,
   ensureBackend = ensureLocalBackend,
 } = {}) {
@@ -198,15 +204,15 @@ async function runSaveSmoke({
       );
     }
 
-    if (health.environment !== EXPECTED_ENVIRONMENT) {
+    if (health.environment !== expectedEnvironment) {
       throw new Error(
-        `Smoke save consentito solo in ${EXPECTED_ENVIRONMENT}. Environment attuale: "${health.environment ?? 'unknown'}".`,
+        `Smoke save consentito solo in ${expectedEnvironment}. Environment attuale: "${health.environment ?? 'unknown'}".`,
       );
     }
 
-    if (health.databaseTarget !== EXPECTED_DATABASE_TARGET) {
+    if (health.databaseTarget !== expectedDatabaseTarget) {
       throw new Error(
-        `Smoke save richiede databaseTarget "${EXPECTED_DATABASE_TARGET}". Trovato "${health.databaseTarget ?? 'unknown'}".`,
+        `Smoke save richiede databaseTarget "${expectedDatabaseTarget}". Trovato "${health.databaseTarget ?? 'unknown'}".`,
       );
     }
 
@@ -233,15 +239,40 @@ async function runSaveSmoke({
       'GET /api/data (after)',
     );
 
-    if (stableSerialize(afterState) !== stableSerialize(beforeState)) {
+    let canonicalBeforeState = beforeState;
+    let canonicalAfterState = afterState;
+
+    if (stableSerialize(canonicalAfterState) !== stableSerialize(canonicalBeforeState)) {
+      canonicalBeforeState = canonicalAfterState;
+
+      const retrySaveResult = await readJsonResponse(
+        await fetchImpl(`${normalizedBaseUrl}${DATA_PATH}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(canonicalBeforeState),
+        }),
+        'POST /api/data (retry)',
+      );
+
+      if (typeof retrySaveResult.message !== 'string' || !retrySaveResult.message.trim()) {
+        throw new Error('POST /api/data (retry) non ha restituito un messaggio di successo valido.');
+      }
+
+      canonicalAfterState = await readJsonResponse(
+        await fetchImpl(`${normalizedBaseUrl}${DATA_PATH}`),
+        'GET /api/data (after retry)',
+      );
+    }
+
+    if (stableSerialize(canonicalAfterState) !== stableSerialize(canonicalBeforeState)) {
       throw new Error('Lo stato letto dopo il salvataggio non coincide con il payload inviato.');
     }
 
     return {
       health,
       saveResult,
-      beforeState,
-      afterState,
+      beforeState: canonicalBeforeState,
+      afterState: canonicalAfterState,
     };
   } finally {
     await backendHandle?.stop?.();

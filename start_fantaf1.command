@@ -3,6 +3,8 @@ set -euo pipefail
 
 cd "$(dirname "$0")"
 
+export NODE_ENV=development
+
 readonly APP_TITLE="Fanta Formula 1"
 readonly BACKEND_HEALTH_URL="http://127.0.0.1:3001/api/health"
 readonly FRONTEND_URL="http://127.0.0.1:5173"

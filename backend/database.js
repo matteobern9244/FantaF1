@@ -1,5 +1,13 @@
+import { backendText, formatBackendText } from './text.js';
+
 const LOCAL_DATABASE_NAME = 'fantaf1_dev';
 const PRODUCTION_DATABASE_NAME = 'fantaf1';
+const MONGO_DATABASE_NAME_OVERRIDE_ENV_VAR = 'MONGODB_DB_NAME_OVERRIDE';
+
+function normalizeDatabaseNameOverride(mongoDatabaseNameOverride) {
+  const normalizedOverride = String(mongoDatabaseNameOverride ?? '').trim();
+  return normalizedOverride || undefined;
+}
 
 function normalizeRuntimeEnvironment(nodeEnv) {
   return String(nodeEnv ?? '').trim().toLowerCase() === 'production'
@@ -7,7 +15,12 @@ function normalizeRuntimeEnvironment(nodeEnv) {
     : 'development';
 }
 
-function determineExpectedMongoDatabaseName(nodeEnv) {
+function determineExpectedMongoDatabaseName(nodeEnv, { mongoDatabaseNameOverride } = {}) {
+  const normalizedOverride = normalizeDatabaseNameOverride(mongoDatabaseNameOverride);
+  if (normalizedOverride) {
+    return normalizedOverride;
+  }
+
   return normalizeRuntimeEnvironment(nodeEnv) === 'production'
     ? PRODUCTION_DATABASE_NAME
     : LOCAL_DATABASE_NAME;
@@ -29,13 +42,19 @@ function extractMongoDatabaseName(mongoUri) {
   }
 }
 
-function resolveMongoDatabaseName({ nodeEnv, mongoUri } = {}) {
-  const expectedDatabaseName = determineExpectedMongoDatabaseName(nodeEnv);
+function resolveMongoDatabaseName({ nodeEnv, mongoUri, mongoDatabaseNameOverride } = {}) {
+  const expectedDatabaseName = determineExpectedMongoDatabaseName(nodeEnv, {
+    mongoDatabaseNameOverride,
+  });
   const uriDatabaseName = extractMongoDatabaseName(mongoUri);
 
   if (uriDatabaseName && uriDatabaseName !== expectedDatabaseName) {
     throw new Error(
-      `MONGODB_URI targets "${uriDatabaseName}" but ${normalizeRuntimeEnvironment(nodeEnv)} requires "${expectedDatabaseName}".`,
+      formatBackendText(backendText.database.mongoUriTargetMismatchTemplate, {
+        uriDatabaseName,
+        environment: normalizeRuntimeEnvironment(nodeEnv),
+        expectedDatabaseName,
+      }),
     );
   }
 
@@ -45,7 +64,10 @@ function resolveMongoDatabaseName({ nodeEnv, mongoUri } = {}) {
 function verifyMongoDatabaseName(actualDbName, expectedDbName) {
   if (actualDbName !== expectedDbName) {
     throw new Error(
-      `Connected to unexpected MongoDB database "${actualDbName}". Expected "${expectedDbName}".`,
+      formatBackendText(backendText.database.unexpectedConnectedDatabaseTemplate, {
+        actualDbName,
+        expectedDbName,
+      }),
     );
   }
 }
@@ -54,6 +76,7 @@ export {
   determineExpectedMongoDatabaseName,
   extractMongoDatabaseName,
   LOCAL_DATABASE_NAME,
+  MONGO_DATABASE_NAME_OVERRIDE_ENV_VAR,
   PRODUCTION_DATABASE_NAME,
   normalizeRuntimeEnvironment,
   resolveMongoDatabaseName,

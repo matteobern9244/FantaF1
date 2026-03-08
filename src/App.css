@@ -7,6 +7,11 @@
   --panel-border-strong: rgba(225, 6, 0, 0.3);
   --ink: #f8fafc;
   --muted: #94a3b8;
+  --control-surface: #181c27;
+  --control-surface-hover: #202534;
+  --control-surface-disabled: #131722;
+  --control-option-surface: #181c27;
+  --control-option-ink: #f8fafc;
   --red: #e10600;
   --red-glow: rgba(225, 6, 0, 0.4);
   --gold: #ffb800;
@@ -360,10 +365,21 @@ select,
   transition: var(--transition);
 }
 
-.hero-card:hover {
+.interactive-surface {
+  transition: var(--transition);
+}
+
+.interactive-surface:hover,
+.interactive-surface:focus-within,
+button.interactive-surface:focus-visible {
+  background: rgba(255, 255, 255, 0.04);
   border-color: var(--line-strong);
   transform: translateY(-4px);
   box-shadow: var(--shadow-lg);
+}
+
+button.interactive-surface:focus-visible {
+  outline: 0;
 }
 
 .rules-panel {
@@ -414,6 +430,17 @@ select,
 .hero-summary-grid .live-list,
 .hero-summary-grid .driver-spotlight {
   gap: 10px;
+}
+
+.hero-summary-grid .highlights-button {
+  justify-content: center;
+  margin-top: 4px;
+  text-align: center;
+  width: 100%;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  line-height: 1.35;
 }
 
 .next-race-card {
@@ -606,15 +633,23 @@ select {
   border-radius: 16px;
   border: 1px solid var(--line);
   color: var(--ink);
-  background: rgba(255, 255, 255, 0.04);
-  backdrop-filter: blur(4px);
+  background-color: var(--control-surface);
   appearance: none;
+  -webkit-appearance: none;
+  color-scheme: dark;
   font-family: 'Formula1', sans-serif;
   font-size: 0.9rem;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 16px center;
+  background-size: 18px;
   transition: var(--transition);
+}
+
+select option,
+select optgroup {
+  color: var(--control-option-ink);
+  background-color: var(--control-option-surface);
 }
 
 .auth-input {
@@ -634,7 +669,7 @@ select {
 }
 
 select:hover:not(:disabled) {
-  background-color: rgba(255, 255, 255, 0.08);
+  background-color: var(--control-surface-hover);
   border-color: var(--line-strong);
 }
 
@@ -642,6 +677,10 @@ select:focus {
   outline: none;
   border-color: var(--red);
   box-shadow: 0 0 0 4px rgba(225, 6, 0, 0.15);
+}
+
+select:disabled {
+  background-color: var(--control-surface-disabled);
 }
 
 .calendar-strip {
@@ -693,12 +732,6 @@ select:focus {
   height: 100%;
   background: transparent;
   transition: var(--transition);
-}
-
-.calendar-card:hover {
-  transform: translateY(-4px);
-  background: rgba(255, 255, 255, 0.08);
-  border-color: var(--line-strong);
 }
 
 .calendar-card.selected {
@@ -986,11 +1019,6 @@ select:focus {
   transition: var(--transition);
 }
 
-.user-card:hover {
-  background: rgba(255, 255, 255, 0.04);
-  border-color: var(--line-strong);
-}
-
 .user-card-head {
   min-width: 0;
   display: flex;
@@ -1114,11 +1142,6 @@ select:focus {
   gap: 6px;
 }
 
-.history-card:hover {
-  background: rgba(255, 255, 255, 0.04);
-  border-color: var(--line-strong);
-}
-
 .history-top-row {
   min-width: 0;
   display: flex;
@@ -1156,6 +1179,45 @@ select:focus {
   justify-content: flex-end;
   flex-wrap: wrap;
   gap: 10px;
+}
+
+.history-filters,
+.weekend-pulse-summary,
+.history-detail-panel {
+  display: grid;
+  gap: 16px;
+}
+
+.history-filters {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin-bottom: 12px;
+}
+
+.compact-list .field-accuracy-row:last-child,
+.history-detail-panel .field-accuracy-row:last-child {
+  border-bottom: 0;
+}
+
+.season-comparison-table {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.season-comparison-row {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 16px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.history-detail-panel {
+  margin-top: 18px;
+  padding-top: 18px;
+  border-top: 1px solid var(--line);
 }
 
 .compact-button {
@@ -1289,6 +1351,17 @@ select:focus {
   gap: 16px;
 }
 
+.install-instructions-modal {
+  text-align: left;
+}
+
+.install-instructions-list {
+  margin: 0;
+  padding-left: 20px;
+  display: grid;
+  gap: 8px;
+}
+
 .toast-success {
   border-color: rgba(255, 184, 0, 0.25);
   color: var(--gold);
@@ -1360,7 +1433,9 @@ select:focus {
   .kpi-grid,
   .analytics-summary-grid,
   .analytics-columns,
-  .history-grid-compact {
+  .history-grid-compact,
+  .history-filters,
+  .season-comparison-row {
     grid-template-columns: 1fr;
   }
 
@@ -1394,7 +1469,9 @@ select:focus {
   .kpi-grid,
   .analytics-summary-grid,
   .analytics-columns,
-  .history-grid-compact {
+  .history-grid-compact,
+  .history-filters,
+  .season-comparison-row {
     grid-template-columns: 1fr;
   }
 

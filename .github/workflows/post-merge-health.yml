@@ -1,0 +1,24 @@
+name: Post Merge Health
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  post-merge-health:
+    name: post-merge-health
+    runs-on: ubuntu-latest
+    env:
+      RENDER_HEALTHCHECK_URL: ${{ secrets.RENDER_HEALTHCHECK_URL }}
+    steps:
+      - name: Skip when healthcheck URL is not configured
+        if: ${{ env.RENDER_HEALTHCHECK_URL == '' }}
+        run: echo "RENDER_HEALTHCHECK_URL non configurato; controllo post-merge saltato."
+
+      - name: Verify Render health endpoint
+        if: ${{ env.RENDER_HEALTHCHECK_URL != '' }}
+        run: curl --fail --silent --show-error --location "$RENDER_HEALTHCHECK_URL"

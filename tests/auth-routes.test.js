@@ -48,6 +48,26 @@ describe('auth routes', () => {
     );
   });
 
+  it('rejects the admin login when the password is invalid', async () => {
+    verifyAdminPassword.mockResolvedValue(false);
+
+    const response = await request(app).post('/api/admin/session').send({ password: 'wrong' });
+
+    expect(response.status).toBe(401);
+    expect(response.body).toEqual({
+      error: 'Invalid password',
+      code: 'admin_auth_invalid',
+    });
+  });
+
+  it('treats a missing admin password payload as an empty password string', async () => {
+    verifyAdminPassword.mockResolvedValue(false);
+
+    await request(app).post('/api/admin/session').send({});
+
+    expect(verifyAdminPassword).toHaveBeenCalledWith('');
+  });
+
   it('clears the admin session on logout', async () => {
     const response = await request(app).delete('/api/admin/session');
 

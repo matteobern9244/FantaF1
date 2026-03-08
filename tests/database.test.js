@@ -20,6 +20,27 @@ describe('MongoDB database target resolution', () => {
     expect(determineExpectedMongoDatabaseName('production')).toBe(PRODUCTION_DATABASE_NAME);
   });
 
+  it('allows an explicit database override for isolated CI runs', () => {
+    expect(
+      determineExpectedMongoDatabaseName('development', {
+        mongoDatabaseNameOverride: 'fantaf1_ci',
+      }),
+    ).toBe('fantaf1_ci');
+    expect(
+      determineExpectedMongoDatabaseName('production', {
+        mongoDatabaseNameOverride: 'fantaf1_ci',
+      }),
+    ).toBe('fantaf1_ci');
+  });
+
+  it('ignores blank database overrides', () => {
+    expect(
+      determineExpectedMongoDatabaseName('development', {
+        mongoDatabaseNameOverride: '   ',
+      }),
+    ).toBe(LOCAL_DATABASE_NAME);
+  });
+
   it('extracts the database name from the MongoDB URI path', () => {
     expect(
       extractMongoDatabaseName(
@@ -63,6 +84,16 @@ describe('MongoDB database target resolution', () => {
         mongoUri: 'mongodb+srv://user:pass@cluster.mongodb.net/fantaf1?retryWrites=true&w=majority',
       }),
     ).toBe(PRODUCTION_DATABASE_NAME);
+  });
+
+  it('accepts a MongoDB URI aligned with an explicit override database', () => {
+    expect(
+      resolveMongoDatabaseName({
+        nodeEnv: 'development',
+        mongoUri: 'mongodb+srv://user:pass@cluster.mongodb.net/fantaf1_ci?retryWrites=true&w=majority',
+        mongoDatabaseNameOverride: 'fantaf1_ci',
+      }),
+    ).toBe('fantaf1_ci');
   });
 
   it('fails when the URI path targets the wrong local database', () => {

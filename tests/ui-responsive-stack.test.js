@@ -1,17 +1,25 @@
 import { describe, expect, it, vi } from 'vitest';
-import {
-  canSelectSprintWeekend,
-  canSwitchWeekend,
-  ensureLocalAppStack,
-} from '../scripts/ui-responsive-check.mjs';
+import { ensureLocalAppStack } from '../scripts/ui-responsive/stack.mjs';
+import { canSelectSprintWeekend, canSwitchWeekend } from '../scripts/ui-responsive/state-validation.mjs';
 
 describe('responsive UI local stack bootstrap', () => {
   it('starts backend and frontend when the frontend is initially unreachable and stops them afterwards', async () => {
-    let fetchCalls = 0;
-    const fetchImpl = vi.fn().mockImplementation(async () => {
-      fetchCalls += 1;
+    const urlState = new Map([
+      ['http://127.0.0.1:5173', { calls: 0, okAfter: 3 }],
+      ['http://127.0.0.1:3001/api/health', { calls: 0, okAfter: 2 }],
+      ['http://127.0.0.1:5173/api/session', { calls: 0, okAfter: 4 }],
+      ['http://127.0.0.1:5173/api/data', { calls: 0, okAfter: 4 }],
+      ['http://127.0.0.1:5173/api/drivers', { calls: 0, okAfter: 4 }],
+      ['http://127.0.0.1:5173/api/calendar', { calls: 0, okAfter: 4 }],
+    ]);
+    const fetchImpl = vi.fn().mockImplementation(async (url) => {
+      const state = urlState.get(url);
+      if (!state) {
+        throw new Error(`unexpected url ${url}`);
+      }
 
-      if (fetchCalls === 1) {
+      state.calls += 1;
+      if (state.calls < state.okAfter) {
         throw new Error('offline');
       }
 
@@ -34,7 +42,7 @@ describe('responsive UI local stack bootstrap', () => {
       spawnImpl,
       sleepImpl: async () => {},
       timeoutMs: 1500,
-      pollIntervalMs: 10,
+      pollInterval: 10,
       cwd: '/tmp/fantaf1',
       env: {},
     });
@@ -59,17 +67,18 @@ describe('responsive UI local stack bootstrap', () => {
     expect(backendKill).toHaveBeenCalledWith('SIGTERM');
   });
 
-  it('reuses an already reachable frontend without spawning child processes', async () => {
+  it('reuses an already healthy frontend and backend without spawning child processes', async () => {
     const fetchImpl = vi.fn().mockResolvedValue({ ok: true });
     const spawnImpl = vi.fn();
 
     const stack = await ensureLocalAppStack({
       frontendUrl: 'http://127.0.0.1:5173',
+      backendUrl: 'http://127.0.0.1:3001/api/health',
       fetchImpl,
       spawnImpl,
       sleepImpl: async () => {},
       timeoutMs: 100,
-      pollIntervalMs: 10,
+      pollInterval: 10,
       cwd: '/tmp/fantaf1',
       env: {},
     });
@@ -78,6 +87,28 @@ describe('responsive UI local stack bootstrap', () => {
     expect(spawnImpl).not.toHaveBeenCalled();
 
     await expect(stack.stop()).resolves.toBeUndefined();
+  });
+
+  it('fails fast when only one side of the local stack is reachable', async () => {
+    const fetchImpl = vi.fn().mockImplementation(async (url) => {
+      if (url === 'http://127.0.0.1:5173') {
+        return { ok: true };
+      }
+
+      throw new Error('offline');
+    });
+
+    await expect(
+      ensureLocalAppStack({
+        frontendUrl: 'http://127.0.0.1:5173',
+        backendUrl: 'http://127.0.0.1:3001/api/health',
+        fetchImpl,
+        spawnImpl: vi.fn(),
+        sleepImpl: async () => {},
+        timeoutMs: 100,
+        pollInterval: 10,
+      }),
+    ).rejects.toThrow(/stack locale parziale/i);
   });
 
   it('skips the weekend-switch scenario when fewer than two calendar cards are available', () => {

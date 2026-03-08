@@ -166,7 +166,14 @@ describe('local save smoke runner', () => {
       )
       .mockResolvedValueOnce(createJsonResponse(beforeState))
       .mockResolvedValueOnce(createJsonResponse({ message: 'Dati salvati correttamente.' }))
-      .mockResolvedValueOnce(createJsonResponse(afterState));
+      .mockResolvedValueOnce(createJsonResponse(afterState))
+      .mockResolvedValueOnce(createJsonResponse({ message: 'Dati salvati correttamente.' }))
+      .mockResolvedValueOnce(
+        createJsonResponse({
+          ...afterState,
+          gpName: 'Changed Grand Prix Again',
+        }),
+      );
 
     await expect(
       runSaveSmoke({
@@ -176,7 +183,84 @@ describe('local save smoke runner', () => {
     ).rejects.toThrow('Lo stato letto dopo il salvataggio non coincide con il payload inviato.');
   });
 
+  it('retries once with the stabilized payload when background sync changes the canonical state mid-check', async () => {
+    const beforeState = {
+      users: [{ name: 'Player 1', predictions: { first: '', second: '', third: '', pole: '' }, points: 0 }],
+      history: [],
+      gpName: 'Australian Grand Prix 2026',
+      raceResults: { first: '', second: '', third: '', pole: '' },
+      selectedMeetingKey: '2026-australia',
+    };
+    const stabilizedState = {
+      ...beforeState,
+      gpName: 'Australian Grand Prix',
+    };
+    const fetchImpl = vi
+      .fn()
+      .mockResolvedValueOnce(
+        createJsonResponse({
+          status: 'ok',
+          environment: 'development',
+          databaseTarget: 'fantaf1_dev',
+        }),
+      )
+      .mockResolvedValueOnce(createJsonResponse(beforeState))
+      .mockResolvedValueOnce(createJsonResponse({ message: 'Dati salvati correttamente.' }))
+      .mockResolvedValueOnce(createJsonResponse(stabilizedState))
+      .mockResolvedValueOnce(createJsonResponse({ message: 'Dati salvati correttamente.' }))
+      .mockResolvedValueOnce(createJsonResponse(stabilizedState));
+
+    const result = await runSaveSmoke({
+      baseUrl: 'http://127.0.0.1:3001',
+      fetchImpl,
+    });
+
+    expect(result.beforeState).toEqual(stabilizedState);
+    expect(result.afterState).toEqual(stabilizedState);
+    expect(fetchImpl).toHaveBeenNthCalledWith(
+      5,
+      'http://127.0.0.1:3001/api/data',
+      expect.objectContaining({
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(stabilizedState),
+      }),
+    );
+  });
+
   it('serializes objects deterministically before comparing them', () => {
     expect(stableSerialize({ second: 2, first: 1 })).toBe(stableSerialize({ first: 1, second: 2 }));
+  });
+
+  it('supports CI-specific expected environment and database target values', async () => {
+    const state = {
+      users: [{ name: 'Player 1', predictions: { first: '', second: '', third: '', pole: '' }, points: 0 }],
+      history: [],
+      gpName: 'Australian Grand Prix 2026',
+      raceResults: { first: '', second: '', third: '', pole: '' },
+      selectedMeetingKey: '2026-australia',
+    };
+    const fetchImpl = vi
+      .fn()
+      .mockResolvedValueOnce(
+        createJsonResponse({
+          status: 'ok',
+          environment: 'ci',
+          databaseTarget: 'fantaf1_ci',
+        }),
+      )
+      .mockResolvedValueOnce(createJsonResponse(state))
+      .mockResolvedValueOnce(createJsonResponse({ message: 'Dati salvati correttamente.' }))
+      .mockResolvedValueOnce(createJsonResponse(state));
+
+    const result = await runSaveSmoke({
+      baseUrl: 'http://127.0.0.1:3001',
+      expectedEnvironment: 'ci',
+      expectedDatabaseTarget: 'fantaf1_ci',
+      fetchImpl,
+    });
+
+    expect(result.health.environment).toBe('ci');
+    expect(result.health.databaseTarget).toBe('fantaf1_ci');
   });
 });

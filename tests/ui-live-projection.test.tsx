@@ -45,6 +45,7 @@ function createCalendar() {
       endDate: '2099-03-15',
       raceStartTime: '2099-03-15T14:00:00Z',
       sessions: [],
+      highlightsVideoUrl: '',
     },
     {
       meetingKey: 'race-2',
@@ -60,6 +61,7 @@ function createCalendar() {
       endDate: '2099-03-22',
       raceStartTime: '2099-03-22T14:00:00Z',
       sessions: [],
+      highlightsVideoUrl: '',
     },
   ];
 }
@@ -127,7 +129,14 @@ function mockAppFetches({
   appData?: ReturnType<typeof createAppData>;
   calendar?: ReturnType<typeof createCalendar>;
   drivers?: ReturnType<typeof createDrivers>;
-  resultsByMeetingKey?: Record<string, ReturnType<typeof createEmptyPrediction>>;
+  resultsByMeetingKey?: Record<
+    string,
+    {
+      racePhase?: 'open' | 'live' | 'finished';
+      results: ReturnType<typeof createEmptyPrediction>;
+      highlightsVideoUrl?: string | null;
+    }
+  >;
 }) {
   const fetchMock = global.fetch as ReturnType<typeof vi.fn>;
 
@@ -164,9 +173,22 @@ function mockAppFetches({
     );
 
     if (resultsEntry) {
+      const responsePayload = {
+        ...resultsEntry[1].results,
+        racePhase: resultsEntry[1].racePhase ?? 'open',
+      } as {
+        racePhase: 'open' | 'live' | 'finished';
+        results?: ReturnType<typeof createEmptyPrediction>;
+        highlightsVideoUrl?: string | null;
+      };
+
+      if (resultsEntry[1].highlightsVideoUrl !== undefined) {
+        responsePayload.highlightsVideoUrl = resultsEntry[1].highlightsVideoUrl;
+      }
+
       return Promise.resolve({
         ok: true,
-        json: () => Promise.resolve(resultsEntry[1]),
+        json: () => Promise.resolve(responsePayload),
       } as Response);
     }
 
@@ -195,15 +217,21 @@ function getSelectedRaceHeroCard() {
   return document.querySelector('.driver-spotlight')?.closest('section') ?? null;
 }
 
+function queryOpenPredictionsStrip() {
+  return screen.queryByText(/pronostici ancora aperti/i);
+}
+
 describe('Live projection UI', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    window.history.replaceState({}, '', '/');
+    vi.spyOn(window, 'open').mockImplementation(() => null);
   });
 
   it('shows explicit waiting messages when the selected weekend has no official results yet', async () => {
     mockAppFetches({
       resultsByMeetingKey: {
-        'race-1': createEmptyPrediction(),
+        'race-1': { racePhase: 'open', results: createEmptyPrediction() },
       },
     });
 
@@ -225,12 +253,165 @@ describe('Live projection UI', () => {
     expect(getProjectionValue('Matteo')).toBe('0');
     expect(getProjectionValue('Fabio')).toBe('0');
     expect(getProjectionValue('Adriano')).toBe('0');
+    expect(queryOpenPredictionsStrip()).toBeInTheDocument();
+  });
+
+  it('shows the highlights CTA in the selected race recap when the finished race has a Sky Sport Italia F1 video', async () => {
+    mockAppFetches({
+      resultsByMeetingKey: {
+        'race-1': {
+          racePhase: 'finished',
+          results: { first: 'nor', second: 'ver', third: 'lec', pole: 'pia' },
+          highlightsVideoUrl: 'https://www.youtube.com/watch?v=skyf1-finished',
+        },
+      },
+    });
+
+    render(<App />);
+
+    const highlightsButton = await screen.findByRole(
+      'button',
+      { name: /guarda highlights/i },
+      { timeout: 5000 },
+    );
+
+    const selectedRaceHeroCard = getSelectedRaceHeroCard();
+    expect(selectedRaceHeroCard).not.toBeNull();
+    expect(
+      within(selectedRaceHeroCard as HTMLElement).getByRole('button', { name: /guarda highlights/i }),
+    ).toBeEnabled();
+    expect(highlightsButton).toBeEnabled();
+  });
+
+  it('shows the official grand prix title in the selected race recap when the race is finished', async () => {
+    mockAppFetches({
+      resultsByMeetingKey: {
+        'race-1': {
+          racePhase: 'finished',
+          results: { first: 'nor', second: 'ver', third: 'lec', pole: 'pia' },
+          highlightsVideoUrl: 'https://www.youtube.com/watch?v=skyf1-finished',
+        },
+      },
+    });
+
+    render(<App />);
+
+    await screen.findByRole('button', { name: /guarda highlights/i }, { timeout: 5000 });
+
+    const selectedRaceHeroCard = getSelectedRaceHeroCard();
+    expect(selectedRaceHeroCard).not.toBeNull();
+    expect(
+      within(selectedRaceHeroCard as HTMLElement).getByText('Australian Grand Prix 2099'),
+    ).toBeInTheDocument();
+    expect(
+      within(selectedRaceHeroCard as HTMLElement).queryByText('Australia'),
+    ).not.toBeInTheDocument();
+  });
+
+  it('opens the YouTube highlights outside the app when the CTA is clicked', async () => {
+    mockAppFetches({
+      resultsByMeetingKey: {
+        'race-1': {
+          racePhase: 'finished',
+          results: { first: 'nor', second: 'ver', third: 'lec', pole: 'pia' },
+          highlightsVideoUrl: 'https://www.youtube.com/watch?v=skyf1-click',
+        },
+      },
+    });
+
+    render(<App />);
+
+    const highlightsButton = await screen.findByRole('button', { name: /guarda highlights/i });
+    fireEvent.click(highlightsButton);
+
+    expect(window.open).toHaveBeenCalledWith(
+      'https://www.youtube.com/watch?v=skyf1-click',
+      '_blank',
+      'noopener,noreferrer',
+    );
+  });
+
+  it('shows a disabled highlights CTA when the finished race video is not available yet', async () => {
+    mockAppFetches({
+      resultsByMeetingKey: {
+        'race-1': {
+          racePhase: 'finished',
+          results: { first: 'nor', second: 'ver', third: 'lec', pole: 'pia' },
+          highlightsVideoUrl: '',
+        },
+      },
+    });
+
+    render(<App />);
+
+    const disabledButton = await screen.findByRole('button', {
+      name: /video highlights ancora non disponibile/i,
+    });
+
+    expect(disabledButton).toBeDisabled();
+  });
+
+  it('falls back to the unavailable highlights CTA when the results payload omits highlightsVideoUrl', async () => {
+    mockAppFetches({
+      resultsByMeetingKey: {
+        'race-1': {
+          racePhase: 'finished',
+          results: { first: 'nor', second: 'ver', third: 'lec', pole: 'pia' },
+        },
+      },
+    });
+
+    render(<App />);
+
+    const disabledButton = await screen.findByRole('button', {
+      name: /video highlights ancora non disponibile/i,
+    });
+
+    expect(disabledButton).toBeDisabled();
+  });
+
+  it('falls back to the unavailable highlights CTA when the results payload has a null highlightsVideoUrl', async () => {
+    mockAppFetches({
+      resultsByMeetingKey: {
+        'race-1': {
+          racePhase: 'finished',
+          results: { first: 'nor', second: 'ver', third: 'lec', pole: 'pia' },
+          highlightsVideoUrl: null,
+        },
+      },
+    });
+
+    render(<App />);
+
+    const disabledButton = await screen.findByRole('button', {
+      name: /video highlights ancora non disponibile/i,
+    });
+
+    expect(disabledButton).toBeDisabled();
+  });
+
+  it('does not show the highlights CTA before the selected race is finished', async () => {
+    mockAppFetches({
+      resultsByMeetingKey: {
+        'race-1': {
+          racePhase: 'live',
+          results: { first: '', second: '', third: '', pole: 'pia' },
+          highlightsVideoUrl: 'https://www.youtube.com/watch?v=should-not-render',
+        },
+      },
+    });
+
+    render(<App />);
+
+    await waitFor(() => {
+      expect(screen.queryByRole('button', { name: /highlights/i })).not.toBeInTheDocument();
+    });
   });
 
   it('shows partial-result messages and awards only the published official fields', async () => {
     mockAppFetches({
       resultsByMeetingKey: {
-        'race-1': { first: '', second: '', third: '', pole: 'pia' },
+        'race-1': { racePhase: 'open', results: { first: '', second: '', third: '', pole: 'pia' } },
       },
     });
 
@@ -263,12 +444,16 @@ describe('Live projection UI', () => {
     expect(
       within(selectedRaceHeroCard as HTMLElement).queryByText('Piastri Oscar'),
     ).not.toBeInTheDocument();
+    expect(queryOpenPredictionsStrip()).not.toBeInTheDocument();
   });
 
   it('fetches the selected weekend results before race finish and updates projections plus live standings', async () => {
     const fetchMock = mockAppFetches({
       resultsByMeetingKey: {
-        'race-1': { first: 'ver', second: 'ham', third: 'lec', pole: 'pia' },
+        'race-1': {
+          racePhase: 'finished',
+          results: { first: 'ver', second: 'ham', third: 'lec', pole: 'pia' },
+        },
       },
     });
 
@@ -308,8 +493,8 @@ describe('Live projection UI', () => {
   it('recalculates availability messages and live standings when the selected weekend changes', async () => {
     const fetchMock = mockAppFetches({
       resultsByMeetingKey: {
-        'race-1': createEmptyPrediction(),
-        'race-2': { first: '', second: '', third: '', pole: 'nor' },
+        'race-1': { racePhase: 'open', results: createEmptyPrediction() },
+        'race-2': { racePhase: 'open', results: { first: '', second: '', third: '', pole: 'nor' } },
       },
     });
 
@@ -322,6 +507,7 @@ describe('Live projection UI', () => {
     await waitFor(() => {
       expect(screen.getByText(/nessun risultato ufficiale disponibile ancora/i)).toBeInTheDocument();
     });
+    expect(queryOpenPredictionsStrip()).toBeInTheDocument();
 
     fireEvent.change(screen.getByLabelText(/weekend selezionato/i), {
       target: { value: 'race-2' },
@@ -346,5 +532,170 @@ describe('Live projection UI', () => {
       { name: 'Matteo', score: '10' },
       { name: 'Adriano', score: '6' },
     ]);
+    expect(queryOpenPredictionsStrip()).not.toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText(/weekend selezionato/i), {
+      target: { value: 'race-1' },
+    });
+
+    await waitFor(() => {
+      expect(fetchMock).toHaveBeenCalledWith('/api/results/race-1');
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText(/nessun risultato ufficiale disponibile ancora/i)).toBeInTheDocument();
+    });
+    expect(queryOpenPredictionsStrip()).toBeInTheDocument();
+  });
+
+  it('renders enriched weekend comparison insights for the selected GP', async () => {
+    mockAppFetches({
+      resultsByMeetingKey: {
+        'race-1': { racePhase: 'live', results: { first: 'ver', second: '', third: '', pole: 'pia' } },
+      },
+    });
+
+    render(<App />);
+
+    await waitFor(() => {
+      expect(screen.queryByTestId('pitstop-loader')).not.toBeInTheDocument();
+    });
+
+    expect(screen.getByRole('heading', { name: /weekend pulse/i })).toBeInTheDocument();
+    expect(screen.getAllByText(/match confermati/i).length).toBeGreaterThan(0);
+    expect(screen.getByText(/risultati ufficiali parziali/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/verstappen max/i).length).toBeGreaterThan(0);
+    expect(screen.getAllByText(/piastri oscar/i).length).toBeGreaterThan(0);
+  });
+
+  it('normalizes sparse flattened results payloads by defaulting missing fields to empty strings', async () => {
+    const fetchMock = global.fetch as ReturnType<typeof vi.fn>;
+
+    fetchMock.mockImplementation((url: string) => {
+      if (url.includes('/api/session')) {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({ isAdmin: true, defaultViewMode: 'admin' }),
+        } as Response);
+      }
+      if (url.includes('/api/data')) {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve(createAppData()),
+        } as Response);
+      }
+      if (url.includes('/api/drivers')) {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve(createDrivers()),
+        } as Response);
+      }
+      if (url.includes('/api/calendar')) {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve(createCalendar()),
+        } as Response);
+      }
+      if (url.includes('/api/results/race-1')) {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({ racePhase: 'open' }),
+        } as Response);
+      }
+
+      return Promise.reject(new Error(`Unhandled fetch to ${url}`));
+    });
+
+    render(<App />);
+
+    await waitFor(() => {
+      expect(screen.queryByTestId('pitstop-loader')).not.toBeInTheDocument();
+    });
+
+    await waitFor(() => {
+      expect(screen.getByLabelText(/risultato 1°/i)).toHaveValue('');
+    });
+    expect(screen.queryByText('Gara in corso: pronostici bloccati.')).not.toBeInTheDocument();
+  });
+
+  it('keeps the strip hidden for the selected weekend when a stale response from another weekend resolves later', async () => {
+    let resolveRace1: ((value: Response) => void) | null = null;
+    const race1Promise = new Promise<Response>((resolve) => {
+      resolveRace1 = resolve;
+    });
+    const fetchMock = global.fetch as ReturnType<typeof vi.fn>;
+
+    fetchMock.mockImplementation((url: string) => {
+      if (url.includes('/api/session')) {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({ isAdmin: true, defaultViewMode: 'admin' }),
+        } as Response);
+      }
+      if (url.includes('/api/data')) {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve(createAppData()),
+        } as Response);
+      }
+      if (url.includes('/api/drivers')) {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve(createDrivers()),
+        } as Response);
+      }
+      if (url.includes('/api/calendar')) {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve(createCalendar()),
+        } as Response);
+      }
+      if (url.includes('/api/results/race-1')) {
+        return race1Promise;
+      }
+      if (url.includes('/api/results/race-2')) {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({
+            first: '',
+            second: '',
+            third: '',
+            pole: 'nor',
+            racePhase: 'open',
+          }),
+        } as Response);
+      }
+
+      return Promise.reject(new Error(`Unhandled fetch to ${url}`));
+    });
+
+    render(<App />);
+
+    await waitFor(() => {
+      expect(screen.queryByTestId('pitstop-loader')).not.toBeInTheDocument();
+    });
+
+    fireEvent.change(screen.getByLabelText(/weekend selezionato/i), {
+      target: { value: 'race-2' },
+    });
+
+    await waitFor(() => {
+      expect(fetchMock).toHaveBeenCalledWith('/api/results/race-2');
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText(/risultati ufficiali parziali per il weekend selezionato/i)).toBeInTheDocument();
+    });
+    expect(queryOpenPredictionsStrip()).not.toBeInTheDocument();
+
+    resolveRace1?.({
+      ok: true,
+      json: () => Promise.resolve({ first: '', second: '', third: '', pole: '', racePhase: 'open' }),
+    } as Response);
+
+    await waitFor(() => {
+      expect(screen.getByText(/risultati ufficiali parziali per il weekend selezionato/i)).toBeInTheDocument();
+    });
+    expect(queryOpenPredictionsStrip()).not.toBeInTheDocument();
   });
 });

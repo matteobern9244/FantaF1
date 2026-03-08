@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { sanitizeAppData, ensureDataDirectory } from '../backend/storage.js';
+import { createDefaultAppData, sanitizeAppData, ensureDataDirectory } from '../backend/storage.js';
 
 describe('storage sanitization', () => {
   it('keeps only expected app fields and preserves participant ordering', () => {
@@ -201,6 +201,23 @@ describe('storage sanitization', () => {
   });
 
   describe('internal coverage', () => {
+    it('covers the storage facade createDefaultAppData export', () => {
+      const defaultData = createDefaultAppData([
+        {
+          meetingKey: '1',
+          meetingName: 'Australia',
+          grandPrixTitle: 'Australian Grand Prix',
+          roundNumber: 1,
+          startDate: '2099-03-15',
+          endDate: '2099-03-15',
+        },
+      ]);
+
+      expect(defaultData.selectedMeetingKey).toBe('1');
+      expect(defaultData.gpName).toBe('Australian Grand Prix');
+      expect(defaultData.users).toHaveLength(3);
+    });
+
     it('handles empty calendar in getNextUpcomingMeeting via createDefaultAppData', () => {
       const defaultData = sanitizeAppData({}, []);
       expect(defaultData.selectedMeetingKey).toBe('');

@@ -46,7 +46,60 @@
     "baseUrl": "https://www.formula1.com/en/racing",
     "referenceArticleUrl": "https://www.formula1.com/en/latest/article/formula-1-reveals-calendar-for-2026-season.YctbMZWqBvrgyddrnauo8.YctbMZWqBvrgyddrnauo8/",
     "sortLocale": "it",
-    "expectedMinimumWeekends": 20
+    "expectedMinimumWeekends": 20,
+    "highlightsChannelHandle": "@skysportf1",
+    "highlightsChannelId": "UCMQ7Gx6v-pQy_gsRoMJYzOA",
+    "highlightsChannelSearchBaseUrl": "https://www.youtube.com/@skysportf1/search?query=",
+    "highlightsChannelVideosUrl": "https://www.youtube.com/@skysportf1/videos",
+    "highlightsFeedUrl": "https://www.youtube.com/feeds/videos.xml?channel_id=UCMQ7Gx6v-pQy_gsRoMJYzOA",
+    "highlightsOEmbedBaseUrl": "https://www.youtube.com/oembed?format=json&url=",
+    "highlightsLookupMissingTtlHours": 6,
+    "highlightsLookupMaxVideoPages": 3,
+    "highlightsSearchBaseUrl": "https://www.youtube.com/results?search_query=",
+    "highlightsSearchPublisherLabel": "Sky Sport Italia F1",
+    "highlightsPublisherKeywords": [
+      "sky sport f1",
+      "sky sport formula 1",
+      "sky sport italia f1"
+    ],
+    "highlightsPositiveKeywords": [
+      "gli highlights",
+      "highlights gara",
+      "highlights"
+    ],
+    "highlightsSecondaryKeywords": [
+      "sintesi",
+      "sintesi lunga"
+    ],
+    "highlightsRequiredKeywords": [
+      "highlight",
+      "highlights",
+      "sintesi"
+    ],
+    "highlightsNegativeKeywords": [
+      "intervista",
+      "interviste",
+      "commento",
+      "analisi",
+      "qualifiche",
+      "prove libere",
+      "fp1",
+      "fp2",
+      "fp3",
+      "notebook",
+      "ultimo giro"
+    ],
+    "highlightsRaceAliases": {
+      "emilia romagna": ["imola"],
+      "great britain": ["silverstone"],
+      "azerbaijan": ["baku"],
+      "spain": ["barcelona"],
+      "canada": ["montreal"],
+      "usa": ["austin"],
+      "mexico": ["mexico city"],
+      "las vegas": ["vegas"],
+      "abu dhabi": ["yas marina"]
+    }
   },
   "driverAliases": {
     "Alex Albon": "Alexander Albon",
@@ -119,6 +172,15 @@
     "loading": "Caricamento dati Fanta Formula 1...",
     "loadError": "Impossibile caricare i dati necessari. Verifica che il backend sia attivo.",
     "pointsSuffix": "pt",
+    "shell": {
+      "loadingMessage": "Preparazione dei box...",
+      "loadingTelemetryMessage": "Sincronizzazione telemetria e piloti in corso...",
+      "loadingWeekendSetupMessage": "Configurazione assetto weekend...",
+      "weekendStatusUnavailable": "Weekend non disponibile",
+      "weekendStatusCompleted": "Concluso",
+      "weekendStatusLive": "In corso",
+      "weekendStatusOpen": "Pronostici aperti"
+    },
     "buttons": {
       "clear": "Reset pronostici correnti",
       "confirmResults": "Conferma risultati e assegna i punti",
@@ -129,8 +191,11 @@
       "savePredictions": "Salva dati inseriti",
       "publicView": "Vista pubblica",
       "adminView": "Modalita' admin",
-      "installApp": "Installa app",
-      "logout": "Logout"
+      "installApp": "INSTALLA APPLICAZIONE",
+      "logout": "Logout",
+      "closeDialog": "Chiudi",
+      "watchHighlights": "Guarda Highlights",
+      "highlightsUnavailable": "Video Highlights ancora non disponibile"
     },
     "headings": {
       "seasonTag": "Fanta Formula 1",
@@ -198,7 +263,7 @@
       "empty": "Nessuna gara registrata finora.",
       "resultSummaryTemplate": "{actualLabel}: 1° {first} | 2° {second} | 3° {third} | Pole/Sprint {pole}",
       "editingLabel": "Stai modificando una gara salvata. La classifica e' gia' stata ricalcolata senza questa gara.",
-      "publicReadonly": "Gestione admin in sola lettura per i non admin.",
+      "publicReadonly": "Solo gli admin possono modificare i pronostici.",
       "analyticsEmpty": "Le analytics saranno disponibili dopo le prime gare confermate."
     },
     "status": {
@@ -206,20 +271,35 @@
       "livePartialOfficialResults": "Risultati ufficiali parziali per il weekend selezionato.",
       "predictionNoOfficialResults": "La proiezione si aggiornera' quando Formula1.com pubblichera' pole/sprint/gara ufficiali.",
       "predictionPartialOfficialResults": "La proiezione e' parziale e usa solo i risultati ufficiali gia' pubblicati.",
-      "raceLockedStrip": "Race lock attivo",
+      "raceLiveStrip": "Gara in corso",
+      "raceFinishedStrip": "Gara terminata",
       "raceOpenStrip": "Pronostici ancora aperti",
       "resultsReadyStrip": "Risultati ufficiali completi",
       "predictionsSaved": "Pronostici salvati.",
       "pwaInstalled": "App installata correttamente.",
       "pwaInstallHint": "Installa FantaF1 sul dispositivo per una home-screen experience piu' rapida.",
+      "pwaInstallInstructionsOpened": "Segui le istruzioni per aggiungere FantaF1 alla Home.",
       "adminLoginSuccess": "Modalita' admin attiva.",
-      "adminLogoutSuccess": "Logout completato. Modalita' pubblica attiva."
+      "adminLogoutSuccess": "Logout completato. Modalita' pubblica attiva.",
+      "shareLinkCopied": "Link della vista corrente copiato."
+    },
+    "installDialog": {
+      "title": "Aggiungi FantaF1 alla Home",
+      "description": "Su iPhone e iPad l'installazione avviene da Safari. Apri il menu Condividi e scegli Aggiungi a Home.",
+      "steps": [
+        "Tocca il pulsante Condividi di Safari.",
+        "Seleziona Aggiungi a Home.",
+        "Conferma con Aggiungi per installare la PWA."
+      ]
     },
     "calendar": {
       "empty": "Calendario non disponibile.",
       "sprintBadge": "Weekend Sprint",
       "raceBadge": "Weekend Standard",
-      "raceLocked": "Gara iniziata: i pronostici sono bloccati."
+      "raceLockedError": "I pronostici sono bloccati.",
+      "raceInProgressLocked": "Gara in corso: pronostici bloccati.",
+      "raceFinished": "Gara terminata.",
+      "sessionsSyncing": "Orari in fase di sincronizzazione..."
     },
     "alerts": {
       "clearConfirm": "Vuoi azzerare i pronostici attuali per il weekend selezionato?",
@@ -239,11 +319,110 @@
       "raceInProgress": "La gara e' in corso... stay tuned !!",
       "missingResults": "Inserisci tutti i risultati reali per continuare."
     },
+    "panels": {
+      "publicGuide": {
+        "title": "Come funziona",
+        "pointsLabel": "Punti gara",
+        "pointsSummaryTemplate": "1° {first} {pointsSuffix}, 2° {second} {pointsSuffix}, 3° {third} {pointsSuffix}, Pole/Sprint {pole} {pointsSuffix}",
+        "raceLockLabel": "Race lock",
+        "raceLockValue": "I pronostici si chiudono all'orario ufficiale di partenza.",
+        "liveViewLabel": "Vista live",
+        "liveViewValue": "Classifica storica piu' proiezione del weekend selezionato.",
+        "sprintLabel": "Weekend Sprint",
+        "sprintValue": "Il quarto campo usa Pole o vincitore Sprint in base al formato del weekend."
+      },
+      "weekendLive": {
+        "title": "Weekend pulse",
+        "liveTotalTemplate": "{points} pt live",
+        "confirmedMatchesTemplate": "Match confermati: {count}"
+      },
+      "weekendPulseHero": {
+        "title": "Weekend pulse",
+        "statusLabel": "Stato weekend",
+        "countdownLabel": "Countdown lock",
+        "availabilityLabel": "Risultati ufficiali",
+        "availabilityComplete": "Completi",
+        "availabilityPartial": "Parziali",
+        "availabilityPending": "In attesa"
+      },
+      "seasonAnalysis": {
+        "title": "Analisi stagione",
+        "shareButton": "Copia link vista corrente",
+        "leaderGapTemplate": "Gap leader {gap}",
+        "hitRateTemplate": "Hit rate {hitRate}%",
+        "consistencyTemplate": "Costanza {consistency}",
+        "cumulativeTrendTitle": "Trend cumulato",
+        "latestGpTitle": "Recap ultimo GP",
+        "latestGpLabel": "GP",
+        "winnerLabel": "Vincitore weekend",
+        "swingLabel": "Swing classifica",
+        "decisivePickLabel": "Pick decisiva"
+      },
+      "historyArchive": {
+        "title": "Storico gare",
+        "userFilterLabel": "Filtra per giocatore",
+        "allUsersOption": "Tutti",
+        "searchLabel": "Cerca GP",
+        "shownCountTemplate": "{count} gran premi mostrati",
+        "editButton": "Modifica",
+        "deleteButton": "Elimina",
+        "detailButtonTemplate": "Dettaglio {gpName}",
+        "detailTitle": "Pronostici dettagliati"
+      }
+    },
     "backend": {
+      "health": {
+        "okStatus": "ok"
+      },
+      "auth": {
+        "adminRequired": "Admin authentication required",
+        "invalidPassword": "Invalid password"
+      },
+      "apiErrors": {
+        "readAppDataFailed": "Failed to read app data",
+        "readDriversFailed": "Failed to read drivers",
+        "readCalendarFailed": "Failed to read calendar",
+        "fetchResultsFailed": "Failed to fetch results",
+        "apiNotFound": "API Endpoint not found"
+      },
+      "save": {
+        "participantsInvalidTemplate": "Invalid participants list. Expected {participantSlots} participants.",
+        "participantsInvalidDetailsTemplate": "Expected {participantSlots} participants, received {received}.",
+        "predictionsMissingDetails": "At least one prediction is required for manual predictions save.",
+        "raceLockedDetailsTemplate": "Race {meetingKey} started at {startTime} and current predictions differ from stored data.",
+        "saveRouteFailureTemplate": "[Error Backend] POST {routePath} fallito [requestId={requestId}] [environment={environment}] [databaseTarget={databaseTarget}] [code={code}]"
+      },
+      "database": {
+        "missingMongoUri": "MONGODB_URI environment variable is not defined",
+        "mongoUriTargetMismatchTemplate": "MONGODB_URI targets \"{uriDatabaseName}\" but {environment} requires \"{expectedDatabaseName}\".",
+        "unexpectedConnectedDatabaseTemplate": "Connected to unexpected MongoDB database \"{actualDbName}\". Expected \"{expectedDbName}\".",
+        "connectedLogTemplate": "[Database] Connected to MongoDB Atlas - Environment: {environment} - Target: {connectedDatabaseName} - Resolved: {targetDatabaseName}",
+        "connectionErrorLog": "[Database] MongoDB connection error:"
+      },
+      "storage": {
+        "defaultUserNameTemplate": "Player {index}",
+        "unknownUserName": "Unknown",
+        "readParticipantRosterError": "Error reading participant roster from DB:",
+        "readAppDataError": "Error reading app data from DB:",
+        "writeAppDataError": "[Storage Error] Error writing app data to DB:",
+        "writeAppDataPayloadLog": "[Storage Error] Data being written:",
+        "readDriversError": "Error reading drivers from DB:",
+        "writeDriversError": "Error writing drivers to DB:",
+        "readCalendarError": "Error reading calendar from DB:",
+        "writeCalendarError": "Error writing calendar to DB:"
+      },
+      "sync": {
+        "startBackground": "[Sync] Starting background synchronization...",
+        "driversSynchronizedTemplate": "[Sync] Drivers synchronized: {count}",
+        "calendarSynchronizedTemplate": "[Sync] Calendar synchronized: {count}",
+        "driverSyncWarning": "[Sync] Driver sync warning:",
+        "calendarSyncWarning": "[Sync] Calendar sync warning:"
+      },
       "logs": {
         "driverSyncStart": "Sincronizzazione roster piloti in corso...",
         "driverSyncSuccess": "Roster piloti aggiornato con {count} piloti.",
         "driverSyncFallback": "Sync roster non disponibile. Uso la cache locale con {count} piloti.",
+        "driverSyncFormulaOneFallback": "Sync roster StatsF1 non disponibile. Uso Formula1.com con {count} piloti.",
         "driverSyncNoCache": "Sync roster non disponibile e nessuna cache piloti trovata.",
         "calendarSyncStart": "Sincronizzazione calendario ufficiale in corso...",
         "calendarSyncSuccess": "Calendario ufficiale aggiornato con {count} weekend.",

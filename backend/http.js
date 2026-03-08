@@ -1,4 +1,5 @@
 import { randomUUID } from 'crypto';
+import { backendText } from './text.js';
 
 const SAVE_ERROR_STATUS = {
   participants_invalid: 400,
@@ -15,7 +16,7 @@ function createRequestId() {
 
 function buildHealthPayload({ currentYear, dbState, environment, databaseTarget }) {
   return {
-    status: 'ok',
+    status: backendText.health.okStatus,
     year: currentYear,
     dbState,
     environment,

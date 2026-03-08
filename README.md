@@ -4,6 +4,34 @@ Applicazione full-stack privata per gestire un Fanta Formula 1 con frontend Reac
 
 L'applicazione e' pensata per un flusso amministrato: un admin seleziona il weekend, inserisce i pronostici dei tre partecipanti, registra o recupera i risultati reali e consolida i punti nello storico.
 
+## Stato release e confronto con la produzione
+
+La versione attualmente in produzione e pubblicata e' `v1.3.12`. Il repository e' ora allineato alla prossima release `v1.4.0` in `package.json`, mentre la live resta ancora sulla baseline `v1.3.12` finche' non verra' rilasciata.
+
+### Baseline produzione `v1.3.12`
+
+La baseline live corrisponde alle capability gia' rilasciate e documentate in `CHANGELOG.md` sotto `v1.3.12`:
+
+- sessioni admin/public con cookie HTTP-only e API `GET /api/session`, `POST /api/admin/session`, `DELETE /api/admin/session`;
+- dashboard KPI e analytics estese;
+- roster dinamico dei partecipanti ricavato dal database;
+- rimozione completa del Weekend Boost;
+- hardening server-side su validazione e sanitizzazione;
+- validazione release con `lint`, `test`, `test:coverage`, `build` e `test:save-local`.
+
+### Delta del workspace corrente rispetto a `v1.3.12`
+
+Rispetto alla produzione `v1.3.12`, il repository contiene gia' il delta tecnico della release `v1.4.0`:
+
+- backend `calendar/results` estratto in service object dedicati (`RaceResultsService`, `RaceResultsCache`);
+- backend `storage` rifattorizzato in facade + servizi espliciti (`AppDataRepository`, `AppDataSanitizer`, `ParticipantRosterPolicy`, `WeekendSelectionService`);
+- logica frontend di weekend state, scoring e analytics spostata in moduli OO dedicati;
+- route di salvataggio e bootstrap server separati in service object testabili;
+- baseline coverage verificata riallineata a `4699 / 4699` statements, `371 / 371` functions, `1908 / 1908` branches e `4699 / 4699` lines;
+- validazione finale completa rieseguita anche con `test:ui-responsive`, `test:save-local`, controllo sintassi di `start_fantaf1.command` e verifica di coerenza dei workflow GitHub Actions.
+
+In sintesi: la produzione `v1.3.12` descrive la baseline live, mentre questo README documenta anche il delta tecnico gia' presente nel repository e versionato come `v1.4.0`, non ancora deployato.
+
 ## Panoramica funzionale
 
 - Lo stato di gioco mantiene sempre esattamente 3 partecipanti.
@@ -57,7 +85,10 @@ Di conseguenza:
 
 ### Risultati reali e assegnazione punti
 
-L'applicazione considera la gara conclusa circa 2.5 ore dopo l'orario di inizio gara.
+Per il weekend selezionato l'applicazione distingue due concetti separati:
+
+- `race lock`: i pronostici si bloccano all'orario ufficiale di partenza della gara;
+- `racePhase`: stato user-facing del weekend (`open`, `live`, `finished`) derivato dal backend.
 
 Quando il weekend selezionato ha risultati reali correnti incompleti:
 
@@ -71,7 +102,7 @@ Quando il weekend selezionato ha risultati reali correnti incompleti:
 
 Il pulsante di conferma risultati resta disabilitato finche' non sono vere entrambe le condizioni:
 
-- gara considerata conclusa;
+- backend in stato `racePhase=finished` per il weekend selezionato;
 - risultati reali completi in tutti i 4 campi.
 
 Alla conferma:
@@ -185,20 +216,41 @@ Se il database non contiene ancora stato applicativo, il backend costruisce uno 
 - Il titolo hero usa un fit basato sulla larghezza reale del contenitore: sui desktop wide mantiene il massimo visivo corrente, mentre su viewport piu' strette riduce il `font-size` solo quanto necessario per restare interamente visibile senza clipping.
 - Card "Prossimo weekend" con badge Sprint/Standard, programma sessioni e orari formattati in italiano.
 - Classifica live calcolata come punti storici piu' proiezione del weekend selezionato, con stato esplicito per risultati ufficiali assenti o parziali.
-- Modalita' `public` e `admin` separate, con login admin via sessione e pannelli operativi esposti solo quando la sessione e' valida.
+- Modalita' `public` e `admin` separate, con login admin via sessione, link condivisibile della vista corrente e pannelli operativi esposti solo quando la sessione e' valida.
 - Calendario stagionale con selettore e strip orizzontale dei weekend.
 - Griglia pronostici per i 3 partecipanti con selezione piloti ordinati per cognome e visualizzati come `Cognome Nome`.
 - Hero results card del weekend selezionato con nomi pilota visualizzati come `Nome Cognome`; dropdown e liste di selezione restano invece in formato `Cognome Nome`.
+- Hero results card del weekend selezionato con CTA Highlights YouTube di Sky Sport Italia F1 per i weekend conclusi: se il video e' disponibile il pulsante apre il contenuto all'esterno della SPA, altrimenti resta visibile ma disabilitato con messaggio di indisponibilita'.
 - Sezione risultati del weekend con track map, recupero automatico read-only dei risultati ufficiali, merge solo dei campi mancanti e pulsante conferma con tooltip di stato.
-- Storico gare modificabile con ricalcolo dei punteggi.
-- Dashboard KPI per utente, analytics deep-dive, storico mobile piu' compatto, status strip, toast operativi e CTA installazione PWA.
+- Storico gare modificabile con ricalcolo dei punteggi, filtri per giocatore/GP e drill-down dei pronostici dettagliati.
+- Dashboard KPI per utente, analytics deep-dive, pannello `Analisi stagione`, riepilogo `Weekend pulse`, guida pubblica, storico mobile piu' compatto, status strip, toast operativi e CTA installazione PWA.
 - Loader iniziale con splash logo `FantaF1`, set icone browser/PWA dedicato (`favicon`, `apple-touch-icon`, `192x192`, `512x512`, `maskable`) e layout responsive desktop/mobile.
+
+### Installazione PWA mobile
+
+La shell frontend espone il pulsante `INSTALLA APPLICAZIONE` in vista mobile solo quando l'app non risulta gia' installata o aperta in modalita' standalone.
+
+- Su browser mobile che espongono `beforeinstallprompt` (per esempio Chrome Android), il pulsante apre il prompt di installazione nativo della PWA.
+- Su `iPhone` e `iPad` con `Safari`, dove il prompt nativo non e' disponibile, il pulsante apre un dialog guidato con i passaggi `Condividi -> Aggiungi a Home`.
+- Se l'app e' gia' installata o sta girando in `display-mode: standalone`, la CTA non viene mostrata.
+- Browser mobile senza prompt nativo e senza flusso supportato non mostrano la CTA, evitando percorsi morti lato utente.
+
+### URL condivisibile della vista
+
+La shell frontend mantiene sincronizzato nell'URL lo stato consultivo della vista corrente, cosi' da poter condividere direttamente il contesto aperto.
+
+- `meeting` seleziona il weekend attivo.
+- `view=public` forza solo la vista pubblica; una query `view=admin` non concede accesso operativo se la sessione non e' admin.
+- `historyUser` e `historySearch` ripristinano i filtri dello storico.
+- L'eventuale `hash` viene preservato e usato per lo scroll iniziale alla sezione richiesta.
+
+Quando l'utente cambia weekend, vista o filtri storico, il frontend aggiorna l'URL via `history.replaceState` senza ricaricare la pagina.
 
 ### Logica di gioco
 
 - Configurazione punteggi centralizzata: 5 punti primo, 3 punti secondo, 2 punti terzo, 1 punto pole/Sprint.
 - Race lock server-side basato su `raceStartTime`, con fallback a `endDate + 14:00:00Z` se l'orario non e' disponibile.
-- Fine gara stimata a `raceStartTime + 2.5h` per abilitare l'assegnazione definitiva dei punti; il recupero ufficiale live dei risultati puo' iniziare prima ma resta read-only.
+- Stato gara user-facing centralizzato lato backend: `open` prima della partenza, `live` dopo la partenza senza classificazione ufficiale completa, `finished` quando Formula1.com pubblica la classifica gara ufficiale completa.
 - Reset dei pronostici correnti con salvataggio persistente immediato.
 - Conservazione dei nomi utente gia' persistiti durante modifica o cancellazione di gare storiche.
 - Il roster ufficiale non arriva piu' dal config nominale: il backend usa il roster gia' persistito nell'ultimo stato valido del database e lo riapplica in validazione e salvataggio.
@@ -219,6 +271,7 @@ L'applicazione di questi standard garantisce un approccio "production-safe" e un
 
 - SPA React 18 + TypeScript + Vite.
 - Il frontend usa API relative (`/api/...`) per compatibilita' locale e produzione.
+- `src/App.tsx` resta il container UI principale, ma parte della logica non visuale e' stata estratta in facade e assembler dedicati come `src/utils/resultsApi.ts`, `src/utils/weekendStateService.ts`, `src/utils/gameService.ts` e `src/utils/analyticsService.ts`.
 - Il titolo visualizzato nell'hero usa `VITE_APP_LOCAL_NAME` se valorizzata, altrimenti il titolo base definito nel config applicativo.
 - Quando l'override hero inizia con il titolo base e aggiunge un suffisso, il frontend lo rende in due righe stabili per preservare leggibilita' e coerenza visiva.
 - Il titolo hero usa un fit `container-based`: il `font-size` resta al massimo corrente quando la prima riga entra nel pannello e si riduce solo quando la larghezza utile non basta, indipendentemente dal breakpoint.
@@ -228,6 +281,7 @@ L'applicazione di questi standard garantisce un approccio "production-safe" e un
 
 - Server Express 5 con `cors`, `express.json()` e `dotenv`.
 - L'applicazione Express è definita in `app.js` per consentire test di integrazione, mentre `server.js` gestisce l'avvio e la connessione al database.
+- Il wiring runtime usa ora service object piccoli e testabili per i flussi piu' sensibili: `backend/race-results-service.js`, `backend/app-data-service.js`, `backend/app-route-service.js` e `backend/server-bootstrap-service.js`.
 - Espone API REST, serve gli asset statici di `dist` e usa un catch-all per il routing SPA.
 - Si connette prima al database, poi avvia il server HTTP e infine esegue in background la sincronizzazione di piloti e calendario.
 - In produzione il server ascolta su `0.0.0.0` e usa `PORT` se fornita dall'ambiente.
@@ -352,7 +406,11 @@ Recupera i risultati reali del weekend a partire dalla cache calendario.
 
 Comportamenti rilevanti:
 
-- restituisce sempre un payload con `first`, `second`, `third` e `pole`;
+- restituisce sempre un payload con `first`, `second`, `third`, `pole` e `racePhase`;
+- `racePhase` vale:
+  - `open` prima del `raceStartTime`
+  - `live` dopo il `raceStartTime` ma senza classifica gara ufficiale completa
+  - `finished` quando Formula1.com ha pubblicato `first`, `second` e `third`;
 - se Formula1.com non ha ancora pubblicato risultati ufficiali, i campi restano stringhe vuote;
 - il fetch e' read-only e non persiste automaticamente nulla nel database;
 - il backend applica una cache in-memory a TTL corto per proteggere il polling live del frontend.
@@ -470,6 +528,7 @@ Il backend verifica in startup che `MONGODB_URI` sia allineata con `fantaf1_dev`
 
 Lo script integrato:
 
+- forza esplicitamente `NODE_ENV=development` per mantenere allineati environment locale e target database `fantaf1_dev`;
 - esegue `npm run lint`, `npm run test`, `npm run build`, `npm run test:ui-responsive` e `npm run test:save-local`;
 - avvia uno stack locale temporaneo solo per il controllo responsive e lo chiude se i test passano;
 - esegue uno smoke reale di lettura/scrittura su `fantaf1_dev` prima dell'avvio finale;
@@ -509,6 +568,7 @@ Lo script integrato:
 
 - `npm run lint`
 - `npm run test`
+- `npm run test:coverage`
 - `npm run test:save-local`
 - `npm run test:ui-responsive`
 - `npm run build`
@@ -524,12 +584,22 @@ Lo script integrato:
 
 - Runner: Vitest.
 - Coverage provider: V8.
+- Baseline coverage verificata corrente sullo scope ufficiale del repository/applicazione:
+  - `4699 / 4699` statements
+  - `371 / 371` functions
+  - `1908 / 1908` branches
+  - `4699 / 4699` lines
 - Scope coverage configurato:
+  - `app.js`
+  - `server.js`
   - `backend/**/*.js`
-  - `src/utils/**/*.ts`
+  - `src/**/*.ts`
+  - `src/**/*.tsx`
 - Esclusioni coverage:
   - `backend/config.js`
   - `backend/models.js`
+  - `src/types.ts`
+  - `src/vite-env.d.ts`
 - Soglie attuali:
   - `lines: 100`
   - `functions: 100`
@@ -540,9 +610,43 @@ La suite copre business logic, storage MongoDB, sanitizzazione, parsing di pilot
 Include test di integrazione API (tramite `supertest` su `app.js`) e test dei componenti UI (tramite `jsdom` e `React Testing Library`).
 Include anche test unitari dedicati allo split deterministico del titolo hero e ai fallback responsive del titolo configurato.
 Include test dedicati alla live projection del weekend selezionato, agli stati UI `nessun risultato ufficiale` / `risultati parziali`, al parser risultati Formula1.com corrente e alla cache TTL di `GET /api/results/:meetingKey`.
-Per la UI e' disponibile anche `npm run test:ui-responsive`, che usa Playwright CLI via `npx` contro l'app locale avviata e verifica i breakpoint principali, il box "Prossimo weekend", il tooltip risultati e l'assenza di overflow orizzontali fuori dal carosello calendario.
+Per la UI e' disponibile anche `npm run test:ui-responsive`, che usa Playwright CLI via `npx` contro l'app locale avviata e verifica i breakpoint principali, il box "Prossimo weekend", il tooltip risultati, l'assenza di overflow orizzontali fuori dal carosello calendario e la coerenza tra vista admin e vista pubblica.
+Il comando esegue un preflight fail-fast sull'ambiente Playwright: se trova sessioni responsive residue (`ui-*`) o una CLI non reattiva, interrompe il run senza killare processi non creati da lui e riporta le istruzioni di bonifica manuale.
+Su errori di navigazione o shell UI bloccata raccoglie artefatti diagnostici in `output/playwright/ui-responsive/` (summary, stato pagina, tab-list, screenshot se disponibile, console e network log) per distinguere facilmente tra regressione UI, splash bloccata e sessione Playwright incoerente.
 Per il salvataggio locale e' disponibile `npm run test:save-local`, che legge `/api/data`, re-invia lo stesso payload su `POST /api/data`, verifica `environment=development`, `databaseTarget=fantaf1_dev` e controlla che lo stato resti invariato dopo il round-trip. Questo smoke test copre il canale di persistenza generica, non il salvataggio manuale dei pronostici su `POST /api/predictions`.
+Per la CI e' disponibile anche `npm run test:coverage`, mentre lo smoke di persistenza puo' essere eseguito sul database isolato di pipeline impostando `MONGODB_DB_NAME_OVERRIDE`, `SAVE_SMOKE_EXPECTED_ENVIRONMENT` e `SAVE_SMOKE_EXPECTED_DATABASE_TARGET` senza toccare `fantaf1_dev` o `fantaf1`.
 Per ripulire documenti legacy che contengono ancora campi del `Weekend Boost` e' disponibile `npm run migrate:remove-weekend-boost`, script idempotente che riscrive gli `AppData` del database corrente in forma sanificata.
+
+## CI/CD GitHub
+
+### Obiettivo
+
+- `main` e' il branch protetto di rilascio.
+- Ogni integrazione verso `main` deve passare da Pull Request.
+- L'auto-merge GitHub puo' chiudere la Pull Request solo quando tutti i check richiesti sono verdi.
+- Il deploy Render resta post-merge su `main`, quindi non parte da workflow di PR.
+
+### Workflow previsti
+
+- `.github/workflows/pr-ci.yml`: esegue `lint`, `coverage`, `build`, `responsive-dev` e `smoke-ci-db` sulle Pull Request verso `main`.
+- `.github/workflows/pr-auto-merge.yml`: arma l'auto-merge `squash` per PR non draft verso `main` provenienti dallo stesso repository, senza bypassare la protezione del branch.
+- `.github/workflows/post-merge-health.yml`: esegue un controllo health opzionale dopo i push su `main`.
+
+### Secret e variabili GitHub richiesti
+
+- `MONGODB_URI_CI`: URI MongoDB dedicata alla pipeline CI.
+- `ADMIN_SESSION_SECRET_CI`: secret admin dedicato alla pipeline CI.
+- `RENDER_HEALTHCHECK_URL`: URL health pubblico del deploy Render, usato solo dal workflow post-merge opzionale.
+
+### Protezione richiesta per `main`
+
+- push diretti bloccati;
+- merge consentito solo via Pull Request;
+- required status checks allineati ai job `lint`, `coverage`, `build`, `responsive-dev`, `smoke-ci-db`;
+- branch up-to-date richiesta prima del merge;
+- conversation resolution richiesta;
+- auto-merge attivo;
+- force-push e deletion disattivati.
 
 ## Struttura del repository
 
