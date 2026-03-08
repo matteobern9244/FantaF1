@@ -78,6 +78,9 @@ jobs:
           node-version: 22
           cache: npm
 
+      - name: Normalize Mongo URI for CI database override
+        run: |
+          echo "MONGODB_URI=$(node -e 'const uri = process.env.MONGODB_URI; const parsed = new URL(uri); parsed.pathname = \"/\"; console.log(parsed.toString())')" >> "$GITHUB_ENV"
       - run: npm ci
       - name: Start local stack
         run: |
@@ -90,6 +93,13 @@ jobs:
           timeout 60 bash -lc 'until curl --fail --silent http://127.0.0.1:3001/api/health >/dev/null; do sleep 1; done'
           timeout 60 bash -lc 'until curl --fail --silent http://127.0.0.1:5173 >/dev/null; do sleep 1; done'
       - run: xvfb-run -a npm run test:ui-responsive
+      - name: Dump local stack logs on failure
+        if: failure()
+        run: |
+          echo "--- backend.log ---"
+          cat backend.log || true
+          echo "--- frontend.log ---"
+          cat frontend.log || true
       - name: Stop local stack
         if: always()
         run: |
@@ -113,6 +123,9 @@ jobs:
           node-version: 22
           cache: npm
 
+      - name: Normalize Mongo URI for CI database override
+        run: |
+          echo "MONGODB_URI=$(node -e 'const uri = process.env.MONGODB_URI; const parsed = new URL(uri); parsed.pathname = \"/\"; console.log(parsed.toString())')" >> "$GITHUB_ENV"
       - run: npm ci
       - name: Start backend
         run: |
@@ -122,6 +135,11 @@ jobs:
         run: |
           timeout 60 bash -lc 'until curl --fail --silent http://127.0.0.1:3001/api/health >/dev/null; do sleep 1; done'
       - run: npm run test:save-local
+      - name: Dump backend log on failure
+        if: failure()
+        run: |
+          echo "--- backend.log ---"
+          cat backend.log || true
       - name: Stop backend
         if: always()
         run: |
