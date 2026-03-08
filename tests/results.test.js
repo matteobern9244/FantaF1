@@ -11,6 +11,7 @@ import * as storage from '../backend/storage.js';
 
 vi.mock('../backend/storage.js', () => ({
   readCalendarCache: vi.fn(),
+  writeCalendarCache: vi.fn(),
 }));
 
 function buildDriverCell(firstName, lastName, abbreviation) {
@@ -69,10 +70,23 @@ function buildTableWithoutTbody(rows) {
   `;
 }
 
+function buildYoutubeSearchHtml(videoId, title) {
+  return `
+    <html>
+      <body>
+        <a href="/watch?v=${videoId}&pp=ygUPc2t5IHNwb3J0IGYx">
+          <span>${title}</span>
+        </a>
+      </body>
+    </html>
+  `;
+}
+
 describe('fetchRaceResults', () => {
   beforeEach(() => {
     clearRaceResultsCache();
     vi.clearAllMocks();
+    vi.mocked(storage.writeCalendarCache).mockResolvedValue([]);
   });
 
   it('parses the current Formula1.com results table markup for race and qualifying pages', async () => {
@@ -400,6 +414,7 @@ describe('fetchRaceResults', () => {
       third: '',
       pole: '',
       racePhase: 'live',
+      highlightsVideoUrl: '',
     });
   });
 
@@ -447,7 +462,196 @@ describe('fetchRaceResults', () => {
       third: 'lec',
       pole: 'pia',
       racePhase: 'finished',
+      highlightsVideoUrl: '',
     });
+  });
+
+  it('returns an existing highlights link for a finished race without running a public YouTube lookup', async () => {
+    vi.mocked(storage.readCalendarCache).mockResolvedValue([
+      {
+        meetingKey: 'finished-race',
+        meetingName: 'Finished GP',
+        grandPrixTitle: 'FORMULA 1 FINISHED GP 2026',
+        detailUrl: 'https://www.formula1.com/en/racing/2026/finished-gp',
+        isSprintWeekend: false,
+        raceStartTime: '2026-03-01T14:00:00Z',
+        highlightsVideoUrl: 'https://www.youtube.com/watch?v=existing-skyf1',
+      },
+    ]);
+
+    global.fetch = vi.fn((url) => {
+      if (url.includes('race-result')) {
+        return Promise.resolve({
+          ok: true,
+          text: () =>
+            Promise.resolve(
+              buildResultsTable([
+                buildTableRow(1, 4, 'Lando', 'Norris', 'NOR'),
+                buildTableRow(2, 1, 'Max', 'Verstappen', 'VER'),
+                buildTableRow(3, 16, 'Charles', 'Leclerc', 'LEC'),
+              ]),
+            ),
+        });
+      }
+
+      if (url.includes('qualifying')) {
+        return Promise.resolve({
+          ok: true,
+          text: () => Promise.resolve(buildResultsTable([buildTableRow(1, 81, 'Oscar', 'Piastri', 'PIA')])),
+        });
+      }
+
+      return Promise.reject(new Error(`Unknown URL ${url}`));
+    });
+
+    await expect(
+      fetchRaceResultsWithStatus('finished-race', new Date('2026-03-01T15:00:00Z')),
+    ).resolves.toEqual({
+      first: 'nor',
+      second: 'ver',
+      third: 'lec',
+      pole: 'pia',
+      racePhase: 'finished',
+      highlightsVideoUrl: 'https://www.youtube.com/watch?v=existing-skyf1',
+    });
+
+    expect(global.fetch).toHaveBeenCalledTimes(2);
+    expect(storage.writeCalendarCache).not.toHaveBeenCalled();
+  });
+
+  it('looks up and persists the highlights link for a finished race when Sky Sport Italia F1 has published it', async () => {
+    vi.mocked(storage.readCalendarCache).mockResolvedValue([
+      {
+        meetingKey: 'finished-race',
+        meetingName: 'Australia',
+        grandPrixTitle: 'FORMULA 1 AUSTRALIAN GRAND PRIX 2026',
+        detailUrl: 'https://www.formula1.com/en/racing/2026/australia',
+        isSprintWeekend: false,
+        raceStartTime: '2026-03-01T14:00:00Z',
+        highlightsVideoUrl: '',
+      },
+    ]);
+
+    global.fetch = vi.fn((url) => {
+      if (url.includes('race-result')) {
+        return Promise.resolve({
+          ok: true,
+          text: () =>
+            Promise.resolve(
+              buildResultsTable([
+                buildTableRow(1, 4, 'Lando', 'Norris', 'NOR'),
+                buildTableRow(2, 1, 'Max', 'Verstappen', 'VER'),
+                buildTableRow(3, 16, 'Charles', 'Leclerc', 'LEC'),
+              ]),
+            ),
+        });
+      }
+
+      if (url.includes('qualifying')) {
+        return Promise.resolve({
+          ok: true,
+          text: () => Promise.resolve(buildResultsTable([buildTableRow(1, 81, 'Oscar', 'Piastri', 'PIA')])),
+        });
+      }
+
+      if (url.includes('youtube.com/results?search_query=')) {
+        return Promise.resolve({
+          ok: true,
+          text: () =>
+            Promise.resolve(
+              buildYoutubeSearchHtml(
+                'skyf1-finished',
+                'HIGHLIGHTS F1 GP Australia 2026 | Sky Sport F1',
+              ),
+            ),
+        });
+      }
+
+      return Promise.reject(new Error(`Unknown URL ${url}`));
+    });
+
+    await expect(
+      fetchRaceResultsWithStatus('finished-race', new Date('2026-03-01T15:00:00Z')),
+    ).resolves.toEqual({
+      first: 'nor',
+      second: 'ver',
+      third: 'lec',
+      pole: 'pia',
+      racePhase: 'finished',
+      highlightsVideoUrl: 'https://www.youtube.com/watch?v=skyf1-finished',
+    });
+
+    expect(storage.writeCalendarCache).toHaveBeenCalledWith([
+      expect.objectContaining({
+        meetingKey: 'finished-race',
+        highlightsVideoUrl: 'https://www.youtube.com/watch?v=skyf1-finished',
+      }),
+    ]);
+  });
+
+  it('skips persisting highlights when the public YouTube search has no valid Sky Sport Italia F1 match', async () => {
+    vi.mocked(storage.readCalendarCache).mockResolvedValue([
+      {
+        meetingKey: 'finished-race',
+        meetingName: 'Australia',
+        grandPrixTitle: 'FORMULA 1 AUSTRALIAN GRAND PRIX 2026',
+        detailUrl: 'https://www.formula1.com/en/racing/2026/australia',
+        isSprintWeekend: false,
+        raceStartTime: '2026-03-01T14:00:00Z',
+        highlightsVideoUrl: '',
+      },
+    ]);
+
+    global.fetch = vi.fn((url) => {
+      if (url.includes('race-result')) {
+        return Promise.resolve({
+          ok: true,
+          text: () =>
+            Promise.resolve(
+              buildResultsTable([
+                buildTableRow(1, 4, 'Lando', 'Norris', 'NOR'),
+                buildTableRow(2, 1, 'Max', 'Verstappen', 'VER'),
+                buildTableRow(3, 16, 'Charles', 'Leclerc', 'LEC'),
+              ]),
+            ),
+        });
+      }
+
+      if (url.includes('qualifying')) {
+        return Promise.resolve({
+          ok: true,
+          text: () => Promise.resolve(buildResultsTable([buildTableRow(1, 81, 'Oscar', 'Piastri', 'PIA')])),
+        });
+      }
+
+      if (url.includes('youtube.com/results?search_query=')) {
+        return Promise.resolve({
+          ok: true,
+          text: () =>
+            Promise.resolve(
+              buildYoutubeSearchHtml(
+                'wrong-channel',
+                'Highlights Formula 1 GP Australia 2026 | Altro canale',
+              ),
+            ),
+        });
+      }
+
+      return Promise.reject(new Error(`Unknown URL ${url}`));
+    });
+
+    await expect(
+      fetchRaceResultsWithStatus('finished-race', new Date('2026-03-01T15:00:00Z')),
+    ).resolves.toEqual({
+      first: 'nor',
+      second: 'ver',
+      third: 'lec',
+      pole: 'pia',
+      racePhase: 'finished',
+      highlightsVideoUrl: '',
+    });
+
+    expect(storage.writeCalendarCache).not.toHaveBeenCalled();
   });
 
   it('reads the calendar only once when resolving results together with the race phase', async () => {

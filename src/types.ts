@@ -21,6 +21,7 @@ export type RacePhase = 'open' | 'live' | 'finished';
 export type OfficialResultsResponse = Prediction & {
   racePhase: RacePhase;
   results?: Prediction;
+  highlightsVideoUrl?: string;
 };
 
 export interface WeekendPredictionState {
@@ -63,6 +64,7 @@ export interface RaceWeekend {
   endDate?: string;
   raceStartTime?: string;
   sessions?: Session[];
+  highlightsVideoUrl?: string;
 }
 
 export interface UserData {

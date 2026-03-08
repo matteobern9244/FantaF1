@@ -68,6 +68,7 @@ const WeekendSchema = new mongoose.Schema({
   endDate: { type: String },
   raceStartTime: { type: String },
   sessions: [SessionSchema],
+  highlightsVideoUrl: { type: String, default: '' },
 });
 
 const AppDataSchema = new mongoose.Schema({

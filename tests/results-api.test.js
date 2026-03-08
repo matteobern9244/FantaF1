@@ -23,6 +23,7 @@ describe('GET /api/results/:meetingKey', () => {
       third: 'lec',
       pole: 'pia',
       racePhase: 'finished',
+      highlightsVideoUrl: 'https://www.youtube.com/watch?v=skyf1',
     });
 
     const response = await request(app).get('/api/results/1280');
@@ -34,6 +35,7 @@ describe('GET /api/results/:meetingKey', () => {
       third: 'lec',
       pole: 'pia',
       racePhase: 'finished',
+      highlightsVideoUrl: 'https://www.youtube.com/watch?v=skyf1',
     });
     expect(fetchRaceResultsWithStatus).toHaveBeenCalledWith('1280');
   });

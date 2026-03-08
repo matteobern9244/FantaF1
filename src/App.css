@@ -432,6 +432,13 @@ button.interactive-surface:focus-visible {
   gap: 10px;
 }
 
+.hero-summary-grid .highlights-button {
+  justify-content: center;
+  margin-top: 4px;
+  text-align: center;
+  width: 100%;
+}
+
 .next-race-card {
   min-width: 0;
   container-type: inline-size;

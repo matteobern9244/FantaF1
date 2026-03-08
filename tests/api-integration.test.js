@@ -84,6 +84,7 @@ describe('API Integration - Routes', () => {
       third: '',
       pole: '',
       racePhase: 'open',
+      highlightsVideoUrl: '',
     });
   });
 
@@ -163,6 +164,29 @@ describe('API Integration - Routes', () => {
     expect(response.body).toEqual({
       error: 'Failed to fetch results',
       details: 'Result error',
+    });
+  });
+
+  it('GET /api/results/:meetingKey should include highlightsVideoUrl when available', async () => {
+    fetchRaceResultsWithStatus.mockResolvedValueOnce({
+      first: 'nor',
+      second: 'ver',
+      third: 'lec',
+      pole: 'pia',
+      racePhase: 'finished',
+      highlightsVideoUrl: 'https://www.youtube.com/watch?v=skyf1-finished',
+    });
+
+    const response = await request(app).get('/api/results/race-1');
+
+    expect(response.status).toBe(200);
+    expect(response.body).toEqual({
+      first: 'nor',
+      second: 'ver',
+      third: 'lec',
+      pole: 'pia',
+      racePhase: 'finished',
+      highlightsVideoUrl: 'https://www.youtube.com/watch?v=skyf1-finished',
     });
   });
 

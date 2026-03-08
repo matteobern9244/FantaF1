@@ -46,7 +46,17 @@
     "baseUrl": "https://www.formula1.com/en/racing",
     "referenceArticleUrl": "https://www.formula1.com/en/latest/article/formula-1-reveals-calendar-for-2026-season.YctbMZWqBvrgyddrnauo8.YctbMZWqBvrgyddrnauo8/",
     "sortLocale": "it",
-    "expectedMinimumWeekends": 20
+    "expectedMinimumWeekends": 20,
+    "highlightsSearchBaseUrl": "https://www.youtube.com/results?search_query=",
+    "highlightsPublisherKeywords": [
+      "sky sport f1",
+      "sky sport formula 1",
+      "sky sport italia f1"
+    ],
+    "highlightsRequiredKeywords": [
+      "highlight",
+      "highlights"
+    ]
   },
   "driverAliases": {
     "Alex Albon": "Alexander Albon",
@@ -140,7 +150,9 @@
       "adminView": "Modalita' admin",
       "installApp": "INSTALLA APPLICAZIONE",
       "logout": "Logout",
-      "closeDialog": "Chiudi"
+      "closeDialog": "Chiudi",
+      "watchHighlights": "Guarda Highlights",
+      "highlightsUnavailable": "Video Highlights ancora non disponibile"
     },
     "headings": {
       "seasonTag": "Fanta Formula 1",

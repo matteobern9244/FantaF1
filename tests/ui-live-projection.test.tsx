@@ -45,6 +45,7 @@ function createCalendar() {
       endDate: '2099-03-15',
       raceStartTime: '2099-03-15T14:00:00Z',
       sessions: [],
+      highlightsVideoUrl: '',
     },
     {
       meetingKey: 'race-2',
@@ -60,6 +61,7 @@ function createCalendar() {
       endDate: '2099-03-22',
       raceStartTime: '2099-03-22T14:00:00Z',
       sessions: [],
+      highlightsVideoUrl: '',
     },
   ];
 }
@@ -132,6 +134,7 @@ function mockAppFetches({
     {
       racePhase?: 'open' | 'live' | 'finished';
       results: ReturnType<typeof createEmptyPrediction>;
+      highlightsVideoUrl?: string | null;
     }
   >;
 }) {
@@ -170,13 +173,22 @@ function mockAppFetches({
     );
 
     if (resultsEntry) {
+      const responsePayload = {
+        ...resultsEntry[1].results,
+        racePhase: resultsEntry[1].racePhase ?? 'open',
+      } as {
+        racePhase: 'open' | 'live' | 'finished';
+        results?: ReturnType<typeof createEmptyPrediction>;
+        highlightsVideoUrl?: string | null;
+      };
+
+      if (resultsEntry[1].highlightsVideoUrl !== undefined) {
+        responsePayload.highlightsVideoUrl = resultsEntry[1].highlightsVideoUrl;
+      }
+
       return Promise.resolve({
         ok: true,
-        json: () =>
-          Promise.resolve({
-            ...resultsEntry[1].results,
-            racePhase: resultsEntry[1].racePhase ?? 'open',
-          }),
+        json: () => Promise.resolve(responsePayload),
       } as Response);
     }
 
@@ -213,6 +225,7 @@ describe('Live projection UI', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     window.history.replaceState({}, '', '/');
+    vi.spyOn(window, 'open').mockImplementation(() => null);
   });
 
   it('shows explicit waiting messages when the selected weekend has no official results yet', async () => {
@@ -241,6 +254,130 @@ describe('Live projection UI', () => {
     expect(getProjectionValue('Fabio')).toBe('0');
     expect(getProjectionValue('Adriano')).toBe('0');
     expect(queryOpenPredictionsStrip()).toBeInTheDocument();
+  });
+
+  it('shows the highlights CTA in the selected race recap when the finished race has a Sky Sport Italia F1 video', async () => {
+    mockAppFetches({
+      resultsByMeetingKey: {
+        'race-1': {
+          racePhase: 'finished',
+          results: { first: 'nor', second: 'ver', third: 'lec', pole: 'pia' },
+          highlightsVideoUrl: 'https://www.youtube.com/watch?v=skyf1-finished',
+        },
+      },
+    });
+
+    render(<App />);
+
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: /guarda highlights/i })).toBeInTheDocument();
+    });
+
+    const selectedRaceHeroCard = getSelectedRaceHeroCard();
+    expect(selectedRaceHeroCard).not.toBeNull();
+    expect(
+      within(selectedRaceHeroCard as HTMLElement).getByRole('button', { name: /guarda highlights/i }),
+    ).toBeEnabled();
+  });
+
+  it('opens the YouTube highlights outside the app when the CTA is clicked', async () => {
+    mockAppFetches({
+      resultsByMeetingKey: {
+        'race-1': {
+          racePhase: 'finished',
+          results: { first: 'nor', second: 'ver', third: 'lec', pole: 'pia' },
+          highlightsVideoUrl: 'https://www.youtube.com/watch?v=skyf1-click',
+        },
+      },
+    });
+
+    render(<App />);
+
+    const highlightsButton = await screen.findByRole('button', { name: /guarda highlights/i });
+    fireEvent.click(highlightsButton);
+
+    expect(window.open).toHaveBeenCalledWith(
+      'https://www.youtube.com/watch?v=skyf1-click',
+      '_blank',
+      'noopener,noreferrer',
+    );
+  });
+
+  it('shows a disabled highlights CTA when the finished race video is not available yet', async () => {
+    mockAppFetches({
+      resultsByMeetingKey: {
+        'race-1': {
+          racePhase: 'finished',
+          results: { first: 'nor', second: 'ver', third: 'lec', pole: 'pia' },
+          highlightsVideoUrl: '',
+        },
+      },
+    });
+
+    render(<App />);
+
+    const disabledButton = await screen.findByRole('button', {
+      name: /video highlights ancora non disponibile/i,
+    });
+
+    expect(disabledButton).toBeDisabled();
+  });
+
+  it('falls back to the unavailable highlights CTA when the results payload omits highlightsVideoUrl', async () => {
+    mockAppFetches({
+      resultsByMeetingKey: {
+        'race-1': {
+          racePhase: 'finished',
+          results: { first: 'nor', second: 'ver', third: 'lec', pole: 'pia' },
+        },
+      },
+    });
+
+    render(<App />);
+
+    const disabledButton = await screen.findByRole('button', {
+      name: /video highlights ancora non disponibile/i,
+    });
+
+    expect(disabledButton).toBeDisabled();
+  });
+
+  it('falls back to the unavailable highlights CTA when the results payload has a null highlightsVideoUrl', async () => {
+    mockAppFetches({
+      resultsByMeetingKey: {
+        'race-1': {
+          racePhase: 'finished',
+          results: { first: 'nor', second: 'ver', third: 'lec', pole: 'pia' },
+          highlightsVideoUrl: null,
+        },
+      },
+    });
+
+    render(<App />);
+
+    const disabledButton = await screen.findByRole('button', {
+      name: /video highlights ancora non disponibile/i,
+    });
+
+    expect(disabledButton).toBeDisabled();
+  });
+
+  it('does not show the highlights CTA before the selected race is finished', async () => {
+    mockAppFetches({
+      resultsByMeetingKey: {
+        'race-1': {
+          racePhase: 'live',
+          results: { first: '', second: '', third: '', pole: 'pia' },
+          highlightsVideoUrl: 'https://www.youtube.com/watch?v=should-not-render',
+        },
+      },
+    });
+
+    render(<App />);
+
+    await waitFor(() => {
+      expect(screen.queryByRole('button', { name: /highlights/i })).not.toBeInTheDocument();
+    });
   });
 
   it('shows partial-result messages and awards only the published official fields', async () => {

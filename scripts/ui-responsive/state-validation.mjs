@@ -263,6 +263,14 @@ function validateState(
     }
   }
 
+  if (state.selectedWeekend?.highlightsButton?.present && !state.selectedWeekend.highlightsButton.text) {
+    failures.push('Pulsante highlights presente ma senza testo leggibile.');
+  }
+
+  if (state.selectedWeekend?.highlightsButton?.clipped) {
+    failures.push('Pulsante highlights fuori dal recap del weekend selezionato.');
+  }
+
   if (state.unauthorizedOverflow.length > 0) {
     failures.push(
       `Overflow orizzontale non consentito: ${JSON.stringify(state.unauthorizedOverflow.slice(0, 5))}`,

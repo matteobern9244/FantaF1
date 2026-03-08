@@ -4,6 +4,9 @@ Cronologia sintetica delle release documentate del progetto Fanta Formula 1.
 
 ## In sviluppo
 
+- **Highlights Sky Sport Italia F1 nel Recap Weekend**: il riepilogo della gara selezionata mostra ora il pulsante `Guarda Highlights` quando il backend ha risolto un video YouTube di Sky Sport Italia F1 per un weekend concluso; in assenza del video il CTA resta visibile ma disabilitato con lo stato `Video Highlights ancora non disponibile`.
+- **Lookup Highlights Automatico con Fallback Sicuro**: il backend arricchisce il calendario con `highlightsVideoUrl` sia in sync startup sia on-demand tramite sorgente pubblica YouTube, senza bloccare avvio, sync calendario o fetch risultati ufficiali in caso di assenza video o fetch esterno fallito.
+- **TDD Regressivo su Highlights e Responsive Hero Recap**: aggiunti test backend, API, UI e controlli responsive dedicati per coprire lookup, persistenza best-effort, apertura esterna del video e tenuta layout del nuovo CTA su mobile e desktop, mantenendo coverage V8 al `100%`.
 - **Pipeline CI/CD Pre-Merge su Main**: introdotti i workflow GitHub `pr-ci`, `pr-auto-merge` e `post-merge-health`, con check stabili `lint`, `coverage`, `build`, `responsive-dev` e `smoke-ci-db` per bloccare il merge su `main` finche' la PR non risulta completamente verde.
 - **Protezione Branch Main e Auto-Merge GitHub**: formalizzato il flusso protetto verso `main` con auto-merge via Pull Request, required checks dedicati e documentazione repository allineata al deploy post-merge su Render.
 - **CI MongoDB Isolata e Smoke Parametrico**: introdotto l'override centralizzato `MONGODB_DB_NAME_OVERRIDE` e reso parametrico lo smoke di persistenza per eseguire i controlli CI su un database dedicato senza toccare `fantaf1_dev` o `fantaf1`.

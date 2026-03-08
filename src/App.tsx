@@ -144,6 +144,7 @@ function normalizeOfficialResultsResponse(payload: OfficialResultsResponse | Pre
     return {
       racePhase: payload.racePhase,
       results: payload.results,
+      highlightsVideoUrl: payload.highlightsVideoUrl ?? '',
     };
   }
 
@@ -155,6 +156,7 @@ function normalizeOfficialResultsResponse(payload: OfficialResultsResponse | Pre
       third: payload.third ?? '',
       pole: payload.pole ?? '',
     },
+    highlightsVideoUrl: 'highlightsVideoUrl' in payload ? payload.highlightsVideoUrl ?? '' : '',
   };
 }
 
@@ -270,6 +272,7 @@ function App() {
   const [historyUserFilter, setHistoryUserFilter] = useState('all');
   const [expandedHistoryKey, setExpandedHistoryKey] = useState('');
   const [selectedRacePhase, setSelectedRacePhase] = useState<RacePhase>('open');
+  const [selectedRaceHighlightsVideoUrl, setSelectedRaceHighlightsVideoUrl] = useState('');
   const selectedMeetingKeyRef = useRef(selectedMeetingKey);
   const toastTimeoutRef = useRef<number | null>(null);
   const initialHashHandledRef = useRef(false);
@@ -360,6 +363,10 @@ function App() {
   useEffect(() => {
     setSelectedRacePhase(raceLocked ? 'live' : 'open');
   }, [raceLocked, selectedRace?.meetingKey]);
+
+  useEffect(() => {
+    setSelectedRaceHighlightsVideoUrl(selectedRace?.highlightsVideoUrl ?? '');
+  }, [selectedRace?.highlightsVideoUrl, selectedRace?.meetingKey]);
 
   function showToastMessage(message: string, tone: ToastTone = 'info') {
     if (toastTimeoutRef.current !== null) {
@@ -615,9 +622,10 @@ function App() {
           return;
         }
 
-        const { results, racePhase } = normalizeOfficialResultsResponse(payload);
+        const { results, racePhase, highlightsVideoUrl } = normalizeOfficialResultsResponse(payload);
 
         setSelectedRacePhase(racePhase ?? (raceLocked ? 'live' : 'open'));
+        setSelectedRaceHighlightsVideoUrl(highlightsVideoUrl);
 
         setRaceResults((currentResults) => mergeMissingPredictionFields(currentResults, results));
         setWeekendStateByMeetingKey((currentWeekendStateByMeetingKey) => {
@@ -667,6 +675,14 @@ function App() {
 
   function calculatePotentialPoints(userPrediction: Prediction) {
     return calculateProjectedPoints(userPrediction, raceResults, points);
+  }
+
+  function handleWatchHighlights() {
+    if (!selectedRaceHighlightsVideoUrl) {
+      return;
+    }
+
+    window.open(selectedRaceHighlightsVideoUrl, '_blank', 'noopener,noreferrer');
   }
 
   function mergePredictionsIntoUsers(nextUsers: UserData[], sourceUsers: UserData[]) {
@@ -1489,6 +1505,18 @@ function App() {
                     </div>
                   );
                 })}
+                {selectedRacePhase === 'finished' ? (
+                  <button
+                    className="secondary-button highlights-button"
+                    disabled={!selectedRaceHighlightsVideoUrl}
+                    onClick={handleWatchHighlights}
+                    type="button"
+                  >
+                    {selectedRaceHighlightsVideoUrl
+                      ? uiText.buttons.watchHighlights
+                      : uiText.buttons.highlightsUnavailable}
+                  </button>
+                ) : null}
               </div>
             ) : (
               <p className="empty-copy">{uiText.calendar.empty}</p>

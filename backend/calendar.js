@@ -17,6 +17,9 @@ const MONTH_INDEX = {
 };
 const RACE_RESULTS_CACHE_TTL_MS = 30_000;
 const raceResultsCache = new Map();
+const youtubeSearchBaseUrl = appConfig.calendarSource.highlightsSearchBaseUrl;
+const highlightsPublisherKeywords = appConfig.calendarSource.highlightsPublisherKeywords;
+const highlightsRequiredKeywords = appConfig.calendarSource.highlightsRequiredKeywords;
 
 function decodeHtmlEntities(value = '') {
   return String(value)
@@ -49,6 +52,128 @@ function toNameCase(value) {
 function canonicalizeDriverName(name) {
   const normalizedName = toNameCase(name);
   return appConfig.driverAliases[normalizedName] ?? normalizedName;
+}
+
+function buildHighlightsSearchQuery(race = {}) {
+  const titleSeed = normalizeText(race?.grandPrixTitle || race?.meetingName || race?.meetingKey || '');
+  return normalizeText(`${titleSeed} highlights Sky Sport Italia F1`);
+}
+
+function normalizeYoutubeWatchUrl(href = '') {
+  const value = String(href).trim();
+  const watchMatch = value.match(/(?:https:\/\/www\.youtube\.com)?\/watch\?v=([A-Za-z0-9_-]{6,})/i);
+
+  if (watchMatch?.[1]) {
+    return `https://www.youtube.com/watch?v=${watchMatch[1]}`;
+  }
+
+  return '';
+}
+
+function buildRaceMatchTerms(race = {}) {
+  const terms = new Set();
+  const values = [
+    race?.meetingName,
+    race?.grandPrixTitle,
+    race?.meetingKey,
+    race?.detailUrl?.split('/').at(-1),
+  ];
+
+  values.forEach((value) => {
+    normalizeText(value)
+      .toLowerCase()
+      .split(/[^a-z0-9]+/i)
+      .filter((token) => token.length >= 3 && !['grand', 'prix', 'formula'].includes(token))
+      .forEach((token) => terms.add(token));
+  });
+
+  return [...terms];
+}
+
+function isHighlightsPublisherMatch(value = '') {
+  const normalizedValue = normalizeText(value).toLowerCase();
+  return highlightsPublisherKeywords.some((keyword) => normalizedValue.includes(keyword));
+}
+
+function hasHighlightsRequiredKeyword(value = '') {
+  const normalizedValue = normalizeText(value).toLowerCase();
+  return highlightsRequiredKeywords.some((keyword) => normalizedValue.includes(keyword));
+}
+
+function isRaceHighlightsCandidateMatch(title = '', race = {}) {
+  const normalizedTitle = normalizeText(title).toLowerCase();
+  const raceMatchTerms = buildRaceMatchTerms(race);
+
+  return (
+    isHighlightsPublisherMatch(normalizedTitle) &&
+    hasHighlightsRequiredKeyword(normalizedTitle) &&
+    raceMatchTerms.some((term) => normalizedTitle.includes(term))
+  );
+}
+
+function extractHighlightsVideoUrlFromSearchHtml(rawContent, race = {}) {
+  const anchorMatches = [...String(rawContent).matchAll(/<a[^>]+href="([^"]+)"[^>]*>([\s\S]*?)<\/a>/gi)];
+
+  for (const [, href, anchorHtml] of anchorMatches) {
+    const videoUrl = normalizeYoutubeWatchUrl(href);
+    if (!videoUrl) {
+      continue;
+    }
+
+    const title = normalizeText(anchorHtml);
+    if (!isRaceHighlightsCandidateMatch(title, race)) {
+      continue;
+    }
+
+    return videoUrl;
+  }
+
+  return '';
+}
+
+function shouldLookupFinishedRaceHighlights(race = {}, now = Date.now()) {
+  if (normalizeText(race?.highlightsVideoUrl)) {
+    return false;
+  }
+
+  const endDateValue = Date.parse(race?.endDate || race?.startDate || '');
+  if (Number.isNaN(endDateValue)) {
+    return false;
+  }
+
+  return endDateValue <= now;
+}
+
+async function fetchHighlightsVideoUrl(race, fetchHtmlImpl = fetchHtml) {
+  if (!race || !youtubeSearchBaseUrl) {
+    return '';
+  }
+
+  const query = buildHighlightsSearchQuery(race);
+  const searchUrl = `${youtubeSearchBaseUrl}${encodeURIComponent(query)}`;
+  const searchHtml = await fetchHtmlImpl(searchUrl, getBrowserHeaders()).catch(() => '');
+
+  return searchHtml ? extractHighlightsVideoUrlFromSearchHtml(searchHtml, race) : '';
+}
+
+async function persistRaceHighlightsVideoUrl(calendar, meetingKey, highlightsVideoUrl) {
+  if (!Array.isArray(calendar) || !normalizeText(highlightsVideoUrl)) {
+    return calendar;
+  }
+
+  const updatedCalendar = calendar.map((weekend) => {
+    if (weekend?.meetingKey !== meetingKey) {
+      return weekend;
+    }
+
+    return {
+      ...weekend,
+      highlightsVideoUrl,
+    };
+  });
+
+  await writeCalendarCache(updatedCalendar);
+  return updatedCalendar;
 }
 
 function clearRaceResultsCache() {
@@ -472,6 +597,16 @@ async function syncCalendarFromOfficialSource({
               isSprintWeekend: detailData.isSprintWeekend,
               raceStartTime: detailData.raceStartTime,
               sessions: detailData.sessions,
+              highlightsVideoUrl:
+                shouldLookupFinishedRaceHighlights(weekend)
+                  ? await fetchHighlightsVideoUrl(
+                      {
+                        ...weekend,
+                        ...detailData,
+                      },
+                      fetchHtmlImpl,
+                    )
+                  : weekend.highlightsVideoUrl ?? '',
             };
           } catch {
             return {
@@ -578,26 +713,43 @@ async function fetchRaceResultsForRace(race, meetingKey) {
 }
 
 async function fetchRaceResultsWithStatus(meetingKey, now = new Date()) {
-  const calendar = await readCalendarCache();
+  let calendar = await readCalendarCache();
   const race = calendar.find((entry) => entry.meetingKey === meetingKey);
   const results = await fetchRaceResultsForRace(race, meetingKey);
+  const racePhase = resolveRacePhase(race, results, now);
+  let highlightsVideoUrl = normalizeText(race?.highlightsVideoUrl);
+
+  if (racePhase === 'finished' && !highlightsVideoUrl) {
+    highlightsVideoUrl = await fetchHighlightsVideoUrl(race);
+
+    if (highlightsVideoUrl) {
+      calendar = await persistRaceHighlightsVideoUrl(calendar, meetingKey, highlightsVideoUrl);
+    }
+  }
 
   return {
     ...results,
-    racePhase: resolveRacePhase(race, results, now),
+    racePhase,
+    highlightsVideoUrl,
   };
 }
 
 export {
+  buildHighlightsSearchQuery,
   buildOfficialResultsBaseUrl,
   clearRaceResultsCache,
+  extractHighlightsVideoUrlFromSearchHtml,
   fetchRaceResults,
   fetchRaceResultsWithStatus,
+  fetchHighlightsVideoUrl,
   hasOfficialRaceClassification,
+  normalizeYoutubeWatchUrl,
   parseDateRangeLabel,
   parseRaceDetailPage,
   parseSeasonCalendarPage,
+  persistRaceHighlightsVideoUrl,
   resolveRacePhase,
+  shouldLookupFinishedRaceHighlights,
   sortCalendarByRound,
   syncCalendarFromOfficialSource,
 };

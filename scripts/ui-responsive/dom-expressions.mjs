@@ -98,6 +98,8 @@ const inspectStateExpression = `() => {
     .slice(0, 20);
   const selectedCalendarCard = document.querySelector('.calendar-card.selected');
   const selectedRaceBanner = document.querySelector('.selected-race-banner');
+  const selectedRaceRecapCard = document.querySelector('.driver-spotlight')?.closest('section');
+  const highlightsButton = document.querySelector('.driver-spotlight .highlights-button');
   const firstUserCard = document.querySelector('.predictions-grid .user-card');
   const firstPredictionSelect = firstUserCard?.querySelector('select');
   const firstResultSelect = document.querySelector('.results-grid select');
@@ -200,6 +202,22 @@ const inspectStateExpression = `() => {
       firstResultText: normalizeText(
         firstResultSelect?.selectedOptions?.[0]?.textContent || firstResultSelect?.value,
       ),
+      highlightsButton: (() => {
+        const buttonRect = highlightsButton?.getBoundingClientRect();
+        const cardRect = selectedRaceRecapCard?.getBoundingClientRect();
+
+        return {
+          present: Boolean(highlightsButton),
+          disabled: Boolean(highlightsButton?.disabled),
+          text: normalizeText(highlightsButton?.textContent),
+          clipped:
+            Boolean(highlightsButton && selectedRaceRecapCard) &&
+            (
+              (buttonRect?.left ?? 0) < (cardRect?.left ?? 0) - 1 ||
+              (buttonRect?.right ?? 0) > (cardRect?.right ?? viewportWidth) + 1
+            ),
+        };
+      })(),
     },
     selects: {
       meeting: readElementStyles(meetingSelector),

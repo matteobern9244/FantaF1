@@ -1,10 +1,17 @@
 import fs from 'fs';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import * as storage from '../backend/storage.js';
 import {
+  buildHighlightsSearchQuery,
   buildOfficialResultsBaseUrl,
   parseDateRangeLabel,
   parseRaceDetailPage,
   parseSeasonCalendarPage,
+  extractHighlightsVideoUrlFromSearchHtml,
+  fetchHighlightsVideoUrl,
+  normalizeYoutubeWatchUrl,
+  persistRaceHighlightsVideoUrl,
+  shouldLookupFinishedRaceHighlights,
   syncCalendarFromOfficialSource,
 } from '../backend/calendar.js';
 
@@ -23,6 +30,7 @@ describe('calendar parsing and fallback', () => {
   beforeEach(() => {
     vi.spyOn(console, 'error').mockImplementation(() => {});
     vi.spyOn(console, 'warn').mockImplementation(() => {});
+    vi.spyOn(storage, 'writeCalendarCache').mockResolvedValue([]);
   });
 
   it('parses Formula1 season and detail fixtures', () => {
@@ -107,7 +115,7 @@ describe('calendar parsing and fallback', () => {
     const fakeSeasonHtml = Array.from({ length: 24 }).map((_, i) => `
       <a href="/en/racing/${currentYear}/race-${i}" class="group">
         <span>ROUND ${i + 1}</span>
-        <span>01 - 03 JAN</span>
+        <span>01 - 03 DEC</span>
         <span>FORMULA 1 RACE ${i} ${currentYear}</span>
         <img src="card.webp" />
       </a>
@@ -133,6 +141,50 @@ describe('calendar parsing and fallback', () => {
     // The second item should have succeeded detail fetch
     expect(result[1].grandPrixTitle).toContain('Detail GP');
     expect(writeCacheSpy).toHaveBeenCalled();
+  });
+
+  it('enriches completed weekends with a public YouTube highlights link when Sky Sport Italia F1 already published it', async () => {
+    const fakeSeasonHtml = Array.from({ length: 20 }).map((_, i) => `
+      <a href="/en/racing/${currentYear}/race-${i}" class="group">
+        <span>ROUND ${i + 1}</span>
+        <span>01 - 03 JAN</span>
+        <span>FORMULA 1 AUSTRALIA ${currentYear}</span>
+        <img src="card.webp" />
+      </a>
+    `).join('');
+
+    const writeCacheSpy = vi.fn();
+    let requestCount = 0;
+
+    const result = await syncCalendarFromOfficialSource({
+      fetchHtmlImpl: async (url) => {
+        requestCount++;
+
+        if (requestCount === 1) {
+          return fakeSeasonHtml;
+        }
+
+        if (url.includes('youtube.com/results?search_query=')) {
+          return `
+            <a href="/watch?v=skyf1-finished">
+              <span>Highlights Detail GP ${currentYear} | Sky Sport F1</span>
+            </a>
+          `;
+        }
+
+        return '<title>Detail GP - F1 Race</title>';
+      },
+      readCache: async () => [],
+      writeCache: writeCacheSpy,
+    });
+
+    expect(result[0]).toEqual(
+      expect.objectContaining({
+        meetingKey: 'race-0',
+        highlightsVideoUrl: 'https://www.youtube.com/watch?v=skyf1-finished',
+      }),
+    );
+    expect(writeCacheSpy).toHaveBeenCalledWith(result);
   });
 
   describe('parseDateRangeLabel edge cases', () => {
@@ -205,5 +257,94 @@ describe('calendar parsing and fallback', () => {
     expect(buildOfficialResultsBaseUrl('', '1280')).toBe('');
     expect(buildOfficialResultsBaseUrl(`https://www.formula1.com/en/racing/${currentYear}/monza`, '')).toBe('');
     expect(buildOfficialResultsBaseUrl('https://example.com/race', '1280')).toBe('');
+  });
+
+  it('builds and filters highlights candidates from public YouTube markup', () => {
+    const race = {
+      meetingKey: 'australia',
+      meetingName: 'Australia',
+      grandPrixTitle: `FORMULA 1 AUSTRALIAN GRAND PRIX ${currentYear}`,
+      detailUrl: `https://www.formula1.com/en/racing/${currentYear}/australia`,
+    };
+
+    expect(buildHighlightsSearchQuery(race)).toContain('Sky Sport Italia F1');
+    expect(buildHighlightsSearchQuery({ meetingName: 'Monza' })).toContain('Monza');
+    expect(buildHighlightsSearchQuery({ meetingKey: 'spa' })).toContain('spa');
+    expect(buildHighlightsSearchQuery({})).toBe('highlights Sky Sport Italia F1');
+    expect(normalizeYoutubeWatchUrl('/watch?v=skyf1clip')).toBe('https://www.youtube.com/watch?v=skyf1clip');
+    expect(normalizeYoutubeWatchUrl('https://www.youtube.com/watch?v=skyf1clip')).toBe(
+      'https://www.youtube.com/watch?v=skyf1clip',
+    );
+    expect(normalizeYoutubeWatchUrl('/channel/not-a-watch-link')).toBe('');
+    expect(
+      extractHighlightsVideoUrlFromSearchHtml(
+        `
+          <a href="/channel/sky-sport-f1"><span>Canale Sky Sport F1</span></a>
+          <a href="/watch?v=wrongvideo"><span>Highlights Formula 1 Australia | Altro canale</span></a>
+          <a href="/watch?v=skyf1clip"><span>Highlights F1 Australia | Sky Sport F1</span></a>
+        `,
+        race,
+      ),
+    ).toBe('https://www.youtube.com/watch?v=skyf1clip');
+    expect(
+      extractHighlightsVideoUrlFromSearchHtml(
+        '<a href="/watch?v=wrongvideo"><span>Highlights Formula 1 Australia | Altro canale</span></a>',
+        race,
+      ),
+    ).toBe('');
+  });
+
+  it('handles highlights lookup guards, fetch fallback and cache persistence helpers', async () => {
+    const race = {
+      meetingKey: 'australia',
+      meetingName: 'Australia',
+      grandPrixTitle: `FORMULA 1 AUSTRALIAN GRAND PRIX ${currentYear}`,
+      detailUrl: `https://www.formula1.com/en/racing/${currentYear}/australia`,
+      endDate: `${currentYear}-01-03`,
+      startDate: `${currentYear}-01-01`,
+      highlightsVideoUrl: '',
+    };
+
+    expect(shouldLookupFinishedRaceHighlights({ ...race, highlightsVideoUrl: 'https://www.youtube.com/watch?v=done' })).toBe(false);
+    expect(shouldLookupFinishedRaceHighlights({ ...race, endDate: 'invalid-date' })).toBe(false);
+    expect(shouldLookupFinishedRaceHighlights(race, Date.parse(`${currentYear}-03-08T00:00:00Z`))).toBe(true);
+    expect(shouldLookupFinishedRaceHighlights({ startDate: `${currentYear}-01-01` }, Date.parse(`${currentYear}-03-08T00:00:00Z`))).toBe(true);
+    expect(shouldLookupFinishedRaceHighlights({}, Date.parse(`${currentYear}-03-08T00:00:00Z`))).toBe(false);
+
+    await expect(fetchHighlightsVideoUrl(null, async () => {
+      throw new Error('should not run');
+    })).resolves.toBe('');
+
+    await expect(
+      fetchHighlightsVideoUrl(race, async () => {
+        throw new Error('offline');
+      }),
+    ).resolves.toBe('');
+
+    await expect(
+      fetchHighlightsVideoUrl(race, async () => `
+        <a href="/watch?v=skyf1clip"><span>Highlights F1 Australia | Sky Sport F1</span></a>
+      `),
+    ).resolves.toBe('https://www.youtube.com/watch?v=skyf1clip');
+
+    const calendar = [{ meetingKey: 'australia', highlightsVideoUrl: '' }, { meetingKey: 'monza', highlightsVideoUrl: '' }];
+    await expect(persistRaceHighlightsVideoUrl(null, 'australia', 'https://www.youtube.com/watch?v=skyf1clip')).resolves.toBeNull();
+
+    const persisted = await persistRaceHighlightsVideoUrl(
+      calendar,
+      'australia',
+      'https://www.youtube.com/watch?v=skyf1clip',
+    );
+    expect(persisted).toEqual([
+      { meetingKey: 'australia', highlightsVideoUrl: 'https://www.youtube.com/watch?v=skyf1clip' },
+      { meetingKey: 'monza', highlightsVideoUrl: '' },
+    ]);
+
+    const untouched = await persistRaceHighlightsVideoUrl(
+      calendar,
+      'imola',
+      'https://www.youtube.com/watch?v=skyf1clip',
+    );
+    expect(untouched).toEqual(calendar);
   });
 });

@@ -147,6 +147,7 @@ describe('responsive UI app shell gating', () => {
         firstPredictionText: '',
         firstResultValue: '',
         firstResultText: '',
+        highlightsButton: { present: true, disabled: false, text: 'Guarda Highlights', clipped: false },
       },
       selects: {
         meeting: { present: true, color: 'rgb(248, 250, 252)', backgroundColor: 'rgb(24, 28, 39)', fontFamily: 'Formula1, sans-serif', disabled: false, text: 'Australia' },
@@ -339,6 +340,86 @@ describe('responsive UI app shell gating', () => {
         expect.stringContaining('option pronostici con colore testo trasparente'),
         expect.stringContaining('option pronostici con sfondo trasparente'),
       ]),
+    );
+  });
+
+  it('flags a clipped highlights button in the selected weekend recap', () => {
+    const validationState = {
+      mainSections: {
+        hero: true,
+        summary: true,
+        calendar: true,
+        predictions: true,
+        results: true,
+        footer: true,
+      },
+      nextRace: {
+        cardPresent: true,
+        badgeText: 'Weekend Standard',
+        hasSessions: false,
+        rowCount: 0,
+        clippedRows: [],
+        noteText: '',
+        noteFits: true,
+      },
+      typography: {
+        sessionDay: { present: false, fontFamily: '', text: '' },
+        sessionDate: { present: false, fontFamily: '', text: '' },
+        sessionClock: { present: false, fontFamily: '', text: '' },
+        liveScoreValue: { present: true, fontFamily: 'Formula1, sans-serif', text: '12' },
+        projectionValue: { present: true, fontFamily: 'Formula1, sans-serif', text: '9' },
+      },
+      tooltip: {
+        wrapperPresent: false,
+        disabledWrapperPresent: false,
+        present: false,
+        visible: false,
+        fitsViewport: true,
+        text: '',
+      },
+      history: {
+        present: true,
+        hasCards: false,
+        emptyStateVisible: true,
+        actionButtonCount: 0,
+        clippedButtons: [],
+      },
+      selectedWeekend: {
+        calendarCardCount: 1,
+        sprintCardCount: 0,
+        cardText: 'Round 1 Australia',
+        bannerTitle: 'Australian Grand Prix 2026',
+        firstPredictionValue: '',
+        firstPredictionText: '',
+        firstResultValue: '',
+        firstResultText: '',
+        highlightsButton: { present: true, disabled: false, text: 'Guarda Highlights', clipped: true },
+      },
+      selects: {
+        meeting: { present: true, color: 'rgb(248, 250, 252)', backgroundColor: 'rgb(24, 28, 39)', fontFamily: 'Formula1, sans-serif', disabled: false, text: 'Australia' },
+        insights: { present: true, color: 'rgb(248, 250, 252)', backgroundColor: 'rgb(24, 28, 39)', fontFamily: 'Formula1, sans-serif', disabled: false, text: 'Adriano' },
+        prediction: { present: true, color: 'rgb(248, 250, 252)', backgroundColor: 'rgb(24, 28, 39)', fontFamily: 'Formula1, sans-serif', disabled: false, text: 'Seleziona un pilota' },
+        result: { present: true, color: 'rgb(248, 250, 252)', backgroundColor: 'rgb(24, 28, 39)', fontFamily: 'Formula1, sans-serif', disabled: false, text: 'Seleziona un pilota' },
+        historyFilter: { present: true, color: 'rgb(248, 250, 252)', backgroundColor: 'rgb(24, 28, 39)', fontFamily: 'Formula1, sans-serif', disabled: false, text: 'Tutti gli utenti' },
+        predictionOption: { present: true, color: 'rgb(248, 250, 252)', backgroundColor: 'rgb(24, 28, 39)', fontFamily: 'Formula1, sans-serif', disabled: false, text: 'Seleziona un pilota' },
+        resultOption: { present: true, color: 'rgb(248, 250, 252)', backgroundColor: 'rgb(24, 28, 39)', fontFamily: 'Formula1, sans-serif', disabled: false, text: 'Seleziona un pilota' },
+      },
+      unauthorizedOverflow: [],
+      viewMode: {
+        current: 'admin',
+        readonlyBannerPresent: false,
+        adminLoginPresent: false,
+        adminControlsPresent: true,
+        publicControlsPresent: false,
+      },
+      interactiveSurfaces: {
+        total: 12,
+        analytics: 5,
+      },
+    };
+
+    expect(validateState(validationState, { expectedViewMode: 'admin' })).toEqual(
+      expect.arrayContaining(['Pulsante highlights fuori dal recap del weekend selezionato.']),
     );
   });
 });
