@@ -5,6 +5,7 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import HistoryArchivePanel from '../src/components/HistoryArchivePanel';
 import SeasonAnalysisPanel from '../src/components/SeasonAnalysisPanel';
+import { appText } from '../src/uiText';
 import { createEmptyPrediction } from '../src/utils/game';
 
 describe('isolated UI panels', () => {
@@ -50,7 +51,7 @@ describe('isolated UI panels', () => {
 
     expect(screen.getByText('N/D')).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('button', { name: /copia link vista corrente/i }));
+    fireEvent.click(screen.getByRole('button', { name: appText.panels.seasonAnalysis.shareButton }));
     expect(onShare).toHaveBeenCalledTimes(1);
 
     rerender(
@@ -69,6 +70,9 @@ describe('isolated UI panels', () => {
     );
 
     expect(screen.getByText('Nessun dato analytics')).toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { name: appText.panels.seasonAnalysis.title }),
+    ).toBeInTheDocument();
   });
 
   it('supports history fallback winner labels and collapse toggling', () => {
@@ -124,16 +128,23 @@ describe('isolated UI panels', () => {
     );
 
     expect(screen.getByText('Pilota sconosciuto')).toBeInTheDocument();
-    fireEvent.change(screen.getByLabelText(/filtra per giocatore/i), {
+    expect(
+      screen.getByRole('heading', { name: appText.panels.historyArchive.title }),
+    ).toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText(appText.panels.historyArchive.userFilterLabel), {
       target: { value: 'Marco' },
     });
-    fireEvent.change(screen.getByLabelText(/cerca gp/i), {
+    fireEvent.change(screen.getByLabelText(appText.panels.historyArchive.searchLabel), {
       target: { value: 'Australia' },
     });
-    fireEvent.click(screen.getByRole('button', { name: /modifica/i }));
-    fireEvent.click(screen.getByRole('button', { name: /elimina/i }));
+    fireEvent.click(screen.getByRole('button', { name: appText.panels.historyArchive.editButton }));
+    fireEvent.click(screen.getByRole('button', { name: appText.panels.historyArchive.deleteButton }));
 
-    fireEvent.click(screen.getByRole('button', { name: /dettaglio australian grand prix 2099/i }));
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: appText.panels.historyArchive.detailButton('Australian Grand Prix 2099'),
+      }),
+    );
     expect(onToggleExpanded).toHaveBeenCalledWith('history-0');
 
     rerender(
@@ -143,7 +154,11 @@ describe('isolated UI panels', () => {
       />,
     );
 
-    fireEvent.click(screen.getByRole('button', { name: /dettaglio australian grand prix 2099/i }));
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: appText.panels.historyArchive.detailButton('Australian Grand Prix 2099'),
+      }),
+    );
     expect(onToggleExpanded).toHaveBeenLastCalledWith('');
     expect(onEditHistoryRace).toHaveBeenCalledWith(0);
     expect(onDeleteHistoryRace).toHaveBeenCalledWith(0);

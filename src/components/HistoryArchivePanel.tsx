@@ -1,5 +1,6 @@
 import { ChevronDown, Trophy } from 'lucide-react';
 import type { AppData, PredictionKey, UserData } from '../types';
+import { appText } from '../uiText';
 
 interface HistoryArchivePanelProps {
   editingSession: {
@@ -58,21 +59,23 @@ function HistoryArchivePanel({
   userDisplayNameForWinner,
   users,
 }: HistoryArchivePanelProps) {
+  const { historyArchive } = appText.panels;
+
   return (
     <section className="panel">
       <div className="section-title">
         <Trophy size={20} />
-        <h2>Storico gare</h2>
+        <h2>{historyArchive.title}</h2>
       </div>
       <div className="history-filters">
         <div className="field-row">
-          <label htmlFor="history-user-filter">Filtra per giocatore</label>
+          <label htmlFor="history-user-filter">{historyArchive.userFilterLabel}</label>
           <select
             id="history-user-filter"
             value={historyUserFilter}
             onChange={(event) => onHistoryUserFilterChange(event.target.value)}
           >
-            <option value="all">Tutti</option>
+            <option value="all">{historyArchive.allUsersOption}</option>
             {users.map((user) => (
               <option key={`history-filter-${user.name}`} value={user.name}>
                 {user.name}
@@ -81,7 +84,7 @@ function HistoryArchivePanel({
           </select>
         </div>
         <div className="field-row">
-          <label htmlFor="history-search">Cerca GP</label>
+          <label htmlFor="history-search">{historyArchive.searchLabel}</label>
           <input
             id="history-search"
             className="auth-input"
@@ -91,7 +94,7 @@ function HistoryArchivePanel({
           />
         </div>
       </div>
-      <p className="sidebar-note">{filteredHistoryEntries.length} gran premi mostrati</p>
+      <p className="sidebar-note">{historyArchive.shownCount(filteredHistoryEntries.length)}</p>
       {filteredHistoryEntries.length === 0 ? (
         <p className="empty-copy">{historyEmptyLabel}</p>
       ) : (
@@ -116,7 +119,7 @@ function HistoryArchivePanel({
                           type="button"
                           disabled={Boolean(editingSession)}
                         >
-                          Modifica
+                          {historyArchive.editButton}
                         </button>
                         <button
                           className="secondary-button compact-button danger-button"
@@ -124,7 +127,7 @@ function HistoryArchivePanel({
                           type="button"
                           disabled={Boolean(editingSession)}
                         >
-                          Elimina
+                          {historyArchive.deleteButton}
                         </button>
                       </div>
                     ) : null}
@@ -140,7 +143,7 @@ function HistoryArchivePanel({
                     aria-controls={`history-detail-${index}`}
                   >
                     <ChevronDown size={16} />
-                    {`Dettaglio ${record.gpName}`}
+                    {historyArchive.detailButton(record.gpName)}
                   </button>
                 </div>
 
@@ -157,7 +160,7 @@ function HistoryArchivePanel({
                 </div>
                 {isExpanded ? (
                   <div className="history-detail-panel" id={`history-detail-${index}`}>
-                    <h3>Pronostici dettagliati</h3>
+                    <h3>{historyArchive.detailTitle}</h3>
                     {Object.entries(record.userPredictions).map(([name]) => (
                       <div key={`detail-${record.gpName}-${name}`} className="analytics-subpanel interactive-surface">
                         <strong>{name}</strong>

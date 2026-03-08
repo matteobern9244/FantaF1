@@ -25,6 +25,7 @@ import {
   verifyAdminPassword,
 } from './backend/auth.js';
 import { sortDriversAlphabetically } from './backend/drivers.js';
+import { backendText, formatBackendText } from './backend/text.js';
 import {
   readAppData,
   readCalendarCache,
@@ -71,7 +72,7 @@ function requireAdminSession(req, res) {
   }
 
   res.status(401).json({
-    error: 'Admin authentication required',
+    error: backendText.auth.adminRequired,
     code: 'admin_auth_required',
   });
 
@@ -104,7 +105,7 @@ app.post('/api/admin/session', async (req, res) => {
   const isPasswordValid = await verifyAdminPassword(password);
 
   if (!isPasswordValid) {
-    return res.status(401).json({ error: 'Invalid password', code: 'admin_auth_invalid' });
+    return res.status(401).json({ error: backendText.auth.invalidPassword, code: 'admin_auth_invalid' });
   }
 
   res.setHeader('Set-Cookie', buildSessionCookie({ isProduction: isProductionEnvironment() }));
@@ -122,7 +123,7 @@ app.get(appConfig.api.dataPath, async (req, res) => {
     const data = await readAppData();
     res.json(data);
   } catch {
-    res.status(500).json({ error: 'Failed to read app data' });
+    res.status(500).json({ error: backendText.apiErrors.readAppDataFailed });
   }
 });
 
@@ -131,7 +132,7 @@ app.get(appConfig.api.driversPath, async (req, res) => {
     const cachedDrivers = sortDriversAlphabetically(await readDriversCache());
     res.json(cachedDrivers);
   } catch {
-    res.status(500).json({ error: 'Failed to read drivers' });
+    res.status(500).json({ error: backendText.apiErrors.readDriversFailed });
   }
 });
 
@@ -140,7 +141,7 @@ app.get(appConfig.api.calendarPath, async (req, res) => {
     const cachedCalendar = sortCalendarByRound(await readCalendarCache());
     res.json(cachedCalendar);
   } catch {
-    res.status(500).json({ error: 'Failed to read calendar' });
+    res.status(500).json({ error: backendText.apiErrors.readCalendarFailed });
   }
 });
 
@@ -149,19 +150,24 @@ app.get('/api/results/:meetingKey', async (req, res) => {
     const results = await fetchRaceResults(req.params.meetingKey);
     res.json(results);
   } catch (error) {
-    res.status(500).json({ error: 'Failed to fetch results', details: error.message });
+    res.status(500).json({ error: backendText.apiErrors.fetchResultsFailed, details: error.message });
   }
 });
 
 function buildParticipantsInvalidResponse(newData, requestId) {
-  const participantError = `Invalid participants list. Expected ${participantSlots} participants.`;
+  const participantError = formatBackendText(backendText.save.participantsInvalidTemplate, {
+    participantSlots,
+  });
 
   return buildSaveErrorResponse({
     environment: runtimeEnvironment,
     requestId,
     code: 'participants_invalid',
     error: participantError,
-    details: `Expected ${participantSlots} participants, received ${Array.isArray(newData?.users) ? newData.users.length : 'unknown'}.`,
+    details: formatBackendText(backendText.save.participantsInvalidDetailsTemplate, {
+      participantSlots,
+      received: Array.isArray(newData?.users) ? newData.users.length : 'unknown',
+    }),
   });
 }
 
@@ -171,7 +177,7 @@ function buildPredictionsMissingResponse(requestId) {
     requestId,
     code: 'predictions_missing',
     error: appConfig.uiText.alerts.missingPredictions,
-    details: 'At least one prediction is required for manual predictions save.',
+    details: backendText.save.predictionsMissingDetails,
   });
 }
 
@@ -205,7 +211,10 @@ async function handleSaveRequest(req, res, { requirePredictions = false, routePa
           code: 'race_locked',
           error: appConfig.uiText.calendar.raceLocked,
           /* v8 ignore next -- the "unknown" fallback requires an impossible locked race without timing metadata */
-          details: `Race ${selectedRace.meetingKey} started at ${selectedRace.raceStartTime || selectedRace.endDate || 'unknown'} and current predictions differ from stored data.`,
+          details: formatBackendText(backendText.save.raceLockedDetailsTemplate, {
+            meetingKey: selectedRace.meetingKey,
+            startTime: selectedRace.raceStartTime || selectedRace.endDate || 'unknown',
+          }),
         });
 
         return res.status(response.status).json(response.payload);
@@ -239,7 +248,13 @@ async function handleSaveRequest(req, res, { requirePredictions = false, routePa
     });
 
     console.error(
-      `[Error Backend] POST ${routePath} fallito [requestId=${requestId}] [environment=${runtimeEnvironment}] [databaseTarget=${databaseTargetName}] [code=${code}]`,
+      formatBackendText(backendText.save.saveRouteFailureTemplate, {
+        routePath,
+        requestId,
+        environment: runtimeEnvironment,
+        databaseTarget: databaseTargetName,
+        code,
+      }),
       error,
     );
 
@@ -266,7 +281,7 @@ app.use(express.static(distPath));
 
 app.use((req, res) => {
   if (req.path.startsWith('/api')) {
-    return res.status(404).json({ error: 'API Endpoint not found' });
+    return res.status(404).json({ error: backendText.apiErrors.apiNotFound });
   }
   /* v8 ignore next -- SPA static fallback depends on built assets and is exercised outside unit tests */
   res.sendFile(path.join(distPath, 'index.html'));

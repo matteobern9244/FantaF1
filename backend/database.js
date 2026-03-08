@@ -1,3 +1,5 @@
+import { backendText, formatBackendText } from './text.js';
+
 const LOCAL_DATABASE_NAME = 'fantaf1_dev';
 const PRODUCTION_DATABASE_NAME = 'fantaf1';
 
@@ -35,7 +37,11 @@ function resolveMongoDatabaseName({ nodeEnv, mongoUri } = {}) {
 
   if (uriDatabaseName && uriDatabaseName !== expectedDatabaseName) {
     throw new Error(
-      `MONGODB_URI targets "${uriDatabaseName}" but ${normalizeRuntimeEnvironment(nodeEnv)} requires "${expectedDatabaseName}".`,
+      formatBackendText(backendText.database.mongoUriTargetMismatchTemplate, {
+        uriDatabaseName,
+        environment: normalizeRuntimeEnvironment(nodeEnv),
+        expectedDatabaseName,
+      }),
     );
   }
 
@@ -45,7 +51,10 @@ function resolveMongoDatabaseName({ nodeEnv, mongoUri } = {}) {
 function verifyMongoDatabaseName(actualDbName, expectedDbName) {
   if (actualDbName !== expectedDbName) {
     throw new Error(
-      `Connected to unexpected MongoDB database "${actualDbName}". Expected "${expectedDbName}".`,
+      formatBackendText(backendText.database.unexpectedConnectedDatabaseTemplate, {
+        actualDbName,
+        expectedDbName,
+      }),
     );
   }
 }

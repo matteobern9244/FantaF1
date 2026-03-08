@@ -26,4 +26,12 @@ describe('constants module', () => {
     expect(constants.resolveVisibleAppTitle('', constants.genericAppTitle)).toBe(constants.genericAppTitle);
     expect(constants.resolveVisibleAppTitle(undefined, constants.genericAppTitle)).toBe(constants.genericAppTitle);
   });
+
+  it('exposes centralized frontend runtime text groups', async () => {
+    const { appText } = await import('../src/uiText');
+
+    expect(appText.shell.loadingMessage).toBe('Preparazione dei box...');
+    expect(appText.panels.publicGuide.title).toBe('Come funziona');
+    expect(appText.panels.weekendPulseHero.availability.complete).toBe('Completi');
+  });
 });

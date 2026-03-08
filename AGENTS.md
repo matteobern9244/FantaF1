@@ -54,6 +54,9 @@ Optional helper commands already supported by the repository:
 - Avoid hidden dependencies and service-locator style access patterns; pass dependencies explicitly or keep them within the owning module boundary.
 - Do not introduce class-based abstractions unless the repository clearly benefits from them; the current codebase is predominantly module-oriented.
 - Centralize repeated rules, labels, and configuration in the existing config/constants layers instead of scattering literals.
+- Never leave application or runtime-facing strings hard coded inside components, backend flows, helpers, or scripts when they can be centralized safely; place them in dedicated config/constants modules grouped by domain area.
+- This rule is mandatory for fixes, modifications, and new implementations in this repository.
+- Allowed exceptions are only technical strings that are structurally required inline, such as raw parser regexes, external HTML fixtures, environment variable names, protocol keys, API paths, MIME values, selectors, and `data-testid` values.
 - Preserve the current visual language, full-width layout, and UI configuration/localization patterns already used by the project.
 - Route persistent state through the defined persistence layer and keep synchronization/import flows explicit about whether they are read-only, idempotent, or mutating.
 - Keep implementations and scripts portable across supported environments; avoid OS-specific assumptions unless the repository already requires them.
@@ -161,6 +164,7 @@ Rules:
 - Related edge cases must be considered and covered when relevant.
 - Never claim TDD was applied if tests were added only after coding without first reproducing the issue.
 - Use the repository's established Vitest/React Testing Library/Supertest patterns, and mock only collaborators outside the actual intent of the test.
+- This TDD rule is mandatory for every fix, modification, and new implementation in this repository without exception.
 
 ---
 

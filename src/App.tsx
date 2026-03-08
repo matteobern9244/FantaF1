@@ -87,6 +87,7 @@ import PublicGuidePanel from './components/PublicGuidePanel';
 import SeasonAnalysisPanel from './components/SeasonAnalysisPanel';
 import WeekendLivePanel from './components/WeekendLivePanel';
 import WeekendPulseHeroCard from './components/WeekendPulseHeroCard';
+import { appText } from './uiText';
 import {
   getWeekendPredictionState,
   hydrateAppDataForWeekend,
@@ -181,7 +182,7 @@ function App() {
     historyIndex: number;
   } | null>(null);
   const [loading, setLoading] = useState(true);
-  const [loadingMessage, setLoadingMessage] = useState('Preparazione dei box...');
+  const [loadingMessage, setLoadingMessage] = useState(appText.shell.loadingMessage);
   const [loadError, setLoadError] = useState('');
   const [showTooltip, setShowTooltip] = useState(false);
   const [viewMode, setViewMode] = useState<ViewMode>('public');
@@ -239,12 +240,12 @@ function App() {
   const seasonAnalytics = buildSeasonAnalytics(users, history, sortedCalendar);
   const weekendStartTime = getRaceStartTime(selectedRace);
   const weekendStatusLabel = !selectedRace
-    ? 'Weekend non disponibile'
+    ? appText.shell.weekendStatus.unavailable
     : isFinished
-      ? 'Concluso'
+      ? appText.shell.weekendStatus.completed
       : raceLocked
-        ? 'In corso'
-        : 'Pronostici aperti';
+        ? appText.shell.weekendStatus.live
+        : appText.shell.weekendStatus.open;
   const weekendCountdownLabel = weekendStartTime
     ? new Intl.RelativeTimeFormat('it', { numeric: 'auto' }).format(
         Math.round((weekendStartTime.getTime() - Date.now()) / (1000 * 60 * 60)),
@@ -331,7 +332,7 @@ function App() {
       const requestedView = initialUrlSearchParams.get('view');
       const requestedHistoryUser = initialUrlSearchParams.get('historyUser');
       const requestedHistorySearch = initialUrlSearchParams.get('historySearch')?.trim() ?? '';
-      setLoadingMessage('Sincronizzazione telemetria e piloti in corso...');
+      setLoadingMessage(appText.shell.loadingTelemetryMessage);
       const [sessionResult, dataResult, driversResult, calendarResult] = await Promise.allSettled([
         fetchWithRetry<SessionState>(sessionApiUrl),
         fetchWithRetry<AppData>(dataApiUrl),
@@ -343,7 +344,7 @@ function App() {
         return;
       }
 
-      setLoadingMessage('Configurazione assetto weekend...');
+      setLoadingMessage(appText.shell.loadingWeekendSetupMessage);
 
       const loadedDrivers =
         driversResult.status === 'fulfilled' ? driversResult.value : [];
@@ -1056,7 +1057,7 @@ function App() {
     const shareUrl = window.location.href;
     try {
       await navigator.clipboard.writeText(shareUrl);
-      showToastMessage('Link della vista corrente copiato.', 'success');
+      showToastMessage(uiText.status.shareLinkCopied, 'success');
     } catch (error) {
       console.error(error);
       window.alert(shareUrl);
@@ -1300,7 +1301,7 @@ function App() {
                   </div>
                 ) : (
                   <div className="session-schedule">
-                    <p className="sidebar-note">Orari in fase di sincronizzazione...</p>
+                    <p className="sidebar-note">{uiText.calendar.sessionsSyncing}</p>
                   </div>
                 )}
               </div>
@@ -1558,7 +1559,7 @@ function App() {
           />
 
           {isPublicView ? (
-            <PublicGuidePanel points={points} pointsSuffix={uiText.pointsSuffix} />
+            <PublicGuidePanel />
           ) : null}
 
           {!isPublicView ? (

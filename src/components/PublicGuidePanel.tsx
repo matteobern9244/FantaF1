@@ -1,39 +1,31 @@
 import { ShieldCheck } from 'lucide-react';
-import type { PointsConfig } from '../types';
+import { appText } from '../uiText';
 
-interface PublicGuidePanelProps {
-  points: PointsConfig;
-  pointsSuffix: string;
-}
+function PublicGuidePanel() {
+  const { publicGuide } = appText.panels;
 
-function PublicGuidePanel({ points, pointsSuffix }: PublicGuidePanelProps) {
   return (
     <section className="panel" id="public-guide">
       <div className="section-title">
         <ShieldCheck size={20} />
-        <h2>Come funziona</h2>
+        <h2>{publicGuide.title}</h2>
       </div>
       <div className="weekend-pulse-summary">
         <div className="spotlight-row">
-          <span>Punti gara</span>
-          <strong>
-            1° {points.first} {pointsSuffix}, 2° {points.second} {pointsSuffix}, 3° {points.third}{' '}
-            {pointsSuffix}, Pole/Sprint {points.pole} {pointsSuffix}
-          </strong>
+          <span>{publicGuide.pointsLabel}</span>
+          <strong>{publicGuide.pointsSummary}</strong>
         </div>
         <div className="spotlight-row">
-          <span>Race lock</span>
-          <strong>I pronostici si chiudono all'orario ufficiale di partenza.</strong>
+          <span>{publicGuide.raceLockLabel}</span>
+          <strong>{publicGuide.raceLockValue}</strong>
         </div>
         <div className="spotlight-row">
-          <span>Vista live</span>
-          <strong>Classifica storica piu' proiezione del weekend selezionato.</strong>
+          <span>{publicGuide.liveViewLabel}</span>
+          <strong>{publicGuide.liveViewValue}</strong>
         </div>
         <div className="spotlight-row">
-          <span>Weekend Sprint</span>
-          <strong>
-            Il quarto campo usa Pole o vincitore Sprint in base al formato del weekend.
-          </strong>
+          <span>{publicGuide.sprintLabel}</span>
+          <strong>{publicGuide.sprintValue}</strong>
         </div>
       </div>
     </section>

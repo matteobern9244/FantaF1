@@ -3,6 +3,7 @@ import type {
   PredictionKey,
   SeasonAnalyticsSummary,
 } from '../types';
+import { appText } from '../uiText';
 
 interface SeasonAnalysisPanelProps {
   analyticsEmptyLabel: string;
@@ -19,16 +20,18 @@ function SeasonAnalysisPanel({
   predictionLabels,
   seasonAnalytics,
 }: SeasonAnalysisPanelProps) {
+  const { seasonAnalysis } = appText.panels;
+
   return (
     <section className="panel" id="season-analysis">
       <div className="panel-head">
         <div className="section-title">
           <BarChart3 size={20} />
-          <h2>Analisi stagione</h2>
+          <h2>{seasonAnalysis.title}</h2>
         </div>
         <button className="secondary-button compact-button" onClick={onShare} type="button">
           <Share2 size={16} />
-          Copia link vista corrente
+          {seasonAnalysis.shareButton}
         </button>
       </div>
       <div className="analytics-summary-grid">
@@ -45,15 +48,15 @@ function SeasonAnalysisPanel({
           <div key={entry.userName} className="season-comparison-row interactive-surface">
             <strong>{entry.userName}</strong>
             <span>{entry.seasonPoints} pt</span>
-            <span>Gap leader {entry.leaderGap}</span>
-            <span>Hit rate {entry.totalHitRate}%</span>
-            <span>Costanza {entry.consistencyIndex}</span>
+            <span>{seasonAnalysis.leaderGap(entry.leaderGap)}</span>
+            <span>{seasonAnalysis.hitRate(entry.totalHitRate)}</span>
+            <span>{seasonAnalysis.consistency(entry.consistencyIndex)}</span>
           </div>
         ))}
       </div>
       <div className="analytics-columns">
         <div className="analytics-subpanel interactive-surface">
-          <h3>Trend cumulato</h3>
+          <h3>{seasonAnalysis.cumulativeTrendTitle}</h3>
           <div className="trend-chart" data-testid="season-cumulative-trend">
             {seasonAnalytics.comparison.map((entry) => {
               const maxValue = Math.max(
@@ -77,23 +80,23 @@ function SeasonAnalysisPanel({
           </div>
         </div>
         <div className="analytics-subpanel interactive-surface">
-          <h3>Recap ultimo GP</h3>
+          <h3>{seasonAnalysis.latestGpTitle}</h3>
           {seasonAnalytics.recap ? (
             <div className="weekend-pulse-summary">
               <div className="spotlight-row">
-                <span>GP</span>
+                <span>{seasonAnalysis.latestGpLabel}</span>
                 <strong>{seasonAnalytics.recap.gpName}</strong>
               </div>
               <div className="spotlight-row">
-                <span>Vincitore weekend</span>
+                <span>{seasonAnalysis.winnerLabel}</span>
                 <strong>{seasonAnalytics.recap.winnerName}</strong>
               </div>
               <div className="spotlight-row">
-                <span>Swing classifica</span>
+                <span>{seasonAnalysis.swingLabel}</span>
                 <strong>{seasonAnalytics.recap.swingLabel}</strong>
               </div>
               <div className="spotlight-row">
-                <span>Pick decisiva</span>
+                <span>{seasonAnalysis.decisivePickLabel}</span>
                 <strong>
                   {seasonAnalytics.recap.decisiveField
                     ? predictionLabels[seasonAnalytics.recap.decisiveField]

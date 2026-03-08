@@ -1,5 +1,6 @@
 import { Gauge } from 'lucide-react';
 import type { OfficialResultsAvailability } from '../utils/appHelpers';
+import { appText } from '../uiText';
 
 interface WeekendPulseHeroCardProps {
   officialResultsAvailability: OfficialResultsAvailability | null;
@@ -12,29 +13,31 @@ function WeekendPulseHeroCard({
   weekendCountdownLabel,
   weekendStatusLabel,
 }: WeekendPulseHeroCardProps) {
+  const { weekendPulseHero } = appText.panels;
+
   return (
     <section className="hero-card interactive-surface">
       <div className="card-heading">
         <Gauge size={18} />
-        <span>Weekend pulse</span>
+        <span>{weekendPulseHero.title}</span>
       </div>
       <div className="weekend-pulse-summary">
         <div className="spotlight-row">
-          <span>Stato weekend</span>
+          <span>{weekendPulseHero.statusLabel}</span>
           <strong>{weekendStatusLabel}</strong>
         </div>
         <div className="spotlight-row">
-          <span>Countdown lock</span>
+          <span>{weekendPulseHero.countdownLabel}</span>
           <strong>{weekendCountdownLabel}</strong>
         </div>
         <div className="spotlight-row">
-          <span>Risultati ufficiali</span>
+          <span>{weekendPulseHero.availabilityLabel}</span>
           <strong>
             {officialResultsAvailability === 'complete'
-              ? 'Completi'
+              ? weekendPulseHero.availability.complete
               : officialResultsAvailability === 'partial'
-                ? 'Parziali'
-                : 'In attesa'}
+                ? weekendPulseHero.availability.partial
+                : weekendPulseHero.availability.pending}
           </strong>
         </div>
       </div>

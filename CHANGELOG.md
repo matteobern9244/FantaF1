@@ -4,6 +4,8 @@ Cronologia sintetica delle release documentate del progetto Fanta Formula 1.
 
 ## In sviluppo
 
+- **Centralizzazione Stringhe Applicative e Runtime**: introdotti entrypoint dedicati per il copy frontend (`src/uiText.ts`) e backend (`backend/text.js`), con estensione di `config/app-config.json` per spostare testi UI, messaggi runtime e messaggistica backend fuori dai componenti e dai flussi server principali.
+- **Regola Persistente No Hardcoded Strings + TDD**: `AGENTS.md` ora impone esplicitamente la centralizzazione delle stringhe applicative e l'uso obbligatorio del ciclo RED/GREEN/REFACTOR per fix, modifiche e nuove implementazioni; la stessa preferenza e' stata registrata anche nella memoria globale di Codex dell'utente.
 - **Refactor Modulare del Check Responsive**: `scripts/ui-responsive-check.mjs` e' stato ridotto a wrapper CLI; bootstrap stack locale, adapter Playwright, validazione stato, scenari, diagnostica e cleanup vivono ora in moduli dedicati sotto `scripts/ui-responsive/`.
 - **Baseline Coverage da Aggiornare Sempre**: `AGENTS.md` impone ora in modo esplicito l'aggiornamento automatico del baseline coverage ogni volta che una task produce un nuovo risultato verificato di release coverage, mantenendo invariati i numeri quando il risultato resta gia' al 100%.
 - **Vista Pubblica Condivisibile e Insight Stagionali**: la UI espone ora `Weekend pulse`, `Analisi stagione`, guida pubblica, filtri storico e drill-down dei GP; `meeting`, `view`, `historyUser`, `historySearch` e `hash` vengono idratati dall'URL e riscritti in modo coerente per condividere la vista corrente senza concedere accesso admin via query string.

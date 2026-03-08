@@ -1,5 +1,6 @@
 import { AppData, Driver, Weekend } from './models.js';
 import { appConfig } from './config.js';
+import { backendText, formatBackendText } from './text.js';
 import {
   buildWeekendStateFromUsers,
   createEmptyPrediction,
@@ -17,7 +18,7 @@ const participantSlots = Number.isFinite(Number(appConfig.participantSlots))
 
 function createInitialUsers() {
   return Array.from({ length: participantSlots }, (_, index) => ({
-    name: `Player ${index + 1}`,
+    name: formatBackendText(backendText.storage.defaultUserNameTemplate, { index: index + 1 }),
     predictions: createEmptyPrediction(),
     points: 0,
   }));
@@ -29,7 +30,7 @@ async function readPersistedParticipantRoster() {
     const plainData = storedData ? storedData.toObject() : null;
     return resolveParticipantRoster(plainData?.users, participantSlots);
   } catch (error) {
-    console.error('Error reading participant roster from DB:', error);
+    console.error(backendText.storage.readParticipantRosterError, error);
     return null;
   }
 }
@@ -195,13 +196,15 @@ function sanitizeAppData(
   let normalizedUsers;
   if (incomingUsers.length >= participantSlots) {
     normalizedUsers = normalizeUsersToRoster(
-      incomingUsers.slice(0, participantSlots).map(user => sanitizeUser(user, user.name || 'Unknown')),
+      incomingUsers.slice(0, participantSlots).map(user =>
+        sanitizeUser(user, user.name || backendText.storage.unknownUserName),
+      ),
       resolvedIncomingRoster,
     );
   } else if (incomingUsers.length > 0) {
     normalizedUsers = normalizeUsersToRoster([
-      ...incomingUsers.map(user => sanitizeUser(user, user.name || 'Unknown')),
-      ...createInitialUsers().slice(incomingUsers.length)
+      ...incomingUsers.map(user => sanitizeUser(user, user.name || backendText.storage.unknownUserName)),
+      ...createInitialUsers().slice(incomingUsers.length),
     ], resolvedIncomingRoster);
   } else {
     normalizedUsers = defaultData.users;
@@ -262,7 +265,7 @@ async function readAppData(calendarPromise) {
     const plainData = storedData ? storedData.toObject() : null;
     return plainData ? sanitizeAppData(plainData, calendar) : createDefaultAppData(calendar);
   } catch (error) {
-    console.error('Error reading app data from DB:', error);
+    console.error(backendText.storage.readAppDataError, error);
     return createDefaultAppData(calendar);
   }
 }
@@ -283,8 +286,8 @@ async function writeAppData(appData, calendarPromise) {
     });
     return sanitizedData;
   } catch (error) {
-    console.error('[Storage Error] Error writing app data to DB:', error);
-    console.error('[Storage Error] Data being written:', JSON.stringify(sanitizedData, null, 2));
+    console.error(backendText.storage.writeAppDataError, error);
+    console.error(backendText.storage.writeAppDataPayloadLog, JSON.stringify(sanitizedData, null, 2));
     throw error;
   }
 }
@@ -294,7 +297,7 @@ async function readDriversCache() {
     const drivers = await Driver.find().sort({ name: 1 });
     return drivers.map(d => d.toObject());
   } catch (error) {
-    console.error('Error reading drivers from DB:', error);
+    console.error(backendText.storage.readDriversError, error);
     return [];
   }
 }
@@ -308,7 +311,7 @@ async function writeDriversCache(drivers) {
     await Driver.insertMany(drivers);
     return drivers;
   } catch (error) {
-    console.error('Error writing drivers to DB:', error);
+    console.error(backendText.storage.writeDriversError, error);
     return drivers;
   }
 }
@@ -318,7 +321,7 @@ async function readCalendarCache() {
     const calendar = await Weekend.find().sort({ roundNumber: 1 });
     return calendar.map(w => w.toObject());
   } catch (error) {
-    console.error('Error reading calendar from DB:', error);
+    console.error(backendText.storage.readCalendarError, error);
     return [];
   }
 }
@@ -329,7 +332,7 @@ async function writeCalendarCache(calendar) {
     await Weekend.insertMany(calendar);
     return calendar;
   } catch (error) {
-    console.error('Error writing calendar to DB:', error);
+    console.error(backendText.storage.writeCalendarError, error);
     return calendar;
   }
 }

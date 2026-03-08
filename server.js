@@ -2,7 +2,7 @@ import 'dotenv/config'; // Load env vars
 import mongoose from 'mongoose';
 import app from './app.js';
 import { syncCalendarFromOfficialSource } from './backend/calendar.js';
-import { appConfig, formatConfigText } from './backend/config.js';
+import { appConfig } from './backend/config.js';
 import {
   determineExpectedMongoDatabaseName,
   normalizeRuntimeEnvironment,
@@ -11,6 +11,7 @@ import {
 } from './backend/database.js';
 import { syncDriversFromOfficialSource } from './backend/drivers.js';
 import { ensureAdminCredentials } from './backend/auth.js';
+import { backendText, formatBackendText } from './backend/text.js';
 
 const PORT = process.env.PORT || appConfig.server.port;
 const HOST = '0.0.0.0'; // Bind to all interfaces for Render
@@ -20,7 +21,7 @@ const databaseTargetName = determineExpectedMongoDatabaseName(process.env.NODE_E
 async function connectToDatabase() {
   const uri = process.env.MONGODB_URI;
   if (!uri) {
-    throw new Error('MONGODB_URI environment variable is not defined');
+    throw new Error(backendText.database.missingMongoUri);
   }
 
   try {
@@ -37,10 +38,14 @@ async function connectToDatabase() {
     verifyMongoDatabaseName(connectedDatabaseName, databaseTargetName);
 
     console.log(
-      `[Database] Connected to MongoDB Atlas - Environment: ${runtimeEnvironment} - Target: ${connectedDatabaseName} - Resolved: ${targetDatabaseName}`,
+      formatBackendText(backendText.database.connectedLogTemplate, {
+        environment: runtimeEnvironment,
+        connectedDatabaseName,
+        targetDatabaseName,
+      }),
     );
   } catch (error) {
-    console.error('[Database] MongoDB connection error:', error);
+    console.error(backendText.database.connectionErrorLog, error);
     process.exit(1);
   }
 }
@@ -53,14 +58,14 @@ async function startServer() {
   await ensureAdminCredentials();
   app.listen(PORT, HOST, () => {
     console.log(
-      formatConfigText(appConfig.uiText.backend.logs.serverStarted, {
+      formatBackendText(backendText.logs.serverStarted, {
         origin: `http://${HOST}:${PORT}`,
       }),
     );
 
     // 3. Perform external sync in the background
     // This prevents slow external sources from blocking startup
-    console.log('[Sync] Starting background synchronization...');
+    console.log(backendText.sync.startBackground);
     
     void (async () => {
       try {
@@ -68,10 +73,10 @@ async function startServer() {
         if (syncedDrivers.length === 0) {
           console.warn(appConfig.uiText.backend.errors.driversUnavailable);
         } else {
-          console.log(`[Sync] Drivers synchronized: ${syncedDrivers.length}`);
+          console.log(formatBackendText(backendText.sync.driversSynchronizedTemplate, { count: syncedDrivers.length }));
         }
       } catch (e) {
-        console.warn('[Sync] Driver sync warning:', e.message);
+        console.warn(backendText.sync.driverSyncWarning, e.message);
       }
 
       try {
@@ -79,10 +84,10 @@ async function startServer() {
         if (syncedCalendar.length === 0) {
           console.warn(appConfig.uiText.backend.errors.calendarUnavailable);
         } else {
-          console.log(`[Sync] Calendar synchronized: ${syncedCalendar.length}`);
+          console.log(formatBackendText(backendText.sync.calendarSynchronizedTemplate, { count: syncedCalendar.length }));
         }
       } catch (e) {
-        console.warn('[Sync] Calendar sync warning:', e.message);
+        console.warn(backendText.sync.calendarSyncWarning, e.message);
       }
     })();
   });
