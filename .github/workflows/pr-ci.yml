@@ -84,7 +84,7 @@ jobs:
             echo "MONGODB_URI_CI secret is missing." >&2
             exit 1
           fi
-          normalized_uri="$(node -e 'const uri = process.env.MONGODB_URI; const parsed = new URL(uri); parsed.pathname = \"/\"; process.stdout.write(parsed.toString())')"
+          normalized_uri="$(node -e 'const uri = process.env.MONGODB_URI; const parsed = new URL(uri); parsed.pathname = "/"; process.stdout.write(parsed.toString())')"
           echo "::add-mask::$normalized_uri"
           {
             echo "MONGODB_URI<<EOF"
@@ -139,7 +139,7 @@ jobs:
             echo "MONGODB_URI_CI secret is missing." >&2
             exit 1
           fi
-          normalized_uri="$(node -e 'const uri = process.env.MONGODB_URI; const parsed = new URL(uri); parsed.pathname = \"/\"; process.stdout.write(parsed.toString())')"
+          normalized_uri="$(node -e 'const uri = process.env.MONGODB_URI; const parsed = new URL(uri); parsed.pathname = "/"; process.stdout.write(parsed.toString())')"
           echo "::add-mask::$normalized_uri"
           {
             echo "MONGODB_URI<<EOF"
