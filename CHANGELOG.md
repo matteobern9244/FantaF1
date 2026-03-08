@@ -4,6 +4,7 @@ Cronologia sintetica delle release documentate del progetto Fanta Formula 1.
 
 ## In sviluppo
 
+- **Workflow Post-Merge Health Corretto**: il job GitHub Actions `post-merge-health` usa ora `RENDER_HEALTHCHECK_URL` come variabile `env` a livello job per pilotare le condizioni `if:` in modo compatibile con GitHub Actions, eliminando l'errore di validazione del workflow su push e mantenendo invariato il controllo `curl` verso Render.
 - **Hardening Highlights Multi-Source con Anno Stagione Dinamico**: il resolver YouTube Sky Sport F1 usa ora una pipeline OO dedicata con `feed`, `channel search`, `channel videos`, `continuation` e fallback globale, includendo l'anno della stagione della gara nella query e nel ranking per evitare match cross-season.
 - **Refactor OO dell'Area Highlights**: introdotto il modulo `backend/highlights.js` con oggetti espliciti per query building, ranking candidati, validation service, lookup policy e source strategy, mantenendo invariato il contratto pubblico `highlightsVideoUrl` verso frontend e API risultati.
 - **Verifiche Development e Production-Like Preview**: confermati il target `fantaf1_dev` in locale, la compatibilita' della build frontend in preview production-like e la tenuta responsive del CTA highlights su admin/public, desktop/mobile; migliorato inoltre il wrapping del pulsante nel recap del weekend selezionato.
