@@ -36,6 +36,7 @@ import {
 } from './backend/storage.js';
 import { isRaceLocked, validateParticipants, validatePredictions } from './backend/validation.js';
 import { verifyMongoDatabaseName } from './backend/database.js';
+import { SaveRequestService } from './backend/app-route-service.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -184,96 +185,41 @@ function buildPredictionsMissingResponse(requestId) {
   });
 }
 
-async function handleSaveRequest(req, res, { requirePredictions = false, routePath }) {
-  const requestId = createRequestId();
-
-  try {
-    if (!requireAdminSession(req, res)) {
-      return;
-    }
-
-    verifyMongoDatabaseName(mongoose.connection.db?.databaseName, databaseTargetName);
-
-    const newData = req.body;
-    const persistedParticipantRoster = await readPersistedParticipantRoster();
-
-    if (!validateParticipants(newData?.users, persistedParticipantRoster, participantSlots)) {
-      const response = buildParticipantsInvalidResponse(newData, requestId);
-      return res.status(response.status).json(response.payload);
-    }
-
-    const calendar = await readCalendarCache();
-    const selectedRace = calendar.find(r => r.meetingKey === newData?.selectedMeetingKey);
-    
-    if (selectedRace) {
-      const currentData = await readAppData();
-      if (isRaceLocked(selectedRace, newData, currentData)) {
-        const response = buildSaveErrorResponse({
-          environment: runtimeEnvironment,
-          requestId,
-          code: 'race_locked',
-          error: appConfig.uiText.calendar.raceLockedError,
-          /* v8 ignore next -- the "unknown" fallback requires an impossible locked race without timing metadata */
-          details: formatBackendText(backendText.save.raceLockedDetailsTemplate, {
-            meetingKey: selectedRace.meetingKey,
-            startTime: selectedRace.raceStartTime || selectedRace.endDate || 'unknown',
-          }),
-        });
-
-        return res.status(response.status).json(response.payload);
-      }
-    }
-
-    if (
-      requirePredictions &&
-      !validatePredictions(
-        newData?.users,
-        predictionFieldOrder,
-        newData?.weekendStateByMeetingKey,
-        newData?.selectedMeetingKey,
-      )
-    ) {
-      const response = buildPredictionsMissingResponse(requestId);
-      return res.status(response.status).json(response.payload);
-    }
-
-    await writeAppData(newData);
-    res.json({ message: appConfig.uiText.backend.messages.saveSuccess });
-  } catch (error) {
-    const code = classifySaveError(error);
-    const details = extractErrorDetails(error);
-    const response = buildSaveErrorResponse({
-      environment: runtimeEnvironment,
-      requestId,
-      code,
-      error: appConfig.uiText.backend.errors.saveFailed,
-      details,
-    });
-
-    console.error(
-      formatBackendText(backendText.save.saveRouteFailureTemplate, {
-        routePath,
-        requestId,
-        environment: runtimeEnvironment,
-        databaseTarget: databaseTargetName,
-        code,
-      }),
-      error,
-    );
-
-    res.status(response.status).json(response.payload);
-  }
-}
+const saveRequestService = new SaveRequestService({
+  requireAdminSession,
+  verifyMongoDatabaseName,
+  readPersistedParticipantRoster,
+  validateParticipants,
+  buildParticipantsInvalidResponse,
+  readCalendarCache,
+  readAppData,
+  isRaceLocked,
+  buildSaveErrorResponse,
+  formatBackendText,
+  backendText,
+  appConfig,
+  validatePredictions,
+  buildPredictionsMissingResponse,
+  writeAppData,
+  classifySaveError,
+  extractErrorDetails,
+  runtimeEnvironment,
+  databaseTargetName,
+  participantSlots,
+  predictionFieldOrder,
+  createRequestId,
+});
+saveRequestService.getConnectedDatabaseName = () => mongoose.connection.db?.databaseName;
 
 app.post(appConfig.api.dataPath, async (req, res) => {
-  await handleSaveRequest(req, res, {
+  await saveRequestService.handleSaveRequest(req, res, {
     requirePredictions: false,
     routePath: appConfig.api.dataPath,
   });
 });
 
 app.post(appConfig.api.predictionsPath, async (req, res) => {
-  await handleSaveRequest(req, res, {
+  await saveRequestService.handleSaveRequest(req, res, {
     requirePredictions: true,
     routePath: appConfig.api.predictionsPath,
   });

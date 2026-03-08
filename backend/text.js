@@ -61,6 +61,7 @@ const defaultBackendText = {
   },
   logs: {
     serverStarted: 'Backend server attivo su {origin}.',
+    driverSyncFormulaOneFallback: 'Sync roster StatsF1 non disponibile. Uso Formula1.com con {count} piloti.',
   },
   errors: {
     driversUnavailable: 'Lista piloti non disponibile.',

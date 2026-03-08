@@ -7,6 +7,7 @@ import {
   resolveSkySportHighlightsVideo,
   shouldLookupFinishedRaceHighlights,
 } from './highlights.js';
+import { RaceResultsCache, RaceResultsService } from './race-results-service.js';
 import { readCalendarCache, writeCalendarCache } from './storage.js';
 
 const MONTH_INDEX = {
@@ -23,9 +24,6 @@ const MONTH_INDEX = {
   NOV: 10,
   DEC: 11,
 };
-const RACE_RESULTS_CACHE_TTL_MS = 30_000;
-const raceResultsCache = new Map();
-
 function decodeHtmlEntities(value = '') {
   return String(value)
     .replaceAll('&amp;', '&')
@@ -93,33 +91,6 @@ async function persistRaceHighlightsVideoUrl(calendar, meetingKey, highlightsVid
     highlightsLookupStatus: 'found',
     highlightsLookupSource: 'legacy',
   });
-}
-
-function clearRaceResultsCache() {
-  raceResultsCache.clear();
-}
-
-function getCachedRaceResults(meetingKey) {
-  const cachedEntry = raceResultsCache.get(meetingKey);
-  if (!cachedEntry) {
-    return null;
-  }
-
-  if (Date.now() - cachedEntry.timestamp > RACE_RESULTS_CACHE_TTL_MS) {
-    raceResultsCache.delete(meetingKey);
-    return null;
-  }
-
-  return { ...cachedEntry.results };
-}
-
-function setCachedRaceResults(meetingKey, results) {
-  raceResultsCache.set(meetingKey, {
-    timestamp: Date.now(),
-    results: { ...results },
-  });
-
-  return { ...results };
 }
 
 function buildOfficialResultsBaseUrl(detailUrl = '', meetingKey = '') {
@@ -614,59 +585,26 @@ async function syncCalendarFromOfficialSource({
   return [];
 }
 
-async function fetchRaceResults(meetingKey) {
-  const calendar = await readCalendarCache();
-  const race = calendar.find((entry) => entry.meetingKey === meetingKey);
+const raceResultsService = new RaceResultsService({
+  readCalendarCache,
+  fetchHtmlImpl: fetchHtml,
+  cache: new RaceResultsCache(),
+  buildOfficialResultsBaseUrl,
+  parseRaceClassification,
+  parseBonusDriver,
+  resolveRacePhase,
+  shouldLookupFinishedRaceHighlights,
+  resolveSkySportHighlightsVideo,
+  persistRaceHighlightsLookup,
+});
 
-  return fetchRaceResultsForRace(race, meetingKey);
+function clearRaceResultsCache() {
+  raceResultsService.clearCache();
 }
 
-async function fetchRaceResultsForRace(race, meetingKey) {
-  const cachedResults = getCachedRaceResults(meetingKey);
-  if (cachedResults) {
-    return cachedResults;
-  }
-
-  /* v8 ignore next 3 */
-  if (!race || !race.detailUrl) {
-    throw new Error('Race not found in calendar');
-  }
-
-  const resultsBaseUrl = buildOfficialResultsBaseUrl(race.detailUrl, race.meetingKey);
-
-  /* v8 ignore next 3 */
-  if (!resultsBaseUrl) {
-    throw new Error('Race results URL could not be derived from calendar data');
-  }
-
-  const resultsUrl = `${resultsBaseUrl}/race-result`;
-  const poleUrl = race.isSprintWeekend
-    ? `${resultsBaseUrl}/sprint-results`
-    : `${resultsBaseUrl}/qualifying`;
-
+async function fetchRaceResults(meetingKey) {
   try {
-    const [raceHtml, poleHtml] = await Promise.all([
-      fetchHtml(resultsUrl, getBrowserHeaders()).catch(() => ''),
-      fetchHtml(poleUrl, getBrowserHeaders()).catch(() => ''),
-    ]);
-
-    const results = {
-      first: '',
-      second: '',
-      third: '',
-      pole: '',
-    };
-
-    if (raceHtml) {
-      Object.assign(results, parseRaceClassification(raceHtml));
-    }
-
-    if (poleHtml) {
-      results.pole = parseBonusDriver(poleHtml);
-    }
-
-    return setCachedRaceResults(meetingKey, results);
-  /* v8 ignore next 4 */
+    return await raceResultsService.fetchRaceResults(meetingKey);
   } catch (error) {
     console.error('Error fetching race results:', error);
     throw error;
@@ -674,27 +612,7 @@ async function fetchRaceResultsForRace(race, meetingKey) {
 }
 
 async function fetchRaceResultsWithStatus(meetingKey, now = new Date()) {
-  let calendar = await readCalendarCache();
-  const race = calendar.find((entry) => entry.meetingKey === meetingKey);
-  const results = await fetchRaceResultsForRace(race, meetingKey);
-  const racePhase = resolveRacePhase(race, results, now);
-  let highlightsVideoUrl = normalizeText(race?.highlightsVideoUrl);
-
-  if (racePhase === 'finished' && shouldLookupFinishedRaceHighlights(race, now.getTime())) {
-    try {
-      const lookupResult = await resolveSkySportHighlightsVideo(race, { now });
-      highlightsVideoUrl = lookupResult.highlightsVideoUrl;
-      calendar = await persistRaceHighlightsLookup(calendar, meetingKey, lookupResult);
-    } catch {
-      highlightsVideoUrl = normalizeText(race?.highlightsVideoUrl);
-    }
-  }
-
-  return {
-    ...results,
-    racePhase,
-    highlightsVideoUrl,
-  };
+  return raceResultsService.fetchRaceResultsWithStatus(meetingKey, now);
 }
 
 export {

@@ -122,6 +122,39 @@ describe('Backend Drivers Extra Coverage', () => {
     expect(result[0].id).toBe('ver');
   });
 
+  it('syncDriversFromOfficialSource prefers live Formula1 fallback over cache when Stats fails', async () => {
+    const warningSpy = vi.spyOn(console, 'warn');
+    global.fetch.mockImplementation((url) => {
+      if (typeof url === 'string' && url.includes('statsf1')) {
+        return Promise.reject(new Error('Stats failed'));
+      }
+
+      return Promise.resolve({
+        ok: true,
+        text: async () => `
+          ${Array.from({ length: 22 }).map((_, i) => `
+            <a href="/en/drivers/driver-${i}">
+              <img src="https://media.formula1.com/image/upload/v1/common/f1/2026/red-bull-racing/image.webp" />
+              <span class="typography-module_body-m-compact-regular__abc">Driver</span>
+              <span class="typography-module_body-m-compact-bold__def">${i}</span>
+            </a>
+          `).join('')}
+        `,
+      });
+    });
+
+    storage.readDriversCache.mockResolvedValue([
+      { id: 'ver', name: 'Cached Driver', team: 'Red Bull' },
+    ]);
+
+    const result = await syncDriversFromOfficialSource();
+
+    expect(result.length).toBeGreaterThan(20);
+    expect(result.some((driver) => driver.name === 'Cached Driver')).toBe(false);
+    expect(storage.writeDriversCache).toHaveBeenCalled();
+    expect(warningSpy).toHaveBeenCalledWith('Sync roster StatsF1 non disponibile. Uso Formula1.com con 22 piloti.');
+  });
+
   it('syncDriversFromOfficialSource fallback to F1 HTML if cache is empty', async () => {
     global.fetch.mockImplementation((url) => {
       if (typeof url === 'string' && url.includes('statsf1')) {

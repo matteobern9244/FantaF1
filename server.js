@@ -13,6 +13,11 @@ import {
 import { syncDriversFromOfficialSource } from './backend/drivers.js';
 import { ensureAdminCredentials } from './backend/auth.js';
 import { backendText, formatBackendText } from './backend/text.js';
+import {
+  BackgroundSyncService,
+  DatabaseConnectionService,
+  ServerBootstrapService,
+} from './backend/server-bootstrap-service.js';
 
 const PORT = process.env.PORT || appConfig.server.port;
 const HOST = '0.0.0.0'; // Bind to all interfaces for Render
@@ -22,82 +27,53 @@ const databaseTargetName = determineExpectedMongoDatabaseName(process.env.NODE_E
   mongoDatabaseNameOverride,
 });
 
-async function connectToDatabase() {
-  const uri = process.env.MONGODB_URI;
-  if (!uri) {
-    throw new Error(backendText.database.missingMongoUri);
-  }
+const databaseConnectionService = new DatabaseConnectionService({
+  mongoose,
+  resolveMongoDatabaseName,
+  verifyMongoDatabaseName,
+  backendText,
+  formatBackendText,
+  runtimeEnvironment,
+  databaseTargetName,
+  mongoDatabaseNameOverride,
+});
 
+const backgroundSyncService = new BackgroundSyncService({
+  syncDriversFromOfficialSource,
+  syncCalendarFromOfficialSource,
+  backendText,
+  formatBackendText,
+  appConfig,
+});
+
+const serverBootstrapService = new ServerBootstrapService({
+  databaseConnectionService,
+  backgroundSyncService,
+  ensureAdminCredentials,
+  app,
+  host: HOST,
+  port: PORT,
+  backendText,
+  formatBackendText,
+});
+
+async function startServer() {
   try {
-    const targetDatabaseName = resolveMongoDatabaseName({
+    await serverBootstrapService.start({
+      mongoUri: process.env.MONGODB_URI,
       nodeEnv: process.env.NODE_ENV,
-      mongoUri: uri,
-      mongoDatabaseNameOverride,
     });
-
-    await mongoose.connect(uri, {
-      dbName: databaseTargetName,
-    });
-
-    const connectedDatabaseName = mongoose.connection.db?.databaseName;
-    verifyMongoDatabaseName(connectedDatabaseName, databaseTargetName);
-
-    console.log(
-      formatBackendText(backendText.database.connectedLogTemplate, {
-        environment: runtimeEnvironment,
-        connectedDatabaseName,
-        targetDatabaseName,
-      }),
-    );
   } catch (error) {
-    console.error(backendText.database.connectionErrorLog, error);
+    if (error?.message === backendText.database.missingMongoUri) {
+      console.error(error);
+    } else {
+      console.error(backendText.database.connectionErrorLog, error);
+    }
     process.exit(1);
   }
 }
 
-async function startServer() {
-  // 1. Connect to DB first (mandatory)
-  await connectToDatabase();
-
-  // 2. Start listening immediately to satisfy platform (Render) health checks
-  await ensureAdminCredentials();
-  app.listen(PORT, HOST, () => {
-    console.log(
-      formatBackendText(backendText.logs.serverStarted, {
-        origin: `http://${HOST}:${PORT}`,
-      }),
-    );
-
-    // 3. Perform external sync in the background
-    // This prevents slow external sources from blocking startup
-    console.log(backendText.sync.startBackground);
-    
-    void (async () => {
-      try {
-        const syncedDrivers = await syncDriversFromOfficialSource();
-        if (syncedDrivers.length === 0) {
-          console.warn(appConfig.uiText.backend.errors.driversUnavailable);
-        } else {
-          console.log(formatBackendText(backendText.sync.driversSynchronizedTemplate, { count: syncedDrivers.length }));
-        }
-      } catch (e) {
-        console.warn(backendText.sync.driverSyncWarning, e.message);
-      }
-
-      try {
-        const syncedCalendar = await syncCalendarFromOfficialSource();
-        if (syncedCalendar.length === 0) {
-          console.warn(appConfig.uiText.backend.errors.calendarUnavailable);
-        } else {
-          console.log(formatBackendText(backendText.sync.calendarSynchronizedTemplate, { count: syncedCalendar.length }));
-        }
-      } catch (e) {
-        console.warn(backendText.sync.calendarSyncWarning, e.message);
-      }
-    })();
-  });
-}
-
+/* v8 ignore next 3 -- defensive final catch after explicit bootstrap error handling */
 startServer().catch((error) => {
   console.error(error);
   process.exit(1);

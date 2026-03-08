@@ -230,17 +230,6 @@ async function syncDriversFromOfficialSource() {
 
     return normalizedDrivers;
   } catch (error) {
-    const cachedDrivers = sortDriversAlphabetically(await readDriversCache());
-
-    if (cachedDrivers.length > 0) {
-      console.warn(
-        formatConfigText(backendText.logs.driverSyncFallback, {
-          count: cachedDrivers.length,
-        }),
-      );
-      return cachedDrivers;
-    }
-
     if (!formulaOneDriversHtml) {
       formulaOneDriversHtml = await formulaOnePromise;
     }
@@ -250,12 +239,23 @@ async function syncDriversFromOfficialSource() {
       if (fallbackDrivers.length >= appConfig.driversSource.expectedCount) {
         await writeDriversCache(fallbackDrivers);
         console.warn(
-          formatConfigText(backendText.logs.driverSyncFallback, {
+          formatConfigText(backendText.logs.driverSyncFormulaOneFallback, {
             count: fallbackDrivers.length,
           }),
         );
         return fallbackDrivers;
       }
+    }
+
+    const cachedDrivers = sortDriversAlphabetically(await readDriversCache());
+
+    if (cachedDrivers.length > 0) {
+      console.warn(
+        formatConfigText(backendText.logs.driverSyncFallback, {
+          count: cachedDrivers.length,
+        }),
+      );
+      return cachedDrivers;
     }
 
     console.error(backendText.logs.driverSyncNoCache, error);

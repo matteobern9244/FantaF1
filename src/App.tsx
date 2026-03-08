@@ -48,7 +48,6 @@ import {
 import type {
   AppData,
   Driver,
-  OfficialResultsResponse,
   Prediction,
   PredictionKey,
   RacePhase,
@@ -83,7 +82,9 @@ import {
 } from './utils/drivers';
 import { buildSeasonAnalytics, buildUserAnalytics, buildUserKpiSummaries, trackedFields } from './utils/analytics';
 import { createSaveRequestError, getSaveErrorAlertMessage } from './utils/save';
+import { fetchOfficialResults, normalizeOfficialResultsResponse } from './utils/resultsApi';
 import { splitHeroTitle } from './utils/title';
+import { WeekendStateAssembler } from './utils/weekendStateService';
 import HistoryArchivePanel from './components/HistoryArchivePanel';
 import PublicGuidePanel from './components/PublicGuidePanel';
 import SeasonAnalysisPanel from './components/SeasonAnalysisPanel';
@@ -92,9 +93,7 @@ import WeekendPulseHeroCard from './components/WeekendPulseHeroCard';
 import { appText } from './uiText';
 import {
   getWeekendPredictionState,
-  hydrateAppDataForWeekend,
   hydrateUsersForWeekend,
-  normalizeWeekendStateByMeetingKey,
   upsertWeekendPredictionState,
   upsertWeekendRaceResults,
 } from './utils/weekendState';
@@ -120,6 +119,7 @@ const heroTitle = splitHeroTitle(visibleAppTitle, genericAppTitle);
 const saveRuntimeEnvironment = import.meta.env.DEV ? 'development' : 'production';
 const sessionApiUrl = '/api/session';
 const adminSessionApiUrl = '/api/admin/session';
+const weekendStateAssembler = new WeekendStateAssembler();
 
 type DeferredInstallPromptEvent = Event & {
   prompt: () => Promise<void>;
@@ -137,27 +137,6 @@ type ToastTone = 'info' | 'success';
 interface ToastState {
   message: string;
   tone: ToastTone;
-}
-
-function normalizeOfficialResultsResponse(payload: OfficialResultsResponse | Prediction) {
-  if ('results' in payload && payload.results) {
-    return {
-      racePhase: payload.racePhase,
-      results: payload.results,
-      highlightsVideoUrl: payload.highlightsVideoUrl ?? '',
-    };
-  }
-
-  return {
-    racePhase: 'racePhase' in payload ? payload.racePhase : 'open',
-    results: {
-      first: payload.first ?? '',
-      second: payload.second ?? '',
-      third: payload.third ?? '',
-      pole: payload.pole ?? '',
-    },
-    highlightsVideoUrl: 'highlightsVideoUrl' in payload ? payload.highlightsVideoUrl ?? '' : '',
-  };
 }
 
 function isStandaloneInstallContext() {
@@ -483,31 +462,21 @@ function App() {
               isAdmin: saveRuntimeEnvironment === 'development',
               defaultViewMode: saveRuntimeEnvironment === 'development' ? 'admin' : 'public',
             };
-      const resolvedRace =
-        resolveSelectedRace(loadedCalendar, requestedMeetingKey || incomingData.selectedMeetingKey) ??
-        getNextUpcomingRace(loadedCalendar);
-      const resolvedMeetingKey = resolvedRace?.meetingKey ?? fallbackData.selectedMeetingKey;
-      const initialWeekendStateByMeetingKey = resolvedMeetingKey
-        ? upsertWeekendPredictionState(
-            normalizeWeekendStateByMeetingKey(incomingData.weekendStateByMeetingKey),
-            resolvedMeetingKey,
-            incomingData.users,
-            incomingData.raceResults,
-          )
-        : normalizeWeekendStateByMeetingKey(incomingData.weekendStateByMeetingKey);
-      const hydratedIncomingData = resolvedMeetingKey
-        ? hydrateAppDataForWeekend(
-            {
-              ...incomingData,
-              selectedMeetingKey: resolvedMeetingKey,
-              weekendStateByMeetingKey: initialWeekendStateByMeetingKey,
-            },
-            resolvedMeetingKey,
-          )
-        : {
-            ...incomingData,
-            weekendStateByMeetingKey: initialWeekendStateByMeetingKey,
-          };
+      const {
+        hydratedIncomingData,
+        initialWeekendStateByMeetingKey,
+        resolvedMeetingKey,
+        resolvedRace,
+      } = weekendStateAssembler.initializeLoadedAppData({
+        incomingData,
+        calendar: loadedCalendar,
+        requestedMeetingKey: requestedMeetingKey ?? '',
+        fallbackSessionState: {
+          isAdmin: saveRuntimeEnvironment === 'development',
+          defaultViewMode: saveRuntimeEnvironment === 'development' ? 'admin' : 'public',
+        },
+        sessionState: sessionResult.status === 'fulfilled' ? sessionResult.value : undefined,
+      });
       const resolvedHistoryUserFilter =
         requestedHistoryUser && hydratedIncomingData.users.some((user) => user.name === requestedHistoryUser)
           ? requestedHistoryUser
@@ -614,11 +583,7 @@ function App() {
 
     async function syncSelectedWeekendResults() {
       try {
-        const response = await fetch(`/api/results/${activeRace.meetingKey}`);
-        if (!response.ok) {
-          return;
-        }
-        const payload = await response.json() as OfficialResultsResponse | Prediction;
+        const payload = await fetchOfficialResults(activeRace.meetingKey);
         if (isCancelled) {
           return;
         }
@@ -704,12 +669,11 @@ function App() {
   }
 
   function hydrateSelectedWeekendView(nextMeetingKey: string, baseUsers: UserData[]) {
-    const selectedWeekendState = getWeekendPredictionState(weekendStateByMeetingKey, nextMeetingKey);
-
-    return {
-      users: hydrateUsersForWeekend(baseUsers, selectedWeekendState),
-      raceResults: selectedWeekendState.raceResults,
-    };
+    return weekendStateAssembler.hydrateSelectedWeekendView(
+      weekendStateByMeetingKey,
+      nextMeetingKey,
+      baseUsers,
+    );
   }
 
   function resolveRaceFromRecord(record: AppData['history'][number]) {
@@ -747,22 +711,9 @@ function App() {
       weekendStateByMeetingKey,
       ...updatedState,
     };
-    const payload: AppData = editingSession
-      ? {
-          ...payloadBase,
-          weekendStateByMeetingKey: normalizeWeekendStateByMeetingKey(
-            payloadBase.weekendStateByMeetingKey,
-          ),
-        }
-      : {
-          ...payloadBase,
-          weekendStateByMeetingKey: upsertWeekendPredictionState(
-            normalizeWeekendStateByMeetingKey(payloadBase.weekendStateByMeetingKey),
-            payloadBase.selectedMeetingKey,
-            payloadBase.users,
-            payloadBase.raceResults,
-          ),
-        };
+    const payload = weekendStateAssembler.buildPersistedPayload(payloadBase, {
+      editingSession: Boolean(editingSession),
+    });
 
     const response = await fetch(targetUrl, {
       method: 'POST',

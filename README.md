@@ -4,6 +4,34 @@ Applicazione full-stack privata per gestire un Fanta Formula 1 con frontend Reac
 
 L'applicazione e' pensata per un flusso amministrato: un admin seleziona il weekend, inserisce i pronostici dei tre partecipanti, registra o recupera i risultati reali e consolida i punti nello storico.
 
+## Stato release e confronto con la produzione
+
+La versione attualmente in produzione e pubblicata e' `v1.3.12`. Il repository e' ora allineato alla prossima release `v1.4.0` in `package.json`, mentre la live resta ancora sulla baseline `v1.3.12` finche' non verra' rilasciata.
+
+### Baseline produzione `v1.3.12`
+
+La baseline live corrisponde alle capability gia' rilasciate e documentate in `CHANGELOG.md` sotto `v1.3.12`:
+
+- sessioni admin/public con cookie HTTP-only e API `GET /api/session`, `POST /api/admin/session`, `DELETE /api/admin/session`;
+- dashboard KPI e analytics estese;
+- roster dinamico dei partecipanti ricavato dal database;
+- rimozione completa del Weekend Boost;
+- hardening server-side su validazione e sanitizzazione;
+- validazione release con `lint`, `test`, `test:coverage`, `build` e `test:save-local`.
+
+### Delta del workspace corrente rispetto a `v1.3.12`
+
+Rispetto alla produzione `v1.3.12`, il repository contiene gia' il delta tecnico della release `v1.4.0`:
+
+- backend `calendar/results` estratto in service object dedicati (`RaceResultsService`, `RaceResultsCache`);
+- backend `storage` rifattorizzato in facade + servizi espliciti (`AppDataRepository`, `AppDataSanitizer`, `ParticipantRosterPolicy`, `WeekendSelectionService`);
+- logica frontend di weekend state, scoring e analytics spostata in moduli OO dedicati;
+- route di salvataggio e bootstrap server separati in service object testabili;
+- baseline coverage verificata riallineata a `4699 / 4699` statements, `371 / 371` functions, `1908 / 1908` branches e `4699 / 4699` lines;
+- validazione finale completa rieseguita anche con `test:ui-responsive`, `test:save-local`, controllo sintassi di `start_fantaf1.command` e verifica di coerenza dei workflow GitHub Actions.
+
+In sintesi: la produzione `v1.3.12` descrive la baseline live, mentre questo README documenta anche il delta tecnico gia' presente nel repository e versionato come `v1.4.0`, non ancora deployato.
+
 ## Panoramica funzionale
 
 - Lo stato di gioco mantiene sempre esattamente 3 partecipanti.
@@ -243,6 +271,7 @@ L'applicazione di questi standard garantisce un approccio "production-safe" e un
 
 - SPA React 18 + TypeScript + Vite.
 - Il frontend usa API relative (`/api/...`) per compatibilita' locale e produzione.
+- `src/App.tsx` resta il container UI principale, ma parte della logica non visuale e' stata estratta in facade e assembler dedicati come `src/utils/resultsApi.ts`, `src/utils/weekendStateService.ts`, `src/utils/gameService.ts` e `src/utils/analyticsService.ts`.
 - Il titolo visualizzato nell'hero usa `VITE_APP_LOCAL_NAME` se valorizzata, altrimenti il titolo base definito nel config applicativo.
 - Quando l'override hero inizia con il titolo base e aggiunge un suffisso, il frontend lo rende in due righe stabili per preservare leggibilita' e coerenza visiva.
 - Il titolo hero usa un fit `container-based`: il `font-size` resta al massimo corrente quando la prima riga entra nel pannello e si riduce solo quando la larghezza utile non basta, indipendentemente dal breakpoint.
@@ -252,6 +281,7 @@ L'applicazione di questi standard garantisce un approccio "production-safe" e un
 
 - Server Express 5 con `cors`, `express.json()` e `dotenv`.
 - L'applicazione Express è definita in `app.js` per consentire test di integrazione, mentre `server.js` gestisce l'avvio e la connessione al database.
+- Il wiring runtime usa ora service object piccoli e testabili per i flussi piu' sensibili: `backend/race-results-service.js`, `backend/app-data-service.js`, `backend/app-route-service.js` e `backend/server-bootstrap-service.js`.
 - Espone API REST, serve gli asset statici di `dist` e usa un catch-all per il routing SPA.
 - Si connette prima al database, poi avvia il server HTTP e infine esegue in background la sincronizzazione di piloti e calendario.
 - In produzione il server ascolta su `0.0.0.0` e usa `PORT` se fornita dall'ambiente.
@@ -554,6 +584,11 @@ Lo script integrato:
 
 - Runner: Vitest.
 - Coverage provider: V8.
+- Baseline coverage verificata corrente sullo scope ufficiale del repository/applicazione:
+  - `4699 / 4699` statements
+  - `371 / 371` functions
+  - `1908 / 1908` branches
+  - `4699 / 4699` lines
 - Scope coverage configurato:
   - `app.js`
   - `server.js`

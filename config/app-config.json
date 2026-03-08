@@ -422,6 +422,7 @@
         "driverSyncStart": "Sincronizzazione roster piloti in corso...",
         "driverSyncSuccess": "Roster piloti aggiornato con {count} piloti.",
         "driverSyncFallback": "Sync roster non disponibile. Uso la cache locale con {count} piloti.",
+        "driverSyncFormulaOneFallback": "Sync roster StatsF1 non disponibile. Uso Formula1.com con {count} piloti.",
         "driverSyncNoCache": "Sync roster non disponibile e nessuna cache piloti trovata.",
         "calendarSyncStart": "Sincronizzazione calendario ufficiale in corso...",
         "calendarSyncSuccess": "Calendario ufficiale aggiornato con {count} weekend.",
