@@ -57,7 +57,10 @@ Di conseguenza:
 
 ### Risultati reali e assegnazione punti
 
-L'applicazione considera la gara conclusa circa 2.5 ore dopo l'orario di inizio gara.
+Per il weekend selezionato l'applicazione distingue due concetti separati:
+
+- `race lock`: i pronostici si bloccano all'orario ufficiale di partenza della gara;
+- `racePhase`: stato user-facing del weekend (`open`, `live`, `finished`) derivato dal backend.
 
 Quando il weekend selezionato ha risultati reali correnti incompleti:
 
@@ -71,7 +74,7 @@ Quando il weekend selezionato ha risultati reali correnti incompleti:
 
 Il pulsante di conferma risultati resta disabilitato finche' non sono vere entrambe le condizioni:
 
-- gara considerata conclusa;
+- backend in stato `racePhase=finished` per il weekend selezionato;
 - risultati reali completi in tutti i 4 campi.
 
 Alla conferma:
@@ -209,7 +212,7 @@ Quando l'utente cambia weekend, vista o filtri storico, il frontend aggiorna l'U
 
 - Configurazione punteggi centralizzata: 5 punti primo, 3 punti secondo, 2 punti terzo, 1 punto pole/Sprint.
 - Race lock server-side basato su `raceStartTime`, con fallback a `endDate + 14:00:00Z` se l'orario non e' disponibile.
-- Fine gara stimata a `raceStartTime + 2.5h` per abilitare l'assegnazione definitiva dei punti; il recupero ufficiale live dei risultati puo' iniziare prima ma resta read-only.
+- Stato gara user-facing centralizzato lato backend: `open` prima della partenza, `live` dopo la partenza senza classificazione ufficiale completa, `finished` quando Formula1.com pubblica la classifica gara ufficiale completa.
 - Reset dei pronostici correnti con salvataggio persistente immediato.
 - Conservazione dei nomi utente gia' persistiti durante modifica o cancellazione di gare storiche.
 - Il roster ufficiale non arriva piu' dal config nominale: il backend usa il roster gia' persistito nell'ultimo stato valido del database e lo riapplica in validazione e salvataggio.
@@ -363,7 +366,11 @@ Recupera i risultati reali del weekend a partire dalla cache calendario.
 
 Comportamenti rilevanti:
 
-- restituisce sempre un payload con `first`, `second`, `third` e `pole`;
+- restituisce sempre un payload con `first`, `second`, `third`, `pole` e `racePhase`;
+- `racePhase` vale:
+  - `open` prima del `raceStartTime`
+  - `live` dopo il `raceStartTime` ma senza classifica gara ufficiale completa
+  - `finished` quando Formula1.com ha pubblicato `first`, `second` e `third`;
 - se Formula1.com non ha ancora pubblicato risultati ufficiali, i campi restano stringhe vuote;
 - il fetch e' read-only e non persiste automaticamente nulla nel database;
 - il backend applica una cache in-memory a TTL corto per proteggere il polling live del frontend.

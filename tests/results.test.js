@@ -2,8 +2,10 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   clearRaceResultsCache,
   fetchRaceResults,
+  fetchRaceResultsWithStatus,
   parseDateRangeLabel,
   parseSeasonCalendarPage,
+  resolveRacePhase,
 } from '../backend/calendar.js';
 import * as storage from '../backend/storage.js';
 
@@ -368,6 +370,127 @@ describe('fetchRaceResults', () => {
     });
   });
 
+  it('returns the race phase as live when the race started but official race classification is not published yet', async () => {
+    vi.mocked(storage.readCalendarCache).mockResolvedValue([
+      {
+        meetingKey: 'live-race',
+        meetingName: 'Live GP',
+        detailUrl: 'https://www.formula1.com/en/racing/2026/live-gp',
+        isSprintWeekend: false,
+        raceStartTime: '2026-03-01T14:00:00Z',
+      },
+    ]);
+
+    global.fetch = vi.fn((url) => {
+      if (url.includes('race-result') || url.includes('qualifying')) {
+        return Promise.resolve({
+          ok: true,
+          text: () => Promise.resolve('<table><tbody></tbody></table><p>No results available</p>'),
+        });
+      }
+
+      return Promise.reject(new Error('Unknown URL'));
+    });
+
+    await expect(
+      fetchRaceResultsWithStatus('live-race', new Date('2026-03-01T15:00:00Z')),
+    ).resolves.toEqual({
+      first: '',
+      second: '',
+      third: '',
+      pole: '',
+      racePhase: 'live',
+    });
+  });
+
+  it('returns the race phase as finished when official race classification is available', async () => {
+    vi.mocked(storage.readCalendarCache).mockResolvedValue([
+      {
+        meetingKey: 'finished-race',
+        meetingName: 'Finished GP',
+        detailUrl: 'https://www.formula1.com/en/racing/2026/finished-gp',
+        isSprintWeekend: false,
+        raceStartTime: '2026-03-01T14:00:00Z',
+      },
+    ]);
+
+    global.fetch = vi.fn((url) => {
+      if (url.includes('race-result')) {
+        return Promise.resolve({
+          ok: true,
+          text: () =>
+            Promise.resolve(
+              buildResultsTable([
+                buildTableRow(1, 4, 'Lando', 'Norris', 'NOR'),
+                buildTableRow(2, 1, 'Max', 'Verstappen', 'VER'),
+                buildTableRow(3, 16, 'Charles', 'Leclerc', 'LEC'),
+              ]),
+            ),
+        });
+      }
+
+      if (url.includes('qualifying')) {
+        return Promise.resolve({
+          ok: true,
+          text: () => Promise.resolve(buildResultsTable([buildTableRow(1, 81, 'Oscar', 'Piastri', 'PIA')])),
+        });
+      }
+
+      return Promise.reject(new Error('Unknown URL'));
+    });
+
+    await expect(
+      fetchRaceResultsWithStatus('finished-race', new Date('2026-03-01T15:00:00Z')),
+    ).resolves.toEqual({
+      first: 'nor',
+      second: 'ver',
+      third: 'lec',
+      pole: 'pia',
+      racePhase: 'finished',
+    });
+  });
+
+  it('reads the calendar only once when resolving results together with the race phase', async () => {
+    vi.mocked(storage.readCalendarCache).mockResolvedValue([
+      {
+        meetingKey: 'single-read',
+        meetingName: 'Single Read GP',
+        detailUrl: 'https://www.formula1.com/en/racing/2026/single-read-gp',
+        isSprintWeekend: false,
+        raceStartTime: '2026-03-01T14:00:00Z',
+      },
+    ]);
+
+    global.fetch = vi.fn((url) => {
+      if (url.includes('race-result')) {
+        return Promise.resolve({
+          ok: true,
+          text: () =>
+            Promise.resolve(
+              buildResultsTable([
+                buildTableRow(1, 4, 'Lando', 'Norris', 'NOR'),
+                buildTableRow(2, 1, 'Max', 'Verstappen', 'VER'),
+                buildTableRow(3, 16, 'Charles', 'Leclerc', 'LEC'),
+              ]),
+            ),
+        });
+      }
+
+      if (url.includes('qualifying')) {
+        return Promise.resolve({
+          ok: true,
+          text: () => Promise.resolve(buildResultsTable([buildTableRow(1, 81, 'Oscar', 'Piastri', 'PIA')])),
+        });
+      }
+
+      return Promise.reject(new Error('Unknown URL'));
+    });
+
+    await fetchRaceResultsWithStatus('single-read', new Date('2026-03-01T15:00:00Z'));
+
+    expect(storage.readCalendarCache).toHaveBeenCalledTimes(1);
+  });
+
   it('handles empty date fragments, missing images and fallback hero images when parsing the season page', () => {
     const year = new Date().getFullYear();
 
@@ -412,5 +535,84 @@ describe('fetchRaceResults', () => {
         heroImageUrl: '',
       }),
     ]);
+  });
+});
+
+describe('resolveRacePhase', () => {
+  it('returns open before race start', () => {
+    expect(
+      resolveRacePhase(
+        {
+          meetingKey: 'race-1',
+          raceStartTime: '2026-03-01T14:00:00Z',
+        },
+        { first: '', second: '', third: '', pole: '' },
+        new Date('2026-03-01T13:59:59Z'),
+      ),
+    ).toBe('open');
+  });
+
+  it('returns live after race start when official race classification is still unavailable', () => {
+    expect(
+      resolveRacePhase(
+        {
+          meetingKey: 'race-1',
+          raceStartTime: '2026-03-01T14:00:00Z',
+        },
+        { first: '', second: '', third: '', pole: 'pia' },
+        new Date('2026-03-01T14:30:00Z'),
+      ),
+    ).toBe('live');
+  });
+
+  it('returns finished when official race classification is available', () => {
+    expect(
+      resolveRacePhase(
+        {
+          meetingKey: 'race-1',
+          raceStartTime: '2026-03-01T14:00:00Z',
+        },
+        { first: 'nor', second: 'ver', third: 'lec', pole: 'pia' },
+        new Date('2026-03-01T14:30:00Z'),
+      ),
+    ).toBe('finished');
+  });
+
+  it('returns open when the race has no usable timing metadata', () => {
+    expect(
+      resolveRacePhase(
+        {
+          meetingKey: 'race-1',
+        },
+        { first: '', second: '', third: '', pole: '' },
+        new Date('2026-03-01T14:30:00Z'),
+      ),
+    ).toBe('open');
+  });
+
+  it('uses endDate as fallback timing metadata when raceStartTime is missing', () => {
+    expect(
+      resolveRacePhase(
+        {
+          meetingKey: 'race-1',
+          endDate: '2026-03-01',
+        },
+        { first: '', second: '', third: '', pole: '' },
+        new Date('2026-03-01T15:00:00Z'),
+      ),
+    ).toBe('live');
+  });
+
+  it('returns open when raceStartTime is invalid', () => {
+    expect(
+      resolveRacePhase(
+        {
+          meetingKey: 'race-1',
+          raceStartTime: 'invalid-date',
+        },
+        { first: '', second: '', third: '', pole: '' },
+        new Date('2026-03-01T15:00:00Z'),
+      ),
+    ).toBe('open');
   });
 });

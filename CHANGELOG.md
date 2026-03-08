@@ -4,6 +4,11 @@ Cronologia sintetica delle release documentate del progetto Fanta Formula 1.
 
 ## In sviluppo
 
+- **Stato Gara Dinamico End-to-End**: `GET /api/results/:meetingKey` restituisce ora anche `racePhase` (`open`, `live`, `finished`) mantenendo il payload flatten dei risultati ufficiali; il frontend usa lo stato backend per distinguere correttamente gara in corso e gara terminata senza alterare il lock server-side dei pronostici.
+- **Backend Risultati Riallineato e Ottimizzato**: centralizzata la risoluzione di stato gara sul weekend selezionato e rimossa la lettura duplicata del calendario nel flusso risultati ufficiali, preservando compatibilita', cache e sicurezza dei flussi production-facing.
+- **Copy Readonly Admin Aggiornato**: il banner della vista non admin mostra ora `Solo gli admin possono modificare i pronostici.` tramite configurazione centralizzata, senza introdurre stringhe inline o modifiche ai flussi di business.
+- **README e Contratti Documentati**: aggiornata la documentazione per esplicitare la separazione tra `race lock` e `racePhase`, il criterio di completamento gara basato sui risultati ufficiali e il payload reale dell'endpoint risultati.
+- **Protocollo AGENTS Rafforzato su Coverage e Piani**: `AGENTS.md` richiede ora in modo esplicito copertura totale al `100%`, strategia `RED -> GREEN -> REFACTOR` mostrata nei piani e riepilogo finale con verifica coverage eseguita.
 - **Coverage Race Lock Portata al 100%**: estesi i test API sul fallback `endDate` del messaggio `race_locked` e aggiunta una suite isolata per coprire il fallback difensivo `unknown` in `app.js`, mantenendo invariato il comportamento runtime e il baseline coverage ufficiale a `100%`.
 - **Cleanup Conservativo con Snapshot Locale Integrale**: creata una snapshot completa del working tree locale prima del cleanup operativo e rimossi i residui locali rigenerabili (`.playwright-cli`, `output`, `screenshot`, log locali, `.DS_Store`) insieme ai residui file-based legacy in `F1Result/`.
 - **Launcher Locale Forzato in Development**: `start_fantaf1.command` e `scripts/dev-launcher.mjs` impongono ora esplicitamente `NODE_ENV=development`, cosi' il bootstrap locale resta allineato in modo deterministico a `fantaf1_dev` anche quando l'ambiente chiamante o `.env` espongono valori incoerenti.

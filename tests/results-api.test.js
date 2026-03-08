@@ -3,24 +3,26 @@ import request from 'supertest';
 
 vi.mock('../backend/calendar.js', () => ({
   fetchRaceResults: vi.fn(),
+  fetchRaceResultsWithStatus: vi.fn(),
   sortCalendarByRound: vi.fn((calendar) => calendar),
   syncCalendarFromOfficialSource: vi.fn(),
 }));
 
 import app from '../app.js';
-import { fetchRaceResults } from '../backend/calendar.js';
+import { fetchRaceResultsWithStatus } from '../backend/calendar.js';
 
 describe('GET /api/results/:meetingKey', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  it('returns the parsed official results payload', async () => {
-    vi.mocked(fetchRaceResults).mockResolvedValue({
+  it('returns the parsed official results payload together with the race phase', async () => {
+    vi.mocked(fetchRaceResultsWithStatus).mockResolvedValue({
       first: 'nor',
       second: 'ver',
       third: 'lec',
       pole: 'pia',
+      racePhase: 'finished',
     });
 
     const response = await request(app).get('/api/results/1280');
@@ -31,7 +33,8 @@ describe('GET /api/results/:meetingKey', () => {
       second: 'ver',
       third: 'lec',
       pole: 'pia',
+      racePhase: 'finished',
     });
-    expect(fetchRaceResults).toHaveBeenCalledWith('1280');
+    expect(fetchRaceResultsWithStatus).toHaveBeenCalledWith('1280');
   });
 });

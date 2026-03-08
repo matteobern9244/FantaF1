@@ -167,6 +167,34 @@ function parseBonusDriver(rawContent) {
   return parseOrderedDriversFromResultsTable(rawContent, 1)[0] ?? '';
 }
 
+function getRaceStartTime(race) {
+  const startTimeStr = race?.raceStartTime || (race?.endDate ? `${race.endDate}T14:00:00Z` : null);
+  if (!startTimeStr) {
+    return null;
+  }
+
+  const normalizedTime = String(startTimeStr).replace(' ', 'T');
+  const startTime = new Date(normalizedTime);
+  return Number.isNaN(startTime.getTime()) ? null : startTime;
+}
+
+function hasOfficialRaceClassification(results = {}) {
+  return ['first', 'second', 'third'].every((field) => normalizeText(results?.[field]).length > 0);
+}
+
+function resolveRacePhase(race, results, now = new Date()) {
+  if (hasOfficialRaceClassification(results)) {
+    return 'finished';
+  }
+
+  const startTime = getRaceStartTime(race);
+  if (!startTime) {
+    return 'open';
+  }
+
+  return now >= startTime ? 'live' : 'open';
+}
+
 function normalizeDateRangeLabel(value) {
   return normalizeText(value)
     .replace(/\s*-\s*/g, ' - ')
@@ -491,17 +519,18 @@ async function syncCalendarFromOfficialSource({
 }
 
 async function fetchRaceResults(meetingKey) {
+  const calendar = await readCalendarCache();
+  const race = calendar.find((entry) => entry.meetingKey === meetingKey);
+
+  return fetchRaceResultsForRace(race, meetingKey);
+}
+
+async function fetchRaceResultsForRace(race, meetingKey) {
   const cachedResults = getCachedRaceResults(meetingKey);
   if (cachedResults) {
     return cachedResults;
   }
 
-  // official results URL pattern: https://www.formula1.com/en/results/<year>/races/<meetingKey>/<slug>/race-result
-  // meetingKey might be the numeric ID or the slug depending on how it's stored.
-  // We'll search for the weekend in cache to get the detailUrl.
-  const calendar = await readCalendarCache();
-  const race = calendar.find(r => r.meetingKey === meetingKey);
-  
   /* v8 ignore next 3 */
   if (!race || !race.detailUrl) {
     throw new Error('Race not found in calendar');
@@ -522,14 +551,14 @@ async function fetchRaceResults(meetingKey) {
   try {
     const [raceHtml, poleHtml] = await Promise.all([
       fetchHtml(resultsUrl, getBrowserHeaders()).catch(() => ''),
-      fetchHtml(poleUrl, getBrowserHeaders()).catch(() => '')
+      fetchHtml(poleUrl, getBrowserHeaders()).catch(() => ''),
     ]);
 
     const results = {
       first: '',
       second: '',
       third: '',
-      pole: ''
+      pole: '',
     };
 
     if (raceHtml) {
@@ -548,13 +577,27 @@ async function fetchRaceResults(meetingKey) {
   }
 }
 
+async function fetchRaceResultsWithStatus(meetingKey, now = new Date()) {
+  const calendar = await readCalendarCache();
+  const race = calendar.find((entry) => entry.meetingKey === meetingKey);
+  const results = await fetchRaceResultsForRace(race, meetingKey);
+
+  return {
+    ...results,
+    racePhase: resolveRacePhase(race, results, now),
+  };
+}
+
 export {
   buildOfficialResultsBaseUrl,
   clearRaceResultsCache,
   fetchRaceResults,
+  fetchRaceResultsWithStatus,
+  hasOfficialRaceClassification,
   parseDateRangeLabel,
   parseRaceDetailPage,
   parseSeasonCalendarPage,
+  resolveRacePhase,
   sortCalendarByRound,
   syncCalendarFromOfficialSource,
 };

@@ -177,7 +177,12 @@ function setupFetch({
         return typeof handler === 'function' ? handler() : handler;
       }
 
-      return Promise.resolve(createResponse(createEmptyPrediction()));
+      return Promise.resolve(
+        createResponse({
+          ...createEmptyPrediction(),
+          racePhase: 'open',
+        }),
+      );
     }
 
     return Promise.reject(new Error(`Unhandled fetch to ${url}`));
@@ -201,6 +206,10 @@ function getPredictionSelect(userName: string, label: RegExp) {
 
 function getResultSelect(label: RegExp) {
   return screen.getByLabelText(label) as HTMLSelectElement;
+}
+
+function createResultsResponse(racePhase, results = createEmptyPrediction()) {
+  return createResponse({ ...results, racePhase });
 }
 
 describe('Weekend draft synchronization UI', () => {
@@ -334,5 +343,95 @@ describe('Weekend draft synchronization UI', () => {
       expect(getResultSelect(/pole \/ sprint reale/i)).toHaveValue('nor');
     });
     expect(getPredictionSelect('Player 1', /vincitore gara/i)).toHaveValue('ham');
+  });
+
+  it('shows no lock banner before the race starts and keeps predictions editable', async () => {
+    setupFetch({
+      resultHandlers: {
+        'race-1': createResultsResponse('open'),
+      },
+    });
+
+    render(<App />);
+
+    await waitFor(() => {
+      expect(screen.queryByTestId('pitstop-loader')).not.toBeInTheDocument();
+    });
+
+    expect(screen.queryByText('Gara in corso: pronostici bloccati.')).not.toBeInTheDocument();
+    expect(screen.queryByText('Gara terminata.')).not.toBeInTheDocument();
+    expect(getPredictionSelect('Player 1', /vincitore gara/i)).not.toBeDisabled();
+  });
+
+  it('shows the in-progress lock banner when the backend marks the selected race as live', async () => {
+    setupFetch({
+      resultHandlers: {
+        'race-1': createResultsResponse('live'),
+      },
+    });
+
+    render(<App />);
+
+    await waitFor(() => {
+      expect(screen.queryByTestId('pitstop-loader')).not.toBeInTheDocument();
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText('Gara in corso: pronostici bloccati.')).toBeInTheDocument();
+    });
+    expect(getPredictionSelect('Player 1', /vincitore gara/i)).toBeDisabled();
+  });
+
+  it('shows the finished banner when the backend marks the selected race as finished', async () => {
+    setupFetch({
+      resultHandlers: {
+        'race-1': createResultsResponse('finished', {
+          first: 'ver',
+          second: 'ham',
+          third: 'nor',
+          pole: 'pia',
+        }),
+      },
+    });
+
+    render(<App />);
+
+    await waitFor(() => {
+      expect(screen.queryByTestId('pitstop-loader')).not.toBeInTheDocument();
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText('Gara terminata.')).toBeInTheDocument();
+    });
+    expect(screen.queryByText('Gara in corso: pronostici bloccati.')).not.toBeInTheDocument();
+    expect(getPredictionSelect('Player 1', /vincitore gara/i)).toBeDisabled();
+  });
+
+  it('accepts the legacy wrapper payload shape while using the backend race phase', async () => {
+    setupFetch({
+      resultHandlers: {
+        'race-1': createResponse({
+          racePhase: 'finished',
+          results: {
+            first: 'ver',
+            second: 'ham',
+            third: 'nor',
+            pole: 'pia',
+          },
+        }),
+      },
+    });
+
+    render(<App />);
+
+    await waitFor(() => {
+      expect(screen.queryByTestId('pitstop-loader')).not.toBeInTheDocument();
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText('Gara terminata.')).toBeInTheDocument();
+    });
+    expect(getResultSelect(/risultato 1°/i)).toHaveValue('ver');
+    expect(getPredictionSelect('Player 1', /vincitore gara/i)).toBeDisabled();
   });
 });

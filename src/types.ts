@@ -16,6 +16,13 @@ export interface Prediction {
   pole: string;
 }
 
+export type RacePhase = 'open' | 'live' | 'finished';
+
+export type OfficialResultsResponse = Prediction & {
+  racePhase: RacePhase;
+  results?: Prediction;
+};
+
 export interface WeekendPredictionState {
   userPredictions: Record<string, Prediction>;
   raceResults: Prediction;

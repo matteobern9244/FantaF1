@@ -39,7 +39,6 @@ import {
   getOfficialResultsAvailability,
   getRaceStartTime,
   hasPredictionValue,
-  isRaceFinished,
   isRaceStarted,
   isWeekendActive,
   normalizeMeetingName,
@@ -48,8 +47,10 @@ import {
 import type {
   AppData,
   Driver,
+  OfficialResultsResponse,
   Prediction,
   PredictionKey,
+  RacePhase,
   RaceWeekend,
   SessionState,
   UserData,
@@ -131,6 +132,25 @@ interface ToastState {
   tone: ToastTone;
 }
 
+function normalizeOfficialResultsResponse(payload: OfficialResultsResponse | Prediction) {
+  if ('results' in payload && payload.results) {
+    return {
+      racePhase: payload.racePhase,
+      results: payload.results,
+    };
+  }
+
+  return {
+    racePhase: 'racePhase' in payload ? payload.racePhase : 'open',
+    results: {
+      first: payload.first ?? '',
+      second: payload.second ?? '',
+      third: payload.third ?? '',
+      pole: payload.pole ?? '',
+    },
+  };
+}
+
 /* v8 ignore next -- static SVG exercised by integration and browser smoke tests */
 function AppLogo() {
   return (
@@ -199,6 +219,7 @@ function App() {
   const [historySearch, setHistorySearch] = useState('');
   const [historyUserFilter, setHistoryUserFilter] = useState('all');
   const [expandedHistoryKey, setExpandedHistoryKey] = useState('');
+  const [selectedRacePhase, setSelectedRacePhase] = useState<RacePhase>('open');
   const selectedMeetingKeyRef = useRef(selectedMeetingKey);
   const toastTimeoutRef = useRef<number | null>(null);
   const initialHashHandledRef = useRef(false);
@@ -214,7 +235,8 @@ function App() {
     ? getOfficialResultsAvailability(raceResults)
     : null;
   const raceLocked = isRaceStarted(selectedRace);
-  const isFinished = isRaceFinished(selectedRace);
+  const predictionsLocked = selectedRacePhase !== 'open' || raceLocked;
+  const isFinished = selectedRacePhase === 'finished';
   const allResultsFilled = allLiveResultsFilled;
   const canAssignPoints = isFinished && allResultsFilled;
   const isPublicView = viewMode === 'public';
@@ -241,9 +263,9 @@ function App() {
   const weekendStartTime = getRaceStartTime(selectedRace);
   const weekendStatusLabel = !selectedRace
     ? appText.shell.weekendStatus.unavailable
-    : isFinished
+    : selectedRacePhase === 'finished'
       ? appText.shell.weekendStatus.completed
-      : raceLocked
+      : selectedRacePhase === 'live'
         ? appText.shell.weekendStatus.live
         : appText.shell.weekendStatus.open;
   const weekendCountdownLabel = weekendStartTime
@@ -276,6 +298,10 @@ function App() {
   useEffect(() => {
     selectedMeetingKeyRef.current = selectedMeetingKey;
   }, [selectedMeetingKey]);
+
+  useEffect(() => {
+    setSelectedRacePhase(raceLocked ? 'live' : 'open');
+  }, [raceLocked, selectedRace?.meetingKey]);
 
   function showToastMessage(message: string, tone: ToastTone = 'info') {
     if (toastTimeoutRef.current !== null) {
@@ -482,7 +508,7 @@ function App() {
   }, [historySearch, historyUserFilter, loading, selectedMeetingKey, viewMode]);
 
   useEffect(() => {
-    if (!selectedRace || editingSession || allLiveResultsFilled) {
+    if (!selectedRace || editingSession) {
       return;
     }
 
@@ -496,7 +522,7 @@ function App() {
         if (!response.ok) {
           return;
         }
-        const results = await response.json() as Prediction;
+        const payload = await response.json() as OfficialResultsResponse | Prediction;
         if (isCancelled) {
           return;
         }
@@ -504,6 +530,10 @@ function App() {
         if (selectedMeetingKeyRef.current !== activeRace.meetingKey) {
           return;
         }
+
+        const { results, racePhase } = normalizeOfficialResultsResponse(payload);
+
+        setSelectedRacePhase(racePhase ?? (raceLocked ? 'live' : 'open'));
 
         setRaceResults((currentResults) => mergeMissingPredictionFields(currentResults, results));
         setWeekendStateByMeetingKey((currentWeekendStateByMeetingKey) => {
@@ -530,7 +560,7 @@ function App() {
 
     void syncSelectedWeekendResults();
 
-    if (isWeekendActive(activeRace)) {
+    if (!allLiveResultsFilled && isWeekendActive(activeRace)) {
       pollingId = window.setInterval(() => {
         void syncSelectedWeekendResults();
       }, 30_000);
@@ -545,6 +575,7 @@ function App() {
   }, [
     allLiveResultsFilled,
     editingSession,
+    raceLocked,
     selectedRace,
   ]);
 
@@ -1127,8 +1158,13 @@ function App() {
     },
     {
       key: 'lock',
-      label: raceLocked ? uiText.status.raceLockedStrip : uiText.status.raceOpenStrip,
-      tone: raceLocked ? 'alert' : 'default',
+      label:
+        selectedRacePhase === 'finished'
+          ? uiText.status.raceFinishedStrip
+          : selectedRacePhase === 'live'
+            ? uiText.status.raceLiveStrip
+            : uiText.status.raceOpenStrip,
+      tone: selectedRacePhase === 'open' ? 'default' : 'alert',
     },
     ...(officialResultsAvailability === 'complete'
       ? [{ key: 'results', label: uiText.status.resultsReadyStrip, tone: 'success' as const }]
@@ -1137,9 +1173,9 @@ function App() {
 
   let disabledReason = '';
   if (!canAssignPoints) {
-    if (!raceLocked) {
+    if (selectedRacePhase === 'open') {
       disabledReason = uiText.tooltips.raceNotStarted;
-    } else if (!isFinished) {
+    } else if (selectedRacePhase === 'live') {
       disabledReason = uiText.tooltips.raceInProgress;
     } else {
       disabledReason = uiText.tooltips.missingResults;
@@ -1573,7 +1609,12 @@ function App() {
               </div>
             </div>
 
-            {raceLocked && <p className="locked-banner">{uiText.calendar.raceLocked}</p>}
+            {selectedRacePhase === 'live' ? (
+              <p className="locked-banner">{uiText.calendar.raceInProgressLocked}</p>
+            ) : null}
+            {selectedRacePhase === 'finished' ? (
+              <p className="locked-banner">{uiText.calendar.raceFinished}</p>
+            ) : null}
             {predictionResultsStatusMessage ? (
               <p className="sidebar-note status-note">{predictionResultsStatusMessage}</p>
             ) : null}
@@ -1601,7 +1642,7 @@ function App() {
                         id={`${user.name}-${field}`}
                         value={user.predictions[field]}
                         onChange={(event) => updatePrediction(user.name, field, event.target.value)}
-                        disabled={raceLocked}
+                        disabled={predictionsLocked}
                       >
                         <option value="">{uiText.placeholders.driverSelect}</option>
                         {sortedDrivers.map((driver) => (
@@ -1621,7 +1662,7 @@ function App() {
                 className="secondary-button"
                 onClick={clearAllPredictions}
                 type="button"
-                disabled={raceLocked || Boolean(editingSession)}
+                disabled={predictionsLocked || Boolean(editingSession)}
               >
                 <Trash2 size={16} />
                 {uiText.buttons.clear}
@@ -1630,7 +1671,7 @@ function App() {
                 className="primary-button"
                 onClick={handleSavePredictions}
                 type="button"
-                disabled={raceLocked || Boolean(editingSession)}
+                disabled={predictionsLocked || Boolean(editingSession)}
               >
                 <Save size={16} />
                 {uiText.buttons.savePredictions}

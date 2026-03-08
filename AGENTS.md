@@ -92,14 +92,16 @@ Never optimize by skipping validation.
 
 For every task, execute this sequence:
 
-1. Restate the requested goal in 1-2 lines.
-2. Identify the impacted files, layers, and risk areas.
-3. State the acceptance criteria.
-4. Inspect existing logic before editing anything.
-5. Apply strict TDD for any behavioral change.
-6. Implement the smallest safe change required.
-7. Run the relevant validations.
-8. Provide a final summary with touched files, tests, and executed commands.
+1. Implement the fix - modification - new implementation ALWAYS respecting the principles of TDD programming and all other programming principles contained in this file.
+2. Restate the requested goal in 1-2 lines.
+3. Identify the impacted files, layers, and risk areas.
+4. State the acceptance criteria.
+5. Inspect existing logic before editing anything.
+6. Apply strict TDD for any behavioral change.
+7. Define and preserve the required 100% total coverage target for the task scope and repository/application.
+8. Implement the smallest safe change required.
+9. Run the relevant validations, including explicit coverage verification at 100%.
+10. Provide a final summary with touched files, tests, coverage verification, and executed commands.
 
 Do not skip steps.
 Do not jump directly into editing without understanding the current implementation.
@@ -165,6 +167,9 @@ Rules:
 - Never claim TDD was applied if tests were added only after coding without first reproducing the issue.
 - Use the repository's established Vitest/React Testing Library/Supertest patterns, and mock only collaborators outside the actual intent of the test.
 - This TDD rule is mandatory for every fix, modification, and new implementation in this repository without exception.
+- RED must also define the coverage work needed to preserve or restore 100% statements, functions, branches, and lines for the official repository/application scope.
+- GREEN is not complete if the implementation passes behavior tests but leaves coverage below 100%.
+- REFACTOR is not complete until all tests remain green and coverage remains at 100%.
 
 ---
 
@@ -199,6 +204,7 @@ A task is not complete if:
 - the project does not compile
 - any relevant test fails
 - the behavior was changed without automated test coverage
+- coverage for the official repository/application scope is below 100% statements, functions, branches, or lines
 
 If a validation step cannot be executed, explicitly state:
 - what was not executed
@@ -272,12 +278,21 @@ Failure policy for `deploya`:
 ## 11. Final Response Protocol
 
 Before editing:
-- provide a short plan
+- provide a comprehensive and detailed plan that always includes checks to ensure no regression on desktop browser view or mobile view for both environments: development and production
+- in every plan, explicitly state which programming/design principles will be applied for the specific task
+- in every plan, explicitly state that `AGENTS.md` instructions are being applied and will be followed
+- in every plan for a fix, modification, or new implementation, explicitly show the TDD strategy as `RED -> GREEN -> REFACTOR`
+- in every plan, explicitly include acceptance criteria, regression checks, and the validation commands intended to be run
+- in every plan must always include a dedicated section named `Coverage 100% totale`
+- in every plan must always include verification of 100% coverage for all files in the repository and application
+- if coverage is not 100% at the end of plan implementation, coverage must be performed until 100% coverage is achieved for all files in the repository and application
+- no plan is valid or complete if it omits the explicit 100% total coverage requirement
 
 After editing:
 - summarize what changed
 - list touched files
 - list tests added or updated
+- list coverage verification executed and the resulting 100% status
 - list validation commands executed
 - state residual risks, blockers, or skipped checks if any
 

@@ -207,7 +207,7 @@
       "empty": "Nessuna gara registrata finora.",
       "resultSummaryTemplate": "{actualLabel}: 1° {first} | 2° {second} | 3° {third} | Pole/Sprint {pole}",
       "editingLabel": "Stai modificando una gara salvata. La classifica e' gia' stata ricalcolata senza questa gara.",
-      "publicReadonly": "Gestione admin in sola lettura per i non admin.",
+      "publicReadonly": "Solo gli admin possono modificare i pronostici.",
       "analyticsEmpty": "Le analytics saranno disponibili dopo le prime gare confermate."
     },
     "status": {
@@ -215,7 +215,8 @@
       "livePartialOfficialResults": "Risultati ufficiali parziali per il weekend selezionato.",
       "predictionNoOfficialResults": "La proiezione si aggiornera' quando Formula1.com pubblichera' pole/sprint/gara ufficiali.",
       "predictionPartialOfficialResults": "La proiezione e' parziale e usa solo i risultati ufficiali gia' pubblicati.",
-      "raceLockedStrip": "Race lock attivo",
+      "raceLiveStrip": "Gara in corso",
+      "raceFinishedStrip": "Gara terminata",
       "raceOpenStrip": "Pronostici ancora aperti",
       "resultsReadyStrip": "Risultati ufficiali completi",
       "predictionsSaved": "Pronostici salvati.",
@@ -229,7 +230,9 @@
       "empty": "Calendario non disponibile.",
       "sprintBadge": "Weekend Sprint",
       "raceBadge": "Weekend Standard",
-      "raceLocked": "Gara iniziata: i pronostici sono bloccati.",
+      "raceLockedError": "I pronostici sono bloccati.",
+      "raceInProgressLocked": "Gara in corso: pronostici bloccati.",
+      "raceFinished": "Gara terminata.",
       "sessionsSyncing": "Orari in fase di sincronizzazione..."
     },
     "alerts": {

@@ -4,7 +4,7 @@ import express from 'express';
 import mongoose from 'mongoose';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { syncCalendarFromOfficialSource, sortCalendarByRound, fetchRaceResults } from './backend/calendar.js';
+import { syncCalendarFromOfficialSource, sortCalendarByRound, fetchRaceResultsWithStatus } from './backend/calendar.js';
 import { appConfig, currentYear } from './backend/config.js';
 import {
   determineExpectedMongoDatabaseName,
@@ -147,8 +147,8 @@ app.get(appConfig.api.calendarPath, async (req, res) => {
 
 app.get('/api/results/:meetingKey', async (req, res) => {
   try {
-    const results = await fetchRaceResults(req.params.meetingKey);
-    res.json(results);
+    const resultsPayload = await fetchRaceResultsWithStatus(req.params.meetingKey);
+    res.json(resultsPayload);
   } catch (error) {
     res.status(500).json({ error: backendText.apiErrors.fetchResultsFailed, details: error.message });
   }
@@ -209,7 +209,7 @@ async function handleSaveRequest(req, res, { requirePredictions = false, routePa
           environment: runtimeEnvironment,
           requestId,
           code: 'race_locked',
-          error: appConfig.uiText.calendar.raceLocked,
+          error: appConfig.uiText.calendar.raceLockedError,
           /* v8 ignore next -- the "unknown" fallback requires an impossible locked race without timing metadata */
           details: formatBackendText(backendText.save.raceLockedDetailsTemplate, {
             meetingKey: selectedRace.meetingKey,

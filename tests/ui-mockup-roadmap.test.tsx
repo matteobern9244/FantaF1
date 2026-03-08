@@ -149,8 +149,8 @@ function setupFetch() {
   const sessionState = { isAdmin: true, defaultViewMode: 'admin' };
   const calendar = createCalendar();
   const resultsByMeetingKey = {
-    'race-1': createEmptyPrediction(),
-  } as Record<string, ReturnType<typeof createEmptyPrediction>>;
+    'race-1': { racePhase: 'open', results: createEmptyPrediction() },
+  } as Record<string, { racePhase?: 'open' | 'live' | 'finished'; results: ReturnType<typeof createEmptyPrediction> }>;
 
   fetchMock.mockImplementation((url: string, options?: RequestInit) => {
     if (url.includes('/api/session')) {
@@ -178,7 +178,12 @@ function setupFetch() {
     );
 
     if (resultsEntry) {
-      return Promise.resolve(createResponse(resultsEntry[1]));
+      return Promise.resolve(
+        createResponse({
+          ...resultsEntry[1].results,
+          racePhase: resultsEntry[1].racePhase ?? 'open',
+        }),
+      );
     }
 
     return Promise.reject(new Error(`Unhandled fetch to ${url}`));
@@ -192,13 +197,13 @@ function setupFetchWithOverrides({
   calendar = createCalendar(),
   sessionState = { isAdmin: true, defaultViewMode: 'admin' as const },
   resultsByMeetingKey = {
-    'race-1': createEmptyPrediction(),
-  } as Record<string, ReturnType<typeof createEmptyPrediction>>,
+    'race-1': { racePhase: 'open', results: createEmptyPrediction() },
+  } as Record<string, { racePhase?: 'open' | 'live' | 'finished'; results: ReturnType<typeof createEmptyPrediction> }>,
 }: {
   appData?: ReturnType<typeof createAppData>;
   calendar?: ReturnType<typeof createCalendar>;
   sessionState?: { isAdmin: boolean; defaultViewMode: 'admin' | 'public' };
-  resultsByMeetingKey?: Record<string, ReturnType<typeof createEmptyPrediction>>;
+  resultsByMeetingKey?: Record<string, { racePhase?: 'open' | 'live' | 'finished'; results: ReturnType<typeof createEmptyPrediction> }>;
 }) {
   const fetchMock = global.fetch as ReturnType<typeof vi.fn>;
 
@@ -228,7 +233,12 @@ function setupFetchWithOverrides({
     );
 
     if (resultsEntry) {
-      return Promise.resolve(createResponse(resultsEntry[1]));
+      return Promise.resolve(
+        createResponse({
+          ...resultsEntry[1].results,
+          racePhase: resultsEntry[1].racePhase ?? 'open',
+        }),
+      );
     }
 
     return Promise.reject(new Error(`Unhandled fetch to ${url}`));
@@ -275,7 +285,7 @@ describe('Mockup roadmap UI features', () => {
       screen.queryByRole('button', { name: /conferma risultati e assegna i punti/i }),
     ).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /modifica/i })).not.toBeInTheDocument();
-    expect(screen.getByText(/gestione admin in sola lettura per i non admin/i)).toBeInTheDocument();
+    expect(screen.getByText(/solo gli admin possono modificare i pronostici/i)).toBeInTheDocument();
   });
 
   it('renders KPI and deep-dive analytics for the selected user', async () => {
@@ -437,8 +447,8 @@ describe('Mockup roadmap UI features', () => {
       appData,
       calendar,
       resultsByMeetingKey: {
-        'race-1': createEmptyPrediction(),
-        'race-2': createEmptyPrediction(),
+        'race-1': { racePhase: 'open', results: createEmptyPrediction() },
+        'race-2': { racePhase: 'open', results: createEmptyPrediction() },
       },
     });
 
