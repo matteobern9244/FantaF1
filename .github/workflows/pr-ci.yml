@@ -80,7 +80,17 @@ jobs:
 
       - name: Normalize Mongo URI for CI database override
         run: |
-          echo "MONGODB_URI=$(node -e 'const uri = process.env.MONGODB_URI; const parsed = new URL(uri); parsed.pathname = \"/\"; console.log(parsed.toString())')" >> "$GITHUB_ENV"
+          if [ -z "$MONGODB_URI" ]; then
+            echo "MONGODB_URI_CI secret is missing." >&2
+            exit 1
+          fi
+          normalized_uri="$(node -e 'const uri = process.env.MONGODB_URI; const parsed = new URL(uri); parsed.pathname = \"/\"; process.stdout.write(parsed.toString())')"
+          echo "::add-mask::$normalized_uri"
+          {
+            echo "MONGODB_URI<<EOF"
+            echo "$normalized_uri"
+            echo "EOF"
+          } >> "$GITHUB_ENV"
       - run: npm ci
       - name: Start local stack
         run: |
@@ -125,7 +135,17 @@ jobs:
 
       - name: Normalize Mongo URI for CI database override
         run: |
-          echo "MONGODB_URI=$(node -e 'const uri = process.env.MONGODB_URI; const parsed = new URL(uri); parsed.pathname = \"/\"; console.log(parsed.toString())')" >> "$GITHUB_ENV"
+          if [ -z "$MONGODB_URI" ]; then
+            echo "MONGODB_URI_CI secret is missing." >&2
+            exit 1
+          fi
+          normalized_uri="$(node -e 'const uri = process.env.MONGODB_URI; const parsed = new URL(uri); parsed.pathname = \"/\"; process.stdout.write(parsed.toString())')"
+          echo "::add-mask::$normalized_uri"
+          {
+            echo "MONGODB_URI<<EOF"
+            echo "$normalized_uri"
+            echo "EOF"
+          } >> "$GITHUB_ENV"
       - run: npm ci
       - name: Start backend
         run: |
