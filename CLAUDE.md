@@ -1,4 +1,4 @@
-# AGENTS.md
+# CLAUDE.md
 
 Mandatory engineering instructions for any coding agent working in this repository.
 
