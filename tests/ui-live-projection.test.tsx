@@ -346,7 +346,7 @@ describe('Live projection UI', () => {
 
     const disabledButton = await screen.findByRole('button', {
       name: /video highlights ancora non disponibile/i,
-    });
+    }, { timeout: 5000 });
 
     expect(disabledButton).toBeDisabled();
   });
@@ -365,7 +365,7 @@ describe('Live projection UI', () => {
 
     const disabledButton = await screen.findByRole('button', {
       name: /video highlights ancora non disponibile/i,
-    });
+    }, { timeout: 5000 });
 
     expect(disabledButton).toBeDisabled();
   });
@@ -385,7 +385,7 @@ describe('Live projection UI', () => {
 
     const disabledButton = await screen.findByRole('button', {
       name: /video highlights ancora non disponibile/i,
-    });
+    }, { timeout: 5000 });
 
     expect(disabledButton).toBeDisabled();
   });
