@@ -552,6 +552,28 @@ describe('responsive UI app shell gating', () => {
         itemCount: 8,
         activeText: 'Calendario stagione',
         backToTopPresent: true,
+        backToTopAnchor: {
+          wrapper: {
+            present: true,
+            left: 120,
+            right: 320,
+            width: 200,
+            computedLeft: '0px',
+            computedRight: 'auto',
+            position: 'absolute',
+            justifyContent: 'center',
+          },
+          button: {
+            present: true,
+            left: 120,
+            right: 164,
+            width: 44,
+            computedLeft: 'auto',
+            computedRight: 'auto',
+            position: 'static',
+            justifyContent: 'normal',
+          },
+        },
       },
       interactiveSurfaces: {
         total: 12,
@@ -563,6 +585,11 @@ describe('responsive UI app shell gating', () => {
       expect.arrayContaining([
         'Scorciatoia torna-su non usa Formula1.',
         'Tooltip torna-su non usa Formula1.',
+        'Wrapper scorciatoia torna-su non fixed.',
+        'Wrapper scorciatoia torna-su senza ancoraggio destro esplicito.',
+        'Wrapper scorciatoia torna-su non allinea il bottone a destra.',
+        'Scorciatoia torna-su non risulta visivamente agganciata al bordo destro.',
+        'Scorciatoia torna-su appare troppo a sinistra nel viewport.',
       ]),
     );
   });

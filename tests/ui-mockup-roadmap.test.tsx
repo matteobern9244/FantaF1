@@ -708,7 +708,11 @@ describe('Mockup roadmap UI features', () => {
 
     const backToTopTooltipWrapper = backToTopButton.closest('.tooltip-wrapper');
     expect(backToTopTooltipWrapper).not.toBeNull();
-    expect(screen.getByText(/torna al menu/i)).toBeInTheDocument();
+    expect(backToTopTooltipWrapper).toHaveClass('back-to-top-tooltip');
+    expect(backToTopTooltipWrapper).toContainElement(backToTopButton);
+    const backToTopTooltip = backToTopTooltipWrapper?.querySelector('.tooltip-text');
+    expect(backToTopTooltip).not.toBeNull();
+    expect(backToTopTooltip).toHaveTextContent(/torna al menu/i);
     expect(backToTopTooltipWrapper).not.toHaveClass('show-tooltip');
 
     fireEvent.mouseEnter(backToTopButton);

@@ -25,6 +25,21 @@ const inspectStateExpression = `() => {
       text: normalizeText(element?.textContent),
     };
   };
+  const readBoxMetrics = (element) => {
+    const rect = element?.getBoundingClientRect();
+    const styles = element ? getComputedStyle(element) : null;
+
+    return {
+      present: Boolean(element),
+      left: rect?.left ?? 0,
+      right: rect?.right ?? 0,
+      width: rect?.width ?? 0,
+      computedLeft: styles?.left ?? '',
+      computedRight: styles?.right ?? '',
+      position: styles?.position ?? '',
+      justifyContent: styles?.justifyContent ?? '',
+    };
+  };
   const nextRaceCard = document.querySelector('.next-race-card');
   const schedule = nextRaceCard?.querySelector('.session-schedule');
   const scheduleRect = schedule?.getBoundingClientRect();
@@ -112,6 +127,7 @@ const inspectStateExpression = `() => {
   const mobileSectionTrigger = document.querySelector('.section-drawer-trigger');
   const mobileSectionDrawer = document.querySelector('.section-drawer');
   const activeSectionButton = document.querySelector('.section-nav-button.active, .section-drawer-item.active');
+  const backToTopWrapper = document.querySelector('.back-to-top-tooltip');
   const backToTopButton = document.querySelector('.back-to-top-button');
   const backToTopTooltip = document.querySelector('.back-to-top-tooltip .tooltip-text');
 
@@ -244,6 +260,10 @@ const inspectStateExpression = `() => {
       activeText: normalizeText(activeSectionButton?.textContent),
       backToTopPresent: Boolean(backToTopButton),
       backToTopTooltipText: normalizeText(backToTopTooltip?.textContent),
+      backToTopAnchor: {
+        wrapper: readBoxMetrics(backToTopWrapper),
+        button: readBoxMetrics(backToTopButton),
+      },
     },
     unauthorizedOverflow,
   };
