@@ -193,6 +193,9 @@
       "adminView": "Modalita' admin",
       "installApp": "INSTALLA APPLICAZIONE",
       "logout": "Logout",
+      "openSections": "Sezioni",
+      "closeSections": "Chiudi sezioni",
+      "backToTop": "Torna su",
       "closeDialog": "Chiudi",
       "watchHighlights": "Guarda Highlights",
       "highlightsUnavailable": "Video Highlights ancora non disponibile"
@@ -244,7 +247,8 @@
       "averageLeaderDelta": "Delta medio dal leader",
       "totalHitRate": "Hit rate totale",
       "weekendsAboveLeader": "Weekend da leader",
-      "cumulativeTrend": "Trend cumulato"
+      "cumulativeTrend": "Trend cumulato",
+      "sectionNavigation": "Sezioni applicazione"
     },
     "placeholders": {
       "driverSelect": "Seleziona un pilota",
@@ -369,6 +373,17 @@
         "detailButtonTemplate": "Dettaglio {gpName}",
         "detailTitle": "Pronostici dettagliati"
       }
+    },
+    "navigation": {
+      "calendar": "Calendario stagione",
+      "userKpi": "User KPI Dashboard",
+      "userAnalytics": "Deep-dive KPI dashboard",
+      "seasonAnalysis": "Analisi stagione",
+      "weekendLive": "Weekend pulse",
+      "publicGuide": "Come funziona",
+      "predictions": "Pronostici dei giocatori",
+      "results": "Risultati del weekend",
+      "history": "Storico gare"
     },
     "backend": {
       "health": {

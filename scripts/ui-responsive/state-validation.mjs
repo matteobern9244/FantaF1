@@ -77,6 +77,7 @@ function validateState(
   {
     expectSprintBadge = false,
     expectVisibleTooltip = false,
+    expectBackToTopVisible = false,
     expectedViewMode = null,
     expectedWeekendChangeFrom = null,
   } = {},
@@ -125,6 +126,27 @@ function validateState(
 
   if (!Object.values(requiredSections).every(Boolean)) {
     failures.push(`Sezioni principali mancanti: ${JSON.stringify(state.mainSections)}`);
+  }
+
+  if (state.viewport.width <= 767) {
+    if (!state.navigation?.mobileTriggerPresent) {
+      failures.push('Trigger menu mobile non rilevato.');
+    }
+    if (state.navigation?.mobileDrawerPresent && Number(state.navigation?.itemCount ?? 0) <= 0) {
+      failures.push('Navigazione sezioni senza voci disponibili.');
+    }
+  } else {
+    if (!state.navigation?.desktopPresent) {
+      failures.push('Navigazione sezioni desktop non rilevata.');
+    }
+
+    if (Number(state.navigation?.itemCount ?? 0) <= 0) {
+      failures.push('Navigazione sezioni senza voci disponibili.');
+    }
+  }
+
+  if (expectBackToTopVisible && !state.navigation?.backToTopPresent) {
+    failures.push('Scorciatoia torna-su non rilevata nello scenario scrollato.');
   }
 
   if (!state.nextRace.cardPresent) {

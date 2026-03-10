@@ -13,6 +13,7 @@ describe('responsive UI scenarios', () => {
       inspectState: vi.fn()
         .mockReturnValueOnce({ selectedWeekend: { cardText: 'A', bannerTitle: 'A' } })
         .mockReturnValueOnce({ selectedWeekend: { cardText: 'A', bannerTitle: 'A' } })
+        .mockReturnValueOnce({ selectedWeekend: { cardText: 'A', bannerTitle: 'A' } })
         .mockReturnValueOnce({ selectedWeekend: { cardText: 'B', bannerTitle: 'B' } })
         .mockReturnValueOnce({ selectedWeekend: { cardText: 'Sprint', bannerTitle: 'Sprint' } }),
       validateState: vi.fn()
@@ -20,8 +21,9 @@ describe('responsive UI scenarios', () => {
         .mockReturnValueOnce(['public fail'])
         .mockReturnValueOnce([])
         .mockReturnValueOnce([])
-      ,
+        .mockReturnValueOnce([]),
       switchViewMode: vi.fn((mode) => calls.push(`view:${mode}`)),
+      scrollAwayFromHeader: vi.fn(() => calls.push('back-to-top')),
       switchWeekend: vi.fn(() => calls.push('weekend')),
       selectSprintWeekend: vi.fn(() => calls.push('sprint')),
       openTooltipIfPresent: vi.fn().mockReturnValue(true),
@@ -35,6 +37,7 @@ describe('responsive UI scenarios', () => {
       'default',
       'public-view',
       'admin-return',
+      'back-to-top',
       'weekend-switch',
       'sprint-tooltip',
     ]);
@@ -44,15 +47,16 @@ describe('responsive UI scenarios', () => {
       results.push(await scenario.run(shared));
     }
 
-    expect(calls).toEqual(['view:public', 'view:admin', 'weekend', 'sprint']);
-    expect(shared.validateState).toHaveBeenCalledTimes(5);
+    expect(calls).toEqual(['view:public', 'view:admin', 'back-to-top', 'weekend', 'sprint']);
+    expect(shared.validateState).toHaveBeenCalledTimes(6);
     expect(results[1]).toEqual(expect.objectContaining({
       key: 'public-view',
       failures: ['public fail'],
       screenshotPath: '/tmp/failure.png',
     }));
-    expect(results[3]).toEqual(expect.objectContaining({ skipped: false }));
-    expect(results[4]).toEqual(expect.objectContaining({ skipped: false }));
+    expect(results[3]).toEqual(expect.objectContaining({ key: 'back-to-top', skipped: false }));
+    expect(results[4]).toEqual(expect.objectContaining({ key: 'weekend-switch', skipped: false }));
+    expect(results[5]).toEqual(expect.objectContaining({ key: 'sprint-tooltip', skipped: false }));
   });
 
   it('marks optional scenarios as skipped when prerequisites are missing', async () => {
@@ -63,6 +67,7 @@ describe('responsive UI scenarios', () => {
       inspectState: vi.fn().mockReturnValue({}),
       validateState: vi.fn().mockReturnValue([]),
       switchViewMode: vi.fn(),
+      scrollAwayFromHeader: vi.fn(),
       switchWeekend: vi.fn(),
       selectSprintWeekend: vi.fn(),
       openTooltipIfPresent: vi.fn().mockReturnValue(false),
@@ -71,11 +76,14 @@ describe('responsive UI scenarios', () => {
     };
 
     const scenarios = buildResponsiveScenarios({ initialState: { selectedWeekend: { cardText: 'A', bannerTitle: 'A' } } });
-    const weekendResult = await scenarios[3].run(shared);
-    const sprintResult = await scenarios[4].run(shared);
+    const backToTopResult = await scenarios[3].run(shared);
+    const weekendResult = await scenarios[4].run(shared);
+    const sprintResult = await scenarios[5].run(shared);
 
+    expect(backToTopResult).toEqual(expect.objectContaining({ key: 'back-to-top', skipped: false }));
     expect(weekendResult).toEqual(expect.objectContaining({ key: 'weekend-switch', skipped: true }));
     expect(sprintResult).toEqual(expect.objectContaining({ key: 'sprint-tooltip', skipped: true }));
+    expect(shared.scrollAwayFromHeader).toHaveBeenCalledTimes(1);
     expect(shared.switchWeekend).not.toHaveBeenCalled();
     expect(shared.selectSprintWeekend).not.toHaveBeenCalled();
   });

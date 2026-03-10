@@ -27,7 +27,7 @@ Rispetto alla produzione `v1.3.12`, il repository contiene gia' il delta tecnico
 - backend `storage` rifattorizzato in facade + servizi espliciti (`AppDataRepository`, `AppDataSanitizer`, `ParticipantRosterPolicy`, `WeekendSelectionService`);
 - logica frontend di weekend state, scoring e analytics spostata in moduli OO dedicati;
 - route di salvataggio e bootstrap server separati in service object testabili;
-- baseline coverage verificata riallineata a `4699 / 4699` statements, `371 / 371` functions, `1908 / 1908` branches e `4699 / 4699` lines;
+- baseline coverage verificata riallineata a `4766 / 4766` statements, `386 / 386` functions, `1968 / 1968` branches e `4766 / 4766` lines;
 - validazione finale completa rieseguita anche con `test:ui-responsive`, `test:save-local`, controllo sintassi di `start_fantaf1.command` e verifica di coerenza dei workflow GitHub Actions.
 
 In sintesi: la produzione `v1.3.12` descrive la baseline live, mentre questo README documenta anche il delta tecnico gia' presente nel repository e versionato come `v1.4.0`, non ancora deployato.
@@ -217,6 +217,7 @@ Se il database non contiene ancora stato applicativo, il backend costruisce uno 
 - Card "Prossimo weekend" con badge Sprint/Standard, programma sessioni e orari formattati in italiano.
 - Classifica live calcolata come punti storici piu' proiezione del weekend selezionato, con stato esplicito per risultati ufficiali assenti o parziali.
 - Modalita' `public` e `admin` separate, con login admin via sessione, link condivisibile della vista corrente e pannelli operativi esposti solo quando la sessione e' valida.
+- Navigazione di sezione coerente con il visual language esistente: su desktop il menu e' sticky sotto l'header, mentre su mobile compare un trigger discreto `Sezioni` che apre un drawer laterale sinistro con le sole sezioni disponibili per la vista corrente.
 - Calendario stagionale con selettore e strip orizzontale dei weekend.
 - Griglia pronostici per i 3 partecipanti con selezione piloti ordinati per cognome e visualizzati come `Cognome Nome`.
 - Hero results card del weekend selezionato con nomi pilota visualizzati come `Nome Cognome`; dropdown e liste di selezione restano invece in formato `Cognome Nome`.
@@ -242,7 +243,7 @@ La shell frontend mantiene sincronizzato nell'URL lo stato consultivo della vist
 - `meeting` seleziona il weekend attivo.
 - `view=public` forza solo la vista pubblica; una query `view=admin` non concede accesso operativo se la sessione non e' admin.
 - `historyUser` e `historySearch` ripristinano i filtri dello storico.
-- L'eventuale `hash` viene preservato e usato per lo scroll iniziale alla sezione richiesta.
+- L'eventuale `hash` viene preservato e usato per lo scroll iniziale alla sezione richiesta; la navigazione di sezione aggiorna l'URL via `history.replaceState` senza perdere `meeting`, `view` e filtri storico gia' presenti.
 
 Quando l'utente cambia weekend, vista o filtri storico, il frontend aggiorna l'URL via `history.replaceState` senza ricaricare la pagina.
 
@@ -529,8 +530,7 @@ Il backend verifica in startup che `MONGODB_URI` sia allineata con `fantaf1_dev`
 Lo script integrato:
 
 - forza esplicitamente `NODE_ENV=development` per mantenere allineati environment locale e target database `fantaf1_dev`;
-- esegue `npm run lint`, `npm run test`, `npm run build`, `npm run test:ui-responsive` e `npm run test:save-local`;
-- avvia uno stack locale temporaneo solo per il controllo responsive e lo chiude se i test passano;
+- esegue `npm run lint`, `npm run test`, `npm run build` e `npm run test:save-local`;
 - esegue uno smoke reale di lettura/scrittura su `fantaf1_dev` prima dell'avvio finale;
 - verifica che le porte `3001` e `5173` siano libere;
 - avvia backend e frontend;
@@ -538,6 +538,8 @@ Lo script integrato:
 - apre Chrome in modalita' app sul frontend;
 - prova a massimizzare la finestra;
 - chiude i processi se uno dei child fallisce o, quando la finestra Chrome e' rilevabile, se la finestra viene chiusa.
+
+Il controllo browser `npm run test:ui-responsive` resta disponibile come verifica esplicita separata per task con impatto UI/responsive, ma non fa piu' parte del preflight automatico di `./start_fantaf1.command`.
 
 ## Deploy su Render
 
@@ -585,10 +587,10 @@ Lo script integrato:
 - Runner: Vitest.
 - Coverage provider: V8.
 - Baseline coverage verificata corrente sullo scope ufficiale del repository/applicazione:
-  - `4699 / 4699` statements
-  - `371 / 371` functions
-  - `1908 / 1908` branches
-  - `4699 / 4699` lines
+  - `4766 / 4766` statements
+  - `386 / 386` functions
+  - `1968 / 1968` branches
+  - `4766 / 4766` lines
 - Scope coverage configurato:
   - `app.js`
   - `server.js`
@@ -611,10 +613,12 @@ Include test di integrazione API (tramite `supertest` su `app.js`) e test dei co
 Include anche test unitari dedicati allo split deterministico del titolo hero e ai fallback responsive del titolo configurato.
 Include test dedicati alla live projection del weekend selezionato, agli stati UI `nessun risultato ufficiale` / `risultati parziali`, al parser risultati Formula1.com corrente e alla cache TTL di `GET /api/results/:meetingKey`.
 Per la UI e' disponibile anche `npm run test:ui-responsive`, che usa Playwright CLI via `npx` contro l'app locale avviata e verifica i breakpoint principali, il box "Prossimo weekend", il tooltip risultati, l'assenza di overflow orizzontali fuori dal carosello calendario e la coerenza tra vista admin e vista pubblica.
+Il controllo responsive verifica anche la presenza del menu corretto per breakpoint: nav desktop sotto l'header nelle viewport larghe, trigger `Sezioni` e drawer laterale sinistro su mobile, coerenza delle voci admin/public e assenza di regressioni sulla CTA `INSTALLA APPLICAZIONE`.
 Il comando esegue un preflight fail-fast sull'ambiente Playwright: se trova sessioni responsive residue (`ui-*`) o una CLI non reattiva, interrompe il run senza killare processi non creati da lui e riporta le istruzioni di bonifica manuale.
 Su errori di navigazione o shell UI bloccata raccoglie artefatti diagnostici in `output/playwright/ui-responsive/` (summary, stato pagina, tab-list, screenshot se disponibile, console e network log) per distinguere facilmente tra regressione UI, splash bloccata e sessione Playwright incoerente.
 Per il salvataggio locale e' disponibile `npm run test:save-local`, che legge `/api/data`, re-invia lo stesso payload su `POST /api/data`, verifica `environment=development`, `databaseTarget=fantaf1_dev` e controlla che lo stato resti invariato dopo il round-trip. Questo smoke test copre il canale di persistenza generica, non il salvataggio manuale dei pronostici su `POST /api/predictions`.
 Per la CI e' disponibile anche `npm run test:coverage`, mentre lo smoke di persistenza puo' essere eseguito sul database isolato di pipeline impostando `MONGODB_DB_NAME_OVERRIDE`, `SAVE_SMOKE_EXPECTED_ENVIRONMENT` e `SAVE_SMOKE_EXPECTED_DATABASE_TARGET` senza toccare `fantaf1_dev` o `fantaf1`.
+Per una verifica browser production-like coerente con il guardrail sul database, il repository supporta anche l'avvio con `NODE_ENV=production MONGODB_DB_NAME_OVERRIDE=fantaf1_dev npm start`, mantenendo runtime `production` ma puntando in modo esplicito al database locale di sviluppo per smoke desktop/mobile della build servita da Express.
 Per ripulire documenti legacy che contengono ancora campi del `Weekend Boost` e' disponibile `npm run migrate:remove-weekend-boost`, script idempotente che riscrive gli `AppData` del database corrente in forma sanificata.
 
 ## CI/CD GitHub

@@ -108,6 +108,11 @@ const inspectStateExpression = `() => {
   const historyFilterSelect = document.querySelector('#history-user-filter');
   const firstPredictionOption = firstPredictionSelect?.querySelector('option');
   const firstResultOption = firstResultSelect?.querySelector('option');
+  const desktopSectionNav = document.querySelector('.section-nav');
+  const mobileSectionTrigger = document.querySelector('.section-drawer-trigger');
+  const mobileSectionDrawer = document.querySelector('.section-drawer');
+  const activeSectionButton = document.querySelector('.section-nav-button.active, .section-drawer-item.active');
+  const backToTopButton = document.querySelector('.back-to-top-button');
 
   return {
     viewport: { width: viewportWidth, height: viewportHeight },
@@ -228,6 +233,14 @@ const inspectStateExpression = `() => {
       predictionOption: readElementStyles(firstPredictionOption),
       resultOption: readElementStyles(firstResultOption),
     },
+    navigation: {
+      desktopPresent: Boolean(desktopSectionNav),
+      mobileTriggerPresent: Boolean(mobileSectionTrigger),
+      mobileDrawerPresent: Boolean(mobileSectionDrawer),
+      itemCount: document.querySelectorAll('.section-nav-button, .section-drawer-item').length,
+      activeText: normalizeText(activeSectionButton?.textContent),
+      backToTopPresent: Boolean(backToTopButton),
+    },
     unauthorizedOverflow,
   };
 }`;
@@ -247,6 +260,7 @@ const appShellStateExpression = `() => {
       resultsActions: Boolean(document.querySelector('.results-actions')),
       liveScoreValue: Boolean(document.querySelector('.live-score-value')),
       pointsPreviewValue: Boolean(document.querySelector('.points-preview-value')),
+      sectionNav: Boolean(document.querySelector('.section-nav') || document.querySelector('.section-drawer-trigger')),
     },
   };
 }`;

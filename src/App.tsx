@@ -3,6 +3,7 @@ import {
   CalendarDays,
   Flag,
   ListChecks,
+  Menu,
   ShieldCheck,
   Save,
   Trash2,
@@ -17,6 +18,8 @@ import {
   LockKeyhole,
   Download,
   LogOut,
+  ArrowUp,
+  X,
 } from 'lucide-react';
 import './App.css';
 import {
@@ -97,6 +100,7 @@ import {
   upsertWeekendPredictionState,
   upsertWeekendRaceResults,
 } from './utils/weekendState';
+import { getSectionNavigationItems } from './utils/sectionNavigation';
 
 const { driversSource, points, uiText } = appConfig;
 
@@ -137,6 +141,11 @@ type ToastTone = 'info' | 'success';
 interface ToastState {
   message: string;
   tone: ToastTone;
+}
+
+function buildHashUrl(hash: string) {
+  const normalizedHash = hash.trim().replace(/^#/, '');
+  return `${window.location.pathname}${window.location.search}#${normalizedHash}`;
 }
 
 function isStandaloneInstallContext() {
@@ -245,6 +254,7 @@ function App() {
   const [isMobileViewport, setIsMobileViewport] = useState(() => window.matchMedia('(max-width: 767px)').matches);
   const [showInstallInstructions, setShowInstallInstructions] = useState(false);
   const [showAdminLogin, setShowAdminLogin] = useState(false);
+  const [isSectionDrawerOpen, setIsSectionDrawerOpen] = useState(false);
   const [adminPassword, setAdminPassword] = useState('');
   const [adminLoginError, setAdminLoginError] = useState('');
   const [historySearch, setHistorySearch] = useState('');
@@ -252,9 +262,14 @@ function App() {
   const [expandedHistoryKey, setExpandedHistoryKey] = useState('');
   const [selectedRacePhase, setSelectedRacePhase] = useState<RacePhase>('open');
   const [selectedRaceHighlightsVideoUrl, setSelectedRaceHighlightsVideoUrl] = useState('');
+  const [activeSectionId, setActiveSectionId] = useState('');
+  const [isBackToTopVisible, setIsBackToTopVisible] = useState(false);
   const selectedMeetingKeyRef = useRef(selectedMeetingKey);
   const toastTimeoutRef = useRef<number | null>(null);
   const initialHashHandledRef = useRef(false);
+  const sectionDrawerRef = useRef<HTMLDivElement | null>(null);
+  const sectionDrawerTriggerRef = useRef<HTMLButtonElement | null>(null);
+  const sectionNavigationBoundaryRef = useRef<HTMLDivElement | null>(null);
 
   // Derived state (declared before effects to avoid TS errors)
   const sortedDrivers = sortDriversBySurname(drivers, driversSource.sortLocale);
@@ -272,6 +287,8 @@ function App() {
   const allResultsFilled = allLiveResultsFilled;
   const canAssignPoints = isFinished && allResultsFilled;
   const isPublicView = viewMode === 'public';
+  const sectionNavigationItems = getSectionNavigationItems(viewMode);
+  const firstSectionId = sectionNavigationItems[0]?.id ?? '';
   const liveResultsStatusMessage =
     officialResultsAvailability === 'none'
       ? uiText.status.liveNoOfficialResults
@@ -364,6 +381,35 @@ function App() {
     }, 3200);
   }
 
+  function closeSectionDrawer({ restoreFocus = false } = {}) {
+    setIsSectionDrawerOpen(false);
+
+    if (restoreFocus) {
+      sectionDrawerTriggerRef.current?.focus();
+    }
+  }
+
+  function navigateToSection(sectionId: string) {
+    const targetElement = document.getElementById(sectionId);
+    if (!targetElement) {
+      return;
+    }
+
+    window.history.replaceState({}, '', buildHashUrl(sectionId));
+    targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    setActiveSectionId(sectionId);
+    closeSectionDrawer();
+  }
+
+  function scrollBackToTop() {
+    closeSectionDrawer();
+    if (firstSectionId) {
+      window.history.replaceState({}, '', buildHashUrl(firstSectionId));
+      setActiveSectionId(firstSectionId);
+    }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
   useEffect(() => {
     if (!selectedInsightsUser && users[0]?.name) {
       setSelectedInsightsUser(users[0].name);
@@ -423,6 +469,16 @@ function App() {
       }
     };
   }, []);
+
+  useEffect(() => {
+    setIsSectionDrawerOpen(false);
+  }, [viewMode]);
+
+  useEffect(() => {
+    if (!isMobileViewport) {
+      setIsSectionDrawerOpen(false);
+    }
+  }, [isMobileViewport]);
 
   useEffect(() => {
     let isCancelled = false;
@@ -546,8 +602,125 @@ function App() {
     }
 
     targetElement.scrollIntoView();
+    setActiveSectionId(targetId);
     initialHashHandledRef.current = true;
   }, [loading, viewMode]);
+
+  useEffect(() => {
+    if (loading || sectionNavigationItems.length === 0) {
+      return;
+    }
+
+    const hashSectionId = window.location.hash.replace(/^#/, '');
+    const fallbackSectionId = hashSectionId || firstSectionId;
+    setActiveSectionId((currentActiveSectionId) => {
+      const isCurrentSectionVisible = sectionNavigationItems.some((item) => item.id === currentActiveSectionId);
+      return isCurrentSectionVisible ? currentActiveSectionId : fallbackSectionId;
+    });
+
+    if (typeof window.IntersectionObserver !== 'function') {
+      return;
+    }
+
+    const observedSections = sectionNavigationItems
+      .map((item) => document.getElementById(item.id))
+      .filter((section): section is HTMLElement => Boolean(section));
+
+    if (observedSections.length === 0) {
+      return;
+    }
+
+    const sectionObserver = new window.IntersectionObserver(
+      (entries) => {
+        const visibleEntry = entries
+          .filter((entry) => entry.isIntersecting)
+          .sort((left, right) => right.intersectionRatio - left.intersectionRatio)[0];
+
+        if (visibleEntry?.target?.id) {
+          setActiveSectionId(visibleEntry.target.id);
+        }
+      },
+      {
+        rootMargin: '-18% 0px -62% 0px',
+        threshold: [0.2, 0.4, 0.65],
+      },
+    );
+
+    observedSections.forEach((section) => {
+      sectionObserver.observe(section);
+    });
+
+    return () => {
+      sectionObserver.disconnect();
+    };
+  }, [firstSectionId, loading, sectionNavigationItems]);
+
+  useEffect(() => {
+    if (!isSectionDrawerOpen) {
+      return;
+    }
+
+    const previousBodyOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    const drawerElement = sectionDrawerRef.current;
+    const focusableElements = drawerElement
+      ? Array.from(drawerElement.querySelectorAll<HTMLButtonElement>('button:not(:disabled)'))
+      : [];
+    const firstFocusableElement = focusableElements[0];
+    const lastFocusableElement = focusableElements[focusableElements.length - 1];
+    firstFocusableElement?.focus();
+
+    function handleDrawerKeydown(event: KeyboardEvent) {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        closeSectionDrawer({ restoreFocus: true });
+        return;
+      }
+
+      if (event.key !== 'Tab' || focusableElements.length === 0) {
+        return;
+      }
+
+      if (event.shiftKey && document.activeElement === firstFocusableElement) {
+        event.preventDefault();
+        lastFocusableElement?.focus();
+        return;
+      }
+
+      if (!event.shiftKey && document.activeElement === lastFocusableElement) {
+        event.preventDefault();
+        firstFocusableElement?.focus();
+      }
+    }
+
+    document.addEventListener('keydown', handleDrawerKeydown);
+
+    return () => {
+      document.body.style.overflow = previousBodyOverflow;
+      document.removeEventListener('keydown', handleDrawerKeydown);
+    };
+  }, [isSectionDrawerOpen]);
+
+  useEffect(() => {
+    if (loading) {
+      return;
+    }
+
+    function updateBackToTopVisibility() {
+      const boundaryTop = sectionNavigationBoundaryRef.current?.getBoundingClientRect().top ?? Number.POSITIVE_INFINITY;
+      setIsBackToTopVisible(boundaryTop < 0 || window.scrollY > 280);
+    }
+
+    updateBackToTopVisibility();
+    window.addEventListener('scroll', updateBackToTopVisibility, { passive: true });
+    window.addEventListener('resize', updateBackToTopVisibility);
+
+    return () => {
+      window.removeEventListener('scroll', updateBackToTopVisibility);
+      window.removeEventListener('resize', updateBackToTopVisibility);
+    };
+  }, [loading]);
 
   useEffect(() => {
     if (loading) {
@@ -1481,9 +1654,44 @@ function App() {
         </div>
       </header>
 
+      {isMobileViewport ? (
+        <div className="section-drawer-entry">
+          <button
+            ref={sectionDrawerTriggerRef}
+            aria-controls="section-drawer"
+            aria-expanded={isSectionDrawerOpen}
+            aria-label={appText.shell.navigation.openButton}
+            className="secondary-button section-drawer-trigger"
+            onClick={() => setIsSectionDrawerOpen(true)}
+            type="button"
+          >
+            <Menu size={18} />
+            {appText.shell.navigation.openButton}
+          </button>
+        </div>
+      ) : (
+        <nav aria-label={appText.shell.navigation.ariaLabel} className="section-nav panel">
+          <div className="section-nav-list">
+            {sectionNavigationItems.map((item) => (
+              <button
+                key={item.id}
+                aria-pressed={activeSectionId === item.id}
+                className={`secondary-button section-nav-button ${activeSectionId === item.id ? 'active' : ''}`.trim()}
+                onClick={() => navigateToSection(item.id)}
+                type="button"
+              >
+                {item.label}
+              </button>
+            ))}
+          </div>
+        </nav>
+      )}
+
+      <div aria-hidden="true" className="section-nav-boundary" ref={sectionNavigationBoundaryRef} />
+
       <main className="dashboard-grid">
         <section className="content-column">
-          <section className="calendar-panel">
+          <section className="calendar-panel" id="calendar-section">
             <div className="section-title">
               <Flag size={20} />
               <h2>{uiText.headings.calendar}</h2>
@@ -1536,7 +1744,7 @@ function App() {
             )}
           </section>
 
-          <section className="panel">
+          <section className="panel" id="user-kpi-section">
             <div className="panel-head">
               <div className="section-title">
                 <BarChart3 size={20} />
@@ -1581,7 +1789,7 @@ function App() {
             )}
           </section>
 
-          <section className="panel analytics-panel">
+          <section className="panel analytics-panel" id="user-analytics-section">
             <div className="section-title">
               <BarChart3 size={20} />
               <h2>{uiText.headings.userAnalytics}</h2>
@@ -1677,7 +1885,7 @@ function App() {
           ) : null}
 
           {!isPublicView ? (
-          <section className="panel">
+          <section className="panel" id="predictions-section">
             <div className="panel-head">
               <div className="section-title">
                 <User size={20} />
@@ -1757,7 +1965,7 @@ function App() {
             </div>
           </section>
           ) : (
-            <section className="panel public-readonly-panel">
+            <section className="panel public-readonly-panel" id="predictions-section">
               <div className="section-title">
                 <User size={20} />
                 <h2>{uiText.headings.predictionEntry}</h2>
@@ -1791,7 +1999,7 @@ function App() {
           )}
 
           {!isPublicView ? (
-          <section className="panel accent-panel">
+          <section className="panel accent-panel" id="results-section">
             <div className="section-title">
               <ListChecks size={20} />
               <h2>{uiText.headings.results}</h2>
@@ -1893,6 +2101,61 @@ function App() {
           />
         </section>
       </main>
+
+      {isMobileViewport && isSectionDrawerOpen ? (
+        <div
+          className="section-drawer-backdrop"
+          role="presentation"
+          onClick={() => closeSectionDrawer({ restoreFocus: true })}
+        >
+          <div
+            ref={sectionDrawerRef}
+            aria-label={appText.shell.navigation.ariaLabel}
+            className="section-drawer"
+            id="section-drawer"
+            role="dialog"
+            aria-modal="true"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="section-drawer-head">
+              <p className="section-drawer-title">{appText.shell.navigation.ariaLabel}</p>
+              <button
+                aria-label={appText.shell.navigation.closeButton}
+                className="secondary-button section-drawer-close"
+                onClick={() => closeSectionDrawer({ restoreFocus: true })}
+                type="button"
+              >
+                <X size={18} />
+              </button>
+            </div>
+            <nav aria-label={appText.shell.navigation.ariaLabel} className="section-drawer-nav">
+              {sectionNavigationItems.map((item) => (
+                <button
+                  key={item.id}
+                  aria-pressed={activeSectionId === item.id}
+                  className={`secondary-button section-drawer-item ${activeSectionId === item.id ? 'active' : ''}`.trim()}
+                  onClick={() => navigateToSection(item.id)}
+                  type="button"
+                >
+                  {item.label}
+                </button>
+              ))}
+            </nav>
+          </div>
+        </div>
+      ) : null}
+
+      {isBackToTopVisible ? (
+        <button
+          aria-label={appText.shell.navigation.backToTopButton}
+          className="secondary-button back-to-top-button"
+          onClick={scrollBackToTop}
+          title={appText.shell.navigation.backToTopButton}
+          type="button"
+        >
+          <ArrowUp size={18} />
+        </button>
+      ) : null}
 
       {showAdminLogin ? (
         <div className="auth-modal-backdrop" role="presentation" onClick={() => setShowAdminLogin(false)}>

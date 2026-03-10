@@ -6,6 +6,17 @@ import { act, fireEvent, render, screen, waitFor, within } from '@testing-librar
 import React from 'react';
 import App from '../src/App';
 
+class MockIntersectionObserver {
+  observe = vi.fn();
+  unobserve = vi.fn();
+  disconnect = vi.fn();
+
+  constructor(
+    _callback: IntersectionObserverCallback,
+    _options?: IntersectionObserverInit,
+  ) {}
+}
+
 Object.defineProperty(window, 'matchMedia', {
   writable: true,
   value: vi.fn().mockImplementation((query) => ({
@@ -30,7 +41,12 @@ function mockMediaMatches(matchesByQuery: Record<string, boolean>) {
     addEventListener: vi.fn(),
     removeEventListener: vi.fn(),
     dispatchEvent: vi.fn(),
-  }));
+}));
+
+Object.defineProperty(window, 'IntersectionObserver', {
+  writable: true,
+  value: MockIntersectionObserver,
+});
 }
 
 function setUserAgent(userAgent: string) {
@@ -283,6 +299,10 @@ describe('Mockup roadmap UI features', () => {
     setUserAgent('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)');
     setNavigatorStandalone(false);
     Object.defineProperty(HTMLElement.prototype, 'scrollIntoView', {
+      configurable: true,
+      value: vi.fn(),
+    });
+    Object.defineProperty(window, 'scrollTo', {
       configurable: true,
       value: vi.fn(),
     });
@@ -597,5 +617,129 @@ describe('Mockup roadmap UI features', () => {
     expect(screen.getByRole('button', { name: /modalita' admin/i })).toHaveAttribute('aria-pressed', 'false');
     expect(screen.queryByRole('button', { name: /salva dati inseriti/i })).not.toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /come funziona/i })).toBeInTheDocument();
+  });
+
+  it('renders desktop section navigation with admin-only and public-only entries', async () => {
+    setupFetch();
+
+    render(<App />);
+
+    await waitFor(() => {
+      expect(screen.queryByTestId('pitstop-loader')).not.toBeInTheDocument();
+    });
+
+    const navigation = screen.getByRole('navigation', { name: /sezioni applicazione/i });
+    expect(within(navigation).getByRole('button', { name: /calendario stagione/i })).toBeInTheDocument();
+    expect(within(navigation).getByRole('button', { name: /risultati del weekend/i })).toBeInTheDocument();
+    expect(within(navigation).queryByRole('button', { name: /come funziona/i })).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: /vista pubblica/i }));
+
+    expect(within(navigation).getByRole('button', { name: /come funziona/i })).toBeInTheDocument();
+    expect(within(navigation).queryByRole('button', { name: /risultati del weekend/i })).not.toBeInTheDocument();
+  });
+
+  it('opens and closes the mobile section drawer and updates the hash on navigation', async () => {
+    setupFetch();
+    mockMediaMatches({ '(max-width: 767px)': true });
+    const scrollIntoView = vi.fn();
+    Object.defineProperty(HTMLElement.prototype, 'scrollIntoView', {
+      configurable: true,
+      value: scrollIntoView,
+    });
+
+    render(<App />);
+
+    await waitFor(() => {
+      expect(screen.queryByTestId('pitstop-loader')).not.toBeInTheDocument();
+    });
+
+    const openButton = screen.getByRole('button', { name: /^sezioni$/i });
+    expect(openButton).toBeInTheDocument();
+    expect(screen.queryByRole('dialog', { name: /sezioni applicazione/i })).not.toBeInTheDocument();
+
+    fireEvent.click(openButton);
+
+    const drawer = screen.getByRole('dialog', { name: /sezioni applicazione/i });
+    const seasonAnalysisButton = within(drawer).getByRole('button', { name: /analisi stagione/i });
+    fireEvent.click(seasonAnalysisButton);
+
+    expect(window.location.hash).toBe('#season-analysis');
+    expect(scrollIntoView).toHaveBeenCalled();
+    expect(screen.queryByRole('dialog', { name: /sezioni applicazione/i })).not.toBeInTheDocument();
+
+    fireEvent.click(openButton);
+    expect(screen.getByRole('dialog', { name: /sezioni applicazione/i })).toBeInTheDocument();
+
+    fireEvent.keyDown(document, { key: 'Escape' });
+
+    await waitFor(() => {
+      expect(screen.queryByRole('dialog', { name: /sezioni applicazione/i })).not.toBeInTheDocument();
+    });
+    expect(document.activeElement).toBe(openButton);
+  });
+
+  it('shows the back-to-top shortcut only after leaving the header area and scrolls back to the menu', async () => {
+    setupFetch();
+    const scrollTo = vi.fn();
+    Object.defineProperty(window, 'scrollTo', {
+      configurable: true,
+      value: scrollTo,
+    });
+
+    render(<App />);
+
+    await waitFor(() => {
+      expect(screen.queryByTestId('pitstop-loader')).not.toBeInTheDocument();
+    });
+
+    expect(screen.queryByRole('button', { name: /torna su/i })).not.toBeInTheDocument();
+
+    Object.defineProperty(window, 'scrollY', {
+      configurable: true,
+      value: 420,
+    });
+
+    fireEvent.scroll(window);
+
+    const backToTopButton = await screen.findByRole('button', { name: /torna su/i });
+    expect(backToTopButton).toBeInTheDocument();
+
+    fireEvent.click(backToTopButton);
+
+    expect(scrollTo).toHaveBeenCalledWith({ top: 0, behavior: 'smooth' });
+    expect(window.location.hash).toBe('#calendar-section');
+  });
+
+  it('closes the mobile drawer before scrolling back to the top', async () => {
+    setupFetch();
+    mockMediaMatches({ '(max-width: 767px)': true });
+    const scrollTo = vi.fn();
+    Object.defineProperty(window, 'scrollTo', {
+      configurable: true,
+      value: scrollTo,
+    });
+
+    render(<App />);
+
+    await waitFor(() => {
+      expect(screen.queryByTestId('pitstop-loader')).not.toBeInTheDocument();
+    });
+
+    Object.defineProperty(window, 'scrollY', {
+      configurable: true,
+      value: 420,
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: /^sezioni$/i }));
+    expect(screen.getByRole('dialog', { name: /sezioni applicazione/i })).toBeInTheDocument();
+
+    fireEvent.scroll(window);
+    fireEvent.click(await screen.findByRole('button', { name: /torna su/i }));
+
+    expect(scrollTo).toHaveBeenCalledWith({ top: 0, behavior: 'smooth' });
+    await waitFor(() => {
+      expect(screen.queryByRole('dialog', { name: /sezioni applicazione/i })).not.toBeInTheDocument();
+    });
   });
 });
