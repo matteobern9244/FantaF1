@@ -135,12 +135,21 @@ function scrollAwayFromHeader({
     return true;
   }`);
 
-  waitForEvaluatedCondition('() => Boolean(document.querySelector(".back-to-top-button"))', {
+  waitForEvaluatedCondition(
+    `() => {
+      const desktopNav = document.querySelector('.section-nav');
+      const mobileTrigger = document.querySelector('.section-drawer-trigger');
+      const installButton = [...document.querySelectorAll('button')]
+        .find((button) => /installa applicazione/i.test(button.textContent || ''));
+      return Boolean(desktopNav || mobileTrigger) && Boolean(installButton);
+    }`,
+    {
     evaluateJsonImpl,
     sleepSyncImpl,
     timeoutMs: 10000,
-    failureMessage: 'Scorciatoia torna-su non visibile dopo lo scroll della pagina.',
-  });
+    failureMessage: 'Navigazione sticky o CTA installazione non visibili dopo lo scroll della pagina.',
+  },
+  );
 
   sleepSyncImpl(100);
 }
@@ -269,13 +278,17 @@ function buildResponsiveScenarios({ initialState }) {
       },
     },
     {
-      key: 'back-to-top',
+      key: 'sticky-navigation',
       run: async ({ cli, inspectState: inspectStateImpl, scrollAwayFromHeader: scrollAwayFromHeaderImpl, validateState }) => {
         scrollAwayFromHeaderImpl();
         const scrolledState = inspectStateImpl();
         return finalizeScenarioResult({
-          key: 'back-to-top',
-          failures: validateState(scrolledState, { expectedViewMode: 'admin', expectBackToTopVisible: true }),
+          key: 'sticky-navigation',
+          failures: validateState(scrolledState, {
+            expectedViewMode: 'admin',
+            expectPersistentNavigationVisible: true,
+            expectInstallCtaVisible: true,
+          }),
           cli,
         });
       },

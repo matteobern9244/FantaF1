@@ -12,7 +12,7 @@ La versione attualmente in produzione e pubblicata e' `v1.4.0`. Il repository e'
 
 La baseline live corrisponde alle capability gia' rilasciate e documentate in `CHANGELOG.md` sotto `v1.4.0`:
 
-- navigation shell responsive con menu desktop/mobile, deep link di sezione e shortcut `Torna al menu`;
+- navigation shell responsive con menu desktop/mobile, deep link di sezione e shortcut contestuale per tornare rapidamente in cima;
 - refactor OO di calendario, persistenza, scoring, analytics e bootstrap runtime;
 - sessioni admin/public reali, analytics stagionali, CTA installazione PWA e recap highlights;
 - validazione release con `lint`, `test`, `test:coverage`, `build`, `test:ui-responsive` e `test:save-local`.
@@ -23,6 +23,8 @@ Rispetto alla produzione `v1.4.0`, il repository contiene gia' il delta tecnico 
 
 - ripristino della track map del circuito anche nella vista pubblica, sia nel recap hero del weekend selezionato sia nel pannello `Recap ultimo GP`;
 - mantenimento invariato della stessa track map nella sezione admin `Risultati del weekend`;
+- menu di sezione sempre visibile durante lo scroll, con rimozione della freccia `Torna al menu`;
+- CTA `INSTALLA APPLICAZIONE` sempre visibile su browser desktop e mobile, con feedback esplicito quando l'installazione non e' disponibile o l'app e' gia' installata;
 - test regressivi aggiuntivi per mappa pubblica, cambio weekend e navigation shell desktop/public;
 - baseline coverage verificata riallineata a `4780 / 4780` statements, `393 / 393` functions, `1999 / 1999` branches e `4780 / 4780` lines;
 - validazione finale completa rieseguita anche con `test:ui-responsive`, `test:save-local`, controllo sintassi di `start_fantaf1.command` e verifica di coerenza dei workflow GitHub Actions.
@@ -214,8 +216,7 @@ Se il database non contiene ancora stato applicativo, il backend costruisce uno 
 - Card "Prossimo weekend" con badge Sprint/Standard, programma sessioni e orari formattati in italiano.
 - Classifica live calcolata come punti storici piu' proiezione del weekend selezionato, con stato esplicito per risultati ufficiali assenti o parziali.
 - Modalita' `public` e `admin` separate, con login admin via sessione, link condivisibile della vista corrente e pannelli operativi esposti solo quando la sessione e' valida.
-- Navigazione di sezione coerente con il visual language esistente: su desktop il menu e' sticky sotto l'header, mentre su mobile compare un trigger discreto `Sezioni` che apre un drawer laterale sinistro con le sole sezioni disponibili per la vista corrente.
-- Scorciatoia floating contestuale `Torna al menu`: quando l'utente lascia l'area hero + navigazione, compare un controllo dedicato con freccia verso l'alto, tooltip `Torna al menu` e font coerente con il resto dell'app, utile per tornare rapidamente in cima senza perdere il menu di sezione.
+- Navigazione di sezione coerente con il visual language esistente e sempre disponibile durante lo scroll: su desktop il menu resta fisso sotto l'header, mentre su mobile compare un trigger discreto `Sezioni` che apre un drawer laterale sinistro con le sole sezioni disponibili per la vista corrente.
 - Calendario stagionale con selettore e strip orizzontale dei weekend.
 - Griglia pronostici per i 3 partecipanti con selezione piloti ordinati per cognome e visualizzati come `Cognome Nome`.
 - Hero results card del weekend selezionato con nomi pilota visualizzati come `Nome Cognome`; dropdown e liste di selezione restano invece in formato `Cognome Nome`.
@@ -226,14 +227,14 @@ Se il database non contiene ancora stato applicativo, il backend costruisce uno 
 - Dashboard KPI per utente, analytics deep-dive, pannello `Analisi stagione`, riepilogo `Weekend pulse`, guida pubblica, storico mobile piu' compatto, status strip, toast operativi e CTA installazione PWA.
 - Loader iniziale con splash logo `FantaF1`, set icone browser/PWA dedicato (`favicon`, `apple-touch-icon`, `192x192`, `512x512`, `maskable`) e layout responsive desktop/mobile.
 
-### Installazione PWA mobile
+### Installazione PWA
 
-La shell frontend espone il pulsante `INSTALLA APPLICAZIONE` in vista mobile solo quando l'app non risulta gia' installata o aperta in modalita' standalone.
+La shell frontend espone sempre il pulsante `INSTALLA APPLICAZIONE` nei browser desktop e mobile, mantenendolo visibile anche durante lo scroll insieme alla navigation shell.
 
-- Su browser mobile che espongono `beforeinstallprompt` (per esempio Chrome Android), il pulsante apre il prompt di installazione nativo della PWA.
+- Su browser che espongono `beforeinstallprompt` il pulsante apre il prompt di installazione nativo della PWA.
 - Su `iPhone` e `iPad` con `Safari`, dove il prompt nativo non e' disponibile, il pulsante apre un dialog guidato con i passaggi `Condividi -> Aggiungi a Home`.
-- Se l'app e' gia' installata o sta girando in `display-mode: standalone`, la CTA non viene mostrata.
-- Browser mobile senza prompt nativo e senza flusso supportato non mostrano la CTA, evitando percorsi morti lato utente.
+- Se l'app e' gia' installata o sta girando in `display-mode: standalone`, la CTA resta visibile ma mostra un feedback esplicito che conferma lo stato gia' installato.
+- Browser senza prompt nativo e senza flusso supportato mantengono la CTA visibile e mostrano un messaggio informativo, evitando percorsi morti lato utente.
 
 ### URL condivisibile della vista
 
@@ -612,7 +613,7 @@ Include test di integrazione API (tramite `supertest` su `app.js`) e test dei co
 Include anche test unitari dedicati allo split deterministico del titolo hero e ai fallback responsive del titolo configurato.
 Include test dedicati alla live projection del weekend selezionato, agli stati UI `nessun risultato ufficiale` / `risultati parziali`, al parser risultati Formula1.com corrente e alla cache TTL di `GET /api/results/:meetingKey`.
 Per la UI e' disponibile anche `npm run test:ui-responsive`, che usa Playwright CLI via `npx` contro l'app locale avviata e verifica i breakpoint principali, il box "Prossimo weekend", il tooltip risultati, l'assenza di overflow orizzontali fuori dal carosello calendario e la coerenza tra vista admin e vista pubblica.
-Il controllo responsive verifica anche la presenza del menu corretto per breakpoint: nav desktop sotto l'header nelle viewport larghe, trigger `Sezioni` e drawer laterale sinistro su mobile, coerenza delle voci admin/public, presenza della scorciatoia `Torna al menu` con tipografia Formula1 e assenza di regressioni sulla CTA `INSTALLA APPLICAZIONE`.
+Il controllo responsive verifica anche la presenza del menu corretto per breakpoint: nav desktop persistente nelle viewport larghe, trigger `Sezioni` e drawer laterale sinistro su mobile, coerenza delle voci admin/public e assenza di regressioni sulla CTA `INSTALLA APPLICAZIONE`, che deve restare visibile in viewport.
 Il comando esegue un preflight fail-fast sull'ambiente Playwright: se trova sessioni responsive residue (`ui-*`) o una CLI non reattiva, interrompe il run senza killare processi non creati da lui e riporta le istruzioni di bonifica manuale.
 Su errori di navigazione o shell UI bloccata raccoglie artefatti diagnostici in `output/playwright/ui-responsive/` (summary, stato pagina, tab-list, screenshot se disponibile, console e network log) per distinguere facilmente tra regressione UI, splash bloccata e sessione Playwright incoerente.
 Per il salvataggio locale e' disponibile `npm run test:save-local`, che legge `/api/data`, re-invia lo stesso payload su `POST /api/data`, verifica `environment=development`, `databaseTarget=fantaf1_dev` e controlla che lo stato resti invariato dopo il round-trip. Questo smoke test copre il canale di persistenza generica, non il salvataggio manuale dei pronostici su `POST /api/predictions`.

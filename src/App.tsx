@@ -18,7 +18,6 @@ import {
   LockKeyhole,
   Download,
   LogOut,
-  ArrowUp,
   X,
 } from 'lucide-react';
 import './App.css';
@@ -134,7 +133,7 @@ type NavigatorWithStandalone = Navigator & {
   standalone?: boolean;
 };
 
-type InstallCtaMode = 'hidden' | 'native' | 'ios';
+type InstallCtaMode = 'native' | 'ios' | 'installed' | 'unavailable';
 
 type ToastTone = 'info' | 'success';
 
@@ -165,27 +164,25 @@ function isIosSafariInstallableBrowser() {
 function resolveInstallCtaMode({
   isAppInstalled,
   hasInstallPrompt,
-  isMobileViewport,
   isIosSafari,
 }: {
   isAppInstalled: boolean;
   hasInstallPrompt: boolean;
-  isMobileViewport: boolean;
   isIosSafari: boolean;
 }): InstallCtaMode {
   if (isAppInstalled) {
-    return 'hidden';
+    return 'installed';
   }
 
   if (hasInstallPrompt) {
     return 'native';
   }
 
-  if (isMobileViewport && isIosSafari) {
+  if (isIosSafari) {
     return 'ios';
   }
 
-  return 'hidden';
+  return 'unavailable';
 }
 
 /* v8 ignore next -- static SVG exercised by integration and browser smoke tests */
@@ -263,14 +260,11 @@ function App() {
   const [selectedRacePhase, setSelectedRacePhase] = useState<RacePhase>('open');
   const [selectedRaceHighlightsVideoUrl, setSelectedRaceHighlightsVideoUrl] = useState('');
   const [activeSectionId, setActiveSectionId] = useState('');
-  const [isBackToTopVisible, setIsBackToTopVisible] = useState(false);
-  const [isBackToTopTooltipVisible, setIsBackToTopTooltipVisible] = useState(false);
   const selectedMeetingKeyRef = useRef(selectedMeetingKey);
   const toastTimeoutRef = useRef<number | null>(null);
   const initialHashHandledRef = useRef(false);
   const sectionDrawerRef = useRef<HTMLDivElement | null>(null);
   const sectionDrawerTriggerRef = useRef<HTMLButtonElement | null>(null);
-  const sectionNavigationBoundaryRef = useRef<HTMLDivElement | null>(null);
 
   // Derived state (declared before effects to avoid TS errors)
   const sortedDrivers = sortDriversBySurname(drivers, driversSource.sortLocale);
@@ -313,7 +307,6 @@ function App() {
   const installCtaMode = resolveInstallCtaMode({
     isAppInstalled,
     hasInstallPrompt: Boolean(installPromptEvent),
-    isMobileViewport,
     isIosSafari: isIosSafariInstallableBrowser(),
   });
   const weekendStartTime = getRaceStartTime(selectedRace);
@@ -400,15 +393,6 @@ function App() {
     targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
     setActiveSectionId(sectionId);
     closeSectionDrawer();
-  }
-
-  function scrollBackToTop() {
-    closeSectionDrawer();
-    if (firstSectionId) {
-      window.history.replaceState({}, '', buildHashUrl(firstSectionId));
-      setActiveSectionId(firstSectionId);
-    }
-    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   useEffect(() => {
@@ -702,30 +686,6 @@ function App() {
       document.removeEventListener('keydown', handleDrawerKeydown);
     };
   }, [isSectionDrawerOpen]);
-
-  useEffect(() => {
-    if (loading) {
-      return;
-    }
-
-    function updateBackToTopVisibility() {
-      const boundaryTop = sectionNavigationBoundaryRef.current?.getBoundingClientRect().top ?? Number.POSITIVE_INFINITY;
-      const shouldShowBackToTop = boundaryTop < 0 || window.scrollY > 280;
-      setIsBackToTopVisible(shouldShowBackToTop);
-      if (!shouldShowBackToTop) {
-        setIsBackToTopTooltipVisible(false);
-      }
-    }
-
-    updateBackToTopVisibility();
-    window.addEventListener('scroll', updateBackToTopVisibility, { passive: true });
-    window.addEventListener('resize', updateBackToTopVisibility);
-
-    return () => {
-      window.removeEventListener('scroll', updateBackToTopVisibility);
-      window.removeEventListener('resize', updateBackToTopVisibility);
-    };
-  }, [loading]);
 
   useEffect(() => {
     if (loading) {
@@ -1311,7 +1271,13 @@ function App() {
       return;
     }
 
+    if (installCtaMode === 'installed') {
+      showToastMessage(uiText.status.pwaAlreadyInstalled, 'info');
+      return;
+    }
+
     if (!installPromptEvent) {
+      showToastMessage(uiText.status.pwaInstallUnavailable, 'info');
       return;
     }
 
@@ -1322,6 +1288,15 @@ function App() {
       showToastMessage(uiText.status.pwaInstalled, 'success');
       setInstallPromptEvent(null);
     }
+  }
+
+  function renderInstallButton() {
+    return (
+      <button className="secondary-button install-button" onClick={handleInstallApp} type="button">
+        <Download size={16} />
+        {uiText.buttons.installApp}
+      </button>
+    );
   }
 
   async function handleShareCurrentView() {
@@ -1447,14 +1422,17 @@ function App() {
     <div className="app-shell">
       <header
         className="hero-panel"
-        style={
-          selectedRace?.heroImageUrl
-            ? {
-                backgroundImage: `linear-gradient(145deg, rgba(10, 11, 19, 0.95), rgba(10, 11, 19, 0.55)), url(${selectedRace.heroImageUrl})`,
-              }
-            : undefined
-        }
       >
+        {selectedRace?.heroImageUrl ? (
+          <div
+            aria-hidden="true"
+            className="hero-race-background"
+            data-testid="hero-race-background"
+            style={{
+              backgroundImage: `linear-gradient(145deg, rgba(10, 11, 19, 0.95), rgba(10, 11, 19, 0.55)), url(${selectedRace.heroImageUrl})`,
+            }}
+          />
+        ) : null}
         <div className="status-strip">
           <div className="status-chip-row">
             {statusChips.map((chip) => (
@@ -1498,12 +1476,6 @@ function App() {
               <button className="secondary-button install-button" onClick={handleAdminLogout} type="button">
                 <LogOut size={16} />
                 {uiText.buttons.logout}
-              </button>
-            ) : null}
-            {installCtaMode !== 'hidden' ? (
-              <button className="secondary-button install-button" onClick={handleInstallApp} type="button">
-                <Download size={16} />
-                {uiText.buttons.installApp}
               </button>
             ) : null}
           </div>
@@ -1690,6 +1662,7 @@ function App() {
             <Menu size={18} />
             {appText.shell.navigation.openButton}
           </button>
+          {renderInstallButton()}
         </div>
       ) : (
         <nav aria-label={appText.shell.navigation.ariaLabel} className="section-nav panel">
@@ -1706,10 +1679,9 @@ function App() {
               </button>
             ))}
           </div>
+          {renderInstallButton()}
         </nav>
       )}
-
-      <div aria-hidden="true" className="section-nav-boundary" ref={sectionNavigationBoundaryRef} />
 
       <main className="dashboard-grid">
         <section className="content-column">
@@ -2159,27 +2131,6 @@ function App() {
               ))}
             </nav>
           </div>
-        </div>
-      ) : null}
-
-      {isBackToTopVisible ? (
-        <div
-          className={`tooltip-wrapper back-to-top-tooltip ${isBackToTopTooltipVisible ? 'show-tooltip' : ''}`.trim()}
-        >
-          <button
-            aria-label={appText.shell.navigation.backToTopButton}
-            className="secondary-button back-to-top-button"
-            onBlur={() => setIsBackToTopTooltipVisible(false)}
-            onClick={scrollBackToTop}
-            onFocus={() => setIsBackToTopTooltipVisible(true)}
-            onMouseEnter={() => setIsBackToTopTooltipVisible(true)}
-            onMouseLeave={() => setIsBackToTopTooltipVisible(false)}
-            title={appText.shell.navigation.backToTopTooltip}
-            type="button"
-          >
-            <ArrowUp aria-hidden="true" size={20} />
-          </button>
-          <div className="tooltip-text">{appText.shell.navigation.backToTopTooltip}</div>
         </div>
       ) : null}
 

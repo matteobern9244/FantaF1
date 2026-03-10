@@ -77,7 +77,8 @@ function validateState(
   {
     expectSprintBadge = false,
     expectVisibleTooltip = false,
-    expectBackToTopVisible = false,
+    expectPersistentNavigationVisible = false,
+    expectInstallCtaVisible = false,
     expectedViewMode = null,
     expectedWeekendChangeFrom = null,
   } = {},
@@ -145,51 +146,47 @@ function validateState(
     }
   }
 
-  if (expectBackToTopVisible && !state.navigation?.backToTopPresent) {
-    failures.push('Scorciatoia torna-su non rilevata nello scenario scrollato.');
+  if (expectPersistentNavigationVisible) {
+    if (state.viewport.width <= 767) {
+      const mobileTriggerAnchor = state.navigation?.mobileEntryAnchor ?? state.navigation?.mobileTriggerAnchor;
+
+      if (!mobileTriggerAnchor?.present) {
+        failures.push('Trigger menu mobile scrollato non rilevato.');
+      } else {
+        if (!['sticky', 'fixed'].includes(mobileTriggerAnchor.position)) {
+          failures.push('Trigger menu mobile scrollato non usa un ancoraggio sticky o fixed.');
+        }
+
+        if (mobileTriggerAnchor.top < -1 || mobileTriggerAnchor.bottom > (state.viewport?.height ?? 0) + 1) {
+          failures.push('Trigger menu mobile scrollato non resta visibile in viewport.');
+        }
+      }
+    } else {
+      const desktopAnchor = state.navigation?.desktopAnchor;
+
+      if (!desktopAnchor?.present) {
+        failures.push('Navigazione desktop scrollata non rilevata.');
+      } else {
+        if (!['sticky', 'fixed'].includes(desktopAnchor.position)) {
+          failures.push('Navigazione desktop scrollata non usa un ancoraggio sticky o fixed.');
+        }
+
+        if (desktopAnchor.top < -1 || desktopAnchor.bottom > (state.viewport?.height ?? 0) + 1) {
+          failures.push('Navigazione desktop scrollata non resta visibile in viewport.');
+        }
+      }
+    }
+
+    if (state.navigation?.backToTopPresent) {
+      failures.push('Scorciatoia torna-su ancora presente nello scenario scrollato.');
+    }
   }
 
-  if (expectBackToTopVisible) {
-    if (!state.typography?.backToTopButton?.present) {
-      failures.push('Target tipografico mancante: scorciatoia torna-su.');
-    } else if (!usesFormula1(state.typography.backToTopButton.fontFamily)) {
-      failures.push('Scorciatoia torna-su non usa Formula1.');
-    }
-
-    if (!state.typography?.backToTopTooltip?.present) {
-      failures.push('Target tipografico mancante: tooltip torna-su.');
-    } else if (!usesFormula1(state.typography.backToTopTooltip.fontFamily)) {
-      failures.push('Tooltip torna-su non usa Formula1.');
-    }
-
-    const backToTopAnchor = state.navigation?.backToTopAnchor;
-    const wrapperAnchor = backToTopAnchor?.wrapper;
-    const buttonAnchor = backToTopAnchor?.button;
-    const wrapperDistanceToRight = Math.abs((state.viewport?.width ?? 0) - Number(wrapperAnchor?.right ?? 0));
-    const buttonDistanceToRight = Math.abs((state.viewport?.width ?? 0) - Number(buttonAnchor?.right ?? 0));
-
-    if (!wrapperAnchor?.present || !buttonAnchor?.present) {
-      failures.push('Ancoraggio scorciatoia torna-su non rilevabile.');
-    } else {
-      if (wrapperAnchor.position !== 'fixed') {
-        failures.push('Wrapper scorciatoia torna-su non fixed.');
-      }
-
-      if (wrapperAnchor.computedRight === 'auto') {
-        failures.push('Wrapper scorciatoia torna-su senza ancoraggio destro esplicito.');
-      }
-
-      if (wrapperAnchor.justifyContent !== 'flex-end') {
-        failures.push('Wrapper scorciatoia torna-su non allinea il bottone a destra.');
-      }
-
-      if (wrapperDistanceToRight > 48 || buttonDistanceToRight > 48) {
-        failures.push('Scorciatoia torna-su non risulta visivamente agganciata al bordo destro.');
-      }
-
-      if (Number(buttonAnchor.left ?? 0) < (state.viewport?.width ?? 0) / 2) {
-        failures.push('Scorciatoia torna-su appare troppo a sinistra nel viewport.');
-      }
+  if (expectInstallCtaVisible) {
+    if (!state.installCta?.present) {
+      failures.push('CTA installazione non rilevata.');
+    } else if (state.installCta.clipped) {
+      failures.push('CTA installazione fuori viewport o clippata.');
     }
   }
 

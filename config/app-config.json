@@ -195,7 +195,6 @@
       "logout": "Logout",
       "openSections": "Sezioni",
       "closeSections": "Chiudi sezioni",
-      "backToTop": "Torna al menu",
       "closeDialog": "Chiudi",
       "watchHighlights": "Guarda Highlights",
       "highlightsUnavailable": "Video Highlights ancora non disponibile"
@@ -281,8 +280,10 @@
       "resultsReadyStrip": "Risultati ufficiali completi",
       "predictionsSaved": "Pronostici salvati.",
       "pwaInstalled": "App installata correttamente.",
+      "pwaAlreadyInstalled": "L'app e' gia' installata su questo dispositivo.",
       "pwaInstallHint": "Installa FantaF1 sul dispositivo per una home-screen experience piu' rapida.",
       "pwaInstallInstructionsOpened": "Segui le istruzioni per aggiungere FantaF1 alla Home.",
+      "pwaInstallUnavailable": "Installazione non disponibile in questo browser. Usa il menu del browser se vuoi aggiungere l'app alla schermata iniziale.",
       "adminLoginSuccess": "Modalita' admin attiva.",
       "adminLogoutSuccess": "Logout completato. Modalita' pubblica attiva.",
       "shareLinkCopied": "Link della vista corrente copiato."
@@ -321,8 +322,7 @@
     "tooltips": {
       "raceNotStarted": "La gara non e' ancora iniziata.",
       "raceInProgress": "La gara e' in corso... stay tuned !!",
-      "missingResults": "Inserisci tutti i risultati reali per continuare.",
-      "backToTop": "Torna al menu"
+      "missingResults": "Inserisci tutti i risultati reali per continuare."
     },
     "panels": {
       "publicGuide": {

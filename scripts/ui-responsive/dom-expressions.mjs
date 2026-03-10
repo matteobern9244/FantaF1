@@ -31,6 +31,8 @@ const inspectStateExpression = `() => {
 
     return {
       present: Boolean(element),
+      top: rect?.top ?? 0,
+      bottom: rect?.bottom ?? 0,
       left: rect?.left ?? 0,
       right: rect?.right ?? 0,
       width: rect?.width ?? 0,
@@ -124,12 +126,12 @@ const inspectStateExpression = `() => {
   const firstPredictionOption = firstPredictionSelect?.querySelector('option');
   const firstResultOption = firstResultSelect?.querySelector('option');
   const desktopSectionNav = document.querySelector('.section-nav');
+  const mobileSectionEntry = document.querySelector('.section-drawer-entry');
   const mobileSectionTrigger = document.querySelector('.section-drawer-trigger');
   const mobileSectionDrawer = document.querySelector('.section-drawer');
   const activeSectionButton = document.querySelector('.section-nav-button.active, .section-drawer-item.active');
-  const backToTopWrapper = document.querySelector('.back-to-top-tooltip');
-  const backToTopButton = document.querySelector('.back-to-top-button');
-  const backToTopTooltip = document.querySelector('.back-to-top-tooltip .tooltip-text');
+  const installButton = [...document.querySelectorAll('button')]
+    .find((button) => /installa applicazione/i.test(normalizeText(button.textContent)));
 
   return {
     viewport: { width: viewportWidth, height: viewportHeight },
@@ -165,8 +167,6 @@ const inspectStateExpression = `() => {
       sessionClock: readFontFamily('.next-race-card .session-clock'),
       liveScoreValue: readFontFamily('.live-score-value'),
       projectionValue: readFontFamily('.points-preview-value'),
-      backToTopButton: readFontFamily('.back-to-top-button'),
-      backToTopTooltip: readFontFamily('.back-to-top-tooltip .tooltip-text'),
     },
     tooltip: {
       wrapperPresent: Boolean(tooltipWrapper),
@@ -258,13 +258,25 @@ const inspectStateExpression = `() => {
       mobileDrawerPresent: Boolean(mobileSectionDrawer),
       itemCount: document.querySelectorAll('.section-nav-button, .section-drawer-item').length,
       activeText: normalizeText(activeSectionButton?.textContent),
-      backToTopPresent: Boolean(backToTopButton),
-      backToTopTooltipText: normalizeText(backToTopTooltip?.textContent),
-      backToTopAnchor: {
-        wrapper: readBoxMetrics(backToTopWrapper),
-        button: readBoxMetrics(backToTopButton),
-      },
+      desktopAnchor: readBoxMetrics(desktopSectionNav),
+      mobileEntryAnchor: readBoxMetrics(mobileSectionEntry),
+      mobileTriggerAnchor: readBoxMetrics(mobileSectionTrigger),
     },
+    installCta: (() => {
+      const rect = installButton?.getBoundingClientRect();
+      return {
+        present: Boolean(installButton),
+        text: normalizeText(installButton?.textContent),
+        clipped:
+          Boolean(installButton) &&
+          (
+            (rect?.left ?? 0) < -1 ||
+            (rect?.right ?? viewportWidth) > viewportWidth + 1 ||
+            (rect?.top ?? 0) < -1 ||
+            (rect?.bottom ?? viewportHeight) > viewportHeight + 1
+          ),
+      };
+    })(),
     unauthorizedOverflow,
   };
 }`;

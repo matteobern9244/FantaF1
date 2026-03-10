@@ -44,8 +44,6 @@ describe('responsive UI app shell gating', () => {
         sessionClock: { present: false, fontFamily: '', text: '' },
         liveScoreValue: { present: false, fontFamily: '', text: '' },
         projectionValue: { present: false, fontFamily: '', text: '' },
-        backToTopButton: { present: false, fontFamily: '', text: '' },
-        backToTopTooltip: { present: false, fontFamily: '', text: '' },
       },
       tooltip: {
         wrapperPresent: false,
@@ -87,6 +85,11 @@ describe('responsive UI app shell gating', () => {
         mobileDrawerPresent: false,
         itemCount: 8,
         activeText: 'Calendario stagione',
+      },
+      installCta: {
+        present: true,
+        text: 'INSTALLA APPLICAZIONE',
+        clipped: false,
       },
       unauthorizedOverflow: [],
     };
@@ -133,8 +136,6 @@ describe('responsive UI app shell gating', () => {
         sessionClock: { present: false, fontFamily: '', text: '' },
         liveScoreValue: { present: true, fontFamily: 'Formula1, sans-serif', text: '12' },
         projectionValue: { present: true, fontFamily: 'Formula1, sans-serif', text: '9' },
-        backToTopButton: { present: false, fontFamily: '', text: '' },
-        backToTopTooltip: { present: false, fontFamily: '', text: '' },
       },
       tooltip: {
         wrapperPresent: false,
@@ -185,6 +186,11 @@ describe('responsive UI app shell gating', () => {
         itemCount: 7,
         activeText: 'Calendario stagione',
       },
+      installCta: {
+        present: true,
+        text: 'INSTALLA APPLICAZIONE',
+        clipped: false,
+      },
       interactiveSurfaces: {
         total: 12,
         analytics: 5,
@@ -221,8 +227,6 @@ describe('responsive UI app shell gating', () => {
         sessionClock: { present: false, fontFamily: '', text: '' },
         liveScoreValue: { present: true, fontFamily: 'Formula1, sans-serif', text: '12' },
         projectionValue: { present: true, fontFamily: 'Formula1, sans-serif', text: '9' },
-        backToTopButton: { present: false, fontFamily: '', text: '' },
-        backToTopTooltip: { present: false, fontFamily: '', text: '' },
       },
       tooltip: {
         wrapperPresent: false,
@@ -273,6 +277,11 @@ describe('responsive UI app shell gating', () => {
         itemCount: 8,
         activeText: 'Calendario stagione',
       },
+      installCta: {
+        present: true,
+        text: 'INSTALLA APPLICAZIONE',
+        clipped: false,
+      },
       interactiveSurfaces: {
         total: 12,
         analytics: 5,
@@ -315,8 +324,6 @@ describe('responsive UI app shell gating', () => {
         sessionClock: { present: false, fontFamily: '', text: '' },
         liveScoreValue: { present: true, fontFamily: 'Formula1, sans-serif', text: '12' },
         projectionValue: { present: true, fontFamily: 'Formula1, sans-serif', text: '9' },
-        backToTopButton: { present: true, fontFamily: 'Formula1, sans-serif', text: 'Torna al menu' },
-        backToTopTooltip: { present: true, fontFamily: 'Formula1, sans-serif', text: 'Torna al menu' },
       },
       tooltip: {
         wrapperPresent: false,
@@ -367,6 +374,11 @@ describe('responsive UI app shell gating', () => {
         itemCount: 8,
         activeText: 'Calendario stagione',
       },
+      installCta: {
+        present: true,
+        text: 'INSTALLA APPLICAZIONE',
+        clipped: false,
+      },
       interactiveSurfaces: {
         total: 12,
         analytics: 5,
@@ -409,8 +421,6 @@ describe('responsive UI app shell gating', () => {
         sessionClock: { present: false, fontFamily: '', text: '' },
         liveScoreValue: { present: true, fontFamily: 'Formula1, sans-serif', text: '12' },
         projectionValue: { present: true, fontFamily: 'Formula1, sans-serif', text: '9' },
-        backToTopButton: { present: true, fontFamily: '', text: '' },
-        backToTopTooltip: { present: true, fontFamily: '', text: 'Torna al menu' },
       },
       tooltip: {
         wrapperPresent: false,
@@ -462,6 +472,11 @@ describe('responsive UI app shell gating', () => {
         itemCount: 8,
         activeText: 'Calendario stagione',
       },
+      installCta: {
+        present: true,
+        text: 'INSTALLA APPLICAZIONE',
+        clipped: false,
+      },
       interactiveSurfaces: {
         total: 12,
         analytics: 5,
@@ -473,7 +488,7 @@ describe('responsive UI app shell gating', () => {
     );
   });
 
-  it('requires the back-to-top shortcut when the scenario expects the page scrolled away from the header', () => {
+  it('requires the sticky navigation and install CTA when the scenario expects the page scrolled away from the header', () => {
     const validationState = {
       viewport: { width: 390, height: 844 },
       mainSections: {
@@ -499,8 +514,6 @@ describe('responsive UI app shell gating', () => {
         sessionClock: { present: false, fontFamily: '', text: '' },
         liveScoreValue: { present: true, fontFamily: 'Formula1, sans-serif', text: '12' },
         projectionValue: { present: true, fontFamily: 'Formula1, sans-serif', text: '9' },
-        backToTopButton: { present: true, fontFamily: '', text: 'Torna al menu' },
-        backToTopTooltip: { present: true, fontFamily: '', text: 'Torna al menu' },
       },
       tooltip: {
         wrapperPresent: false,
@@ -551,29 +564,23 @@ describe('responsive UI app shell gating', () => {
         mobileDrawerPresent: false,
         itemCount: 8,
         activeText: 'Calendario stagione',
-        backToTopPresent: true,
-        backToTopAnchor: {
-          wrapper: {
-            present: true,
-            left: 120,
-            right: 320,
-            width: 200,
-            computedLeft: '0px',
-            computedRight: 'auto',
-            position: 'absolute',
-            justifyContent: 'center',
-          },
-          button: {
-            present: true,
-            left: 120,
-            right: 164,
-            width: 44,
-            computedLeft: 'auto',
-            computedRight: 'auto',
-            position: 'static',
-            justifyContent: 'normal',
-          },
+        mobileTriggerAnchor: {
+          present: true,
+          left: 0,
+          right: 280,
+          width: 280,
+          top: 860,
+          bottom: 908,
+          computedLeft: 'auto',
+          computedRight: 'auto',
+          position: 'static',
+          justifyContent: 'normal',
         },
+      },
+      installCta: {
+        present: false,
+        text: '',
+        clipped: true,
       },
       interactiveSurfaces: {
         total: 12,
@@ -581,15 +588,15 @@ describe('responsive UI app shell gating', () => {
       },
     };
 
-    expect(validateState(validationState, { expectedViewMode: 'admin', expectBackToTopVisible: true })).toEqual(
+    expect(validateState(validationState, {
+      expectedViewMode: 'admin',
+      expectPersistentNavigationVisible: true,
+      expectInstallCtaVisible: true,
+    })).toEqual(
       expect.arrayContaining([
-        'Scorciatoia torna-su non usa Formula1.',
-        'Tooltip torna-su non usa Formula1.',
-        'Wrapper scorciatoia torna-su non fixed.',
-        'Wrapper scorciatoia torna-su senza ancoraggio destro esplicito.',
-        'Wrapper scorciatoia torna-su non allinea il bottone a destra.',
-        'Scorciatoia torna-su non risulta visivamente agganciata al bordo destro.',
-        'Scorciatoia torna-su appare troppo a sinistra nel viewport.',
+        'Trigger menu mobile scrollato non resta visibile in viewport.',
+        'Trigger menu mobile scrollato non usa un ancoraggio sticky o fixed.',
+        'CTA installazione non rilevata.',
       ]),
     );
   });

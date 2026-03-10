@@ -499,7 +499,6 @@ describe('Mockup roadmap UI features', () => {
 
   it('shows install CTA when the browser exposes the PWA install prompt', async () => {
     setupFetch();
-    mockMediaMatches({ '(max-width: 767px)': true });
 
     render(<App />);
 
@@ -550,7 +549,7 @@ describe('Mockup roadmap UI features', () => {
     expect(screen.getAllByText(/condividi/i).length).toBeGreaterThan(0);
   });
 
-  it('hides the mobile install CTA when the app is already running in standalone mode', async () => {
+  it('keeps the install CTA visible when the app is already running in standalone mode and explains that it is already installed', async () => {
     setupFetch();
     mockMediaMatches({
       '(max-width: 767px)': true,
@@ -567,10 +566,15 @@ describe('Mockup roadmap UI features', () => {
       expect(screen.queryByTestId('pitstop-loader')).not.toBeInTheDocument();
     });
 
-    expect(screen.queryByRole('button', { name: /installa/i })).not.toBeInTheDocument();
+    const installButton = screen.getByRole('button', { name: /installa/i });
+    expect(installButton).toBeInTheDocument();
+
+    fireEvent.click(installButton);
+
+    expect(screen.getByRole('status')).toHaveTextContent(/gia' installata/i);
   });
 
-  it('hides the mobile install CTA on unsupported mobile browsers without native prompt or iOS flow', async () => {
+  it('keeps the install CTA visible on unsupported browsers and shows an explicit fallback message', async () => {
     setupFetch();
     mockMediaMatches({ '(max-width: 767px)': true });
     setUserAgent(
@@ -583,7 +587,12 @@ describe('Mockup roadmap UI features', () => {
       expect(screen.queryByTestId('pitstop-loader')).not.toBeInTheDocument();
     });
 
-    expect(screen.queryByRole('button', { name: /installa/i })).not.toBeInTheDocument();
+    const installButton = screen.getByRole('button', { name: /installa/i });
+    expect(installButton).toBeInTheDocument();
+
+    fireEvent.click(installButton);
+
+    expect(screen.getByRole('status')).toHaveTextContent(/non disponibile/i);
   });
 
   it('hydrates the shared public url state from query params and preserves the hash when copying the link', async () => {
@@ -754,13 +763,8 @@ describe('Mockup roadmap UI features', () => {
     expect(document.activeElement).toBe(openButton);
   });
 
-  it('shows the back-to-top shortcut only after leaving the header area and scrolls back to the menu', async () => {
+  it('keeps the desktop section navigation available after scrolling without showing the back-to-top shortcut', async () => {
     setupFetch();
-    const scrollTo = vi.fn();
-    Object.defineProperty(window, 'scrollTo', {
-      configurable: true,
-      value: scrollTo,
-    });
 
     render(<App />);
 
@@ -768,7 +772,8 @@ describe('Mockup roadmap UI features', () => {
       expect(screen.queryByTestId('pitstop-loader')).not.toBeInTheDocument();
     });
 
-    expect(screen.queryByRole('button', { name: /torna al menu/i })).not.toBeInTheDocument();
+    const navigation = screen.getByRole('navigation', { name: /sezioni applicazione/i });
+    expect(within(navigation).getByRole('button', { name: /calendario stagione/i })).toBeInTheDocument();
 
     Object.defineProperty(window, 'scrollY', {
       configurable: true,
@@ -777,40 +782,17 @@ describe('Mockup roadmap UI features', () => {
 
     fireEvent.scroll(window);
 
-    const backToTopButton = await screen.findByRole('button', { name: /torna al menu/i });
-    expect(backToTopButton).toBeInTheDocument();
-    expect(backToTopButton.querySelector('svg')).not.toBeNull();
-
-    const backToTopTooltipWrapper = backToTopButton.closest('.tooltip-wrapper');
-    expect(backToTopTooltipWrapper).not.toBeNull();
-    expect(backToTopTooltipWrapper).toHaveClass('back-to-top-tooltip');
-    expect(backToTopTooltipWrapper).toContainElement(backToTopButton);
-    const backToTopTooltip = backToTopTooltipWrapper?.querySelector('.tooltip-text');
-    expect(backToTopTooltip).not.toBeNull();
-    expect(backToTopTooltip).toHaveTextContent(/torna al menu/i);
-    expect(backToTopTooltipWrapper).not.toHaveClass('show-tooltip');
-
-    fireEvent.mouseEnter(backToTopButton);
-
-    expect(backToTopTooltipWrapper).toHaveClass('show-tooltip');
-
-    fireEvent.mouseLeave(backToTopButton);
-
-    expect(backToTopTooltipWrapper).not.toHaveClass('show-tooltip');
-
-    fireEvent.click(backToTopButton);
-
-    expect(scrollTo).toHaveBeenCalledWith({ top: 0, behavior: 'smooth' });
-    expect(window.location.hash).toBe('#calendar-section');
+    expect(within(navigation).getByRole('button', { name: /analisi stagione/i })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /torna al menu/i })).not.toBeInTheDocument();
   });
 
-  it('closes the mobile drawer before scrolling back to the top', async () => {
+  it('keeps the mobile sections trigger available after scrolling and the drawer still navigates correctly', async () => {
     setupFetch();
     mockMediaMatches({ '(max-width: 767px)': true });
-    const scrollTo = vi.fn();
-    Object.defineProperty(window, 'scrollTo', {
+    const scrollIntoView = vi.fn();
+    Object.defineProperty(HTMLElement.prototype, 'scrollIntoView', {
       configurable: true,
-      value: scrollTo,
+      value: scrollIntoView,
     });
 
     render(<App />);
@@ -824,13 +806,18 @@ describe('Mockup roadmap UI features', () => {
       value: 420,
     });
 
-    fireEvent.click(screen.getByRole('button', { name: /^sezioni$/i }));
-    expect(screen.getByRole('dialog', { name: /sezioni applicazione/i })).toBeInTheDocument();
-
     fireEvent.scroll(window);
-    fireEvent.click(await screen.findByRole('button', { name: /torna al menu/i }));
 
-    expect(scrollTo).toHaveBeenCalledWith({ top: 0, behavior: 'smooth' });
+    const openButton = screen.getByRole('button', { name: /^sezioni$/i });
+    expect(openButton).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /torna al menu/i })).not.toBeInTheDocument();
+
+    fireEvent.click(openButton);
+    const drawer = screen.getByRole('dialog', { name: /sezioni applicazione/i });
+    fireEvent.click(within(drawer).getByRole('button', { name: /storico gare/i }));
+
+    expect(window.location.hash).toBe('#history-archive');
+    expect(scrollIntoView).toHaveBeenCalled();
     await waitFor(() => {
       expect(screen.queryByRole('dialog', { name: /sezioni applicazione/i })).not.toBeInTheDocument();
     });
