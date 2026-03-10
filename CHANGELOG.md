@@ -4,6 +4,7 @@ Cronologia sintetica delle release documentate del progetto Fanta Formula 1.
 
 ## v1.4.1
 
+- **Hero Ripulita e Sfondo Gara Piu' Luminoso**: rimosso il blur dal contenitore del titolo nell'header hero e introdotto un layer dedicato per lo sfondo del weekend selezionato con luminosita' aumentata, mantenendo invariato il cambio dinamico dell'immagine in base alla gara attiva.
 - **Navigation Shell Sempre Disponibile e Shortcut Rimossa**: il menu di sezione resta ora sempre visibile durante lo scroll sia su desktop sia su mobile, mentre la scorciatoia `Torna al menu` e il relativo floating control sono stati rimossi dal runtime senza alterare hash navigation, drawer mobile o comportamento admin/public.
 - **CTA Installazione Sempre Visibile**: `INSTALLA APPLICAZIONE` e' ora sempre presente nei browser desktop e mobile; il click continua ad aprire il prompt nativo quando disponibile, il dialog guidato su iOS Safari e un feedback esplicito quando l'app e' gia' installata o il browser non supporta l'installazione.
 - **Documentazione e Tooling Riallineati Alla Nuova UX**: README, copy centralizzato e controlli responsive descrivono ora la navigation shell persistente e la CTA installazione sempre visibile, mantenendo il repository coerente con lo stato reale della UI e con la baseline coverage verificata a `4780 / 4780` statements, `393 / 393` functions, `1999 / 1999` branches e `4780 / 4780` lines.
