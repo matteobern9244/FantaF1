@@ -6,31 +6,28 @@ L'applicazione e' pensata per un flusso amministrato: un admin seleziona il week
 
 ## Stato release e confronto con la produzione
 
-La versione attualmente in produzione e pubblicata e' `v1.3.12`. Il repository e' ora allineato alla prossima release `v1.4.0` in `package.json`, mentre la live resta ancora sulla baseline `v1.3.12` finche' non verra' rilasciata.
+La versione attualmente in produzione e pubblicata e' `v1.4.0`. Il repository e' ora allineato alla prossima release `v1.4.1` in `package.json`, mentre la live resta ancora sulla baseline `v1.4.0` finche' non verra' rilasciata.
 
-### Baseline produzione `v1.3.12`
+### Baseline produzione `v1.4.0`
 
-La baseline live corrisponde alle capability gia' rilasciate e documentate in `CHANGELOG.md` sotto `v1.3.12`:
+La baseline live corrisponde alle capability gia' rilasciate e documentate in `CHANGELOG.md` sotto `v1.4.0`:
 
-- sessioni admin/public con cookie HTTP-only e API `GET /api/session`, `POST /api/admin/session`, `DELETE /api/admin/session`;
-- dashboard KPI e analytics estese;
-- roster dinamico dei partecipanti ricavato dal database;
-- rimozione completa del Weekend Boost;
-- hardening server-side su validazione e sanitizzazione;
-- validazione release con `lint`, `test`, `test:coverage`, `build` e `test:save-local`.
+- navigation shell responsive con menu desktop/mobile, deep link di sezione e shortcut `Torna al menu`;
+- refactor OO di calendario, persistenza, scoring, analytics e bootstrap runtime;
+- sessioni admin/public reali, analytics stagionali, CTA installazione PWA e recap highlights;
+- validazione release con `lint`, `test`, `test:coverage`, `build`, `test:ui-responsive` e `test:save-local`.
 
-### Delta del workspace corrente rispetto a `v1.3.12`
+### Delta del workspace corrente rispetto a `v1.4.0`
 
-Rispetto alla produzione `v1.3.12`, il repository contiene gia' il delta tecnico della release `v1.4.0`:
+Rispetto alla produzione `v1.4.0`, il repository contiene gia' il delta tecnico della release `v1.4.1`:
 
-- backend `calendar/results` estratto in service object dedicati (`RaceResultsService`, `RaceResultsCache`);
-- backend `storage` rifattorizzato in facade + servizi espliciti (`AppDataRepository`, `AppDataSanitizer`, `ParticipantRosterPolicy`, `WeekendSelectionService`);
-- logica frontend di weekend state, scoring e analytics spostata in moduli OO dedicati;
-- route di salvataggio e bootstrap server separati in service object testabili;
+- ripristino della track map del circuito anche nella vista pubblica, sia nel recap hero del weekend selezionato sia nel pannello `Recap ultimo GP`;
+- mantenimento invariato della stessa track map nella sezione admin `Risultati del weekend`;
+- test regressivi aggiuntivi per mappa pubblica, cambio weekend e navigation shell desktop/public;
 - baseline coverage verificata riallineata a `4780 / 4780` statements, `393 / 393` functions, `1999 / 1999` branches e `4780 / 4780` lines;
 - validazione finale completa rieseguita anche con `test:ui-responsive`, `test:save-local`, controllo sintassi di `start_fantaf1.command` e verifica di coerenza dei workflow GitHub Actions.
 
-In sintesi: la produzione `v1.3.12` descrive la baseline live, mentre questo README documenta anche il delta tecnico gia' presente nel repository e versionato come `v1.4.0`, non ancora deployato.
+In sintesi: la produzione `v1.4.0` descrive la baseline live, mentre questo README documenta anche il delta tecnico gia' presente nel repository e versionato come `v1.4.1`, non ancora deployato.
 
 ## Panoramica funzionale
 
