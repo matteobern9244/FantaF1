@@ -1269,6 +1269,10 @@ select:disabled {
   padding: 0;
 }
 
+.track-map-container-compact {
+  padding-top: 8px;
+}
+
 .track-map {
   width: 100%;
   max-width: 1100px; /* Previene lo sgranamento oltre la risoluzione nativa */
@@ -1278,6 +1282,10 @@ select:disabled {
   image-rendering: high-quality; /* Ottimizza il rendering visivo */
   filter: drop-shadow(0 0 30px rgba(225, 6, 0, 0.3));
   animation: fade-in 1s ease-out;
+}
+
+.track-map-compact {
+  max-width: 320px;
 }
 
 @keyframes fade-in {

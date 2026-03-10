@@ -21,8 +21,11 @@ describe('isolated UI panels', () => {
       <SeasonAnalysisPanel
         analyticsEmptyLabel="Nessun dato analytics"
         emptyOptionLabel="N/D"
+        isPublicView={true}
         onShare={onShare}
         predictionLabels={predictionLabels}
+        selectedRaceMeetingName="Australia"
+        selectedRaceTrackOutlineUrl="https://media.example.com/australia-track.webp"
         seasonAnalytics={{
           leaderName: 'Marco',
           narratives: [],
@@ -50,6 +53,10 @@ describe('isolated UI panels', () => {
     );
 
     expect(screen.getByText('N/D')).toBeInTheDocument();
+    expect(screen.getByRole('img', { name: 'Australia' })).toHaveAttribute(
+      'src',
+      'https://media.example.com/australia-track.webp',
+    );
 
     fireEvent.click(screen.getByRole('button', { name: appText.panels.seasonAnalysis.shareButton }));
     expect(onShare).toHaveBeenCalledTimes(1);
@@ -58,8 +65,11 @@ describe('isolated UI panels', () => {
       <SeasonAnalysisPanel
         analyticsEmptyLabel="Nessun dato analytics"
         emptyOptionLabel="N/D"
+        isPublicView={true}
         onShare={onShare}
         predictionLabels={predictionLabels}
+        selectedRaceMeetingName="Australia"
+        selectedRaceTrackOutlineUrl=""
         seasonAnalytics={{
           leaderName: '',
           narratives: [],

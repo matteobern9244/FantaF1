@@ -422,6 +422,81 @@ describe('Mockup roadmap UI features', () => {
     expect(document.querySelectorAll('.history-detail-panel .analytics-subpanel.interactive-surface').length).toBeGreaterThan(0);
   });
 
+  it('shows the selected circuit map in public recap surfaces and keeps admin results plus menu navigation intact', async () => {
+    const australiaMapUrl = 'https://media.example.com/australia-track.webp';
+    const chinaMapUrl = 'https://media.example.com/china-track.webp';
+    const calendar = [
+      {
+        ...createCalendar()[0],
+        trackOutlineUrl: australiaMapUrl,
+      },
+      {
+        meetingKey: 'race-2',
+        meetingName: 'China',
+        grandPrixTitle: 'Chinese Grand Prix 2099',
+        roundNumber: 2,
+        dateRangeLabel: '20 - 22 MAR',
+        detailUrl: 'https://www.formula1.com/en/racing/2099/china',
+        heroImageUrl: '',
+        trackOutlineUrl: chinaMapUrl,
+        isSprintWeekend: true,
+        startDate: '2099-03-20',
+        endDate: '2099-03-22',
+        raceStartTime: '2099-03-22T14:00:00Z',
+        sessions: [],
+      },
+    ];
+    const appData = createAppData();
+    appData.weekendStateByMeetingKey['race-2'] = {
+      userPredictions: {
+        Marco: { first: 'ham', second: 'nor', third: 'lec', pole: 'ver' },
+        Luca: { first: 'ham', second: 'nor', third: 'pia', pole: 'ver' },
+        Sara: { first: 'nor', second: 'ham', third: 'lec', pole: 'ver' },
+      },
+      raceResults: createEmptyPrediction(),
+    };
+
+    setupFetchWithOverrides({
+      appData,
+      calendar,
+      resultsByMeetingKey: {
+        'race-1': { racePhase: 'open', results: createEmptyPrediction() },
+        'race-2': { racePhase: 'open', results: createEmptyPrediction() },
+      },
+    });
+
+    render(<App />);
+
+    await waitFor(() => {
+      expect(screen.queryByTestId('pitstop-loader')).not.toBeInTheDocument();
+    });
+
+    expect(screen.getByRole('img', { name: 'Australia' })).toHaveAttribute('src', australiaMapUrl);
+
+    fireEvent.click(screen.getByRole('button', { name: /vista pubblica/i }));
+
+    await waitFor(() => {
+      expect(screen.getAllByRole('img', { name: 'Australia' })).toHaveLength(2);
+    });
+    expect(screen.queryByRole('button', { name: /conferma risultati e assegna i punti/i })).not.toBeInTheDocument();
+
+    const navigation = screen.getByRole('navigation', { name: /sezioni applicazione/i });
+    expect(within(navigation).getByRole('button', { name: /come funziona/i })).toBeInTheDocument();
+    expect(within(navigation).queryByRole('button', { name: /risultati del weekend/i })).not.toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText(/weekend selezionato/i), {
+      target: { value: 'race-2' },
+    });
+
+    await waitFor(() => {
+      expect(screen.getAllByRole('img', { name: 'China' })).toHaveLength(2);
+    });
+    expect(screen.getAllByRole('img', { name: 'China' }).every((image) => image.getAttribute('src') === chinaMapUrl)).toBe(true);
+
+    fireEvent.click(within(navigation).getByRole('button', { name: /analisi stagione/i }));
+    expect(window.location.hash).toBe('#season-analysis');
+  });
+
   it('shows install CTA when the browser exposes the PWA install prompt', async () => {
     setupFetch();
     mockMediaMatches({ '(max-width: 767px)': true });

@@ -1360,6 +1360,22 @@ function App() {
     return winnerDriver ? formatDriverDisplayName(winnerDriver.name) : uiText.history.unknownDriver;
   }
 
+  function renderSelectedRaceTrackMap({ compact = false } = {}) {
+    if (!selectedRace?.trackOutlineUrl) {
+      return null;
+    }
+
+    return (
+      <div className={`track-map-container ${compact ? 'track-map-container-compact' : ''}`.trim()}>
+        <img
+          alt={selectedRace.meetingName}
+          className={`track-map ${compact ? 'track-map-compact' : ''}`.trim()}
+          src={selectedRace.trackOutlineUrl}
+        />
+      </div>
+    );
+  }
+
   if (loading) {
     return (
       <div className="loading-shell">
@@ -1627,6 +1643,7 @@ function App() {
             </div>
             {selectedRace ? (
               <div className="driver-spotlight">
+                {isPublicView ? renderSelectedRaceTrackMap({ compact: true }) : null}
                 {predictionFieldOrder.map((field) => {
                   const driver = getDriverById(drivers, raceResults[field]);
 
@@ -1873,8 +1890,11 @@ function App() {
           <SeasonAnalysisPanel
             analyticsEmptyLabel={uiText.history.analyticsEmpty}
             emptyOptionLabel={uiText.placeholders.emptyOption}
+            isPublicView={isPublicView}
             onShare={handleShareCurrentView}
             predictionLabels={predictionLabels}
+            selectedRaceMeetingName={selectedRace?.meetingName ?? ''}
+            selectedRaceTrackOutlineUrl={selectedRace?.trackOutlineUrl ?? ''}
             seasonAnalytics={seasonAnalytics}
           />
 
@@ -2019,15 +2039,7 @@ function App() {
                   <strong>{selectedRace.grandPrixTitle}</strong>
                   <span>{selectedRace.dateRangeLabel}</span>
                 </div>
-                {selectedRace.trackOutlineUrl ? (
-                  <div className="track-map-container">
-                    <img
-                      alt={selectedRace.meetingName}
-                      className="track-map"
-                      src={selectedRace.trackOutlineUrl}
-                    />
-                  </div>
-                ) : null}
+                {renderSelectedRaceTrackMap()}
               </div>
             ) : (
               <p className="empty-copy">{uiText.calendar.empty}</p>

@@ -220,7 +220,7 @@ Where applicable this includes:
 
 - Main automated test stack: Vitest, React Testing Library, and Supertest.
 - Coverage provider: V8.
-- Current verified merged baseline for the configured official application-code scope is **100% statements (4766 / 4766)**, **100% functions (386 / 386)**, **100% branches (1968 / 1968)**, and **100% lines (4766 / 4766)**, aligned with the thresholds currently documented in `README.md`.
+- Current verified merged baseline for the configured official application-code scope is **100% statements (4780 / 4780)**, **100% functions (393 / 393)**, **100% branches (1999 / 1999)**, and **100% lines (4780 / 4780)**, aligned with the thresholds currently documented in `README.md`.
 - Whenever a task produces a new verified merged Release coverage result, update this baseline in `AGENTS.md` to the new numbers.
 - If a task produces a new verified merged coverage result for the tracked scope, update the baseline in `AGENTS.md` and never accept a regression below that verified baseline.
 

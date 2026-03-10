@@ -27,7 +27,7 @@ Rispetto alla produzione `v1.3.12`, il repository contiene gia' il delta tecnico
 - backend `storage` rifattorizzato in facade + servizi espliciti (`AppDataRepository`, `AppDataSanitizer`, `ParticipantRosterPolicy`, `WeekendSelectionService`);
 - logica frontend di weekend state, scoring e analytics spostata in moduli OO dedicati;
 - route di salvataggio e bootstrap server separati in service object testabili;
-- baseline coverage verificata riallineata a `4766 / 4766` statements, `386 / 386` functions, `1968 / 1968` branches e `4766 / 4766` lines;
+- baseline coverage verificata riallineata a `4780 / 4780` statements, `393 / 393` functions, `1999 / 1999` branches e `4780 / 4780` lines;
 - validazione finale completa rieseguita anche con `test:ui-responsive`, `test:save-local`, controllo sintassi di `start_fantaf1.command` e verifica di coerenza dei workflow GitHub Actions.
 
 In sintesi: la produzione `v1.3.12` descrive la baseline live, mentre questo README documenta anche il delta tecnico gia' presente nel repository e versionato come `v1.4.0`, non ancora deployato.
@@ -224,6 +224,7 @@ Se il database non contiene ancora stato applicativo, il backend costruisce uno 
 - Hero results card del weekend selezionato con nomi pilota visualizzati come `Nome Cognome`; dropdown e liste di selezione restano invece in formato `Cognome Nome`.
 - Hero results card del weekend selezionato con CTA Highlights YouTube di Sky Sport Italia F1 per i weekend conclusi: se il video e' disponibile il pulsante apre il contenuto all'esterno della SPA, altrimenti resta visibile ma disabilitato con messaggio di indisponibilita'.
 - Sezione risultati del weekend con track map, recupero automatico read-only dei risultati ufficiali, merge solo dei campi mancanti e pulsante conferma con tooltip di stato.
+- Vista pubblica con track map coerente col weekend selezionato sia nel recap hero del weekend sia nel pannello `Recap ultimo GP`, mantenendo la stessa mappa anche nella sezione admin `Risultati del weekend`.
 - Storico gare modificabile con ricalcolo dei punteggi, filtri per giocatore/GP e drill-down dei pronostici dettagliati.
 - Dashboard KPI per utente, analytics deep-dive, pannello `Analisi stagione`, riepilogo `Weekend pulse`, guida pubblica, storico mobile piu' compatto, status strip, toast operativi e CTA installazione PWA.
 - Loader iniziale con splash logo `FantaF1`, set icone browser/PWA dedicato (`favicon`, `apple-touch-icon`, `192x192`, `512x512`, `maskable`) e layout responsive desktop/mobile.
@@ -588,10 +589,10 @@ Il controllo browser `npm run test:ui-responsive` resta disponibile come verific
 - Runner: Vitest.
 - Coverage provider: V8.
 - Baseline coverage verificata corrente sullo scope ufficiale del repository/applicazione:
-  - `4766 / 4766` statements
-  - `386 / 386` functions
-  - `1968 / 1968` branches
-  - `4766 / 4766` lines
+  - `4780 / 4780` statements
+  - `393 / 393` functions
+  - `1999 / 1999` branches
+  - `4780 / 4780` lines
 - Scope coverage configurato:
   - `app.js`
   - `server.js`
