@@ -693,7 +693,7 @@ describe('Mockup roadmap UI features', () => {
       expect(screen.queryByTestId('pitstop-loader')).not.toBeInTheDocument();
     });
 
-    expect(screen.queryByRole('button', { name: /torna su/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /torna al menu/i })).not.toBeInTheDocument();
 
     Object.defineProperty(window, 'scrollY', {
       configurable: true,
@@ -702,8 +702,22 @@ describe('Mockup roadmap UI features', () => {
 
     fireEvent.scroll(window);
 
-    const backToTopButton = await screen.findByRole('button', { name: /torna su/i });
+    const backToTopButton = await screen.findByRole('button', { name: /torna al menu/i });
     expect(backToTopButton).toBeInTheDocument();
+    expect(backToTopButton.querySelector('svg')).not.toBeNull();
+
+    const backToTopTooltipWrapper = backToTopButton.closest('.tooltip-wrapper');
+    expect(backToTopTooltipWrapper).not.toBeNull();
+    expect(screen.getByText(/torna al menu/i)).toBeInTheDocument();
+    expect(backToTopTooltipWrapper).not.toHaveClass('show-tooltip');
+
+    fireEvent.mouseEnter(backToTopButton);
+
+    expect(backToTopTooltipWrapper).toHaveClass('show-tooltip');
+
+    fireEvent.mouseLeave(backToTopButton);
+
+    expect(backToTopTooltipWrapper).not.toHaveClass('show-tooltip');
 
     fireEvent.click(backToTopButton);
 
@@ -735,7 +749,7 @@ describe('Mockup roadmap UI features', () => {
     expect(screen.getByRole('dialog', { name: /sezioni applicazione/i })).toBeInTheDocument();
 
     fireEvent.scroll(window);
-    fireEvent.click(await screen.findByRole('button', { name: /torna su/i }));
+    fireEvent.click(await screen.findByRole('button', { name: /torna al menu/i }));
 
     expect(scrollTo).toHaveBeenCalledWith({ top: 0, behavior: 'smooth' });
     await waitFor(() => {

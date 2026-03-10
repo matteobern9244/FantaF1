@@ -113,6 +113,7 @@ const inspectStateExpression = `() => {
   const mobileSectionDrawer = document.querySelector('.section-drawer');
   const activeSectionButton = document.querySelector('.section-nav-button.active, .section-drawer-item.active');
   const backToTopButton = document.querySelector('.back-to-top-button');
+  const backToTopTooltip = document.querySelector('.back-to-top-tooltip .tooltip-text');
 
   return {
     viewport: { width: viewportWidth, height: viewportHeight },
@@ -148,6 +149,8 @@ const inspectStateExpression = `() => {
       sessionClock: readFontFamily('.next-race-card .session-clock'),
       liveScoreValue: readFontFamily('.live-score-value'),
       projectionValue: readFontFamily('.points-preview-value'),
+      backToTopButton: readFontFamily('.back-to-top-button'),
+      backToTopTooltip: readFontFamily('.back-to-top-tooltip .tooltip-text'),
     },
     tooltip: {
       wrapperPresent: Boolean(tooltipWrapper),
@@ -240,6 +243,7 @@ const inspectStateExpression = `() => {
       itemCount: document.querySelectorAll('.section-nav-button, .section-drawer-item').length,
       activeText: normalizeText(activeSectionButton?.textContent),
       backToTopPresent: Boolean(backToTopButton),
+      backToTopTooltipText: normalizeText(backToTopTooltip?.textContent),
     },
     unauthorizedOverflow,
   };

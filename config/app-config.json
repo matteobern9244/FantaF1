@@ -195,7 +195,7 @@
       "logout": "Logout",
       "openSections": "Sezioni",
       "closeSections": "Chiudi sezioni",
-      "backToTop": "Torna su",
+      "backToTop": "Torna al menu",
       "closeDialog": "Chiudi",
       "watchHighlights": "Guarda Highlights",
       "highlightsUnavailable": "Video Highlights ancora non disponibile"
@@ -321,7 +321,8 @@
     "tooltips": {
       "raceNotStarted": "La gara non e' ancora iniziata.",
       "raceInProgress": "La gara e' in corso... stay tuned !!",
-      "missingResults": "Inserisci tutti i risultati reali per continuare."
+      "missingResults": "Inserisci tutti i risultati reali per continuare.",
+      "backToTop": "Torna al menu"
     },
     "panels": {
       "publicGuide": {

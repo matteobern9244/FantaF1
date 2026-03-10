@@ -149,6 +149,20 @@ function validateState(
     failures.push('Scorciatoia torna-su non rilevata nello scenario scrollato.');
   }
 
+  if (expectBackToTopVisible) {
+    if (!state.typography?.backToTopButton?.present) {
+      failures.push('Target tipografico mancante: scorciatoia torna-su.');
+    } else if (!usesFormula1(state.typography.backToTopButton.fontFamily)) {
+      failures.push('Scorciatoia torna-su non usa Formula1.');
+    }
+
+    if (!state.typography?.backToTopTooltip?.present) {
+      failures.push('Target tipografico mancante: tooltip torna-su.');
+    } else if (!usesFormula1(state.typography.backToTopTooltip.fontFamily)) {
+      failures.push('Tooltip torna-su non usa Formula1.');
+    }
+  }
+
   if (!state.nextRace.cardPresent) {
     failures.push('Card "Prossimo weekend" non trovata.');
   }

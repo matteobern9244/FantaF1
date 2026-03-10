@@ -264,6 +264,7 @@ function App() {
   const [selectedRaceHighlightsVideoUrl, setSelectedRaceHighlightsVideoUrl] = useState('');
   const [activeSectionId, setActiveSectionId] = useState('');
   const [isBackToTopVisible, setIsBackToTopVisible] = useState(false);
+  const [isBackToTopTooltipVisible, setIsBackToTopTooltipVisible] = useState(false);
   const selectedMeetingKeyRef = useRef(selectedMeetingKey);
   const toastTimeoutRef = useRef<number | null>(null);
   const initialHashHandledRef = useRef(false);
@@ -709,7 +710,11 @@ function App() {
 
     function updateBackToTopVisibility() {
       const boundaryTop = sectionNavigationBoundaryRef.current?.getBoundingClientRect().top ?? Number.POSITIVE_INFINITY;
-      setIsBackToTopVisible(boundaryTop < 0 || window.scrollY > 280);
+      const shouldShowBackToTop = boundaryTop < 0 || window.scrollY > 280;
+      setIsBackToTopVisible(shouldShowBackToTop);
+      if (!shouldShowBackToTop) {
+        setIsBackToTopTooltipVisible(false);
+      }
     }
 
     updateBackToTopVisibility();
@@ -2146,15 +2151,24 @@ function App() {
       ) : null}
 
       {isBackToTopVisible ? (
-        <button
-          aria-label={appText.shell.navigation.backToTopButton}
-          className="secondary-button back-to-top-button"
-          onClick={scrollBackToTop}
-          title={appText.shell.navigation.backToTopButton}
-          type="button"
+        <div
+          className={`tooltip-wrapper back-to-top-tooltip ${isBackToTopTooltipVisible ? 'show-tooltip' : ''}`.trim()}
         >
-          <ArrowUp size={18} />
-        </button>
+          <button
+            aria-label={appText.shell.navigation.backToTopButton}
+            className="secondary-button back-to-top-button"
+            onBlur={() => setIsBackToTopTooltipVisible(false)}
+            onClick={scrollBackToTop}
+            onFocus={() => setIsBackToTopTooltipVisible(true)}
+            onMouseEnter={() => setIsBackToTopTooltipVisible(true)}
+            onMouseLeave={() => setIsBackToTopTooltipVisible(false)}
+            title={appText.shell.navigation.backToTopTooltip}
+            type="button"
+          >
+            <ArrowUp aria-hidden="true" size={20} />
+          </button>
+          <div className="tooltip-text">{appText.shell.navigation.backToTopTooltip}</div>
+        </div>
       ) : null}
 
       {showAdminLogin ? (

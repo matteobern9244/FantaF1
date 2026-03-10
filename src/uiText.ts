@@ -23,6 +23,7 @@ const appText = {
       openButton: uiText.buttons.openSections,
       closeButton: uiText.buttons.closeSections,
       backToTopButton: uiText.buttons.backToTop,
+      backToTopTooltip: uiText.tooltips.backToTop,
       ariaLabel: uiText.labels.sectionNavigation,
       items: uiText.navigation,
     },

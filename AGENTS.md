@@ -202,6 +202,7 @@ Where applicable this includes:
 ### Mandatory launcher rule
 
 - When the user asks to `avvia l'app`, always use `./start_fantaf1.command` instead of invoking `npm run start:local` directly.
+- When the user writes exactly `check viste`, run `npm run test:ui-responsive`.
 - That launcher must be treated as the repository's monitored startup entrypoint and must remain valid.
 - `./start_fantaf1.command` must not execute `npm run test:ui-responsive` inside its monitored preflight flow; responsive browser validation remains a separate explicit check to run only when relevant to the task, not part of the launcher startup path.
 - If the launcher or startup flow reports any error, stop the full execution immediately.

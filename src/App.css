@@ -292,16 +292,32 @@ select,
   text-align: left;
 }
 
-.back-to-top-button {
+.back-to-top-tooltip {
   position: fixed;
   right: max(14px, calc(env(safe-area-inset-right, 0px) + 14px));
   bottom: max(20px, calc(env(safe-area-inset-bottom, 0px) + 20px));
   z-index: 190;
+  display: flex;
+  width: auto;
+}
+
+.back-to-top-tooltip .tooltip-text {
+  left: auto;
+  right: 0;
+  bottom: calc(100% + 10px);
+  transform: none;
+  font-family: 'Formula1', 'Titillium Web', 'Segoe UI', sans-serif;
+}
+
+.back-to-top-button {
   width: 48px;
   min-width: 48px;
   height: 48px;
   min-height: 48px;
   padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   border-radius: 999px;
   border-color: rgba(255, 255, 255, 0.1);
   background:
@@ -309,6 +325,16 @@ select,
     rgba(12, 15, 24, 0.92);
   box-shadow: 0 16px 34px rgba(0, 0, 0, 0.34);
   backdrop-filter: blur(14px);
+  color: var(--ink);
+  font-family: 'Formula1', 'Titillium Web', 'Segoe UI', sans-serif;
+}
+
+.back-to-top-button svg {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  color: currentColor;
+  stroke-width: 2.4;
 }
 
 .back-to-top-button:hover,
@@ -1645,9 +1671,12 @@ select:disabled {
     width: auto;
   }
 
-  .back-to-top-button {
+  .back-to-top-tooltip {
     right: max(10px, calc(env(safe-area-inset-right, 0px) + 10px));
     bottom: max(14px, calc(env(safe-area-inset-bottom, 0px) + 14px));
+  }
+
+  .back-to-top-button {
     width: 44px;
     min-width: 44px;
     height: 44px;

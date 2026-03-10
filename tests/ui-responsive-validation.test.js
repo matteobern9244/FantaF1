@@ -44,6 +44,8 @@ describe('responsive UI app shell gating', () => {
         sessionClock: { present: false, fontFamily: '', text: '' },
         liveScoreValue: { present: false, fontFamily: '', text: '' },
         projectionValue: { present: false, fontFamily: '', text: '' },
+        backToTopButton: { present: false, fontFamily: '', text: '' },
+        backToTopTooltip: { present: false, fontFamily: '', text: '' },
       },
       tooltip: {
         wrapperPresent: false,
@@ -131,6 +133,8 @@ describe('responsive UI app shell gating', () => {
         sessionClock: { present: false, fontFamily: '', text: '' },
         liveScoreValue: { present: true, fontFamily: 'Formula1, sans-serif', text: '12' },
         projectionValue: { present: true, fontFamily: 'Formula1, sans-serif', text: '9' },
+        backToTopButton: { present: false, fontFamily: '', text: '' },
+        backToTopTooltip: { present: false, fontFamily: '', text: '' },
       },
       tooltip: {
         wrapperPresent: false,
@@ -217,6 +221,8 @@ describe('responsive UI app shell gating', () => {
         sessionClock: { present: false, fontFamily: '', text: '' },
         liveScoreValue: { present: true, fontFamily: 'Formula1, sans-serif', text: '12' },
         projectionValue: { present: true, fontFamily: 'Formula1, sans-serif', text: '9' },
+        backToTopButton: { present: false, fontFamily: '', text: '' },
+        backToTopTooltip: { present: false, fontFamily: '', text: '' },
       },
       tooltip: {
         wrapperPresent: false,
@@ -309,6 +315,8 @@ describe('responsive UI app shell gating', () => {
         sessionClock: { present: false, fontFamily: '', text: '' },
         liveScoreValue: { present: true, fontFamily: 'Formula1, sans-serif', text: '12' },
         projectionValue: { present: true, fontFamily: 'Formula1, sans-serif', text: '9' },
+        backToTopButton: { present: true, fontFamily: 'Formula1, sans-serif', text: 'Torna al menu' },
+        backToTopTooltip: { present: true, fontFamily: 'Formula1, sans-serif', text: 'Torna al menu' },
       },
       tooltip: {
         wrapperPresent: false,
@@ -401,6 +409,8 @@ describe('responsive UI app shell gating', () => {
         sessionClock: { present: false, fontFamily: '', text: '' },
         liveScoreValue: { present: true, fontFamily: 'Formula1, sans-serif', text: '12' },
         projectionValue: { present: true, fontFamily: 'Formula1, sans-serif', text: '9' },
+        backToTopButton: { present: true, fontFamily: '', text: '' },
+        backToTopTooltip: { present: true, fontFamily: '', text: 'Torna al menu' },
       },
       tooltip: {
         wrapperPresent: false,
@@ -489,6 +499,8 @@ describe('responsive UI app shell gating', () => {
         sessionClock: { present: false, fontFamily: '', text: '' },
         liveScoreValue: { present: true, fontFamily: 'Formula1, sans-serif', text: '12' },
         projectionValue: { present: true, fontFamily: 'Formula1, sans-serif', text: '9' },
+        backToTopButton: { present: true, fontFamily: '', text: 'Torna al menu' },
+        backToTopTooltip: { present: true, fontFamily: '', text: 'Torna al menu' },
       },
       tooltip: {
         wrapperPresent: false,
@@ -502,7 +514,7 @@ describe('responsive UI app shell gating', () => {
         present: true,
         hasCards: true,
         emptyStateVisible: false,
-        actionButtonCount: 0,
+        actionButtonCount: 2,
         clippedButtons: [],
       },
       selectedWeekend: {
@@ -539,7 +551,7 @@ describe('responsive UI app shell gating', () => {
         mobileDrawerPresent: false,
         itemCount: 8,
         activeText: 'Calendario stagione',
-        backToTopPresent: false,
+        backToTopPresent: true,
       },
       interactiveSurfaces: {
         total: 12,
@@ -548,7 +560,10 @@ describe('responsive UI app shell gating', () => {
     };
 
     expect(validateState(validationState, { expectedViewMode: 'admin', expectBackToTopVisible: true })).toEqual(
-      expect.arrayContaining(['Scorciatoia torna-su non rilevata nello scenario scrollato.']),
+      expect.arrayContaining([
+        'Scorciatoia torna-su non usa Formula1.',
+        'Tooltip torna-su non usa Formula1.',
+      ]),
     );
   });
 });
