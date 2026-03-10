@@ -77,6 +77,7 @@ function validateState(
   {
     expectSprintBadge = false,
     expectVisibleTooltip = false,
+    expectBackToTopVisible = false,
     expectedViewMode = null,
     expectedWeekendChangeFrom = null,
   } = {},
@@ -125,6 +126,71 @@ function validateState(
 
   if (!Object.values(requiredSections).every(Boolean)) {
     failures.push(`Sezioni principali mancanti: ${JSON.stringify(state.mainSections)}`);
+  }
+
+  if (state.viewport.width <= 767) {
+    if (!state.navigation?.mobileTriggerPresent) {
+      failures.push('Trigger menu mobile non rilevato.');
+    }
+    if (state.navigation?.mobileDrawerPresent && Number(state.navigation?.itemCount ?? 0) <= 0) {
+      failures.push('Navigazione sezioni senza voci disponibili.');
+    }
+  } else {
+    if (!state.navigation?.desktopPresent) {
+      failures.push('Navigazione sezioni desktop non rilevata.');
+    }
+
+    if (Number(state.navigation?.itemCount ?? 0) <= 0) {
+      failures.push('Navigazione sezioni senza voci disponibili.');
+    }
+  }
+
+  if (expectBackToTopVisible && !state.navigation?.backToTopPresent) {
+    failures.push('Scorciatoia torna-su non rilevata nello scenario scrollato.');
+  }
+
+  if (expectBackToTopVisible) {
+    if (!state.typography?.backToTopButton?.present) {
+      failures.push('Target tipografico mancante: scorciatoia torna-su.');
+    } else if (!usesFormula1(state.typography.backToTopButton.fontFamily)) {
+      failures.push('Scorciatoia torna-su non usa Formula1.');
+    }
+
+    if (!state.typography?.backToTopTooltip?.present) {
+      failures.push('Target tipografico mancante: tooltip torna-su.');
+    } else if (!usesFormula1(state.typography.backToTopTooltip.fontFamily)) {
+      failures.push('Tooltip torna-su non usa Formula1.');
+    }
+
+    const backToTopAnchor = state.navigation?.backToTopAnchor;
+    const wrapperAnchor = backToTopAnchor?.wrapper;
+    const buttonAnchor = backToTopAnchor?.button;
+    const wrapperDistanceToRight = Math.abs((state.viewport?.width ?? 0) - Number(wrapperAnchor?.right ?? 0));
+    const buttonDistanceToRight = Math.abs((state.viewport?.width ?? 0) - Number(buttonAnchor?.right ?? 0));
+
+    if (!wrapperAnchor?.present || !buttonAnchor?.present) {
+      failures.push('Ancoraggio scorciatoia torna-su non rilevabile.');
+    } else {
+      if (wrapperAnchor.position !== 'fixed') {
+        failures.push('Wrapper scorciatoia torna-su non fixed.');
+      }
+
+      if (wrapperAnchor.computedRight === 'auto') {
+        failures.push('Wrapper scorciatoia torna-su senza ancoraggio destro esplicito.');
+      }
+
+      if (wrapperAnchor.justifyContent !== 'flex-end') {
+        failures.push('Wrapper scorciatoia torna-su non allinea il bottone a destra.');
+      }
+
+      if (wrapperDistanceToRight > 48 || buttonDistanceToRight > 48) {
+        failures.push('Scorciatoia torna-su non risulta visivamente agganciata al bordo destro.');
+      }
+
+      if (Number(buttonAnchor.left ?? 0) < (state.viewport?.width ?? 0) / 2) {
+        failures.push('Scorciatoia torna-su appare troppo a sinistra nel viewport.');
+      }
+    }
   }
 
   if (!state.nextRace.cardPresent) {

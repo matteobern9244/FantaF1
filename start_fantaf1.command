@@ -147,27 +147,7 @@ ensure_port_free 5173 "frontend preflight"
 backend_log="$(mktemp -t fantaf1-preflight-backend.XXXXXX.log)"
 frontend_log="$(mktemp -t fantaf1-preflight-frontend.XXXXXX.log)"
 
-echo
-echo "==> Avvio stack temporaneo per test UI responsive"
-current_step="avvio backend preflight"
-npm run dev:backend >"$backend_log" 2>&1 &
-backend_pid="$!"
-wait_for_url "$BACKEND_HEALTH_URL" "backend preflight" "$backend_pid"
-
-current_step="avvio frontend preflight"
-npm run dev:frontend >"$frontend_log" 2>&1 &
-frontend_pid="$!"
-wait_for_url "$FRONTEND_URL" "frontend preflight" "$frontend_pid"
-
-run_step "Eseguo test UI responsive" npm run test:ui-responsive
 run_step "Eseguo smoke test salvataggio locale" npm run test:save-local
-
-echo
-echo "==> Chiudo stack temporaneo"
-current_step="chiusura stack temporaneo"
-cleanup_preflight
-ensure_port_free 3001 "avvio finale backend"
-ensure_port_free 5173 "avvio finale frontend"
 
 echo
 echo "==> Avvio applicazione"

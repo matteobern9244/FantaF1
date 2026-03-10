@@ -6,6 +6,17 @@ import { act, fireEvent, render, screen, waitFor, within } from '@testing-librar
 import React from 'react';
 import App from '../src/App';
 
+class MockIntersectionObserver {
+  observe = vi.fn();
+  unobserve = vi.fn();
+  disconnect = vi.fn();
+
+  constructor(
+    _callback: IntersectionObserverCallback,
+    _options?: IntersectionObserverInit,
+  ) {}
+}
+
 Object.defineProperty(window, 'matchMedia', {
   writable: true,
   value: vi.fn().mockImplementation((query) => ({
@@ -30,7 +41,12 @@ function mockMediaMatches(matchesByQuery: Record<string, boolean>) {
     addEventListener: vi.fn(),
     removeEventListener: vi.fn(),
     dispatchEvent: vi.fn(),
-  }));
+}));
+
+Object.defineProperty(window, 'IntersectionObserver', {
+  writable: true,
+  value: MockIntersectionObserver,
+});
 }
 
 function setUserAgent(userAgent: string) {
@@ -286,6 +302,10 @@ describe('Mockup roadmap UI features', () => {
       configurable: true,
       value: vi.fn(),
     });
+    Object.defineProperty(window, 'scrollTo', {
+      configurable: true,
+      value: vi.fn(),
+    });
     Object.assign(navigator, {
       clipboard: {
         writeText: vi.fn().mockResolvedValue(undefined),
@@ -400,6 +420,81 @@ describe('Mockup roadmap UI features', () => {
     expect(document.querySelectorAll('.history-card.interactive-surface').length).toBeGreaterThan(0);
     expect(document.querySelectorAll('.history-user-card.interactive-surface').length).toBeGreaterThan(0);
     expect(document.querySelectorAll('.history-detail-panel .analytics-subpanel.interactive-surface').length).toBeGreaterThan(0);
+  });
+
+  it('shows the selected circuit map in public recap surfaces and keeps admin results plus menu navigation intact', async () => {
+    const australiaMapUrl = 'https://media.example.com/australia-track.webp';
+    const chinaMapUrl = 'https://media.example.com/china-track.webp';
+    const calendar = [
+      {
+        ...createCalendar()[0],
+        trackOutlineUrl: australiaMapUrl,
+      },
+      {
+        meetingKey: 'race-2',
+        meetingName: 'China',
+        grandPrixTitle: 'Chinese Grand Prix 2099',
+        roundNumber: 2,
+        dateRangeLabel: '20 - 22 MAR',
+        detailUrl: 'https://www.formula1.com/en/racing/2099/china',
+        heroImageUrl: '',
+        trackOutlineUrl: chinaMapUrl,
+        isSprintWeekend: true,
+        startDate: '2099-03-20',
+        endDate: '2099-03-22',
+        raceStartTime: '2099-03-22T14:00:00Z',
+        sessions: [],
+      },
+    ];
+    const appData = createAppData();
+    appData.weekendStateByMeetingKey['race-2'] = {
+      userPredictions: {
+        Marco: { first: 'ham', second: 'nor', third: 'lec', pole: 'ver' },
+        Luca: { first: 'ham', second: 'nor', third: 'pia', pole: 'ver' },
+        Sara: { first: 'nor', second: 'ham', third: 'lec', pole: 'ver' },
+      },
+      raceResults: createEmptyPrediction(),
+    };
+
+    setupFetchWithOverrides({
+      appData,
+      calendar,
+      resultsByMeetingKey: {
+        'race-1': { racePhase: 'open', results: createEmptyPrediction() },
+        'race-2': { racePhase: 'open', results: createEmptyPrediction() },
+      },
+    });
+
+    render(<App />);
+
+    await waitFor(() => {
+      expect(screen.queryByTestId('pitstop-loader')).not.toBeInTheDocument();
+    });
+
+    expect(screen.getByRole('img', { name: 'Australia' })).toHaveAttribute('src', australiaMapUrl);
+
+    fireEvent.click(screen.getByRole('button', { name: /vista pubblica/i }));
+
+    await waitFor(() => {
+      expect(screen.getAllByRole('img', { name: 'Australia' })).toHaveLength(2);
+    });
+    expect(screen.queryByRole('button', { name: /conferma risultati e assegna i punti/i })).not.toBeInTheDocument();
+
+    const navigation = screen.getByRole('navigation', { name: /sezioni applicazione/i });
+    expect(within(navigation).getByRole('button', { name: /come funziona/i })).toBeInTheDocument();
+    expect(within(navigation).queryByRole('button', { name: /risultati del weekend/i })).not.toBeInTheDocument();
+
+    fireEvent.change(screen.getByLabelText(/weekend selezionato/i), {
+      target: { value: 'race-2' },
+    });
+
+    await waitFor(() => {
+      expect(screen.getAllByRole('img', { name: 'China' })).toHaveLength(2);
+    });
+    expect(screen.getAllByRole('img', { name: 'China' }).every((image) => image.getAttribute('src') === chinaMapUrl)).toBe(true);
+
+    fireEvent.click(within(navigation).getByRole('button', { name: /analisi stagione/i }));
+    expect(window.location.hash).toBe('#season-analysis');
   });
 
   it('shows install CTA when the browser exposes the PWA install prompt', async () => {
@@ -597,5 +692,147 @@ describe('Mockup roadmap UI features', () => {
     expect(screen.getByRole('button', { name: /modalita' admin/i })).toHaveAttribute('aria-pressed', 'false');
     expect(screen.queryByRole('button', { name: /salva dati inseriti/i })).not.toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /come funziona/i })).toBeInTheDocument();
+  });
+
+  it('renders desktop section navigation with admin-only and public-only entries', async () => {
+    setupFetch();
+
+    render(<App />);
+
+    await waitFor(() => {
+      expect(screen.queryByTestId('pitstop-loader')).not.toBeInTheDocument();
+    });
+
+    const navigation = screen.getByRole('navigation', { name: /sezioni applicazione/i });
+    expect(within(navigation).getByRole('button', { name: /calendario stagione/i })).toBeInTheDocument();
+    expect(within(navigation).getByRole('button', { name: /risultati del weekend/i })).toBeInTheDocument();
+    expect(within(navigation).queryByRole('button', { name: /come funziona/i })).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: /vista pubblica/i }));
+
+    expect(within(navigation).getByRole('button', { name: /come funziona/i })).toBeInTheDocument();
+    expect(within(navigation).queryByRole('button', { name: /risultati del weekend/i })).not.toBeInTheDocument();
+  });
+
+  it('opens and closes the mobile section drawer and updates the hash on navigation', async () => {
+    setupFetch();
+    mockMediaMatches({ '(max-width: 767px)': true });
+    const scrollIntoView = vi.fn();
+    Object.defineProperty(HTMLElement.prototype, 'scrollIntoView', {
+      configurable: true,
+      value: scrollIntoView,
+    });
+
+    render(<App />);
+
+    await waitFor(() => {
+      expect(screen.queryByTestId('pitstop-loader')).not.toBeInTheDocument();
+    });
+
+    const openButton = screen.getByRole('button', { name: /^sezioni$/i });
+    expect(openButton).toBeInTheDocument();
+    expect(screen.queryByRole('dialog', { name: /sezioni applicazione/i })).not.toBeInTheDocument();
+
+    fireEvent.click(openButton);
+
+    const drawer = screen.getByRole('dialog', { name: /sezioni applicazione/i });
+    const seasonAnalysisButton = within(drawer).getByRole('button', { name: /analisi stagione/i });
+    fireEvent.click(seasonAnalysisButton);
+
+    expect(window.location.hash).toBe('#season-analysis');
+    expect(scrollIntoView).toHaveBeenCalled();
+    expect(screen.queryByRole('dialog', { name: /sezioni applicazione/i })).not.toBeInTheDocument();
+
+    fireEvent.click(openButton);
+    expect(screen.getByRole('dialog', { name: /sezioni applicazione/i })).toBeInTheDocument();
+
+    fireEvent.keyDown(document, { key: 'Escape' });
+
+    await waitFor(() => {
+      expect(screen.queryByRole('dialog', { name: /sezioni applicazione/i })).not.toBeInTheDocument();
+    });
+    expect(document.activeElement).toBe(openButton);
+  });
+
+  it('shows the back-to-top shortcut only after leaving the header area and scrolls back to the menu', async () => {
+    setupFetch();
+    const scrollTo = vi.fn();
+    Object.defineProperty(window, 'scrollTo', {
+      configurable: true,
+      value: scrollTo,
+    });
+
+    render(<App />);
+
+    await waitFor(() => {
+      expect(screen.queryByTestId('pitstop-loader')).not.toBeInTheDocument();
+    });
+
+    expect(screen.queryByRole('button', { name: /torna al menu/i })).not.toBeInTheDocument();
+
+    Object.defineProperty(window, 'scrollY', {
+      configurable: true,
+      value: 420,
+    });
+
+    fireEvent.scroll(window);
+
+    const backToTopButton = await screen.findByRole('button', { name: /torna al menu/i });
+    expect(backToTopButton).toBeInTheDocument();
+    expect(backToTopButton.querySelector('svg')).not.toBeNull();
+
+    const backToTopTooltipWrapper = backToTopButton.closest('.tooltip-wrapper');
+    expect(backToTopTooltipWrapper).not.toBeNull();
+    expect(backToTopTooltipWrapper).toHaveClass('back-to-top-tooltip');
+    expect(backToTopTooltipWrapper).toContainElement(backToTopButton);
+    const backToTopTooltip = backToTopTooltipWrapper?.querySelector('.tooltip-text');
+    expect(backToTopTooltip).not.toBeNull();
+    expect(backToTopTooltip).toHaveTextContent(/torna al menu/i);
+    expect(backToTopTooltipWrapper).not.toHaveClass('show-tooltip');
+
+    fireEvent.mouseEnter(backToTopButton);
+
+    expect(backToTopTooltipWrapper).toHaveClass('show-tooltip');
+
+    fireEvent.mouseLeave(backToTopButton);
+
+    expect(backToTopTooltipWrapper).not.toHaveClass('show-tooltip');
+
+    fireEvent.click(backToTopButton);
+
+    expect(scrollTo).toHaveBeenCalledWith({ top: 0, behavior: 'smooth' });
+    expect(window.location.hash).toBe('#calendar-section');
+  });
+
+  it('closes the mobile drawer before scrolling back to the top', async () => {
+    setupFetch();
+    mockMediaMatches({ '(max-width: 767px)': true });
+    const scrollTo = vi.fn();
+    Object.defineProperty(window, 'scrollTo', {
+      configurable: true,
+      value: scrollTo,
+    });
+
+    render(<App />);
+
+    await waitFor(() => {
+      expect(screen.queryByTestId('pitstop-loader')).not.toBeInTheDocument();
+    });
+
+    Object.defineProperty(window, 'scrollY', {
+      configurable: true,
+      value: 420,
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: /^sezioni$/i }));
+    expect(screen.getByRole('dialog', { name: /sezioni applicazione/i })).toBeInTheDocument();
+
+    fireEvent.scroll(window);
+    fireEvent.click(await screen.findByRole('button', { name: /torna al menu/i }));
+
+    expect(scrollTo).toHaveBeenCalledWith({ top: 0, behavior: 'smooth' });
+    await waitFor(() => {
+      expect(screen.queryByRole('dialog', { name: /sezioni applicazione/i })).not.toBeInTheDocument();
+    });
   });
 });

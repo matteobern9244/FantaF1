@@ -19,6 +19,14 @@ const appText = {
       live: uiText.shell.weekendStatusLive,
       open: uiText.shell.weekendStatusOpen,
     },
+    navigation: {
+      openButton: uiText.buttons.openSections,
+      closeButton: uiText.buttons.closeSections,
+      backToTopButton: uiText.buttons.backToTop,
+      backToTopTooltip: uiText.tooltips.backToTop,
+      ariaLabel: uiText.labels.sectionNavigation,
+      items: uiText.navigation,
+    },
   },
   panels: {
     publicGuide: {

@@ -193,6 +193,9 @@
       "adminView": "Modalita' admin",
       "installApp": "INSTALLA APPLICAZIONE",
       "logout": "Logout",
+      "openSections": "Sezioni",
+      "closeSections": "Chiudi sezioni",
+      "backToTop": "Torna al menu",
       "closeDialog": "Chiudi",
       "watchHighlights": "Guarda Highlights",
       "highlightsUnavailable": "Video Highlights ancora non disponibile"
@@ -244,7 +247,8 @@
       "averageLeaderDelta": "Delta medio dal leader",
       "totalHitRate": "Hit rate totale",
       "weekendsAboveLeader": "Weekend da leader",
-      "cumulativeTrend": "Trend cumulato"
+      "cumulativeTrend": "Trend cumulato",
+      "sectionNavigation": "Sezioni applicazione"
     },
     "placeholders": {
       "driverSelect": "Seleziona un pilota",
@@ -317,7 +321,8 @@
     "tooltips": {
       "raceNotStarted": "La gara non e' ancora iniziata.",
       "raceInProgress": "La gara e' in corso... stay tuned !!",
-      "missingResults": "Inserisci tutti i risultati reali per continuare."
+      "missingResults": "Inserisci tutti i risultati reali per continuare.",
+      "backToTop": "Torna al menu"
     },
     "panels": {
       "publicGuide": {
@@ -369,6 +374,17 @@
         "detailButtonTemplate": "Dettaglio {gpName}",
         "detailTitle": "Pronostici dettagliati"
       }
+    },
+    "navigation": {
+      "calendar": "Calendario stagione",
+      "userKpi": "User KPI Dashboard",
+      "userAnalytics": "Deep-dive KPI dashboard",
+      "seasonAnalysis": "Analisi stagione",
+      "weekendLive": "Weekend pulse",
+      "publicGuide": "Come funziona",
+      "predictions": "Pronostici dei giocatori",
+      "results": "Risultati del weekend",
+      "history": "Storico gare"
     },
     "backend": {
       "health": {

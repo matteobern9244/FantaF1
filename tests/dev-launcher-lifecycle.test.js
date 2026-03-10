@@ -37,6 +37,12 @@ describe('dev launcher Chrome lifecycle tracking', () => {
     expect(launcherScript).toMatch(/export NODE_ENV=development/);
   });
 
+  it('does not run the responsive browser check inside the monitored launcher preflight', () => {
+    const launcherScript = fs.readFileSync(startCommandPath, 'utf8');
+
+    expect(launcherScript).not.toMatch(/npm run test:ui-responsive/);
+  });
+
   it('forces the Node local launcher env to development even if the parent env is production', async () => {
     const { buildLauncherEnv } = await import('../scripts/dev-launcher.mjs');
 

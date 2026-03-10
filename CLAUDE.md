@@ -1,4 +1,4 @@
-# AGENTS.md
+# CLAUDE.md
 
 Mandatory engineering instructions for any coding agent working in this repository.
 
@@ -202,9 +202,7 @@ Where applicable this includes:
 ### Mandatory launcher rule
 
 - When the user asks to `avvia l'app`, always use `./start_fantaf1.command` instead of invoking `npm run start:local` directly.
-- When the user writes exactly `check viste`, run `npm run test:ui-responsive`.
 - That launcher must be treated as the repository's monitored startup entrypoint and must remain valid.
-- `./start_fantaf1.command` must not execute `npm run test:ui-responsive` inside its monitored preflight flow; responsive browser validation remains a separate explicit check to run only when relevant to the task, not part of the launcher startup path.
 - If the launcher or startup flow reports any error, stop the full execution immediately.
 - On any startup failure, terminate all active application-related processes and any active Playwright or Playwright-MCP processes started for the flow before responding.
 - Report the concrete error or errors observed to the user; never claim a successful startup when any monitored step failed.
@@ -220,7 +218,7 @@ Where applicable this includes:
 
 - Main automated test stack: Vitest, React Testing Library, and Supertest.
 - Coverage provider: V8.
-- Current verified merged baseline for the configured official application-code scope is **100% statements (4780 / 4780)**, **100% functions (393 / 393)**, **100% branches (1999 / 1999)**, and **100% lines (4780 / 4780)**, aligned with the thresholds currently documented in `README.md`.
+- Current verified merged baseline for the configured official application-code scope is **100% statements (4699 / 4699)**, **100% functions (371 / 371)**, **100% branches (1908 / 1908)**, and **100% lines (4699 / 4699)**, aligned with the thresholds currently documented in `README.md`.
 - Whenever a task produces a new verified merged Release coverage result, update this baseline in `AGENTS.md` to the new numbers.
 - If a task produces a new verified merged coverage result for the tracked scope, update the baseline in `AGENTS.md` and never accept a regression below that verified baseline.
 

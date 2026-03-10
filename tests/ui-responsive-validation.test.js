@@ -20,6 +20,7 @@ describe('responsive UI app shell gating', () => {
       },
     };
     const validationState = {
+      viewport: { width: 1280, height: 800 },
       mainSections: {
         hero: true,
         summary: true,
@@ -43,6 +44,8 @@ describe('responsive UI app shell gating', () => {
         sessionClock: { present: false, fontFamily: '', text: '' },
         liveScoreValue: { present: false, fontFamily: '', text: '' },
         projectionValue: { present: false, fontFamily: '', text: '' },
+        backToTopButton: { present: false, fontFamily: '', text: '' },
+        backToTopTooltip: { present: false, fontFamily: '', text: '' },
       },
       tooltip: {
         wrapperPresent: false,
@@ -78,6 +81,13 @@ describe('responsive UI app shell gating', () => {
         predictionOption: { present: true, color: 'rgb(248, 250, 252)', backgroundColor: 'rgb(24, 28, 39)', fontFamily: 'Formula1, sans-serif', disabled: false, text: 'Seleziona un pilota' },
         resultOption: { present: true, color: 'rgb(248, 250, 252)', backgroundColor: 'rgb(24, 28, 39)', fontFamily: 'Formula1, sans-serif', disabled: false, text: 'Seleziona un pilota' },
       },
+      navigation: {
+        desktopPresent: true,
+        mobileTriggerPresent: false,
+        mobileDrawerPresent: false,
+        itemCount: 8,
+        activeText: 'Calendario stagione',
+      },
       unauthorizedOverflow: [],
     };
 
@@ -99,6 +109,7 @@ describe('responsive UI app shell gating', () => {
 
   it('accepts the public view when admin-only controls are intentionally absent', () => {
     const validationState = {
+      viewport: { width: 1280, height: 800 },
       mainSections: {
         hero: true,
         summary: true,
@@ -122,6 +133,8 @@ describe('responsive UI app shell gating', () => {
         sessionClock: { present: false, fontFamily: '', text: '' },
         liveScoreValue: { present: true, fontFamily: 'Formula1, sans-serif', text: '12' },
         projectionValue: { present: true, fontFamily: 'Formula1, sans-serif', text: '9' },
+        backToTopButton: { present: false, fontFamily: '', text: '' },
+        backToTopTooltip: { present: false, fontFamily: '', text: '' },
       },
       tooltip: {
         wrapperPresent: false,
@@ -135,7 +148,7 @@ describe('responsive UI app shell gating', () => {
         present: true,
         hasCards: true,
         emptyStateVisible: false,
-        actionButtonCount: 0,
+        actionButtonCount: 2,
         clippedButtons: [],
       },
       selectedWeekend: {
@@ -165,6 +178,13 @@ describe('responsive UI app shell gating', () => {
         adminControlsPresent: false,
         publicControlsPresent: true,
       },
+      navigation: {
+        desktopPresent: true,
+        mobileTriggerPresent: false,
+        mobileDrawerPresent: false,
+        itemCount: 7,
+        activeText: 'Calendario stagione',
+      },
       interactiveSurfaces: {
         total: 12,
         analytics: 5,
@@ -177,6 +197,7 @@ describe('responsive UI app shell gating', () => {
 
   it('requires editable prediction and result controls in admin view', () => {
     const validationState = {
+      viewport: { width: 1280, height: 800 },
       mainSections: {
         hero: true,
         summary: true,
@@ -200,6 +221,8 @@ describe('responsive UI app shell gating', () => {
         sessionClock: { present: false, fontFamily: '', text: '' },
         liveScoreValue: { present: true, fontFamily: 'Formula1, sans-serif', text: '12' },
         projectionValue: { present: true, fontFamily: 'Formula1, sans-serif', text: '9' },
+        backToTopButton: { present: false, fontFamily: '', text: '' },
+        backToTopTooltip: { present: false, fontFamily: '', text: '' },
       },
       tooltip: {
         wrapperPresent: false,
@@ -243,6 +266,13 @@ describe('responsive UI app shell gating', () => {
         adminControlsPresent: true,
         publicControlsPresent: false,
       },
+      navigation: {
+        desktopPresent: true,
+        mobileTriggerPresent: false,
+        mobileDrawerPresent: false,
+        itemCount: 8,
+        activeText: 'Calendario stagione',
+      },
       interactiveSurfaces: {
         total: 12,
         analytics: 5,
@@ -261,6 +291,7 @@ describe('responsive UI app shell gating', () => {
 
   it('flags selects with transparent colors or missing backgrounds', () => {
     const validationState = {
+      viewport: { width: 1280, height: 800 },
       mainSections: {
         hero: true,
         summary: true,
@@ -284,6 +315,8 @@ describe('responsive UI app shell gating', () => {
         sessionClock: { present: false, fontFamily: '', text: '' },
         liveScoreValue: { present: true, fontFamily: 'Formula1, sans-serif', text: '12' },
         projectionValue: { present: true, fontFamily: 'Formula1, sans-serif', text: '9' },
+        backToTopButton: { present: true, fontFamily: 'Formula1, sans-serif', text: 'Torna al menu' },
+        backToTopTooltip: { present: true, fontFamily: 'Formula1, sans-serif', text: 'Torna al menu' },
       },
       tooltip: {
         wrapperPresent: false,
@@ -327,6 +360,13 @@ describe('responsive UI app shell gating', () => {
         adminControlsPresent: true,
         publicControlsPresent: false,
       },
+      navigation: {
+        desktopPresent: true,
+        mobileTriggerPresent: false,
+        mobileDrawerPresent: false,
+        itemCount: 8,
+        activeText: 'Calendario stagione',
+      },
       interactiveSurfaces: {
         total: 12,
         analytics: 5,
@@ -345,6 +385,7 @@ describe('responsive UI app shell gating', () => {
 
   it('flags a clipped highlights button in the selected weekend recap', () => {
     const validationState = {
+      viewport: { width: 1280, height: 800 },
       mainSections: {
         hero: true,
         summary: true,
@@ -368,6 +409,8 @@ describe('responsive UI app shell gating', () => {
         sessionClock: { present: false, fontFamily: '', text: '' },
         liveScoreValue: { present: true, fontFamily: 'Formula1, sans-serif', text: '12' },
         projectionValue: { present: true, fontFamily: 'Formula1, sans-serif', text: '9' },
+        backToTopButton: { present: true, fontFamily: '', text: '' },
+        backToTopTooltip: { present: true, fontFamily: '', text: 'Torna al menu' },
       },
       tooltip: {
         wrapperPresent: false,
@@ -412,6 +455,13 @@ describe('responsive UI app shell gating', () => {
         adminControlsPresent: true,
         publicControlsPresent: false,
       },
+      navigation: {
+        desktopPresent: true,
+        mobileTriggerPresent: false,
+        mobileDrawerPresent: false,
+        itemCount: 8,
+        activeText: 'Calendario stagione',
+      },
       interactiveSurfaces: {
         total: 12,
         analytics: 5,
@@ -420,6 +470,127 @@ describe('responsive UI app shell gating', () => {
 
     expect(validateState(validationState, { expectedViewMode: 'admin' })).toEqual(
       expect.arrayContaining(['Pulsante highlights fuori dal recap del weekend selezionato.']),
+    );
+  });
+
+  it('requires the back-to-top shortcut when the scenario expects the page scrolled away from the header', () => {
+    const validationState = {
+      viewport: { width: 390, height: 844 },
+      mainSections: {
+        hero: true,
+        summary: true,
+        calendar: true,
+        predictions: true,
+        results: true,
+        footer: true,
+      },
+      nextRace: {
+        cardPresent: true,
+        badgeText: 'Weekend Standard',
+        hasSessions: false,
+        rowCount: 0,
+        clippedRows: [],
+        noteText: '',
+        noteFits: true,
+      },
+      typography: {
+        sessionDay: { present: false, fontFamily: '', text: '' },
+        sessionDate: { present: false, fontFamily: '', text: '' },
+        sessionClock: { present: false, fontFamily: '', text: '' },
+        liveScoreValue: { present: true, fontFamily: 'Formula1, sans-serif', text: '12' },
+        projectionValue: { present: true, fontFamily: 'Formula1, sans-serif', text: '9' },
+        backToTopButton: { present: true, fontFamily: '', text: 'Torna al menu' },
+        backToTopTooltip: { present: true, fontFamily: '', text: 'Torna al menu' },
+      },
+      tooltip: {
+        wrapperPresent: false,
+        disabledWrapperPresent: false,
+        present: false,
+        visible: false,
+        fitsViewport: true,
+        text: '',
+      },
+      history: {
+        present: true,
+        hasCards: true,
+        emptyStateVisible: false,
+        actionButtonCount: 2,
+        clippedButtons: [],
+      },
+      selectedWeekend: {
+        calendarCardCount: 2,
+        sprintCardCount: 0,
+        cardText: 'Round 1 Australia',
+        bannerTitle: 'Australian Grand Prix 2026',
+        firstPredictionValue: 'ver',
+        firstPredictionText: 'Verstappen Max',
+        firstResultValue: 'ver',
+        firstResultText: 'Verstappen Max',
+        highlightsButton: { present: false, disabled: true, text: '', clipped: false },
+      },
+      selects: {
+        meeting: { present: true, color: 'rgb(248, 250, 252)', backgroundColor: 'rgb(24, 28, 39)', fontFamily: 'Formula1, sans-serif', disabled: false, text: 'Australia' },
+        insights: { present: true, color: 'rgb(248, 250, 252)', backgroundColor: 'rgb(24, 28, 39)', fontFamily: 'Formula1, sans-serif', disabled: false, text: 'Marco' },
+        prediction: { present: true, color: 'rgb(248, 250, 252)', backgroundColor: 'rgb(24, 28, 39)', fontFamily: 'Formula1, sans-serif', disabled: false, text: 'Verstappen Max' },
+        result: { present: true, color: 'rgb(248, 250, 252)', backgroundColor: 'rgb(24, 28, 39)', fontFamily: 'Formula1, sans-serif', disabled: false, text: 'Verstappen Max' },
+        historyFilter: { present: true, color: 'rgb(248, 250, 252)', backgroundColor: 'rgb(24, 28, 39)', fontFamily: 'Formula1, sans-serif', disabled: false, text: 'Tutti gli utenti' },
+        predictionOption: { present: true, color: 'rgb(248, 250, 252)', backgroundColor: 'rgb(24, 28, 39)', fontFamily: 'Formula1, sans-serif', disabled: false, text: 'Seleziona un pilota' },
+        resultOption: { present: true, color: 'rgb(248, 250, 252)', backgroundColor: 'rgb(24, 28, 39)', fontFamily: 'Formula1, sans-serif', disabled: false, text: 'Seleziona un pilota' },
+      },
+      unauthorizedOverflow: [],
+      viewMode: {
+        current: 'admin',
+        readonlyBannerPresent: false,
+        adminLoginPresent: false,
+        adminControlsPresent: true,
+        publicControlsPresent: false,
+      },
+      navigation: {
+        desktopPresent: false,
+        mobileTriggerPresent: true,
+        mobileDrawerPresent: false,
+        itemCount: 8,
+        activeText: 'Calendario stagione',
+        backToTopPresent: true,
+        backToTopAnchor: {
+          wrapper: {
+            present: true,
+            left: 120,
+            right: 320,
+            width: 200,
+            computedLeft: '0px',
+            computedRight: 'auto',
+            position: 'absolute',
+            justifyContent: 'center',
+          },
+          button: {
+            present: true,
+            left: 120,
+            right: 164,
+            width: 44,
+            computedLeft: 'auto',
+            computedRight: 'auto',
+            position: 'static',
+            justifyContent: 'normal',
+          },
+        },
+      },
+      interactiveSurfaces: {
+        total: 12,
+        analytics: 5,
+      },
+    };
+
+    expect(validateState(validationState, { expectedViewMode: 'admin', expectBackToTopVisible: true })).toEqual(
+      expect.arrayContaining([
+        'Scorciatoia torna-su non usa Formula1.',
+        'Tooltip torna-su non usa Formula1.',
+        'Wrapper scorciatoia torna-su non fixed.',
+        'Wrapper scorciatoia torna-su senza ancoraggio destro esplicito.',
+        'Wrapper scorciatoia torna-su non allinea il bottone a destra.',
+        'Scorciatoia torna-su non risulta visivamente agganciata al bordo destro.',
+        'Scorciatoia torna-su appare troppo a sinistra nel viewport.',
+      ]),
     );
   });
 });
