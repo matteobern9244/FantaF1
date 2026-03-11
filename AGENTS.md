@@ -18,6 +18,7 @@ All three files are mandatory and complementary.
 - The application always manages exactly 3 participants and keeps live projections plus historical standings.
 - The repository contains production-facing business logic and persistent data constraints that must remain safe.
 - `PROJECT.md` remains the source of truth for business rules, critical flows, and domain invariants.
+- `docs/backend-csharp-porting-plan.md` is the canonical migration plan for the backend C# port.
 
 ### Main Technologies
 
@@ -33,6 +34,7 @@ All three files are mandatory and complementary.
 - `backend/`: REST API, validation, persistence access, and external Formula 1 synchronization logic.
 - `app.js` and `server.js`: Express composition, database bootstrap, and runtime startup.
 - `tests/`: unit, integration, API, and UI regression coverage across frontend and backend flows.
+- `docs/backend-csharp-porting-plan.md`: canonical backend migration plan, environment matrix, staging strategy, and cutover guardrails.
 
 ### Building and Running
 
@@ -68,6 +70,7 @@ Optional helper commands already supported by the repository:
 
 - `AGENTS.md`
 - `PROJECT.md`
+- `docs/backend-csharp-porting-plan.md`
 - `GEMINI.md`
 - `CLAUDE.md`
 - `package.json`
