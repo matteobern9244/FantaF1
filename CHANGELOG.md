@@ -2,6 +2,12 @@
 
 Cronologia sintetica delle release documentate del progetto Fanta Formula 1.
 
+## Unreleased
+
+- **Piano Canonico C# Scomposto in 11 Subfasi Deterministiche**: il piano [docs/backend-csharp-porting-plan.md](/Users/matteobernardini/code/FantaF1/docs/backend-csharp-porting-plan.md) ora include un indice esecutivo ordinato che mappa in modo uno-a-uno `Subphase 1` ... `Subphase 11` ai nuovi documenti sotto `docs/backend-csharp-porting-subphases/`, mantenendo il file canonico come unica source of truth.
+- **Nuovo Set Documentale di Subfase per il Porting Backend**: aggiunti 11 documenti in italiano con nomi file ASCII, struttura obbligatoria uniforme, ownership esclusivo per ogni area del porting, richiami espliciti ai principi di `AGENTS_migration_template.md`, coverage `100% totale`, gate browser/responsive e confini operativi senza decisioni aperte.
+- **Governance del Porting Rafforzata Senza Impatto Runtime**: i nuovi documenti formalizzano branch isolation su `porting-backend-c#`, divieto di usare `fantaf1` e `fantaf1_dev`, staging `FantaF1_staging`, target `fantaf1_porting` e il vincolo che workflow futuri e legacy removal compaiano solo nella `Subphase 11`, senza introdurre alcun cambiamento a API pubbliche, payload, cookie o business logic.
+
 ## v1.4.1
 
 - **Hero Ripulita e Sfondo Gara Piu' Luminoso**: rimosso il blur dal contenitore del titolo nell'header hero e introdotto un layer dedicato per lo sfondo del weekend selezionato con luminosita' aumentata, mantenendo invariato il cambio dinamico dell'immagine in base alla gara attiva.
