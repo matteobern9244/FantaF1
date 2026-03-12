@@ -773,7 +773,13 @@ describe('Mockup roadmap UI features', () => {
     expect(lastButton).toHaveTextContent(/installa applicazione/i);
   });
 
-  it('shows the back-to-top button after scrolling down and scrolls to the navigation element', async () => {
+  it('shows the back-to-top button when the hero panel is scrolled out of view and scrolls back to the navigation element', async () => {
+    const originalObserver = window.IntersectionObserver;
+    Object.defineProperty(window, 'IntersectionObserver', {
+      writable: true,
+      value: undefined,
+    });
+
     setupFetch();
     const scrollIntoViewMock = vi.fn();
     
@@ -801,5 +807,10 @@ describe('Mockup roadmap UI features', () => {
 
     fireEvent.click(backToTopButton);
     expect(scrollIntoViewMock).toHaveBeenCalledWith({ behavior: 'smooth' });
+
+    Object.defineProperty(window, 'IntersectionObserver', {
+      writable: true,
+      value: originalObserver,
+    });
   });
 });

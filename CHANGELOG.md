@@ -6,6 +6,7 @@ Cronologia sintetica delle release documentate del progetto Fanta Formula 1.
 
 - **Ristrutturazione Navigazione e UX**: il menu di sezione e' stato spostato all'interno dell'header, direttamente sotto il titolo della stagione, migliorando la gerarchia visiva e l'accessibilità immediata.
 - **Menu Mobile User-Friendly**: rimossa la classe `.panel` dalla navigazione per una perfetta integrazione trasparente nella hero; introdotto un gradiente di mascheramento laterale per segnalare visivamente la possibilità di scorrimento orizzontale.
+- **Ottimizzazione Performance Scroll**: eliminata la latenza ("jank") durante lo scroll su dispositivi mobili sostituendo l'event listener sincrono di React con un `IntersectionObserver` mirato; disabilitato inoltre il `backdrop-filter: blur` sui pannelli in vista mobile per garantire i 60fps su background complessi.
 - **Fix Regressione Dropdown Mobile**: ripristinato il comportamento nativo delle dropdown su dispositivi mobili per risolvere il bug di posizionamento errato delle opzioni riscontrato su Chrome (emulazione mobile).
 - **Fix Mappa Circuito Storico**: il riquadro `Recap ultimo GP` ora visualizza correttamente la mappa della gara conclusa recuperandola dal calendario, indipendentemente dal weekend selezionato globalmente nell'app.
 - **Navigazione Fluida Mobile e Risoluzione Bug**: eliminato l'hamburger menu (Drawer) in favore di una barra a scorrimento orizzontale nativa su dispositivi mobili, risolvendo il bug di visibilità e garantendo che tutte le opzioni siano sempre visibili.

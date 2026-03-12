@@ -24,6 +24,7 @@ Rispetto alla produzione `v1.4.0`, il repository contiene gia' il delta tecnico 
 - ristrutturazione completa della navigazione con spostamento del menu all'interno dell'header, sotto il titolo della stagione;
 - navigazione fluida su dispositivi mobili tramite barra a scorrimento orizzontale nativa e rimozione del Drawer (hamburger menu), risolvendo i bug di visibilità mobile;
 - menu mobile ottimizzato: rimossa la classe `.panel` per una trasparenza elegante e introdotto gradiente di mascheramento laterale per indicare lo scroll;
+- ottimizzazione performance: eliminato il jank durante lo scorrimento fluido su dispositivi mobili tramite l'uso di `IntersectionObserver` in luogo dei global event listeners sincroni e la disattivazione del `backdrop-filter` in mobile;
 - fix regressione dropdown mobile: ripristinato l'aspetto nativo delle select su smartphone per garantire il corretto posizionamento dei menu opzioni;
 - fix architetturale mappa circuito: il `Recap ultimo GP` visualizza ora la mappa specifica della gara conclusa recuperandola dal calendario, indipendentemente dalla selezione corrente;
 - integrazione della CTA `INSTALLA APPLICAZIONE` come ultima voce della lista di navigazione unificata;

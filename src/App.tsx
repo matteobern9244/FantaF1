@@ -452,12 +452,30 @@ function App() {
   }, [isMobileViewport]);
 
   useEffect(() => {
-    function handleScroll() {
-      setShowBackToTop(window.scrollY > 400);
-    }
+    const heroPanel = document.querySelector('header.hero-panel');
 
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    if (typeof window.IntersectionObserver === 'function' && heroPanel) {
+      const observer = new window.IntersectionObserver(
+        ([entry]) => {
+          setShowBackToTop(!entry.isIntersecting);
+        },
+        { threshold: 0 }
+      );
+
+      observer.observe(heroPanel);
+
+      return () => {
+        observer.disconnect();
+      };
+    } else {
+      // Fallback
+      function handleScroll() {
+        setShowBackToTop(window.scrollY > 400);
+      }
+
+      window.addEventListener('scroll', handleScroll);
+      return () => window.removeEventListener('scroll', handleScroll);
+    }
   }, []);
 
   useEffect(() => {
