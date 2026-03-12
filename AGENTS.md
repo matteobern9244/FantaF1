@@ -53,6 +53,11 @@ Optional helper commands already supported by the repository:
 
 ### Development Conventions
 
+- **Separation Of Concerns:** Keep UI, application orchestration, domain rules, infrastructure, and migration glue clearly separated.
+- **Abstraction Naming:** Name adapters, translators, facades, and compatibility seams for the boundary they protect, not as generic `Helper` or `Utils` buckets.
+- **Configuration Discipline:** Put migration flags, environment-specific endpoints, file paths, routing toggles, and cutover settings in configuration or constants, not scattered literals.
+- **Localization:** New user-facing text must go through the existing centralized UI/config text system instead of ad-hoc literals.
+- **Documentation:** Keep architecture notes, migration progress, known parity gaps, cutover conditions, and verified coverage baselines updated in repository docs.
 - Prefer focused domain objects, explicit collaborators, and clear data flow over oversized orchestration blocks.
 - Keep runtime wiring and environment/bootstrap concerns in entry points and bootstrap modules such as `app.js`, `server.js`, and backend startup code.
 - Avoid hidden dependencies and service-locator style access patterns; pass dependencies explicitly or keep them within the owning module boundary.
@@ -120,29 +125,47 @@ Do not jump directly into editing without understanding the current implementati
 
 - Never invent requirements, commands, hidden business rules, or architecture.
 - Never assume missing behavior if the codebase does not support that assumption.
+- **Source Of Truth:** For every task, explicitly identify and follow the currently authoritative runtime path and document set. During the backend port, Node remains authoritative until a later verified cutover subphase says otherwise.
+- Read the affected legacy and target implementations before proposing structural changes.
 - If business logic, expected behavior, or data flow is unclear, stop and ask for clarification.
+- If the repository contains current migration docs, treat them as part of the specification.
 - If the repository already defines the behavior, follow the repository files instead of guessing.
 
 ---
 
 ## 4. Change Scope Policy
 
+- **Behavior Preservation First:** During migration or porting, preserve externally observable behavior unless the task explicitly includes a product change. If behavior must change, document the delta, update tests, and call it out explicitly.
+- **Incremental Migration:** Prefer small, reversible migration steps. Avoid broad rewrites that mix structural migration, refactoring, behavior changes, and cleanup in one change set.
+- **Strangler Mindset:** Add new migration code behind stable seams, adapters, or interfaces so legacy and target implementations can coexist safely during rollout.
+- **Compatibility Layers Must Be Intentional:** Adapters, shims, translators, and facades are acceptable only when they reduce migration risk and remain focused, documented, and temporary unless there is a stable long-term reason to keep them.
+- **Avoid Legacy Leakage:** Do not spread legacy Node/Express/Mongoose concepts deeper into the target C# architecture than necessary; translate at boundaries and keep target-side abstractions clean.
 - Keep changes minimal and targeted.
+- Do not collapse migration, refactor, and feature work into one edit unless explicitly requested.
 - Do not refactor unrelated code.
 - Do not rename or move files unless necessary.
 - Do not introduce new frameworks, patterns, or dependencies without explicit need.
+- Prefer edits that improve the seam between old and new systems.
+- **Legacy Decommission Rule:** Do not remove legacy code until replacement behavior, migration validation, observability, and rollback expectations are verified.
+- **Delete Dead Paths Promptly:** Once a migration step is verified and cutover is complete, remove obsolete flags, adapters, and duplicate paths instead of carrying permanent transitional complexity.
 - Preserve naming conventions, folder structure, and coding style already used in the repository.
 
 ---
 
 ## 5. Code Quality Standards
 
+- **Business Logic Isolation:** Move business rules into focused domain services, value objects, or pure collaborators that remain independent from transport and framework concerns whenever that improves the migration seam.
+- **SOLID Principles:** Apply `SRP`, `OCP`, `LSP`, `ISP`, and `DIP` consistently, especially when extracting abstractions from the legacy backend into the target C# architecture.
+- **Dependency Injection by Default:** Runtime collaborators must be injected. Bootstrap code, composition roots, and narrowly scoped factories may create concrete implementations when justified.
+- **No Hidden Collaborator Graphs:** Controllers, services, handlers, repositories, parsers, and orchestrators must not instantiate runtime collaborators directly except for value types or framework-mandated primitives.
+- **Static Logic Policy:** Avoid placing production behavior in static classes. Static-only use is limited to constants, pure extensions, and framework-mandated entry points.
 - Prefer clarity over cleverness.
 - Keep functions focused and single-purpose.
 - Avoid deep nesting and hidden side effects.
 - Preserve API contracts unless explicitly asked to change them.
 - Validate external or unsafe input before use.
 - Never swallow errors silently.
+- **Error Handling:** Produce actionable errors with enough context to diagnose mapping failures, invalid input, unsupported migration states, or broken invariants.
 - Fail clearly when invariants are broken.
 - If code or tests appear brittle, inconsistent, or overengineered, surface that explicitly instead of silently working around it.
 
@@ -150,10 +173,12 @@ Do not jump directly into editing without understanding the current implementati
 
 ## 6. Determinism and Stability
 
+- **Cross-Platform Discipline:** Use platform-safe file, path, encoding, locale, and environment handling. Never hardcode platform separators, shell assumptions, or machine-local paths unless the repository already requires them.
 - Avoid time-dependent behavior unless explicitly guarded.
 - Avoid randomness unless explicitly required.
 - Tests must be deterministic and repeatable.
 - Tests must not rely on uncontrolled system clock values, ambient locale differences, machine-specific paths, or uncontrolled network availability unless the scenario is explicitly guarded behind a controlled seam.
+- **Time And Clock Access:** All production time access must go through injectable abstractions, especially in the C# port.
 - Avoid implicit global state mutations.
 - Avoid introducing behavior that depends on execution order unless already part of the design.
 
@@ -169,6 +194,13 @@ Any behavioral change, fix, or implementation must follow strict TDD:
 
 Rules:
 
+- **TDD By Default:** Start with a failing test when adding or fixing behavior unless the task is strictly exploratory or mechanical and no behavior is being changed.
+- **Deterministic Tests Only:** Keep tests independent from uncontrolled time, locale, machine-specific paths, network availability, or mutable external state unless those conditions are explicitly isolated as the scenario under test.
+- **Parity Tests:** For migrated behavior, add tests that assert the target implementation matches the legacy implementation for representative and edge-case inputs.
+- **Contract Tests:** For shared abstractions, adapters, and interfaces, define tests that every implementation or placeholder seam must satisfy.
+- **Mock Narrowly:** Mock only collaborators outside the true scope under test; prefer focused fakes or real seams over broad incidental integration.
+- **Migration Regression Coverage:** Every migration change must preserve or increase confidence in the migrated area through new or improved tests.
+- **Test Data Management:** Keep fixtures minimal, explicit, canonical, and readable.
 - A behavioral fix is not complete without tests.
 - A regression fix is not complete without a regression test.
 - New logic must be covered by automated tests.
@@ -187,6 +219,8 @@ Rules:
 Before declaring completion, run the relevant validation pipeline supported by the repository.
 Where applicable this includes:
 
+- **Parity Before Optimization:** Reach functional parity first. Optimize architecture, performance, or style only after behavior is covered by tests unless the task is explicitly performance-driven.
+- **Dual-Run Verification:** When both Node and C# implementations exist, compare outputs with deterministic parity assertions, contract tests, golden cases, or equivalent evidence before declaring parity.
 - lint
 - unit/integration tests
 - build
@@ -248,8 +282,14 @@ Never fabricate validation results.
 
 For every task:
 
+- **Data Safety:** Schema changes, data reshaping, or migration utilities must be reversible when feasible or protected by backup/export strategy and explicit validation.
+- **Contract Preservation:** Public APIs, file formats, CLI surfaces, collection names, session semantics, and integration contracts must remain stable unless the task explicitly includes a reviewed breaking change.
+- **Feature Flags For Cutover:** Use explicit routing seams or feature toggles for staged rollout when both legacy and target paths may be exercised.
+- **Observability During Migration:** Add or preserve logs, metrics, traces, or diagnostics when needed to compare legacy and target behavior during rollout.
+- **No Silent Fallbacks:** If the target path cannot handle a case, fail explicitly or route through a documented compatibility path; never hide broken migration behavior behind silent fallback logic.
 - identify the flows that may be affected
 - check adjacent logic, shared helpers, selectors, services, mappers, and API contracts
+- If a task risks breaking parity, state the risk explicitly and verify with targeted tests before finishing.
 - verify that unchanged user flows still behave as before
 - pay extra attention to high-risk areas declared in `PROJECT.md`
 

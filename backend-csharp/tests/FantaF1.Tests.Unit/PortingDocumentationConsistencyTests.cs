@@ -52,6 +52,58 @@ public sealed class PortingDocumentationConsistencyTests
     }
 
     [Fact]
+    public void Agents_doc_explicitly_records_the_required_migration_template_principles()
+    {
+        var agents = ReadRepositoryFile("AGENTS.md");
+        var requiredPhrases = new[]
+        {
+            "**Behavior Preservation First:**",
+            "**Incremental Migration:**",
+            "**Strangler Mindset:**",
+            "**Business Logic Isolation:**",
+            "**SOLID Principles:**",
+            "**Dependency Injection by Default:**",
+            "**No Hidden Collaborator Graphs:**",
+            "**Compatibility Layers Must Be Intentional:**",
+            "**Avoid Legacy Leakage:**",
+            "**Delete Dead Paths Promptly:**",
+            "**Static Logic Policy:**",
+            "**Cross-Platform Discipline:**",
+            "**Source Of Truth:**",
+            "**Parity Before Optimization:**",
+            "**Dual-Run Verification:**",
+            "**Data Safety:**",
+            "**Contract Preservation:**",
+            "**Feature Flags For Cutover:**",
+            "**Legacy Decommission Rule:**",
+            "**Observability During Migration:**",
+            "**No Silent Fallbacks:**",
+            "**TDD By Default:**",
+            "**Deterministic Tests Only:**",
+            "**Parity Tests:**",
+            "**Contract Tests:**",
+            "**Mock Narrowly:**",
+            "**Migration Regression Coverage:**",
+            "**Time And Clock Access:**",
+            "**Test Data Management:**",
+            "**Separation Of Concerns:**",
+            "**Abstraction Naming:**",
+            "**Configuration Discipline:**",
+            "**Localization:**",
+            "**Error Handling:**",
+            "**Documentation:**",
+            "Read the affected legacy and target implementations before proposing structural changes.",
+            "Do not collapse migration, refactor, and feature work into one edit unless explicitly requested.",
+            "Prefer edits that improve the seam between old and new systems.",
+            "If a task risks breaking parity, state the risk explicitly and verify with targeted tests before finishing.",
+            "If the repository contains current migration docs, treat them as part of the specification.",
+        };
+
+        Assert.All(requiredPhrases, requiredPhrase =>
+            Assert.Contains(requiredPhrase, agents, StringComparison.Ordinal));
+    }
+
+    [Fact]
     public void Referenced_migration_template_still_exists_in_the_repository()
     {
         Assert.True(File.Exists(GetRepositoryPath("guide-porting-c#", "AGENTS_migration_template.md")));
