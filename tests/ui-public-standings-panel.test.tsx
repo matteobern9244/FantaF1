@@ -20,7 +20,7 @@ describe('public standings panel', () => {
   });
 
   it('renders avatar fallbacks and non-podium positions', () => {
-    render(
+    const { container } = render(
       <PublicStandingsPanel
         constructorStandings={[{ position: 4, team: 'Mercedes', points: 100, color: '#00D2BE', logoUrl: 'https://media.example.com/mercedes-logo.webp' }]}
         driverStandings={[{
@@ -41,6 +41,8 @@ describe('public standings panel', () => {
       'https://media.formula1.com/image/upload/c_lfill,w_256/q_auto/v1740000000/common/f1/2026/mercedes/rusgeo01/2026mercedesrusgeo01right.webp',
     );
     expect(screen.getByAltText('Mercedes logo')).toHaveAttribute('src', 'https://media.example.com/mercedes-logo.webp');
+    expect(container.querySelector('.public-standings-grid.public-standings-grid-compact')).not.toBeNull();
+    expect(container.querySelectorAll('.standings-subpanel.standings-subpanel-compact')).toHaveLength(2);
     expect(screen.getAllByText('P4')).toHaveLength(2);
     expect(screen.getByText(/ultimo aggiornamento/i)).toBeInTheDocument();
   });

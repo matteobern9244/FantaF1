@@ -51,8 +51,8 @@ function PublicStandingsPanel({
       {!hasStandings ? (
         <p className="empty-copy">{publicStandings.emptyLabel}</p>
       ) : (
-        <div className="public-standings-grid">
-          <article className="analytics-subpanel interactive-surface standings-subpanel">
+        <div className="public-standings-grid public-standings-grid-compact">
+          <article className="analytics-subpanel interactive-surface standings-subpanel standings-subpanel-compact">
             <div className="section-title standings-subpanel-title">
               <Flag size={16} />
               <h3>{publicStandings.driversTitle}</h3>
@@ -87,7 +87,7 @@ function PublicStandingsPanel({
             </div>
           </article>
 
-          <article className="analytics-subpanel interactive-surface standings-subpanel">
+          <article className="analytics-subpanel interactive-surface standings-subpanel standings-subpanel-compact">
             <div className="section-title standings-subpanel-title">
               <ShieldCheck size={16} />
               <h3>{publicStandings.constructorsTitle}</h3>

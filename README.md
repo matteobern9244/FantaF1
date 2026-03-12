@@ -28,6 +28,7 @@ Rispetto alla produzione `v1.4.0`, il repository contiene gia' il delta tecnico 
 - fix regressione dropdown mobile: ripristinato l'aspetto nativo delle select su smartphone per garantire il corretto posizionamento dei menu opzioni;
 - fix architetturale mappa circuito: il `Recap ultimo GP` visualizza ora la mappa specifica della gara conclusa recuperandola dal calendario, indipendentemente dalla selezione corrente;
 - affinamento delle classifiche reali pubbliche: `Classifica piloti` usa avatar Formula1 più nitidi con crop orientato al volto, mentre `Classifica scuderia` è stata riallineata con logo ufficiale, nome squadra colorato e rimozione del vecchio marker lineare;
+- ottimizzazione del layout standings pubbliche: il riquadro `Classifica scuderia` resta nella colonna destra su desktop ma non viene più allungato artificialmente, eliminando il grande spazio vuoto interno e mantenendo lo stacking invariato su tablet e mobile;
 - integrazione della CTA `INSTALLA APPLICAZIONE` come ultima voce della lista di navigazione unificata;
 - shortcut contestuale `Torna al menu` raffinata: la freccia flottante ancora ora lo scroll direttamente alla barra di navigazione nell'header;
 - ripristino della track map del circuito anche nella vista pubblica, sia nel recap hero del weekend selezionato sia nel pannello `Recap ultimo GP`;

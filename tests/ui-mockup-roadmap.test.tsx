@@ -435,6 +435,8 @@ describe('Mockup roadmap UI features', () => {
     expect(screen.getByRole('heading', { name: /classifica scuderia/i })).toBeInTheDocument();
     expect(screen.getByAltText('McLaren logo')).toBeInTheDocument();
     expect(document.querySelector('.standings-team-marker')).toBeNull();
+    expect(document.querySelector('.public-standings-grid.public-standings-grid-compact')).not.toBeNull();
+    expect(document.querySelectorAll('.standings-subpanel.standings-subpanel-compact')).toHaveLength(2);
     expect(screen.queryByRole('button', { name: /copia link vista corrente/i })).not.toBeInTheDocument();
     expect(
       screen.getAllByRole('article').some((card) => card.classList.contains('interactive-surface')),

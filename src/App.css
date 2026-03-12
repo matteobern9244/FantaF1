@@ -1472,9 +1472,18 @@ select:disabled {
   gap: 18px;
 }
 
+.public-standings-grid-compact {
+  align-items: start;
+}
+
 .standings-subpanel {
   display: grid;
   gap: 14px;
+}
+
+.standings-subpanel-compact {
+  height: fit-content;
+  align-self: start;
 }
 
 .standings-subpanel-title {
