@@ -48,8 +48,13 @@ describe('app race lock coverage fallbacks', () => {
       ]))),
       readCalendarCache: vi.fn(() => Promise.resolve([{ meetingKey: 'race-1' }])),
       readDriversCache: vi.fn(() => Promise.resolve([])),
+      readStandingsCache: vi.fn(() => Promise.resolve({ driverStandings: [], constructorStandings: [], updatedAt: '' })),
       readPersistedParticipantRoster: vi.fn(() => Promise.resolve(['Player 1', 'Player 2', 'Player 3'])),
       writeAppData: vi.fn(() => Promise.resolve()),
+    }));
+
+    vi.doMock('../backend/standings.js', () => ({
+      syncStandingsFromOfficialSource: vi.fn(() => Promise.resolve({ driverStandings: [], constructorStandings: [], updatedAt: '' })),
     }));
 
     vi.doMock('../backend/validation.js', async () => {

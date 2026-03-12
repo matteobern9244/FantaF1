@@ -595,10 +595,10 @@ Il controllo browser `npm run test:ui-responsive` resta disponibile come verific
 - Runner: Vitest.
 - Coverage provider: V8.
 - Baseline coverage verificata corrente sullo scope ufficiale del repository/applicazione:
-  - `4780 / 4780` statements
-  - `393 / 393` functions
-  - `1999 / 1999` branches
-  - `4780 / 4780` lines
+  - `5136 / 5136` statements
+  - `404 / 404` functions
+  - `2082 / 2082` branches
+  - `5136 / 5136` lines
 - Scope coverage configurato:
   - `app.js`
   - `server.js`

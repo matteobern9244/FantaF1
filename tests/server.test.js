@@ -16,6 +16,12 @@ async function loadServerModule({
   }),
   syncDriversImpl = vi.fn(() => Promise.resolve([{ id: 'ver' }])),
   syncCalendarImpl = vi.fn(() => Promise.resolve([{ meetingKey: 'race-1' }])),
+  syncStandingsImpl = vi.fn(() =>
+    Promise.resolve({
+      driverStandings: [{ position: 1, driverId: 'pia', name: 'Oscar Piastri', team: 'McLaren', points: 99 }],
+      constructorStandings: [{ position: 1, team: 'McLaren', points: 188 }],
+      updatedAt: '2026-03-12T10:00:00.000Z',
+    })),
   ensureAdminCredentialsImpl = vi.fn(() => Promise.resolve()),
   resolveMongoDatabaseNameImpl = vi.fn(() => 'fantaf1_dev'),
   verifyMongoDatabaseNameImpl = vi.fn(),
@@ -59,6 +65,10 @@ async function loadServerModule({
     syncDriversFromOfficialSource: syncDriversImpl,
   }));
 
+  vi.doMock('../backend/standings.js', () => ({
+    syncStandingsFromOfficialSource: syncStandingsImpl,
+  }));
+
   vi.doMock('../backend/auth.js', () => ({
     ensureAdminCredentials: ensureAdminCredentialsImpl,
   }));
@@ -74,6 +84,7 @@ async function loadServerModule({
           errors: {
             driversUnavailable: 'Piloti non disponibili',
             calendarUnavailable: 'Calendario non disponibile',
+            standingsUnavailable: 'Classifiche reali non disponibili.',
           },
         },
       },
@@ -101,6 +112,7 @@ async function loadServerModule({
     logSpy,
     syncCalendarImpl,
     syncDriversImpl,
+    syncStandingsImpl,
     verifyMongoDatabaseNameImpl,
     warnSpy,
   };
@@ -133,19 +145,23 @@ describe('server entrypoint', () => {
     expect(context.listenImpl).toHaveBeenCalledWith('3001', '0.0.0.0', expect.any(Function));
     expect(context.syncDriversImpl).toHaveBeenCalled();
     expect(context.syncCalendarImpl).toHaveBeenCalled();
+    expect(context.syncStandingsImpl).toHaveBeenCalled();
     expect(context.logSpy).toHaveBeenCalledWith(expect.stringContaining('[Database] Connected to MongoDB Atlas'));
     expect(context.logSpy).toHaveBeenCalledWith('[Sync] Drivers synchronized: 1');
     expect(context.logSpy).toHaveBeenCalledWith('[Sync] Calendar synchronized: 1');
+    expect(context.logSpy).toHaveBeenCalledWith('[Sync] Standings synchronized: drivers=1, constructors=1');
   });
 
   it('warns when the background sync returns empty datasets', async () => {
     const context = await loadServerModule({
       syncDriversImpl: vi.fn(() => Promise.resolve([])),
       syncCalendarImpl: vi.fn(() => Promise.resolve([])),
+      syncStandingsImpl: vi.fn(() => Promise.resolve({ driverStandings: [], constructorStandings: [], updatedAt: '' })),
     });
 
     expect(context.warnSpy).toHaveBeenCalledWith('Piloti non disponibili');
     expect(context.warnSpy).toHaveBeenCalledWith('Calendario non disponibile');
+    expect(context.warnSpy).toHaveBeenCalledWith('Classifiche reali non disponibili.');
   });
 
   it('prefers the explicit PORT environment variable when starting the listener', async () => {
@@ -160,10 +176,12 @@ describe('server entrypoint', () => {
     const context = await loadServerModule({
       syncDriversImpl: vi.fn(() => Promise.reject(new Error('driver sync failed'))),
       syncCalendarImpl: vi.fn(() => Promise.reject(new Error('calendar sync failed'))),
+      syncStandingsImpl: vi.fn(() => Promise.reject(new Error('standings sync failed'))),
     });
 
     expect(context.warnSpy).toHaveBeenCalledWith('[Sync] Driver sync warning:', 'driver sync failed');
     expect(context.warnSpy).toHaveBeenCalledWith('[Sync] Calendar sync warning:', 'calendar sync failed');
+    expect(context.warnSpy).toHaveBeenCalledWith('[Sync] Standings sync warning:', 'standings sync failed');
   });
 
   it('exits when MongoDB is not configured', async () => {

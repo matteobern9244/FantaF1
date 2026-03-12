@@ -7,6 +7,29 @@ export interface Driver {
   teamSlug?: string;
 }
 
+export interface DriverStanding {
+  position: number;
+  driverId: string;
+  name: string;
+  team: string;
+  points: number;
+  avatarUrl?: string;
+  color?: string;
+}
+
+export interface ConstructorStanding {
+  position: number;
+  team: string;
+  points: number;
+  color?: string;
+}
+
+export interface StandingsPayload {
+  driverStandings: DriverStanding[];
+  constructorStandings: ConstructorStanding[];
+  updatedAt: string;
+}
+
 export type PredictionKey = 'first' | 'second' | 'third' | 'pole';
 
 export interface Prediction {

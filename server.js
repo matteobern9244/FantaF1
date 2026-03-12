@@ -11,6 +11,7 @@ import {
   verifyMongoDatabaseName,
 } from './backend/database.js';
 import { syncDriversFromOfficialSource } from './backend/drivers.js';
+import { syncStandingsFromOfficialSource } from './backend/standings.js';
 import { ensureAdminCredentials } from './backend/auth.js';
 import { backendText, formatBackendText } from './backend/text.js';
 import {
@@ -41,6 +42,7 @@ const databaseConnectionService = new DatabaseConnectionService({
 const backgroundSyncService = new BackgroundSyncService({
   syncDriversFromOfficialSource,
   syncCalendarFromOfficialSource,
+  syncStandingsFromOfficialSource,
   backendText,
   formatBackendText,
   appConfig,

@@ -37,17 +37,32 @@ describe('server bootstrap services', () => {
     const backgroundSyncService = new BackgroundSyncService({
       syncDriversFromOfficialSource: vi.fn().mockResolvedValue([]),
       syncCalendarFromOfficialSource: vi.fn().mockResolvedValue([{ meetingKey: 'race-1' }]),
+      syncStandingsFromOfficialSource: vi
+        .fn()
+        .mockResolvedValue({ driverStandings: [], constructorStandings: [], updatedAt: '' }),
       backendText: {
         sync: {
           startBackground: 'bg',
           driversSynchronizedTemplate: 'drivers',
           calendarSynchronizedTemplate: 'calendar',
+          standingsSynchronizedTemplate: 'standings',
           driverSyncWarning: 'driver warning',
           calendarSyncWarning: 'calendar warning',
+          standingsSyncWarning: 'standings warning',
         },
       },
       formatBackendText: vi.fn((template) => template),
-      appConfig: { uiText: { backend: { errors: { driversUnavailable: 'drivers unavailable', calendarUnavailable: 'calendar unavailable' } } } },
+      appConfig: {
+        uiText: {
+          backend: {
+            errors: {
+              driversUnavailable: 'drivers unavailable',
+              calendarUnavailable: 'calendar unavailable',
+              standingsUnavailable: 'standings unavailable',
+            },
+          },
+        },
+      },
     });
     const bootstrap = new ServerBootstrapService({
       databaseConnectionService: { connectToDatabase: vi.fn().mockResolvedValue(undefined) },
@@ -61,8 +76,10 @@ describe('server bootstrap services', () => {
     });
 
     await bootstrap.start({ mongoUri: 'mongodb://localhost:27017/fantaf1', nodeEnv: 'development' });
+    await backgroundSyncService.run();
 
     expect(warnSpy).toHaveBeenCalledWith('drivers unavailable');
+    expect(warnSpy).toHaveBeenCalledWith('standings unavailable');
     expect(logSpy).toHaveBeenCalledWith('server');
     logSpy.mockRestore();
     warnSpy.mockRestore();

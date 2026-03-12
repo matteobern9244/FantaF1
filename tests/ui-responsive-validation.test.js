@@ -179,7 +179,7 @@ describe('responsive UI app shell gating', () => {
       },
       navigation: {
         present: true,
-        itemCount: 7,
+        itemCount: 8,
         activeText: 'Calendario stagione',
       },
       installCta: {

@@ -18,6 +18,7 @@ const defaultBackendText = {
     readAppDataFailed: 'Failed to read app data',
     readDriversFailed: 'Failed to read drivers',
     readCalendarFailed: 'Failed to read calendar',
+    readStandingsFailed: 'Failed to read standings',
     fetchResultsFailed: 'Failed to fetch results',
     apiNotFound: 'API Endpoint not found',
   },
@@ -51,13 +52,17 @@ const defaultBackendText = {
     writeDriversError: 'Error writing drivers to DB:',
     readCalendarError: 'Error reading calendar from DB:',
     writeCalendarError: 'Error writing calendar to DB:',
+    readStandingsError: 'Error reading standings from DB:',
+    writeStandingsError: 'Error writing standings to DB:',
   },
   sync: {
     startBackground: '[Sync] Starting background synchronization...',
     driversSynchronizedTemplate: '[Sync] Drivers synchronized: {count}',
     calendarSynchronizedTemplate: '[Sync] Calendar synchronized: {count}',
+    standingsSynchronizedTemplate: '[Sync] Standings synchronized: drivers={driversCount}, constructors={constructorsCount}',
     driverSyncWarning: '[Sync] Driver sync warning:',
     calendarSyncWarning: '[Sync] Calendar sync warning:',
+    standingsSyncWarning: '[Sync] Standings sync warning:',
   },
   logs: {
     serverStarted: 'Backend server attivo su {origin}.',
@@ -66,6 +71,7 @@ const defaultBackendText = {
   errors: {
     driversUnavailable: 'Lista piloti non disponibile.',
     calendarUnavailable: 'Calendario non disponibile.',
+    standingsUnavailable: 'Classifiche reali non disponibili.',
   },
   messages: {
     saveSuccess: 'Dati salvati correttamente.',

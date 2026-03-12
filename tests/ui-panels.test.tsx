@@ -2,15 +2,15 @@
  * @vitest-environment jsdom
  */
 import { fireEvent, render, screen } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import HistoryArchivePanel from '../src/components/HistoryArchivePanel';
+import PublicGuidePanel from '../src/components/PublicGuidePanel';
 import SeasonAnalysisPanel from '../src/components/SeasonAnalysisPanel';
 import { appText } from '../src/uiText';
 import { createEmptyPrediction } from '../src/utils/game';
 
 describe('isolated UI panels', () => {
   it('renders season analysis fallbacks when recap data is partial or missing', () => {
-    const onShare = vi.fn();
     const predictionLabels = {
       first: 'Primo',
       second: 'Secondo',
@@ -21,7 +21,6 @@ describe('isolated UI panels', () => {
       <SeasonAnalysisPanel
         analyticsEmptyLabel="Nessun dato analytics"
         emptyOptionLabel="N/D"
-        onShare={onShare}
         predictionLabels={predictionLabels}
         seasonAnalytics={{
           leaderName: 'Marco',
@@ -57,14 +56,12 @@ describe('isolated UI panels', () => {
       'https://media.example.com/australia-track.webp',
     );
 
-    fireEvent.click(screen.getByRole('button', { name: appText.panels.seasonAnalysis.shareButton }));
-    expect(onShare).toHaveBeenCalledTimes(1);
+    expect(screen.queryByRole('button', { name: /copia link vista corrente/i })).not.toBeInTheDocument();
 
     rerender(
       <SeasonAnalysisPanel
         analyticsEmptyLabel="Nessun dato analytics"
         emptyOptionLabel="N/D"
-        onShare={onShare}
         predictionLabels={predictionLabels}
         seasonAnalytics={{
           leaderName: '',
@@ -89,7 +86,6 @@ describe('isolated UI panels', () => {
       <SeasonAnalysisPanel
         analyticsEmptyLabel="Nessun dato analytics"
         emptyOptionLabel="N/D"
-        onShare={onShare}
         predictionLabels={predictionLabels}
         seasonAnalytics={{
           leaderName: '',
@@ -145,7 +141,11 @@ describe('isolated UI panels', () => {
         third: 'Terzo',
         pole: 'Pole',
       },
-      renderHistoryResults: () => 'Recap risultati',
+      resolveHistoryPodium: () => ([
+        { position: 1 as const, driverName: '', avatarUrl: '' },
+        { position: 2 as const, driverName: 'Lando Norris', avatarUrl: 'https://media.example.com/norris.webp' },
+        { position: 3 as const, driverName: 'Max Verstappen', avatarUrl: '' },
+      ]),
       unknownDriverLabel: 'Pilota sconosciuto',
       userDisplayNameForWinner: () => '',
       users: [{ name: 'Marco', predictions: createEmptyPrediction(), points: 0 }],
@@ -158,7 +158,9 @@ describe('isolated UI panels', () => {
       />,
     );
 
-    expect(screen.getByText('Pilota sconosciuto')).toBeInTheDocument();
+    expect(screen.getAllByText('Pilota sconosciuto')).toHaveLength(2);
+    expect(screen.getByText(appText.panels.historyArchive.actualPodiumTitle)).toBeInTheDocument();
+    expect(screen.getByAltText('Lando Norris')).toBeInTheDocument();
     expect(
       screen.getByRole('heading', { name: appText.panels.historyArchive.title }),
     ).toBeInTheDocument();
@@ -195,5 +197,14 @@ describe('isolated UI panels', () => {
     expect(onDeleteHistoryRace).toHaveBeenCalledWith(0);
     expect(onHistoryUserFilterChange).toHaveBeenCalledWith('Marco');
     expect(onHistorySearchChange).toHaveBeenCalledWith('Australia');
+  });
+
+  it('renders the public guide with the new race strip points layout', () => {
+    render(<PublicGuidePanel />);
+
+    expect(screen.getByRole('heading', { name: appText.panels.publicGuide.title })).toBeInTheDocument();
+    expect(screen.getByLabelText(appText.panels.publicGuide.pointsLabel)).toBeInTheDocument();
+    expect(screen.getByText(/\+5 pt/i)).toBeInTheDocument();
+    expect(screen.getByText(/\+1 pt/i)).toBeInTheDocument();
   });
 });

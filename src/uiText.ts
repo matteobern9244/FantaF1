@@ -1,4 +1,5 @@
 import { appConfig } from './constants';
+import type { DriverStanding, ConstructorStanding } from './types';
 
 function formatUiText(template: string, replacements: Record<string, string | number>) {
   return Object.entries(replacements).reduce((value, [key, replacement]) => {
@@ -30,13 +31,13 @@ const appText = {
     publicGuide: {
       title: uiText.panels.publicGuide.title,
       pointsLabel: uiText.panels.publicGuide.pointsLabel,
-      pointsSummary: formatUiText(uiText.panels.publicGuide.pointsSummaryTemplate, {
-        first: points.first,
-        second: points.second,
-        third: points.third,
-        pole: points.pole,
-        pointsSuffix: uiText.pointsSuffix,
-      }),
+      pointsSuffix: uiText.pointsSuffix,
+      pointsStrip: [
+        { field: 'first', label: uiText.panels.publicGuide.pointsStripLabels.first, points: points.first },
+        { field: 'second', label: uiText.panels.publicGuide.pointsStripLabels.second, points: points.second },
+        { field: 'third', label: uiText.panels.publicGuide.pointsStripLabels.third, points: points.third },
+        { field: 'pole', label: uiText.panels.publicGuide.pointsStripLabels.pole, points: points.pole },
+      ],
       raceLockLabel: uiText.panels.publicGuide.raceLockLabel,
       raceLockValue: uiText.panels.publicGuide.raceLockValue,
       liveViewLabel: uiText.panels.publicGuide.liveViewLabel,
@@ -64,7 +65,6 @@ const appText = {
     },
     seasonAnalysis: {
       title: uiText.panels.seasonAnalysis.title,
-      shareButton: uiText.panels.seasonAnalysis.shareButton,
       leaderGap: (gap: number) =>
         formatUiText(uiText.panels.seasonAnalysis.leaderGapTemplate, { gap }),
       hitRate: (hitRate: number) =>
@@ -80,6 +80,7 @@ const appText = {
     },
     historyArchive: {
       title: uiText.panels.historyArchive.title,
+      actualPodiumTitle: uiText.panels.historyArchive.actualPodiumTitle,
       userFilterLabel: uiText.panels.historyArchive.userFilterLabel,
       allUsersOption: uiText.panels.historyArchive.allUsersOption,
       searchLabel: uiText.panels.historyArchive.searchLabel,
@@ -90,6 +91,17 @@ const appText = {
       detailButton: (gpName: string) =>
         formatUiText(uiText.panels.historyArchive.detailButtonTemplate, { gpName }),
       detailTitle: uiText.panels.historyArchive.detailTitle,
+    },
+    publicStandings: {
+      title: uiText.panels.publicStandings.title,
+      driversTitle: uiText.panels.publicStandings.driversTitle,
+      constructorsTitle: uiText.panels.publicStandings.constructorsTitle,
+      updatedAtLabel: uiText.panels.publicStandings.updatedAtLabel,
+      pointsLabel: (points: number) =>
+        `${points} ${uiText.panels.publicStandings.pointsSuffix}`,
+      emptyLabel: uiText.panels.publicStandings.emptyLabel,
+      driverPositionLabel: (entry: DriverStanding) => `P${entry.position}`,
+      constructorPositionLabel: (entry: ConstructorStanding) => `P${entry.position}`,
     },
   },
 };
