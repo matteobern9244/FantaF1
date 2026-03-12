@@ -72,9 +72,27 @@ describe('standings parsing and sync', () => {
 
   it('parses constructor standings and normalizes team aliases', () => {
     expect(parseConstructorStandings(constructorsFixture)).toEqual([
-      { position: 1, team: 'McLaren', points: 188, color: '#FF8700' },
-      { position: 2, team: 'Ferrari', points: 144, color: '#EF1A2D' },
-      { position: 3, team: 'Red Bull', points: 121, color: '#0600EF' },
+      {
+        position: 1,
+        team: 'McLaren',
+        points: 188,
+        color: '#FF8700',
+        logoUrl: 'https://media.formula1.com/image/upload/c_fit,h_64/q_auto/v1740000000/common/f1/2025/mclaren/2025mclarenlogowhite.webp',
+      },
+      {
+        position: 2,
+        team: 'Ferrari',
+        points: 144,
+        color: '#EF1A2D',
+        logoUrl: 'https://media.formula1.com/image/upload/c_fit,h_64/q_auto/v1740000000/common/f1/2025/ferrari/2025ferrarilogolight.webp',
+      },
+      {
+        position: 3,
+        team: 'Red Bull',
+        points: 121,
+        color: '#0600EF',
+        logoUrl: 'https://media.formula1.com/image/upload/c_fit,h_64/q_auto/v1740000000/common/f1/2025/redbullracing/2025redbullracinglogowhite.webp',
+      },
     ]);
   });
 
@@ -117,6 +135,7 @@ describe('standings parsing and sync', () => {
         team: "Legacy 'Works'",
         points: 9,
         color: appConfig.teamColors.default,
+        logoUrl: '',
       },
     ]);
   });

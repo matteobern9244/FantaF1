@@ -22,6 +22,7 @@ export interface ConstructorStanding {
   team: string;
   points: number;
   color?: string;
+  logoUrl?: string;
 }
 
 export interface StandingsPayload {

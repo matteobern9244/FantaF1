@@ -28,6 +28,10 @@ function normalizeTeamName(team = '') {
   return appConfig.teamAliases[normalizedTeam] ?? normalizedTeam;
 }
 
+function getTeamLogoUrl(team = '') {
+  return appConfig.teamAssets?.[team]?.logoUrl ?? '';
+}
+
 function parseStandingsRows(rawContent) {
   const rowPattern = /<tr\b[\s\S]*?<\/tr>/gi;
   const rows = [];
@@ -88,6 +92,7 @@ function parseConstructorStandings(rawContent) {
       team,
       points: row.points,
       color: appConfig.teamColors[team] ?? appConfig.teamColors.default,
+      logoUrl: getTeamLogoUrl(team),
     };
   });
 }
@@ -156,6 +161,7 @@ async function syncStandingsFromOfficialSource() {
 
 export {
   StandingsService,
+  getTeamLogoUrl,
   normalizeDriverName,
   normalizeTeamName,
   parseConstructorStandings,

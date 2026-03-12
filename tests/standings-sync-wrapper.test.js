@@ -42,6 +42,7 @@ describe('standings sync wrapper', () => {
         team: 'McLaren',
         points: 188,
         color: '#FF8700',
+        logoUrl: 'https://media.formula1.com/image/upload/c_fit,h_64/q_auto/v1740000000/common/f1/2025/mclaren/2025mclarenlogowhite.webp',
       }],
       updatedAt: expect.any(String),
     });

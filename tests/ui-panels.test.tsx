@@ -143,7 +143,12 @@ describe('isolated UI panels', () => {
       },
       resolveHistoryPodium: () => ([
         { position: 1 as const, driverName: '', avatarUrl: '' },
-        { position: 2 as const, driverName: 'Lando Norris', avatarUrl: 'https://media.example.com/norris.webp' },
+        {
+          position: 2 as const,
+          driverName: 'Lando Norris',
+          avatarUrl:
+            'https://media.formula1.com/image/upload/c_lfill,w_64/q_auto/v1740000000/common/f1/2026/mclaren/norlan01/2026mclarennorlan01right.webp',
+        },
         { position: 3 as const, driverName: 'Max Verstappen', avatarUrl: '' },
       ]),
       unknownDriverLabel: 'Pilota sconosciuto',
@@ -168,7 +173,10 @@ describe('isolated UI panels', () => {
     expect(podiumSlots).toHaveLength(3);
     expect(screen.getAllByText('Pilota sconosciuto')).toHaveLength(2);
     expect(screen.getByText(appText.panels.historyArchive.actualPodiumTitle)).toBeInTheDocument();
-    expect(screen.getByAltText('Lando Norris')).toBeInTheDocument();
+    expect(screen.getByAltText('Lando Norris')).toHaveAttribute(
+      'src',
+      'https://media.formula1.com/image/upload/c_lfill,w_256/q_auto/v1740000000/common/f1/2026/mclaren/norlan01/2026mclarennorlan01right.webp',
+    );
     expect(
       screen.getByRole('heading', { name: appText.panels.historyArchive.title }),
     ).toBeInTheDocument();

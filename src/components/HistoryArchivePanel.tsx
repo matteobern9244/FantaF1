@@ -2,6 +2,7 @@ import type { CSSProperties } from 'react';
 import { ChevronDown, Trophy } from 'lucide-react';
 import type { AppData, PredictionKey, UserData } from '../types';
 import { appText } from '../uiText';
+import { getDriverPortraitUrl } from '../utils/driverAvatar';
 
 interface HistoryArchivePanelProps {
   editingSession: {
@@ -154,7 +155,7 @@ function HistoryArchivePanel({
                             <img
                               alt={entry.driverName}
                               className="history-podium-avatar"
-                              src={entry.avatarUrl}
+                              src={getDriverPortraitUrl(entry.avatarUrl)}
                             />
                           ) : (
                             <span

@@ -2,6 +2,7 @@ import type { CSSProperties } from 'react';
 import { Flag, ShieldCheck } from 'lucide-react';
 import type { ConstructorStanding, DriverStanding } from '../types';
 import { appText } from '../uiText';
+import { getDriverPortraitUrl } from '../utils/driverAvatar';
 
 interface PublicStandingsPanelProps {
   constructorStandings: ConstructorStanding[];
@@ -68,7 +69,7 @@ function PublicStandingsPanel({
                       <img
                         alt={entry.name}
                         className="standings-avatar"
-                        src={entry.avatarUrl}
+                        src={getDriverPortraitUrl(entry.avatarUrl)}
                       />
                     ) : (
                       <span className="standings-avatar standings-avatar-fallback" aria-hidden="true">
@@ -99,8 +100,19 @@ function PublicStandingsPanel({
                 >
                   <span className="standings-position">{publicStandings.constructorPositionLabel(entry)}</span>
                   <div className="standings-constructor-copy">
-                    <strong>{entry.team}</strong>
-                    <span className="standings-team-marker" style={{ '--team-color': entry.color ?? '' } as CSSProperties} />
+                    {entry.logoUrl ? (
+                      <img
+                        alt={`${entry.team} logo`}
+                        className="standings-team-logo"
+                        src={entry.logoUrl}
+                      />
+                    ) : null}
+                    <strong
+                      className="standings-constructor-name"
+                      style={{ '--team-color': entry.color ?? '' } as CSSProperties}
+                    >
+                      {entry.team}
+                    </strong>
                   </div>
                   <strong className="standings-points">{publicStandings.pointsLabel(entry.points)}</strong>
                 </article>

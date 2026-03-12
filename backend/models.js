@@ -89,6 +89,7 @@ const ConstructorStandingSchema = new mongoose.Schema({
   team: { type: String, required: true },
   points: { type: Number, required: true },
   color: { type: String, default: '' },
+  logoUrl: { type: String, default: '' },
 }, { _id: false });
 
 const StandingsCacheSchema = new mongoose.Schema({

@@ -147,9 +147,9 @@ function createStandings() {
       { position: 3, driverId: 'lec', name: 'Charles Leclerc', team: 'Ferrari', points: 71, avatarUrl: 'https://media.example.com/lec.webp', color: '#ff0000' },
     ],
     constructorStandings: [
-      { position: 1, team: 'McLaren', points: 188, color: '#ff8000' },
-      { position: 2, team: 'Ferrari', points: 144, color: '#ff0000' },
-      { position: 3, team: 'Red Bull', points: 121, color: '#0000ff' },
+      { position: 1, team: 'McLaren', points: 188, color: '#ff8000', logoUrl: 'https://media.example.com/mclaren-logo.webp' },
+      { position: 2, team: 'Ferrari', points: 144, color: '#ff0000', logoUrl: 'https://media.example.com/ferrari-logo.webp' },
+      { position: 3, team: 'Red Bull', points: 121, color: '#0000ff', logoUrl: 'https://media.example.com/red-bull-logo.webp' },
     ],
     updatedAt: '2026-03-12T10:00:00.000Z',
   };
@@ -433,6 +433,8 @@ describe('Mockup roadmap UI features', () => {
     expect(screen.getByRole('heading', { name: /come funziona/i })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /classifica piloti/i })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /classifica scuderia/i })).toBeInTheDocument();
+    expect(screen.getByAltText('McLaren logo')).toBeInTheDocument();
+    expect(document.querySelector('.standings-team-marker')).toBeNull();
     expect(screen.queryByRole('button', { name: /copia link vista corrente/i })).not.toBeInTheDocument();
     expect(
       screen.getAllByRole('article').some((card) => card.classList.contains('interactive-surface')),

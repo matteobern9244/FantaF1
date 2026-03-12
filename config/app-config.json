@@ -174,6 +174,41 @@
     "Cadillac": "#C5A66A",
     "default": "#5F6673"
   },
+  "teamAssets": {
+    "McLaren": {
+      "logoUrl": "https://media.formula1.com/image/upload/c_fit,h_64/q_auto/v1740000000/common/f1/2025/mclaren/2025mclarenlogowhite.webp"
+    },
+    "Mercedes": {
+      "logoUrl": "https://media.formula1.com/image/upload/c_fit,h_64/q_auto/v1740000000/common/f1/2025/mercedes/2025mercedeslogowhite.webp"
+    },
+    "Red Bull": {
+      "logoUrl": "https://media.formula1.com/image/upload/c_fit,h_64/q_auto/v1740000000/common/f1/2025/redbullracing/2025redbullracinglogowhite.webp"
+    },
+    "Ferrari": {
+      "logoUrl": "https://media.formula1.com/image/upload/c_fit,h_64/q_auto/v1740000000/common/f1/2025/ferrari/2025ferrarilogolight.webp"
+    },
+    "Williams": {
+      "logoUrl": "https://media.formula1.com/image/upload/c_fit,h_64/q_auto/v1740000000/common/f1/2025/williams/2025williamslogowhite.webp"
+    },
+    "Racing Bulls": {
+      "logoUrl": "https://media.formula1.com/image/upload/c_fit,h_64/q_auto/v1740000000/common/f1/2025/racingbulls/2025racingbullslogowhite.webp"
+    },
+    "Aston Martin": {
+      "logoUrl": "https://media.formula1.com/image/upload/c_fit,h_64/q_auto/v1740000000/common/f1/2025/astonmartin/2025astonmartinlogowhite.webp"
+    },
+    "Haas": {
+      "logoUrl": "https://media.formula1.com/image/upload/c_fit,h_64/q_auto/v1740000000/common/f1/2025/haas/2025haaslogowhite.webp"
+    },
+    "Audi": {
+      "logoUrl": "https://media.formula1.com/image/upload/c_fit,h_64/q_auto/v1740000000/common/f1/2026/audi/2026audilogowhite.webp"
+    },
+    "Alpine": {
+      "logoUrl": "https://media.formula1.com/image/upload/c_fit,h_64/q_auto/v1740000000/common/f1/2025/alpine/2025alpinelogowhite.webp"
+    },
+    "Cadillac": {
+      "logoUrl": "https://media.formula1.com/image/upload/c_fit,h_64/q_auto/v1740000000/common/f1/2026/cadillac/2026cadillaclogowhite.webp"
+    }
+  },
   "uiText": {
     "loading": "Caricamento dati Fanta Formula 1...",
     "loadError": "Impossibile caricare i dati necessari. Verifica che il backend sia attivo.",
