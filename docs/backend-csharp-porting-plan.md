@@ -42,6 +42,24 @@ It includes:
 
 This document remains the canonical source of truth. The files below are execution-oriented subphases written in Italian, and commands such as `fai Subphase N` map one-to-one to the corresponding numbered document.
 
+### Current execution ledger
+
+The ledger below is the canonical persistent checkpoint for the temporal execution state of the porting program. Whenever a subphase is formally closed, this ledger must be updated in the same task. This canonical ledger overrides temporary notes or ad-hoc reminders written elsewhere.
+
+| Subphase | Status | Last known outcome | Next action |
+| --- | --- | --- | --- |
+| `Subphase 1` | `completed` | Baseline, safety rails, requirement ownership, branch isolation, and shared TDD/parity rules recorded in the canonical plan. | Keep enforced by every later subphase. |
+| `Subphase 2` | `current` | C# solution/bootstrap milestone verified and flaky UI coverage blocker stabilized, with `npm run test:coverage` returned to green before moving on. | Start `Subphase 3`. |
+| `Subphase 3` | `pending` | Not started yet in the canonical ledger. | Execute after the `Subphase 2` checkpoint is superseded. |
+| `Subphase 4` | `pending` | Not started yet in the canonical ledger. | Wait for `Subphase 3` completion. |
+| `Subphase 5` | `pending` | Not started yet in the canonical ledger. | Wait for `Subphase 4` completion. |
+| `Subphase 6` | `pending` | Not started yet in the canonical ledger. | Wait for `Subphase 5` completion. |
+| `Subphase 7` | `pending` | Not started yet in the canonical ledger. | Wait for `Subphase 6` completion. |
+| `Subphase 8` | `pending` | Not started yet in the canonical ledger. | Wait for `Subphase 7` completion. |
+| `Subphase 9` | `pending` | Not started yet in the canonical ledger. | Wait for `Subphase 8` completion. |
+| `Subphase 10` | `pending` | Not started yet in the canonical ledger. | Wait for `Subphase 9` completion. |
+| `Subphase 11` | `pending` | Not started yet in the canonical ledger. | Wait for `Subphase 10` completion. |
+
 | Subphase | Document | Objective | Canonical anchors | Prerequisites |
 | --- | --- | --- | --- | --- |
 | `Subphase 1` | [`docs/backend-csharp-porting-subphases/subphase-01-foundation-and-safety-rails.md`](backend-csharp-porting-subphases/subphase-01-foundation-and-safety-rails.md) | Freeze the baseline, safety rails, contract inventory, environment/database matrix, branch isolation, and shared TDD/parity rules. | Sections 1, 2, 4, 5.2, 5.3, 6, backlog items 1 and 6 | canonical plan and `AGENTS.md` aligned |
