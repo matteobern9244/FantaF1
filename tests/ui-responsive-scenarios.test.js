@@ -23,7 +23,7 @@ describe('responsive UI scenarios', () => {
         .mockReturnValueOnce([])
         .mockReturnValueOnce([]),
       switchViewMode: vi.fn((mode) => calls.push(`view:${mode}`)),
-      scrollAwayFromHeader: vi.fn(() => calls.push('back-to-top')),
+      scrollAwayFromHeader: vi.fn(() => calls.push('sticky-navigation')),
       switchWeekend: vi.fn(() => calls.push('weekend')),
       selectSprintWeekend: vi.fn(() => calls.push('sprint')),
       openTooltipIfPresent: vi.fn().mockReturnValue(true),
@@ -37,7 +37,7 @@ describe('responsive UI scenarios', () => {
       'default',
       'public-view',
       'admin-return',
-      'back-to-top',
+      'sticky-navigation',
       'weekend-switch',
       'sprint-tooltip',
     ]);
@@ -47,14 +47,14 @@ describe('responsive UI scenarios', () => {
       results.push(await scenario.run(shared));
     }
 
-    expect(calls).toEqual(['view:public', 'view:admin', 'back-to-top', 'weekend', 'sprint']);
+    expect(calls).toEqual(['view:public', 'view:admin', 'sticky-navigation', 'weekend', 'sprint']);
     expect(shared.validateState).toHaveBeenCalledTimes(6);
     expect(results[1]).toEqual(expect.objectContaining({
       key: 'public-view',
       failures: ['public fail'],
       screenshotPath: '/tmp/failure.png',
     }));
-    expect(results[3]).toEqual(expect.objectContaining({ key: 'back-to-top', skipped: false }));
+    expect(results[3]).toEqual(expect.objectContaining({ key: 'sticky-navigation', skipped: false }));
     expect(results[4]).toEqual(expect.objectContaining({ key: 'weekend-switch', skipped: false }));
     expect(results[5]).toEqual(expect.objectContaining({ key: 'sprint-tooltip', skipped: false }));
   });
@@ -76,11 +76,11 @@ describe('responsive UI scenarios', () => {
     };
 
     const scenarios = buildResponsiveScenarios({ initialState: { selectedWeekend: { cardText: 'A', bannerTitle: 'A' } } });
-    const backToTopResult = await scenarios[3].run(shared);
+    const stickyNavigationResult = await scenarios[3].run(shared);
     const weekendResult = await scenarios[4].run(shared);
     const sprintResult = await scenarios[5].run(shared);
 
-    expect(backToTopResult).toEqual(expect.objectContaining({ key: 'back-to-top', skipped: false }));
+    expect(stickyNavigationResult).toEqual(expect.objectContaining({ key: 'sticky-navigation', skipped: false }));
     expect(weekendResult).toEqual(expect.objectContaining({ key: 'weekend-switch', skipped: true }));
     expect(sprintResult).toEqual(expect.objectContaining({ key: 'sprint-tooltip', skipped: true }));
     expect(shared.scrollAwayFromHeader).toHaveBeenCalledTimes(1);

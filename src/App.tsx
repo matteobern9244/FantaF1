@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import {
+  ArrowUp,
   CalendarDays,
   Flag,
   ListChecks,
-  Menu,
   ShieldCheck,
   Save,
   Trash2,
@@ -18,8 +18,6 @@ import {
   LockKeyhole,
   Download,
   LogOut,
-  ArrowUp,
-  X,
 } from 'lucide-react';
 import './App.css';
 import {
@@ -134,7 +132,7 @@ type NavigatorWithStandalone = Navigator & {
   standalone?: boolean;
 };
 
-type InstallCtaMode = 'hidden' | 'native' | 'ios';
+type InstallCtaMode = 'native' | 'ios' | 'installed' | 'unavailable';
 
 type ToastTone = 'info' | 'success';
 
@@ -165,27 +163,25 @@ function isIosSafariInstallableBrowser() {
 function resolveInstallCtaMode({
   isAppInstalled,
   hasInstallPrompt,
-  isMobileViewport,
   isIosSafari,
 }: {
   isAppInstalled: boolean;
   hasInstallPrompt: boolean;
-  isMobileViewport: boolean;
   isIosSafari: boolean;
 }): InstallCtaMode {
   if (isAppInstalled) {
-    return 'hidden';
+    return 'installed';
   }
 
   if (hasInstallPrompt) {
     return 'native';
   }
 
-  if (isMobileViewport && isIosSafari) {
+  if (isIosSafari) {
     return 'ios';
   }
 
-  return 'hidden';
+  return 'unavailable';
 }
 
 /* v8 ignore next -- static SVG exercised by integration and browser smoke tests */
@@ -254,7 +250,6 @@ function App() {
   const [isMobileViewport, setIsMobileViewport] = useState(() => window.matchMedia('(max-width: 767px)').matches);
   const [showInstallInstructions, setShowInstallInstructions] = useState(false);
   const [showAdminLogin, setShowAdminLogin] = useState(false);
-  const [isSectionDrawerOpen, setIsSectionDrawerOpen] = useState(false);
   const [adminPassword, setAdminPassword] = useState('');
   const [adminLoginError, setAdminLoginError] = useState('');
   const [historySearch, setHistorySearch] = useState('');
@@ -263,14 +258,10 @@ function App() {
   const [selectedRacePhase, setSelectedRacePhase] = useState<RacePhase>('open');
   const [selectedRaceHighlightsVideoUrl, setSelectedRaceHighlightsVideoUrl] = useState('');
   const [activeSectionId, setActiveSectionId] = useState('');
-  const [isBackToTopVisible, setIsBackToTopVisible] = useState(false);
-  const [isBackToTopTooltipVisible, setIsBackToTopTooltipVisible] = useState(false);
+  const [showBackToTop, setShowBackToTop] = useState(false);
   const selectedMeetingKeyRef = useRef(selectedMeetingKey);
   const toastTimeoutRef = useRef<number | null>(null);
   const initialHashHandledRef = useRef(false);
-  const sectionDrawerRef = useRef<HTMLDivElement | null>(null);
-  const sectionDrawerTriggerRef = useRef<HTMLButtonElement | null>(null);
-  const sectionNavigationBoundaryRef = useRef<HTMLDivElement | null>(null);
 
   // Derived state (declared before effects to avoid TS errors)
   const sortedDrivers = sortDriversBySurname(drivers, driversSource.sortLocale);
@@ -313,7 +304,6 @@ function App() {
   const installCtaMode = resolveInstallCtaMode({
     isAppInstalled,
     hasInstallPrompt: Boolean(installPromptEvent),
-    isMobileViewport,
     isIosSafari: isIosSafariInstallableBrowser(),
   });
   const weekendStartTime = getRaceStartTime(selectedRace);
@@ -382,14 +372,6 @@ function App() {
     }, 3200);
   }
 
-  function closeSectionDrawer({ restoreFocus = false } = {}) {
-    setIsSectionDrawerOpen(false);
-
-    if (restoreFocus) {
-      sectionDrawerTriggerRef.current?.focus();
-    }
-  }
-
   function navigateToSection(sectionId: string) {
     const targetElement = document.getElementById(sectionId);
     if (!targetElement) {
@@ -399,16 +381,6 @@ function App() {
     window.history.replaceState({}, '', buildHashUrl(sectionId));
     targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
     setActiveSectionId(sectionId);
-    closeSectionDrawer();
-  }
-
-  function scrollBackToTop() {
-    closeSectionDrawer();
-    if (firstSectionId) {
-      window.history.replaceState({}, '', buildHashUrl(firstSectionId));
-      setActiveSectionId(firstSectionId);
-    }
-    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   useEffect(() => {
@@ -472,14 +444,39 @@ function App() {
   }, []);
 
   useEffect(() => {
-    setIsSectionDrawerOpen(false);
+    // viewMode effect placeholder
   }, [viewMode]);
 
   useEffect(() => {
-    if (!isMobileViewport) {
-      setIsSectionDrawerOpen(false);
-    }
+    // isMobileViewport effect placeholder
   }, [isMobileViewport]);
+
+  useEffect(() => {
+    const heroPanel = document.querySelector('header.hero-panel');
+
+    if (typeof window.IntersectionObserver === 'function' && heroPanel) {
+      const observer = new window.IntersectionObserver(
+        ([entry]) => {
+          setShowBackToTop(!entry.isIntersecting);
+        },
+        { threshold: 0 }
+      );
+
+      observer.observe(heroPanel);
+
+      return () => {
+        observer.disconnect();
+      };
+    } else {
+      // Fallback
+      function handleScroll() {
+        setShowBackToTop(window.scrollY > 400);
+      }
+
+      window.addEventListener('scroll', handleScroll);
+      return () => window.removeEventListener('scroll', handleScroll);
+    }
+  }, []);
 
   useEffect(() => {
     let isCancelled = false;
@@ -655,77 +652,6 @@ function App() {
       sectionObserver.disconnect();
     };
   }, [firstSectionId, loading, sectionNavigationItems]);
-
-  useEffect(() => {
-    if (!isSectionDrawerOpen) {
-      return;
-    }
-
-    const previousBodyOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-
-    const drawerElement = sectionDrawerRef.current;
-    const focusableElements = drawerElement
-      ? Array.from(drawerElement.querySelectorAll<HTMLButtonElement>('button:not(:disabled)'))
-      : [];
-    const firstFocusableElement = focusableElements[0];
-    const lastFocusableElement = focusableElements[focusableElements.length - 1];
-    firstFocusableElement?.focus();
-
-    function handleDrawerKeydown(event: KeyboardEvent) {
-      if (event.key === 'Escape') {
-        event.preventDefault();
-        closeSectionDrawer({ restoreFocus: true });
-        return;
-      }
-
-      if (event.key !== 'Tab' || focusableElements.length === 0) {
-        return;
-      }
-
-      if (event.shiftKey && document.activeElement === firstFocusableElement) {
-        event.preventDefault();
-        lastFocusableElement?.focus();
-        return;
-      }
-
-      if (!event.shiftKey && document.activeElement === lastFocusableElement) {
-        event.preventDefault();
-        firstFocusableElement?.focus();
-      }
-    }
-
-    document.addEventListener('keydown', handleDrawerKeydown);
-
-    return () => {
-      document.body.style.overflow = previousBodyOverflow;
-      document.removeEventListener('keydown', handleDrawerKeydown);
-    };
-  }, [isSectionDrawerOpen]);
-
-  useEffect(() => {
-    if (loading) {
-      return;
-    }
-
-    function updateBackToTopVisibility() {
-      const boundaryTop = sectionNavigationBoundaryRef.current?.getBoundingClientRect().top ?? Number.POSITIVE_INFINITY;
-      const shouldShowBackToTop = boundaryTop < 0 || window.scrollY > 280;
-      setIsBackToTopVisible(shouldShowBackToTop);
-      if (!shouldShowBackToTop) {
-        setIsBackToTopTooltipVisible(false);
-      }
-    }
-
-    updateBackToTopVisibility();
-    window.addEventListener('scroll', updateBackToTopVisibility, { passive: true });
-    window.addEventListener('resize', updateBackToTopVisibility);
-
-    return () => {
-      window.removeEventListener('scroll', updateBackToTopVisibility);
-      window.removeEventListener('resize', updateBackToTopVisibility);
-    };
-  }, [loading]);
 
   useEffect(() => {
     if (loading) {
@@ -1311,7 +1237,13 @@ function App() {
       return;
     }
 
+    if (installCtaMode === 'installed') {
+      showToastMessage(uiText.status.pwaAlreadyInstalled, 'info');
+      return;
+    }
+
     if (!installPromptEvent) {
+      showToastMessage(uiText.status.pwaInstallUnavailable, 'info');
       return;
     }
 
@@ -1322,6 +1254,15 @@ function App() {
       showToastMessage(uiText.status.pwaInstalled, 'success');
       setInstallPromptEvent(null);
     }
+  }
+
+  function renderInstallButton() {
+    return (
+      <button className="secondary-button install-button" onClick={handleInstallApp} type="button">
+        <Download size={16} />
+        {uiText.buttons.installApp}
+      </button>
+    );
   }
 
   async function handleShareCurrentView() {
@@ -1447,14 +1388,17 @@ function App() {
     <div className="app-shell">
       <header
         className="hero-panel"
-        style={
-          selectedRace?.heroImageUrl
-            ? {
-                backgroundImage: `linear-gradient(145deg, rgba(10, 11, 19, 0.95), rgba(10, 11, 19, 0.55)), url(${selectedRace.heroImageUrl})`,
-              }
-            : undefined
-        }
       >
+        {selectedRace?.heroImageUrl ? (
+          <div
+            aria-hidden="true"
+            className="hero-race-background"
+            data-testid="hero-race-background"
+            style={{
+              backgroundImage: `linear-gradient(145deg, rgba(10, 11, 19, 0.95), rgba(10, 11, 19, 0.55)), url(${selectedRace.heroImageUrl})`,
+            }}
+          />
+        ) : null}
         <div className="status-strip">
           <div className="status-chip-row">
             {statusChips.map((chip) => (
@@ -1500,12 +1444,6 @@ function App() {
                 {uiText.buttons.logout}
               </button>
             ) : null}
-            {installCtaMode !== 'hidden' ? (
-              <button className="secondary-button install-button" onClick={handleInstallApp} type="button">
-                <Download size={16} />
-                {uiText.buttons.installApp}
-              </button>
-            ) : null}
           </div>
         </div>
         <div className="hero-brand">
@@ -1519,6 +1457,23 @@ function App() {
           </h1>
           <p className="subtitle">{currentYear}</p>
         </div>
+
+        <nav aria-label={appText.shell.navigation.ariaLabel} className="section-nav">
+          <div className="section-nav-list">
+            {sectionNavigationItems.map((item) => (
+              <button
+                key={item.id}
+                aria-pressed={activeSectionId === item.id}
+                className={`secondary-button section-nav-button ${activeSectionId === item.id ? 'active' : ''}`.trim()}
+                onClick={() => navigateToSection(item.id)}
+                type="button"
+              >
+                {item.label}
+              </button>
+            ))}
+            {renderInstallButton()}
+          </div>
+        </nav>
 
         <div className="hero-summary-grid">
           <section className="hero-card rules-panel interactive-surface">
@@ -1675,41 +1630,6 @@ function App() {
           </section>
         </div>
       </header>
-
-      {isMobileViewport ? (
-        <div className="section-drawer-entry">
-          <button
-            ref={sectionDrawerTriggerRef}
-            aria-controls="section-drawer"
-            aria-expanded={isSectionDrawerOpen}
-            aria-label={appText.shell.navigation.openButton}
-            className="secondary-button section-drawer-trigger"
-            onClick={() => setIsSectionDrawerOpen(true)}
-            type="button"
-          >
-            <Menu size={18} />
-            {appText.shell.navigation.openButton}
-          </button>
-        </div>
-      ) : (
-        <nav aria-label={appText.shell.navigation.ariaLabel} className="section-nav panel">
-          <div className="section-nav-list">
-            {sectionNavigationItems.map((item) => (
-              <button
-                key={item.id}
-                aria-pressed={activeSectionId === item.id}
-                className={`secondary-button section-nav-button ${activeSectionId === item.id ? 'active' : ''}`.trim()}
-                onClick={() => navigateToSection(item.id)}
-                type="button"
-              >
-                {item.label}
-              </button>
-            ))}
-          </div>
-        </nav>
-      )}
-
-      <div aria-hidden="true" className="section-nav-boundary" ref={sectionNavigationBoundaryRef} />
 
       <main className="dashboard-grid">
         <section className="content-column">
@@ -1890,11 +1810,8 @@ function App() {
           <SeasonAnalysisPanel
             analyticsEmptyLabel={uiText.history.analyticsEmpty}
             emptyOptionLabel={uiText.placeholders.emptyOption}
-            isPublicView={isPublicView}
             onShare={handleShareCurrentView}
             predictionLabels={predictionLabels}
-            selectedRaceMeetingName={selectedRace?.meetingName ?? ''}
-            selectedRaceTrackOutlineUrl={selectedRace?.trackOutlineUrl ?? ''}
             seasonAnalytics={seasonAnalytics}
           />
 
@@ -2119,70 +2036,6 @@ function App() {
         </section>
       </main>
 
-      {isMobileViewport && isSectionDrawerOpen ? (
-        <div
-          className="section-drawer-backdrop"
-          role="presentation"
-          onClick={() => closeSectionDrawer({ restoreFocus: true })}
-        >
-          <div
-            ref={sectionDrawerRef}
-            aria-label={appText.shell.navigation.ariaLabel}
-            className="section-drawer"
-            id="section-drawer"
-            role="dialog"
-            aria-modal="true"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <div className="section-drawer-head">
-              <p className="section-drawer-title">{appText.shell.navigation.ariaLabel}</p>
-              <button
-                aria-label={appText.shell.navigation.closeButton}
-                className="secondary-button section-drawer-close"
-                onClick={() => closeSectionDrawer({ restoreFocus: true })}
-                type="button"
-              >
-                <X size={18} />
-              </button>
-            </div>
-            <nav aria-label={appText.shell.navigation.ariaLabel} className="section-drawer-nav">
-              {sectionNavigationItems.map((item) => (
-                <button
-                  key={item.id}
-                  aria-pressed={activeSectionId === item.id}
-                  className={`secondary-button section-drawer-item ${activeSectionId === item.id ? 'active' : ''}`.trim()}
-                  onClick={() => navigateToSection(item.id)}
-                  type="button"
-                >
-                  {item.label}
-                </button>
-              ))}
-            </nav>
-          </div>
-        </div>
-      ) : null}
-
-      {isBackToTopVisible ? (
-        <div
-          className={`tooltip-wrapper back-to-top-tooltip ${isBackToTopTooltipVisible ? 'show-tooltip' : ''}`.trim()}
-        >
-          <button
-            aria-label={appText.shell.navigation.backToTopButton}
-            className="secondary-button back-to-top-button"
-            onBlur={() => setIsBackToTopTooltipVisible(false)}
-            onClick={scrollBackToTop}
-            onFocus={() => setIsBackToTopTooltipVisible(true)}
-            onMouseEnter={() => setIsBackToTopTooltipVisible(true)}
-            onMouseLeave={() => setIsBackToTopTooltipVisible(false)}
-            title={appText.shell.navigation.backToTopTooltip}
-            type="button"
-          >
-            <ArrowUp aria-hidden="true" size={20} />
-          </button>
-          <div className="tooltip-text">{appText.shell.navigation.backToTopTooltip}</div>
-        </div>
-      ) : null}
-
       {showAdminLogin ? (
         <div className="auth-modal-backdrop" role="presentation" onClick={() => setShowAdminLogin(false)}>
           <div
@@ -2250,6 +2103,20 @@ function App() {
         <div className={`toast-shell toast-${toast.tone}`} role="status" aria-live="polite">
           {toast.message}
         </div>
+      ) : null}
+
+      {showBackToTop ? (
+        <button
+          aria-label="Torna al menu"
+          className="secondary-button back-to-top"
+          onClick={() => {
+            const navElement = document.querySelector('.section-nav');
+            navElement?.scrollIntoView({ behavior: 'smooth' });
+          }}
+          type="button"
+        >
+          <ArrowUp size={20} />
+        </button>
       ) : null}
 
       <footer className="app-footer">

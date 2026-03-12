@@ -44,8 +44,6 @@ describe('responsive UI app shell gating', () => {
         sessionClock: { present: false, fontFamily: '', text: '' },
         liveScoreValue: { present: false, fontFamily: '', text: '' },
         projectionValue: { present: false, fontFamily: '', text: '' },
-        backToTopButton: { present: false, fontFamily: '', text: '' },
-        backToTopTooltip: { present: false, fontFamily: '', text: '' },
       },
       tooltip: {
         wrapperPresent: false,
@@ -73,20 +71,23 @@ describe('responsive UI app shell gating', () => {
         firstResultText: '',
       },
       selects: {
-        meeting: { present: true, color: 'rgb(248, 250, 252)', backgroundColor: 'rgb(24, 28, 39)', fontFamily: 'Formula1, sans-serif', disabled: false, text: 'Australia' },
-        insights: { present: true, color: 'rgb(248, 250, 252)', backgroundColor: 'rgb(24, 28, 39)', fontFamily: 'Formula1, sans-serif', disabled: false, text: 'Adriano' },
-        prediction: { present: true, color: 'rgb(248, 250, 252)', backgroundColor: 'rgb(24, 28, 39)', fontFamily: 'Formula1, sans-serif', disabled: false, text: 'Seleziona un pilota' },
-        result: { present: true, color: 'rgb(248, 250, 252)', backgroundColor: 'rgb(24, 28, 39)', fontFamily: 'Formula1, sans-serif', disabled: false, text: 'Seleziona un pilota' },
-        historyFilter: { present: true, color: 'rgb(248, 250, 252)', backgroundColor: 'rgb(24, 28, 39)', fontFamily: 'Formula1, sans-serif', disabled: false, text: 'Tutti gli utenti' },
+        meeting: { present: true, color: 'rgb(248, 250, 252)', backgroundColor: 'rgb(24, 28, 39)', fontFamily: 'Formula1, sans-serif', appearance: 'none', disabled: false, text: 'Australia' },
+        insights: { present: true, color: 'rgb(248, 250, 252)', backgroundColor: 'rgb(24, 28, 39)', fontFamily: 'Formula1, sans-serif', appearance: 'none', disabled: false, text: 'Adriano' },
+        prediction: { present: true, color: 'rgb(248, 250, 252)', backgroundColor: 'rgb(24, 28, 39)', fontFamily: 'Formula1, sans-serif', appearance: 'none', disabled: false, text: 'Seleziona un pilota' },
+        result: { present: true, color: 'rgb(248, 250, 252)', backgroundColor: 'rgb(24, 28, 39)', fontFamily: 'Formula1, sans-serif', appearance: 'none', disabled: false, text: 'Seleziona un pilota' },
+        historyFilter: { present: true, color: 'rgb(248, 250, 252)', backgroundColor: 'rgb(24, 28, 39)', fontFamily: 'Formula1, sans-serif', appearance: 'none', disabled: false, text: 'Tutti gli utenti' },
         predictionOption: { present: true, color: 'rgb(248, 250, 252)', backgroundColor: 'rgb(24, 28, 39)', fontFamily: 'Formula1, sans-serif', disabled: false, text: 'Seleziona un pilota' },
         resultOption: { present: true, color: 'rgb(248, 250, 252)', backgroundColor: 'rgb(24, 28, 39)', fontFamily: 'Formula1, sans-serif', disabled: false, text: 'Seleziona un pilota' },
       },
       navigation: {
-        desktopPresent: true,
-        mobileTriggerPresent: false,
-        mobileDrawerPresent: false,
+        present: true,
         itemCount: 8,
         activeText: 'Calendario stagione',
+      },
+      installCta: {
+        present: true,
+        text: 'INSTALLA APPLICAZIONE',
+        clipped: false,
       },
       unauthorizedOverflow: [],
     };
@@ -133,8 +134,6 @@ describe('responsive UI app shell gating', () => {
         sessionClock: { present: false, fontFamily: '', text: '' },
         liveScoreValue: { present: true, fontFamily: 'Formula1, sans-serif', text: '12' },
         projectionValue: { present: true, fontFamily: 'Formula1, sans-serif', text: '9' },
-        backToTopButton: { present: false, fontFamily: '', text: '' },
-        backToTopTooltip: { present: false, fontFamily: '', text: '' },
       },
       tooltip: {
         wrapperPresent: false,
@@ -163,13 +162,13 @@ describe('responsive UI app shell gating', () => {
         highlightsButton: { present: true, disabled: false, text: 'Guarda Highlights', clipped: false },
       },
       selects: {
-        meeting: { present: true, color: 'rgb(248, 250, 252)', backgroundColor: 'rgb(24, 28, 39)', fontFamily: 'Formula1, sans-serif', disabled: false, text: 'Australia' },
-        insights: { present: true, color: 'rgb(248, 250, 252)', backgroundColor: 'rgb(24, 28, 39)', fontFamily: 'Formula1, sans-serif', disabled: false, text: 'Adriano' },
-        prediction: { present: false, color: '', backgroundColor: '', fontFamily: '', disabled: false, text: '' },
-        result: { present: false, color: '', backgroundColor: '', fontFamily: '', disabled: false, text: '' },
-        historyFilter: { present: true, color: 'rgb(248, 250, 252)', backgroundColor: 'rgb(24, 28, 39)', fontFamily: 'Formula1, sans-serif', disabled: false, text: 'Tutti gli utenti' },
-        predictionOption: { present: false, color: '', backgroundColor: '', fontFamily: '', disabled: false, text: '' },
-        resultOption: { present: false, color: '', backgroundColor: '', fontFamily: '', disabled: false, text: '' },
+        meeting: { present: true, color: 'rgb(248, 250, 252)', backgroundColor: 'rgb(24, 28, 39)', fontFamily: 'Formula1, sans-serif', appearance: 'none', disabled: false, text: 'Australia' },
+        insights: { present: true, color: 'rgb(248, 250, 252)', backgroundColor: 'rgb(24, 28, 39)', fontFamily: 'Formula1, sans-serif', appearance: 'none', disabled: false, text: 'Adriano' },
+        prediction: { present: false, color: '', backgroundColor: '', fontFamily: '', appearance: '', disabled: false, text: '' },
+        result: { present: false, color: '', backgroundColor: '', fontFamily: '', appearance: '', disabled: false, text: '' },
+        historyFilter: { present: true, color: 'rgb(248, 250, 252)', backgroundColor: 'rgb(24, 28, 39)', fontFamily: 'Formula1, sans-serif', appearance: 'none', disabled: false, text: 'Tutti gli utenti' },
+        predictionOption: { present: false, color: '', backgroundColor: '', fontFamily: '', appearance: '', disabled: false, text: '' },
+        resultOption: { present: false, color: '', backgroundColor: '', fontFamily: '', appearance: '', disabled: false, text: '' },
       },
       viewMode: {
         current: 'public',
@@ -179,11 +178,14 @@ describe('responsive UI app shell gating', () => {
         publicControlsPresent: true,
       },
       navigation: {
-        desktopPresent: true,
-        mobileTriggerPresent: false,
-        mobileDrawerPresent: false,
+        present: true,
         itemCount: 7,
         activeText: 'Calendario stagione',
+      },
+      installCta: {
+        present: true,
+        text: 'INSTALLA APPLICAZIONE',
+        clipped: false,
       },
       interactiveSurfaces: {
         total: 12,
@@ -221,8 +223,6 @@ describe('responsive UI app shell gating', () => {
         sessionClock: { present: false, fontFamily: '', text: '' },
         liveScoreValue: { present: true, fontFamily: 'Formula1, sans-serif', text: '12' },
         projectionValue: { present: true, fontFamily: 'Formula1, sans-serif', text: '9' },
-        backToTopButton: { present: false, fontFamily: '', text: '' },
-        backToTopTooltip: { present: false, fontFamily: '', text: '' },
       },
       tooltip: {
         wrapperPresent: false,
@@ -250,13 +250,13 @@ describe('responsive UI app shell gating', () => {
         firstResultText: '',
       },
       selects: {
-        meeting: { present: true, color: 'rgb(248, 250, 252)', backgroundColor: 'rgb(24, 28, 39)', fontFamily: 'Formula1, sans-serif', disabled: false, text: 'Australia' },
-        insights: { present: true, color: 'rgb(248, 250, 252)', backgroundColor: 'rgb(24, 28, 39)', fontFamily: 'Formula1, sans-serif', disabled: false, text: 'Adriano' },
-        prediction: { present: false, color: '', backgroundColor: '', fontFamily: '', disabled: false, text: '' },
-        result: { present: false, color: '', backgroundColor: '', fontFamily: '', disabled: false, text: '' },
-        historyFilter: { present: true, color: 'rgb(248, 250, 252)', backgroundColor: 'rgb(24, 28, 39)', fontFamily: 'Formula1, sans-serif', disabled: false, text: 'Tutti gli utenti' },
-        predictionOption: { present: false, color: '', backgroundColor: '', fontFamily: '', disabled: false, text: '' },
-        resultOption: { present: false, color: '', backgroundColor: '', fontFamily: '', disabled: false, text: '' },
+        meeting: { present: true, color: 'rgb(248, 250, 252)', backgroundColor: 'rgb(24, 28, 39)', fontFamily: 'Formula1, sans-serif', appearance: 'none', disabled: false, text: 'Australia' },
+        insights: { present: true, color: 'rgb(248, 250, 252)', backgroundColor: 'rgb(24, 28, 39)', fontFamily: 'Formula1, sans-serif', appearance: 'none', disabled: false, text: 'Adriano' },
+        prediction: { present: false, color: '', backgroundColor: '', fontFamily: '', appearance: '', disabled: false, text: '' },
+        result: { present: false, color: '', backgroundColor: '', fontFamily: '', appearance: '', disabled: false, text: '' },
+        historyFilter: { present: true, color: 'rgb(248, 250, 252)', backgroundColor: 'rgb(24, 28, 39)', fontFamily: 'Formula1, sans-serif', appearance: 'none', disabled: false, text: 'Tutti gli utenti' },
+        predictionOption: { present: false, color: '', backgroundColor: '', fontFamily: '', appearance: '', disabled: false, text: '' },
+        resultOption: { present: false, color: '', backgroundColor: '', fontFamily: '', appearance: '', disabled: false, text: '' },
       },
       unauthorizedOverflow: [],
       viewMode: {
@@ -267,11 +267,14 @@ describe('responsive UI app shell gating', () => {
         publicControlsPresent: false,
       },
       navigation: {
-        desktopPresent: true,
-        mobileTriggerPresent: false,
-        mobileDrawerPresent: false,
+        present: true,
         itemCount: 8,
         activeText: 'Calendario stagione',
+      },
+      installCta: {
+        present: true,
+        text: 'INSTALLA APPLICAZIONE',
+        clipped: false,
       },
       interactiveSurfaces: {
         total: 12,
@@ -315,8 +318,6 @@ describe('responsive UI app shell gating', () => {
         sessionClock: { present: false, fontFamily: '', text: '' },
         liveScoreValue: { present: true, fontFamily: 'Formula1, sans-serif', text: '12' },
         projectionValue: { present: true, fontFamily: 'Formula1, sans-serif', text: '9' },
-        backToTopButton: { present: true, fontFamily: 'Formula1, sans-serif', text: 'Torna al menu' },
-        backToTopTooltip: { present: true, fontFamily: 'Formula1, sans-serif', text: 'Torna al menu' },
       },
       tooltip: {
         wrapperPresent: false,
@@ -361,11 +362,14 @@ describe('responsive UI app shell gating', () => {
         publicControlsPresent: false,
       },
       navigation: {
-        desktopPresent: true,
-        mobileTriggerPresent: false,
-        mobileDrawerPresent: false,
+        present: true,
         itemCount: 8,
         activeText: 'Calendario stagione',
+      },
+      installCta: {
+        present: true,
+        text: 'INSTALLA APPLICAZIONE',
+        clipped: false,
       },
       interactiveSurfaces: {
         total: 12,
@@ -409,8 +413,6 @@ describe('responsive UI app shell gating', () => {
         sessionClock: { present: false, fontFamily: '', text: '' },
         liveScoreValue: { present: true, fontFamily: 'Formula1, sans-serif', text: '12' },
         projectionValue: { present: true, fontFamily: 'Formula1, sans-serif', text: '9' },
-        backToTopButton: { present: true, fontFamily: '', text: '' },
-        backToTopTooltip: { present: true, fontFamily: '', text: 'Torna al menu' },
       },
       tooltip: {
         wrapperPresent: false,
@@ -439,11 +441,11 @@ describe('responsive UI app shell gating', () => {
         highlightsButton: { present: true, disabled: false, text: 'Guarda Highlights', clipped: true },
       },
       selects: {
-        meeting: { present: true, color: 'rgb(248, 250, 252)', backgroundColor: 'rgb(24, 28, 39)', fontFamily: 'Formula1, sans-serif', disabled: false, text: 'Australia' },
-        insights: { present: true, color: 'rgb(248, 250, 252)', backgroundColor: 'rgb(24, 28, 39)', fontFamily: 'Formula1, sans-serif', disabled: false, text: 'Adriano' },
-        prediction: { present: true, color: 'rgb(248, 250, 252)', backgroundColor: 'rgb(24, 28, 39)', fontFamily: 'Formula1, sans-serif', disabled: false, text: 'Seleziona un pilota' },
-        result: { present: true, color: 'rgb(248, 250, 252)', backgroundColor: 'rgb(24, 28, 39)', fontFamily: 'Formula1, sans-serif', disabled: false, text: 'Seleziona un pilota' },
-        historyFilter: { present: true, color: 'rgb(248, 250, 252)', backgroundColor: 'rgb(24, 28, 39)', fontFamily: 'Formula1, sans-serif', disabled: false, text: 'Tutti gli utenti' },
+        meeting: { present: true, color: 'rgb(248, 250, 252)', backgroundColor: 'rgb(24, 28, 39)', fontFamily: 'Formula1, sans-serif', appearance: 'none', disabled: false, text: 'Australia' },
+        insights: { present: true, color: 'rgb(248, 250, 252)', backgroundColor: 'rgb(24, 28, 39)', fontFamily: 'Formula1, sans-serif', appearance: 'none', disabled: false, text: 'Adriano' },
+        prediction: { present: true, color: 'rgb(248, 250, 252)', backgroundColor: 'rgb(24, 28, 39)', fontFamily: 'Formula1, sans-serif', appearance: 'none', disabled: false, text: 'Seleziona un pilota' },
+        result: { present: true, color: 'rgb(248, 250, 252)', backgroundColor: 'rgb(24, 28, 39)', fontFamily: 'Formula1, sans-serif', appearance: 'none', disabled: false, text: 'Seleziona un pilota' },
+        historyFilter: { present: true, color: 'rgb(248, 250, 252)', backgroundColor: 'rgb(24, 28, 39)', fontFamily: 'Formula1, sans-serif', appearance: 'none', disabled: false, text: 'Tutti gli utenti' },
         predictionOption: { present: true, color: 'rgb(248, 250, 252)', backgroundColor: 'rgb(24, 28, 39)', fontFamily: 'Formula1, sans-serif', disabled: false, text: 'Seleziona un pilota' },
         resultOption: { present: true, color: 'rgb(248, 250, 252)', backgroundColor: 'rgb(24, 28, 39)', fontFamily: 'Formula1, sans-serif', disabled: false, text: 'Seleziona un pilota' },
       },
@@ -456,11 +458,14 @@ describe('responsive UI app shell gating', () => {
         publicControlsPresent: false,
       },
       navigation: {
-        desktopPresent: true,
-        mobileTriggerPresent: false,
-        mobileDrawerPresent: false,
+        present: true,
         itemCount: 8,
         activeText: 'Calendario stagione',
+      },
+      installCta: {
+        present: true,
+        text: 'INSTALLA APPLICAZIONE',
+        clipped: false,
       },
       interactiveSurfaces: {
         total: 12,
@@ -473,7 +478,7 @@ describe('responsive UI app shell gating', () => {
     );
   });
 
-  it('requires the back-to-top shortcut when the scenario expects the page scrolled away from the header', () => {
+  it('requires the sticky navigation and install CTA when the scenario expects the page scrolled away from the header', () => {
     const validationState = {
       viewport: { width: 390, height: 844 },
       mainSections: {
@@ -499,8 +504,6 @@ describe('responsive UI app shell gating', () => {
         sessionClock: { present: false, fontFamily: '', text: '' },
         liveScoreValue: { present: true, fontFamily: 'Formula1, sans-serif', text: '12' },
         projectionValue: { present: true, fontFamily: 'Formula1, sans-serif', text: '9' },
-        backToTopButton: { present: true, fontFamily: '', text: 'Torna al menu' },
-        backToTopTooltip: { present: true, fontFamily: '', text: 'Torna al menu' },
       },
       tooltip: {
         wrapperPresent: false,
@@ -529,11 +532,11 @@ describe('responsive UI app shell gating', () => {
         highlightsButton: { present: false, disabled: true, text: '', clipped: false },
       },
       selects: {
-        meeting: { present: true, color: 'rgb(248, 250, 252)', backgroundColor: 'rgb(24, 28, 39)', fontFamily: 'Formula1, sans-serif', disabled: false, text: 'Australia' },
-        insights: { present: true, color: 'rgb(248, 250, 252)', backgroundColor: 'rgb(24, 28, 39)', fontFamily: 'Formula1, sans-serif', disabled: false, text: 'Marco' },
-        prediction: { present: true, color: 'rgb(248, 250, 252)', backgroundColor: 'rgb(24, 28, 39)', fontFamily: 'Formula1, sans-serif', disabled: false, text: 'Verstappen Max' },
-        result: { present: true, color: 'rgb(248, 250, 252)', backgroundColor: 'rgb(24, 28, 39)', fontFamily: 'Formula1, sans-serif', disabled: false, text: 'Verstappen Max' },
-        historyFilter: { present: true, color: 'rgb(248, 250, 252)', backgroundColor: 'rgb(24, 28, 39)', fontFamily: 'Formula1, sans-serif', disabled: false, text: 'Tutti gli utenti' },
+        meeting: { present: true, color: 'rgb(248, 250, 252)', backgroundColor: 'rgb(24, 28, 39)', fontFamily: 'Formula1, sans-serif', appearance: 'auto', disabled: false, text: 'Australia' },
+        insights: { present: true, color: 'rgb(248, 250, 252)', backgroundColor: 'rgb(24, 28, 39)', fontFamily: 'Formula1, sans-serif', appearance: 'auto', disabled: false, text: 'Marco' },
+        prediction: { present: true, color: 'rgb(248, 250, 252)', backgroundColor: 'rgb(24, 28, 39)', fontFamily: 'Formula1, sans-serif', appearance: 'auto', disabled: false, text: 'Verstappen Max' },
+        result: { present: true, color: 'rgb(248, 250, 252)', backgroundColor: 'rgb(24, 28, 39)', fontFamily: 'Formula1, sans-serif', appearance: 'auto', disabled: false, text: 'Verstappen Max' },
+        historyFilter: { present: true, color: 'rgb(248, 250, 252)', backgroundColor: 'rgb(24, 28, 39)', fontFamily: 'Formula1, sans-serif', appearance: 'auto', disabled: false, text: 'Tutti gli utenti' },
         predictionOption: { present: true, color: 'rgb(248, 250, 252)', backgroundColor: 'rgb(24, 28, 39)', fontFamily: 'Formula1, sans-serif', disabled: false, text: 'Seleziona un pilota' },
         resultOption: { present: true, color: 'rgb(248, 250, 252)', backgroundColor: 'rgb(24, 28, 39)', fontFamily: 'Formula1, sans-serif', disabled: false, text: 'Seleziona un pilota' },
       },
@@ -546,34 +549,14 @@ describe('responsive UI app shell gating', () => {
         publicControlsPresent: false,
       },
       navigation: {
-        desktopPresent: false,
-        mobileTriggerPresent: true,
-        mobileDrawerPresent: false,
+        present: true,
         itemCount: 8,
         activeText: 'Calendario stagione',
-        backToTopPresent: true,
-        backToTopAnchor: {
-          wrapper: {
-            present: true,
-            left: 120,
-            right: 320,
-            width: 200,
-            computedLeft: '0px',
-            computedRight: 'auto',
-            position: 'absolute',
-            justifyContent: 'center',
-          },
-          button: {
-            present: true,
-            left: 120,
-            right: 164,
-            width: 44,
-            computedLeft: 'auto',
-            computedRight: 'auto',
-            position: 'static',
-            justifyContent: 'normal',
-          },
-        },
+      },
+      installCta: {
+        present: false,
+        text: '',
+        clipped: true,
       },
       interactiveSurfaces: {
         total: 12,
@@ -581,15 +564,12 @@ describe('responsive UI app shell gating', () => {
       },
     };
 
-    expect(validateState(validationState, { expectedViewMode: 'admin', expectBackToTopVisible: true })).toEqual(
+    expect(validateState(validationState, {
+      expectedViewMode: 'admin',
+      expectInstallCtaVisible: true,
+    })).toEqual(
       expect.arrayContaining([
-        'Scorciatoia torna-su non usa Formula1.',
-        'Tooltip torna-su non usa Formula1.',
-        'Wrapper scorciatoia torna-su non fixed.',
-        'Wrapper scorciatoia torna-su senza ancoraggio destro esplicito.',
-        'Wrapper scorciatoia torna-su non allinea il bottone a destra.',
-        'Scorciatoia torna-su non risulta visivamente agganciata al bordo destro.',
-        'Scorciatoia torna-su appare troppo a sinistra nel viewport.',
+        'CTA installazione non rilevata.',
       ]),
     );
   });

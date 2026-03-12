@@ -96,36 +96,6 @@ function openTooltipIfPresent({
   return true;
 }
 
-function openSectionDrawer({
-  evaluateJsonImpl,
-  sleepSyncImpl = sleepSync,
-} = {}) {
-  const result = evaluateJsonImpl(`() => {
-    const trigger = document.querySelector('.section-drawer-trigger');
-
-    if (!trigger) {
-      return { clicked: false };
-    }
-
-    trigger.dispatchEvent(new MouseEvent('click', { bubbles: true }));
-    return { clicked: true };
-  }`);
-
-  if (!result.clicked) {
-    return false;
-  }
-
-  waitForEvaluatedCondition('() => Boolean(document.querySelector(".section-drawer"))', {
-    evaluateJsonImpl,
-    sleepSyncImpl,
-    timeoutMs: 10000,
-    failureMessage: 'Drawer sezioni mobile non visibile dopo il click sul trigger.',
-  });
-
-  sleepSyncImpl(100);
-  return true;
-}
-
 function scrollAwayFromHeader({
   evaluateJsonImpl,
   sleepSyncImpl = sleepSync,
@@ -134,13 +104,6 @@ function scrollAwayFromHeader({
     window.scrollTo(0, Math.max(window.innerHeight, 900));
     return true;
   }`);
-
-  waitForEvaluatedCondition('() => Boolean(document.querySelector(".back-to-top-button"))', {
-    evaluateJsonImpl,
-    sleepSyncImpl,
-    timeoutMs: 10000,
-    failureMessage: 'Scorciatoia torna-su non visibile dopo lo scroll della pagina.',
-  });
 
   sleepSyncImpl(100);
 }
@@ -269,13 +232,15 @@ function buildResponsiveScenarios({ initialState }) {
       },
     },
     {
-      key: 'back-to-top',
+      key: 'sticky-navigation',
       run: async ({ cli, inspectState: inspectStateImpl, scrollAwayFromHeader: scrollAwayFromHeaderImpl, validateState }) => {
         scrollAwayFromHeaderImpl();
         const scrolledState = inspectStateImpl();
         return finalizeScenarioResult({
-          key: 'back-to-top',
-          failures: validateState(scrolledState, { expectedViewMode: 'admin', expectBackToTopVisible: true }),
+          key: 'sticky-navigation',
+          failures: validateState(scrolledState, {
+            expectedViewMode: 'admin',
+          }),
           cli,
         });
       },
@@ -333,27 +298,6 @@ function buildResponsiveScenarios({ initialState }) {
     },
   ];
 
-  if (initialState.navigation?.mobileTriggerPresent) {
-    scenarios.push({
-      key: 'mobile-drawer',
-      run: async ({ cli, inspectState: inspectStateImpl, openSectionDrawer: openSectionDrawerImpl, validateState }) => {
-        if (!openSectionDrawerImpl()) {
-          return { key: 'mobile-drawer', failures: [], screenshotPath: null, skipped: true };
-        }
-
-        const drawerState = inspectStateImpl();
-        return finalizeScenarioResult({
-          key: 'mobile-drawer',
-          failures: [
-            ...validateState(drawerState, { expectedViewMode: 'admin' }),
-            ...(drawerState.navigation?.mobileDrawerPresent ? [] : ['Drawer sezioni mobile non presente nel DOM.']),
-          ],
-          cli,
-        });
-      },
-    });
-  }
-
   return scenarios;
 }
 
@@ -361,7 +305,6 @@ export {
   buildResponsiveScenarios,
   inspectState,
   navigateToBase,
-  openSectionDrawer,
   scrollAwayFromHeader,
   openTooltipIfPresent,
   resizeViewport,

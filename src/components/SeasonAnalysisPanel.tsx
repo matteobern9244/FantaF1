@@ -8,22 +8,16 @@ import { appText } from '../uiText';
 interface SeasonAnalysisPanelProps {
   analyticsEmptyLabel: string;
   emptyOptionLabel: string;
-  isPublicView: boolean;
   onShare: () => void;
   predictionLabels: Record<PredictionKey, string>;
-  selectedRaceMeetingName: string;
-  selectedRaceTrackOutlineUrl: string;
   seasonAnalytics: SeasonAnalyticsSummary;
 }
 
 function SeasonAnalysisPanel({
   analyticsEmptyLabel,
   emptyOptionLabel,
-  isPublicView,
   onShare,
   predictionLabels,
-  selectedRaceMeetingName,
-  selectedRaceTrackOutlineUrl,
   seasonAnalytics,
 }: SeasonAnalysisPanelProps) {
   const { seasonAnalysis } = appText.panels;
@@ -89,12 +83,12 @@ function SeasonAnalysisPanel({
           <h3>{seasonAnalysis.latestGpTitle}</h3>
           {seasonAnalytics.recap ? (
             <div className="weekend-pulse-summary">
-              {isPublicView && selectedRaceTrackOutlineUrl ? (
+              {seasonAnalytics.recap.trackOutlineUrl ? (
                 <div className="track-map-container track-map-container-compact">
                   <img
-                    alt={selectedRaceMeetingName}
+                    alt={seasonAnalytics.recap.meetingName}
                     className="track-map track-map-compact"
-                    src={selectedRaceTrackOutlineUrl}
+                    src={seasonAnalytics.recap.trackOutlineUrl}
                   />
                 </div>
               ) : null}

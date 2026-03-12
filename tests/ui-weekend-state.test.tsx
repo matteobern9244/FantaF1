@@ -56,7 +56,7 @@ function createCalendar() {
       roundNumber: 1,
       dateRangeLabel: '13 - 15 MAR',
       detailUrl: 'https://www.formula1.com/en/racing/2099/australia',
-      heroImageUrl: '',
+      heroImageUrl: 'https://media.example.com/australia-hero.webp',
       trackOutlineUrl: '',
       isSprintWeekend: false,
       startDate: '2099-03-13',
@@ -71,7 +71,7 @@ function createCalendar() {
       roundNumber: 2,
       dateRangeLabel: '20 - 22 MAR',
       detailUrl: 'https://www.formula1.com/en/racing/2099/china',
-      heroImageUrl: '',
+      heroImageUrl: 'https://media.example.com/china-hero.webp',
       trackOutlineUrl: '',
       isSprintWeekend: true,
       startDate: '2099-03-20',
@@ -86,7 +86,7 @@ function createCalendar() {
       roundNumber: 3,
       dateRangeLabel: '27 - 29 MAR',
       detailUrl: 'https://www.formula1.com/en/racing/2099/monaco',
-      heroImageUrl: '',
+      heroImageUrl: 'https://media.example.com/monaco-hero.webp',
       trackOutlineUrl: '',
       isSprintWeekend: false,
       startDate: '2099-03-27',
@@ -301,6 +301,43 @@ describe('Weekend draft synchronization UI', () => {
     expectReadableSelectStyles(screen.getByLabelText(/weekend selezionato/i) as HTMLSelectElement);
     expectReadableSelectStyles(screen.getByLabelText(/dashboard utente/i) as HTMLSelectElement);
     expectReadableSelectStyles(screen.getByLabelText(/filtra per giocatore/i) as HTMLSelectElement);
+  });
+
+  it('removes the hero title blur and keeps the race background brightness isolated to the dynamic layer', async () => {
+    setupFetch();
+
+    render(<App />);
+
+    await waitFor(() => {
+      expect(screen.queryByTestId('pitstop-loader')).not.toBeInTheDocument();
+    });
+
+    const heroPanel = document.querySelector('.hero-panel') as HTMLElement | null;
+    const heroBrand = document.querySelector('.hero-brand') as HTMLElement | null;
+    const heroRaceBackground = screen.getByTestId('hero-race-background');
+
+    expect(heroPanel).not.toBeNull();
+    expect(heroBrand).not.toBeNull();
+    expect(heroPanel?.style.backgroundImage).toBe('');
+    expect(heroRaceBackground).toHaveStyle({
+      backgroundImage:
+        'linear-gradient(145deg, rgba(10, 11, 19, 0.95), rgba(10, 11, 19, 0.55)), url(https://media.example.com/australia-hero.webp)',
+    });
+
+    const heroBrandCssBlock = appCssContent.match(/\.hero-brand\s*\{[^}]*\}/);
+
+    expect(heroBrandCssBlock?.[0]).toContain('container-type: inline-size;');
+    expect(heroBrandCssBlock?.[0]).not.toContain('backdrop-filter:');
+    expect(appCssContent).toMatch(/\.hero-race-background\s*\{[\s\S]*filter:\s*brightness\(1\.4\);/);
+
+    fireEvent.click(screen.getByRole('button', { name: /china/i }));
+
+    await waitFor(() => {
+      expect(heroRaceBackground).toHaveStyle({
+        backgroundImage:
+          'linear-gradient(145deg, rgba(10, 11, 19, 0.95), rgba(10, 11, 19, 0.55)), url(https://media.example.com/china-hero.webp)',
+      });
+    });
   });
 
   it('saves the selected weekend draft without overwriting other weekend drafts', async () => {

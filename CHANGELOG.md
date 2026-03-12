@@ -2,8 +2,24 @@
 
 Cronologia sintetica delle release documentate del progetto Fanta Formula 1.
 
+## v1.4.2 (2026-03-12)
+
+- **Ristrutturazione Navigazione e UX**: il menu di sezione e' stato spostato all'interno dell'header, direttamente sotto il titolo della stagione, migliorando la gerarchia visiva e l'accessibilità immediata.
+- **Menu Mobile User-Friendly**: rimossa la classe `.panel` dalla navigazione per una perfetta integrazione trasparente nella hero; introdotto un gradiente di mascheramento laterale per segnalare visivamente la possibilità di scorrimento orizzontale.
+- **Ottimizzazione Performance Scroll**: eliminata la latenza ("jank") durante lo scroll su dispositivi mobili sostituendo l'event listener sincrono di React con un `IntersectionObserver` mirato; disabilitato inoltre il `backdrop-filter: blur` sui pannelli in vista mobile per garantire i 60fps su background complessi.
+- **Fix Regressione Dropdown Mobile**: ripristinato il comportamento nativo delle dropdown su dispositivi mobili per risolvere il bug di posizionamento errato delle opzioni riscontrato su Chrome (emulazione mobile).
+- **Fix Mappa Circuito Storico**: il riquadro `Recap ultimo GP` ora visualizza correttamente la mappa della gara conclusa recuperandola dal calendario, indipendentemente dal weekend selezionato globalmente nell'app.
+- **Navigazione Fluida Mobile e Risoluzione Bug**: eliminato l'hamburger menu (Drawer) in favore di una barra a scorrimento orizzontale nativa su dispositivi mobili, risolvendo il bug di visibilità e garantendo che tutte le opzioni siano sempre visibili.
+- **Pulsante PWA Integrato nel Flusso**: la CTA `INSTALLA APPLICAZIONE` e' stata integrata come ultima voce della lista di navigazione, garantendo un layout pulito e coerente su tutte le risoluzioni.
+- **Shortcut "Torna al menu" Raffinata**: la freccia flottante per risalire la pagina ancora ora lo scroll direttamente alla barra di navigazione nell'header, ottimizzando il passaggio tra le sezioni senza dover tornare a inizio pagina.
+- **TDD e Validazione Totale**: aggiornati i test UI e gli script di controllo responsive per coprire la nuova struttura del menu e il comportamento della shortcut di scroll; verificata la coverage totale al 100% e superati tutti i 415 test.
+
 ## v1.4.1
 
+- **Hero Ripulita e Sfondo Gara Piu' Luminoso**: rimosso il blur dal contenitore del titolo nell'header hero e introdotto un layer dedicato per lo sfondo del weekend selezionato con luminosita' aumentata, mantenendo invariato il cambio dinamico dell'immagine in base alla gara attiva.
+- **Navigation Shell Sempre Disponibile e Shortcut Rimossa**: il menu di sezione resta ora sempre visibile durante lo scroll sia su desktop sia su mobile, mentre la scorciatoia `Torna al menu` e il relativo floating control sono stati rimossi dal runtime senza alterare hash navigation, drawer mobile o comportamento admin/public.
+- **CTA Installazione Sempre Visibile**: `INSTALLA APPLICAZIONE` e' ora sempre presente nei browser desktop e mobile; il click continua ad aprire il prompt nativo quando disponibile, il dialog guidato su iOS Safari e un feedback esplicito quando l'app e' gia' installata o il browser non supporta l'installazione.
+- **Documentazione e Tooling Riallineati Alla Nuova UX**: README, copy centralizzato e controlli responsive descrivono ora la navigation shell persistente e la CTA installazione sempre visibile, mantenendo il repository coerente con lo stato reale della UI e con la baseline coverage verificata a `4780 / 4780` statements, `393 / 393` functions, `1999 / 1999` branches e `4780 / 4780` lines.
 - **Track Map Ripristinata Anche in Vista Pubblica**: la mappa del circuito del weekend selezionato e' tornata visibile non solo nella sezione admin `Risultati del weekend`, ma anche nella vista pubblica dentro il recap hero del weekend e nel pannello `Recap ultimo GP`, mantenendo la coerenza con il `selectedRace` corrente senza toccare la logica del nuovo menu di sezione.
 - **TDD Regressivo su Mappa Pubblica e Navigation Shell**: aggiunti test UI mirati per coprire la presenza della track map in vista pubblica, l'aggiornamento al cambio weekend e la tenuta della navigation shell desktop/admin-public; la coverage V8 verificata del repository e' stata riallineata a `4780 / 4780` statements, `393 / 393` functions, `1999 / 1999` branches e `4780 / 4780` lines.
 - **Validazione Release Completa v1.4.1**: rieseguiti `npm run test`, `npm run lint`, `npm run build`, `npm run test:ui-responsive`, `npm run test:save-local` e `npm run test:coverage`, tutti con esito verde sullo stato finale della release.

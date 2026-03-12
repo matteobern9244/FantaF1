@@ -10,6 +10,7 @@ const inspectStateExpression = `() => {
       color: styles?.color ?? '',
       backgroundColor: styles?.backgroundColor ?? '',
       fontFamily: styles?.fontFamily ?? '',
+      appearance: styles?.appearance ?? styles?.webkitAppearance ?? '',
       disabled: element ? Boolean(element.disabled) : false,
       text: normalizeText(
         element?.selectedOptions?.[0]?.textContent ||
@@ -31,6 +32,8 @@ const inspectStateExpression = `() => {
 
     return {
       present: Boolean(element),
+      top: rect?.top ?? 0,
+      bottom: rect?.bottom ?? 0,
       left: rect?.left ?? 0,
       right: rect?.right ?? 0,
       width: rect?.width ?? 0,
@@ -99,7 +102,7 @@ const inspectStateExpression = `() => {
         left: rect.left,
         right: rect.right,
         width: rect.width,
-        allowed: Boolean(element.closest('.calendar-strip')),
+        allowed: Boolean(element.closest('.calendar-strip')) || Boolean(element.closest('.section-nav-list')),
         position: getComputedStyle(element).position,
       };
     })
@@ -123,13 +126,10 @@ const inspectStateExpression = `() => {
   const historyFilterSelect = document.querySelector('#history-user-filter');
   const firstPredictionOption = firstPredictionSelect?.querySelector('option');
   const firstResultOption = firstResultSelect?.querySelector('option');
-  const desktopSectionNav = document.querySelector('.section-nav');
-  const mobileSectionTrigger = document.querySelector('.section-drawer-trigger');
-  const mobileSectionDrawer = document.querySelector('.section-drawer');
-  const activeSectionButton = document.querySelector('.section-nav-button.active, .section-drawer-item.active');
-  const backToTopWrapper = document.querySelector('.back-to-top-tooltip');
-  const backToTopButton = document.querySelector('.back-to-top-button');
-  const backToTopTooltip = document.querySelector('.back-to-top-tooltip .tooltip-text');
+  const sectionNav = document.querySelector('.section-nav');
+  const activeSectionButton = document.querySelector('.section-nav-button.active');
+  const installButton = [...document.querySelectorAll('button')]
+    .find((button) => /installa applicazione/i.test(normalizeText(button.textContent)));
 
   return {
     viewport: { width: viewportWidth, height: viewportHeight },
@@ -165,8 +165,6 @@ const inspectStateExpression = `() => {
       sessionClock: readFontFamily('.next-race-card .session-clock'),
       liveScoreValue: readFontFamily('.live-score-value'),
       projectionValue: readFontFamily('.points-preview-value'),
-      backToTopButton: readFontFamily('.back-to-top-button'),
-      backToTopTooltip: readFontFamily('.back-to-top-tooltip .tooltip-text'),
     },
     tooltip: {
       wrapperPresent: Boolean(tooltipWrapper),
@@ -253,18 +251,26 @@ const inspectStateExpression = `() => {
       resultOption: readElementStyles(firstResultOption),
     },
     navigation: {
-      desktopPresent: Boolean(desktopSectionNav),
-      mobileTriggerPresent: Boolean(mobileSectionTrigger),
-      mobileDrawerPresent: Boolean(mobileSectionDrawer),
-      itemCount: document.querySelectorAll('.section-nav-button, .section-drawer-item').length,
+      present: Boolean(sectionNav),
+      itemCount: document.querySelectorAll('.section-nav-button').length,
       activeText: normalizeText(activeSectionButton?.textContent),
-      backToTopPresent: Boolean(backToTopButton),
-      backToTopTooltipText: normalizeText(backToTopTooltip?.textContent),
-      backToTopAnchor: {
-        wrapper: readBoxMetrics(backToTopWrapper),
-        button: readBoxMetrics(backToTopButton),
-      },
+      anchor: readBoxMetrics(sectionNav),
     },
+    installCta: (() => {
+      const rect = installButton?.getBoundingClientRect();
+      return {
+        present: Boolean(installButton),
+        text: normalizeText(installButton?.textContent),
+        clipped:
+          Boolean(installButton) &&
+          (
+            (rect?.left ?? 0) < -1 ||
+            (rect?.right ?? viewportWidth) > viewportWidth + 1 ||
+            (rect?.top ?? 0) < -1 ||
+            (rect?.bottom ?? viewportHeight) > viewportHeight + 1
+          ),
+      };
+    })(),
     unauthorizedOverflow,
   };
 }`;
@@ -284,7 +290,7 @@ const appShellStateExpression = `() => {
       resultsActions: Boolean(document.querySelector('.results-actions')),
       liveScoreValue: Boolean(document.querySelector('.live-score-value')),
       pointsPreviewValue: Boolean(document.querySelector('.points-preview-value')),
-      sectionNav: Boolean(document.querySelector('.section-nav') || document.querySelector('.section-drawer-trigger')),
+      sectionNav: Boolean(document.querySelector('.section-nav')),
     },
   };
 }`;

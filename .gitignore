@@ -3,6 +3,11 @@ dist/
 .vite/
 coverage/
 output/
+**/bin/
+**/obj/
+**/TestResults/
+**/coverage.cobertura.xml
+conductor/
 
 *.log
 npm-debug.log*

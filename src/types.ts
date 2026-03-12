@@ -151,10 +151,12 @@ export interface SeasonNarrative {
 
 export interface RaceRecapSummary {
   gpName: string;
+  meetingName: string;
   winnerName: string;
   winnerPoints: number;
   swingLabel: string;
   decisiveField: PredictionKey | null;
+  trackOutlineUrl: string;
 }
 
 export interface SeasonAnalyticsSummary {
