@@ -723,48 +723,13 @@ describe('Mockup roadmap UI features', () => {
     expect(within(navigation).queryByRole('button', { name: /risultati del weekend/i })).not.toBeInTheDocument();
   });
 
-  it('opens and closes the mobile section drawer and updates the hash on navigation', async () => {
+  it('renders navigation directly in the header and updates the hash on navigation', async () => {
     setupFetch();
-    mockMediaMatches({ '(max-width: 767px)': true });
     const scrollIntoView = vi.fn();
     Object.defineProperty(HTMLElement.prototype, 'scrollIntoView', {
       configurable: true,
       value: scrollIntoView,
     });
-
-    render(<App />);
-
-    await waitFor(() => {
-      expect(screen.queryByTestId('pitstop-loader')).not.toBeInTheDocument();
-    });
-
-    const openButton = screen.getByRole('button', { name: /^sezioni$/i });
-    expect(openButton).toBeInTheDocument();
-    expect(screen.queryByRole('dialog', { name: /sezioni applicazione/i })).not.toBeInTheDocument();
-
-    fireEvent.click(openButton);
-
-    const drawer = screen.getByRole('dialog', { name: /sezioni applicazione/i });
-    const seasonAnalysisButton = within(drawer).getByRole('button', { name: /analisi stagione/i });
-    fireEvent.click(seasonAnalysisButton);
-
-    expect(window.location.hash).toBe('#season-analysis');
-    expect(scrollIntoView).toHaveBeenCalled();
-    expect(screen.queryByRole('dialog', { name: /sezioni applicazione/i })).not.toBeInTheDocument();
-
-    fireEvent.click(openButton);
-    expect(screen.getByRole('dialog', { name: /sezioni applicazione/i })).toBeInTheDocument();
-
-    fireEvent.keyDown(document, { key: 'Escape' });
-
-    await waitFor(() => {
-      expect(screen.queryByRole('dialog', { name: /sezioni applicazione/i })).not.toBeInTheDocument();
-    });
-    expect(document.activeElement).toBe(openButton);
-  });
-
-  it('keeps the desktop section navigation available after scrolling without showing the back-to-top shortcut', async () => {
-    setupFetch();
 
     render(<App />);
 
@@ -773,53 +738,60 @@ describe('Mockup roadmap UI features', () => {
     });
 
     const navigation = screen.getByRole('navigation', { name: /sezioni applicazione/i });
-    expect(within(navigation).getByRole('button', { name: /calendario stagione/i })).toBeInTheDocument();
+    expect(navigation).toBeInTheDocument();
+    
+    const navList = navigation.querySelector('.section-nav-list');
+    expect(navList).toBeInTheDocument();
+    
+    const seasonAnalysisButton = within(navigation).getByRole('button', { name: /analisi stagione/i });
+    fireEvent.click(seasonAnalysisButton);
 
-    Object.defineProperty(window, 'scrollY', {
-      configurable: true,
-      value: 420,
-    });
-
-    fireEvent.scroll(window);
-
-    expect(within(navigation).getByRole('button', { name: /analisi stagione/i })).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /torna al menu/i })).not.toBeInTheDocument();
+    expect(window.location.hash).toBe('#season-analysis');
+    expect(scrollIntoView).toHaveBeenCalled();
   });
 
-  it('keeps the mobile sections trigger available after scrolling and the drawer still navigates correctly', async () => {
+  it('renders the install button as the last item in the navigation list', async () => {
     setupFetch();
-    mockMediaMatches({ '(max-width: 767px)': true });
-    const scrollIntoView = vi.fn();
-    Object.defineProperty(HTMLElement.prototype, 'scrollIntoView', {
-      configurable: true,
-      value: scrollIntoView,
-    });
-
     render(<App />);
 
     await waitFor(() => {
       expect(screen.queryByTestId('pitstop-loader')).not.toBeInTheDocument();
     });
 
-    Object.defineProperty(window, 'scrollY', {
-      configurable: true,
-      value: 420,
+    const navList = screen.getByRole('navigation', { name: /sezioni applicazione/i }).querySelector('.section-nav-list');
+    const buttons = within(navList as HTMLElement).getAllByRole('button');
+    const lastButton = buttons[buttons.length - 1];
+
+    expect(lastButton).toHaveTextContent(/installa applicazione/i);
+  });
+
+  it('shows the back-to-top button after scrolling down and scrolls to the navigation element', async () => {
+    setupFetch();
+    const scrollIntoViewMock = vi.fn();
+    
+    render(<App />);
+
+    await waitFor(() => {
+      expect(screen.queryByTestId('pitstop-loader')).not.toBeInTheDocument();
     });
 
-    fireEvent.scroll(window);
+    const navigation = screen.getByRole('navigation', { name: /sezioni applicazione/i });
+    Object.defineProperty(navigation, 'scrollIntoView', {
+      configurable: true,
+      value: scrollIntoViewMock,
+    });
 
-    const openButton = screen.getByRole('button', { name: /^sezioni$/i });
-    expect(openButton).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /torna al menu/i })).not.toBeInTheDocument();
 
-    fireEvent.click(openButton);
-    const drawer = screen.getByRole('dialog', { name: /sezioni applicazione/i });
-    fireEvent.click(within(drawer).getByRole('button', { name: /storico gare/i }));
-
-    expect(window.location.hash).toBe('#history-archive');
-    expect(scrollIntoView).toHaveBeenCalled();
-    await waitFor(() => {
-      expect(screen.queryByRole('dialog', { name: /sezioni applicazione/i })).not.toBeInTheDocument();
+    await act(async () => {
+      Object.defineProperty(window, 'scrollY', { value: 500, configurable: true });
+      window.dispatchEvent(new Event('scroll'));
     });
+
+    const backToTopButton = screen.getByRole('button', { name: /torna al menu/i });
+    expect(backToTopButton).toBeInTheDocument();
+
+    fireEvent.click(backToTopButton);
+    expect(scrollIntoViewMock).toHaveBeenCalledWith({ behavior: 'smooth' });
   });
 });

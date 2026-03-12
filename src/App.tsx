@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import {
+  ArrowUp,
   CalendarDays,
   Flag,
   ListChecks,
-  Menu,
   ShieldCheck,
   Save,
   Trash2,
@@ -18,7 +18,6 @@ import {
   LockKeyhole,
   Download,
   LogOut,
-  X,
 } from 'lucide-react';
 import './App.css';
 import {
@@ -251,7 +250,6 @@ function App() {
   const [isMobileViewport, setIsMobileViewport] = useState(() => window.matchMedia('(max-width: 767px)').matches);
   const [showInstallInstructions, setShowInstallInstructions] = useState(false);
   const [showAdminLogin, setShowAdminLogin] = useState(false);
-  const [isSectionDrawerOpen, setIsSectionDrawerOpen] = useState(false);
   const [adminPassword, setAdminPassword] = useState('');
   const [adminLoginError, setAdminLoginError] = useState('');
   const [historySearch, setHistorySearch] = useState('');
@@ -260,11 +258,10 @@ function App() {
   const [selectedRacePhase, setSelectedRacePhase] = useState<RacePhase>('open');
   const [selectedRaceHighlightsVideoUrl, setSelectedRaceHighlightsVideoUrl] = useState('');
   const [activeSectionId, setActiveSectionId] = useState('');
+  const [showBackToTop, setShowBackToTop] = useState(false);
   const selectedMeetingKeyRef = useRef(selectedMeetingKey);
   const toastTimeoutRef = useRef<number | null>(null);
   const initialHashHandledRef = useRef(false);
-  const sectionDrawerRef = useRef<HTMLDivElement | null>(null);
-  const sectionDrawerTriggerRef = useRef<HTMLButtonElement | null>(null);
 
   // Derived state (declared before effects to avoid TS errors)
   const sortedDrivers = sortDriversBySurname(drivers, driversSource.sortLocale);
@@ -375,14 +372,6 @@ function App() {
     }, 3200);
   }
 
-  function closeSectionDrawer({ restoreFocus = false } = {}) {
-    setIsSectionDrawerOpen(false);
-
-    if (restoreFocus) {
-      sectionDrawerTriggerRef.current?.focus();
-    }
-  }
-
   function navigateToSection(sectionId: string) {
     const targetElement = document.getElementById(sectionId);
     if (!targetElement) {
@@ -392,7 +381,6 @@ function App() {
     window.history.replaceState({}, '', buildHashUrl(sectionId));
     targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
     setActiveSectionId(sectionId);
-    closeSectionDrawer();
   }
 
   useEffect(() => {
@@ -456,14 +444,21 @@ function App() {
   }, []);
 
   useEffect(() => {
-    setIsSectionDrawerOpen(false);
+    // viewMode effect placeholder
   }, [viewMode]);
 
   useEffect(() => {
-    if (!isMobileViewport) {
-      setIsSectionDrawerOpen(false);
-    }
+    // isMobileViewport effect placeholder
   }, [isMobileViewport]);
+
+  useEffect(() => {
+    function handleScroll() {
+      setShowBackToTop(window.scrollY > 400);
+    }
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   useEffect(() => {
     let isCancelled = false;
@@ -639,53 +634,6 @@ function App() {
       sectionObserver.disconnect();
     };
   }, [firstSectionId, loading, sectionNavigationItems]);
-
-  useEffect(() => {
-    if (!isSectionDrawerOpen) {
-      return;
-    }
-
-    const previousBodyOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-
-    const drawerElement = sectionDrawerRef.current;
-    const focusableElements = drawerElement
-      ? Array.from(drawerElement.querySelectorAll<HTMLButtonElement>('button:not(:disabled)'))
-      : [];
-    const firstFocusableElement = focusableElements[0];
-    const lastFocusableElement = focusableElements[focusableElements.length - 1];
-    firstFocusableElement?.focus();
-
-    function handleDrawerKeydown(event: KeyboardEvent) {
-      if (event.key === 'Escape') {
-        event.preventDefault();
-        closeSectionDrawer({ restoreFocus: true });
-        return;
-      }
-
-      if (event.key !== 'Tab' || focusableElements.length === 0) {
-        return;
-      }
-
-      if (event.shiftKey && document.activeElement === firstFocusableElement) {
-        event.preventDefault();
-        lastFocusableElement?.focus();
-        return;
-      }
-
-      if (!event.shiftKey && document.activeElement === lastFocusableElement) {
-        event.preventDefault();
-        firstFocusableElement?.focus();
-      }
-    }
-
-    document.addEventListener('keydown', handleDrawerKeydown);
-
-    return () => {
-      document.body.style.overflow = previousBodyOverflow;
-      document.removeEventListener('keydown', handleDrawerKeydown);
-    };
-  }, [isSectionDrawerOpen]);
 
   useEffect(() => {
     if (loading) {
@@ -1492,6 +1440,23 @@ function App() {
           <p className="subtitle">{currentYear}</p>
         </div>
 
+        <nav aria-label={appText.shell.navigation.ariaLabel} className="section-nav panel">
+          <div className="section-nav-list">
+            {sectionNavigationItems.map((item) => (
+              <button
+                key={item.id}
+                aria-pressed={activeSectionId === item.id}
+                className={`secondary-button section-nav-button ${activeSectionId === item.id ? 'active' : ''}`.trim()}
+                onClick={() => navigateToSection(item.id)}
+                type="button"
+              >
+                {item.label}
+              </button>
+            ))}
+            {renderInstallButton()}
+          </div>
+        </nav>
+
         <div className="hero-summary-grid">
           <section className="hero-card rules-panel interactive-surface">
             <div className="card-heading">
@@ -1647,41 +1612,6 @@ function App() {
           </section>
         </div>
       </header>
-
-      {isMobileViewport ? (
-        <div className="section-drawer-entry">
-          <button
-            ref={sectionDrawerTriggerRef}
-            aria-controls="section-drawer"
-            aria-expanded={isSectionDrawerOpen}
-            aria-label={appText.shell.navigation.openButton}
-            className="secondary-button section-drawer-trigger"
-            onClick={() => setIsSectionDrawerOpen(true)}
-            type="button"
-          >
-            <Menu size={18} />
-            {appText.shell.navigation.openButton}
-          </button>
-          {renderInstallButton()}
-        </div>
-      ) : (
-        <nav aria-label={appText.shell.navigation.ariaLabel} className="section-nav panel">
-          <div className="section-nav-list">
-            {sectionNavigationItems.map((item) => (
-              <button
-                key={item.id}
-                aria-pressed={activeSectionId === item.id}
-                className={`secondary-button section-nav-button ${activeSectionId === item.id ? 'active' : ''}`.trim()}
-                onClick={() => navigateToSection(item.id)}
-                type="button"
-              >
-                {item.label}
-              </button>
-            ))}
-          </div>
-          {renderInstallButton()}
-        </nav>
-      )}
 
       <main className="dashboard-grid">
         <section className="content-column">
@@ -2091,49 +2021,6 @@ function App() {
         </section>
       </main>
 
-      {isMobileViewport && isSectionDrawerOpen ? (
-        <div
-          className="section-drawer-backdrop"
-          role="presentation"
-          onClick={() => closeSectionDrawer({ restoreFocus: true })}
-        >
-          <div
-            ref={sectionDrawerRef}
-            aria-label={appText.shell.navigation.ariaLabel}
-            className="section-drawer"
-            id="section-drawer"
-            role="dialog"
-            aria-modal="true"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <div className="section-drawer-head">
-              <p className="section-drawer-title">{appText.shell.navigation.ariaLabel}</p>
-              <button
-                aria-label={appText.shell.navigation.closeButton}
-                className="secondary-button section-drawer-close"
-                onClick={() => closeSectionDrawer({ restoreFocus: true })}
-                type="button"
-              >
-                <X size={18} />
-              </button>
-            </div>
-            <nav aria-label={appText.shell.navigation.ariaLabel} className="section-drawer-nav">
-              {sectionNavigationItems.map((item) => (
-                <button
-                  key={item.id}
-                  aria-pressed={activeSectionId === item.id}
-                  className={`secondary-button section-drawer-item ${activeSectionId === item.id ? 'active' : ''}`.trim()}
-                  onClick={() => navigateToSection(item.id)}
-                  type="button"
-                >
-                  {item.label}
-                </button>
-              ))}
-            </nav>
-          </div>
-        </div>
-      ) : null}
-
       {showAdminLogin ? (
         <div className="auth-modal-backdrop" role="presentation" onClick={() => setShowAdminLogin(false)}>
           <div
@@ -2201,6 +2088,20 @@ function App() {
         <div className={`toast-shell toast-${toast.tone}`} role="status" aria-live="polite">
           {toast.message}
         </div>
+      ) : null}
+
+      {showBackToTop ? (
+        <button
+          aria-label="Torna al menu"
+          className="secondary-button back-to-top"
+          onClick={() => {
+            const navElement = document.querySelector('.section-nav');
+            navElement?.scrollIntoView({ behavior: 'smooth' });
+          }}
+          type="button"
+        >
+          <ArrowUp size={20} />
+        </button>
       ) : null}
 
       <footer className="app-footer">

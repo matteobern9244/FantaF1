@@ -101,7 +101,7 @@ const inspectStateExpression = `() => {
         left: rect.left,
         right: rect.right,
         width: rect.width,
-        allowed: Boolean(element.closest('.calendar-strip')),
+        allowed: Boolean(element.closest('.calendar-strip')) || Boolean(element.closest('.section-nav-list')),
         position: getComputedStyle(element).position,
       };
     })
@@ -125,11 +125,8 @@ const inspectStateExpression = `() => {
   const historyFilterSelect = document.querySelector('#history-user-filter');
   const firstPredictionOption = firstPredictionSelect?.querySelector('option');
   const firstResultOption = firstResultSelect?.querySelector('option');
-  const desktopSectionNav = document.querySelector('.section-nav');
-  const mobileSectionEntry = document.querySelector('.section-drawer-entry');
-  const mobileSectionTrigger = document.querySelector('.section-drawer-trigger');
-  const mobileSectionDrawer = document.querySelector('.section-drawer');
-  const activeSectionButton = document.querySelector('.section-nav-button.active, .section-drawer-item.active');
+  const sectionNav = document.querySelector('.section-nav');
+  const activeSectionButton = document.querySelector('.section-nav-button.active');
   const installButton = [...document.querySelectorAll('button')]
     .find((button) => /installa applicazione/i.test(normalizeText(button.textContent)));
 
@@ -253,14 +250,10 @@ const inspectStateExpression = `() => {
       resultOption: readElementStyles(firstResultOption),
     },
     navigation: {
-      desktopPresent: Boolean(desktopSectionNav),
-      mobileTriggerPresent: Boolean(mobileSectionTrigger),
-      mobileDrawerPresent: Boolean(mobileSectionDrawer),
-      itemCount: document.querySelectorAll('.section-nav-button, .section-drawer-item').length,
+      present: Boolean(sectionNav),
+      itemCount: document.querySelectorAll('.section-nav-button').length,
       activeText: normalizeText(activeSectionButton?.textContent),
-      desktopAnchor: readBoxMetrics(desktopSectionNav),
-      mobileEntryAnchor: readBoxMetrics(mobileSectionEntry),
-      mobileTriggerAnchor: readBoxMetrics(mobileSectionTrigger),
+      anchor: readBoxMetrics(sectionNav),
     },
     installCta: (() => {
       const rect = installButton?.getBoundingClientRect();
@@ -296,7 +289,7 @@ const appShellStateExpression = `() => {
       resultsActions: Boolean(document.querySelector('.results-actions')),
       liveScoreValue: Boolean(document.querySelector('.live-score-value')),
       pointsPreviewValue: Boolean(document.querySelector('.points-preview-value')),
-      sectionNav: Boolean(document.querySelector('.section-nav') || document.querySelector('.section-drawer-trigger')),
+      sectionNav: Boolean(document.querySelector('.section-nav')),
     },
   };
 }`;

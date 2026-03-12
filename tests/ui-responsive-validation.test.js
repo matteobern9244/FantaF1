@@ -80,9 +80,7 @@ describe('responsive UI app shell gating', () => {
         resultOption: { present: true, color: 'rgb(248, 250, 252)', backgroundColor: 'rgb(24, 28, 39)', fontFamily: 'Formula1, sans-serif', disabled: false, text: 'Seleziona un pilota' },
       },
       navigation: {
-        desktopPresent: true,
-        mobileTriggerPresent: false,
-        mobileDrawerPresent: false,
+        present: true,
         itemCount: 8,
         activeText: 'Calendario stagione',
       },
@@ -180,9 +178,7 @@ describe('responsive UI app shell gating', () => {
         publicControlsPresent: true,
       },
       navigation: {
-        desktopPresent: true,
-        mobileTriggerPresent: false,
-        mobileDrawerPresent: false,
+        present: true,
         itemCount: 7,
         activeText: 'Calendario stagione',
       },
@@ -271,9 +267,7 @@ describe('responsive UI app shell gating', () => {
         publicControlsPresent: false,
       },
       navigation: {
-        desktopPresent: true,
-        mobileTriggerPresent: false,
-        mobileDrawerPresent: false,
+        present: true,
         itemCount: 8,
         activeText: 'Calendario stagione',
       },
@@ -368,9 +362,7 @@ describe('responsive UI app shell gating', () => {
         publicControlsPresent: false,
       },
       navigation: {
-        desktopPresent: true,
-        mobileTriggerPresent: false,
-        mobileDrawerPresent: false,
+        present: true,
         itemCount: 8,
         activeText: 'Calendario stagione',
       },
@@ -466,9 +458,7 @@ describe('responsive UI app shell gating', () => {
         publicControlsPresent: false,
       },
       navigation: {
-        desktopPresent: true,
-        mobileTriggerPresent: false,
-        mobileDrawerPresent: false,
+        present: true,
         itemCount: 8,
         activeText: 'Calendario stagione',
       },
@@ -559,23 +549,9 @@ describe('responsive UI app shell gating', () => {
         publicControlsPresent: false,
       },
       navigation: {
-        desktopPresent: false,
-        mobileTriggerPresent: true,
-        mobileDrawerPresent: false,
+        present: true,
         itemCount: 8,
         activeText: 'Calendario stagione',
-        mobileTriggerAnchor: {
-          present: true,
-          left: 0,
-          right: 280,
-          width: 280,
-          top: 860,
-          bottom: 908,
-          computedLeft: 'auto',
-          computedRight: 'auto',
-          position: 'static',
-          justifyContent: 'normal',
-        },
       },
       installCta: {
         present: false,
@@ -590,12 +566,9 @@ describe('responsive UI app shell gating', () => {
 
     expect(validateState(validationState, {
       expectedViewMode: 'admin',
-      expectPersistentNavigationVisible: true,
       expectInstallCtaVisible: true,
     })).toEqual(
       expect.arrayContaining([
-        'Trigger menu mobile scrollato non resta visibile in viewport.',
-        'Trigger menu mobile scrollato non usa un ancoraggio sticky o fixed.',
         'CTA installazione non rilevata.',
       ]),
     );

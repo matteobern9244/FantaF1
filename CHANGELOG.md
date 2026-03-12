@@ -2,6 +2,14 @@
 
 Cronologia sintetica delle release documentate del progetto Fanta Formula 1.
 
+## v1.4.2
+
+- **Ristrutturazione Navigazione e UX**: il menu di sezione e' stato spostato all'interno dell'header, direttamente sotto il titolo della stagione, migliorando la gerarchia visiva e l'accessibilità immediata.
+- **Navigazione Fluida Mobile e Risoluzione Bug**: eliminato l'hamburger menu (Drawer) in favore di una barra a scorrimento orizzontale nativa su dispositivi mobili, risolvendo il bug di visibilità e garantendo che tutte le opzioni siano sempre visibili.
+- **Pulsante PWA Integrato nel Flusso**: la CTA `INSTALLA APPLICAZIONE` e' stata integrata come ultima voce della lista di navigazione, garantendo un layout pulito e coerente su tutte le risoluzioni.
+- **Shortcut "Torna al menu" Raffinata**: la freccia flottante per risalire la pagina ancora ora lo scroll direttamente alla barra di navigazione nell'header, ottimizzando il passaggio tra le sezioni senza dover tornare a inizio pagina.
+- **TDD e Validazione Totale**: aggiornati i test UI e gli script di controllo responsive per coprire la nuova struttura del menu e il comportamento della shortcut di scroll; verificata la coverage totale al 100% e superati tutti i 414 test.
+
 ## v1.4.1
 
 - **Hero Ripulita e Sfondo Gara Piu' Luminoso**: rimosso il blur dal contenitore del titolo nell'header hero e introdotto un layer dedicato per lo sfondo del weekend selezionato con luminosita' aumentata, mantenendo invariato il cambio dinamico dell'immagine in base alla gara attiva.
