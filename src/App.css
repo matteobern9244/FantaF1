@@ -418,9 +418,7 @@ select,
   line-height: 0.95;
   letter-spacing: -0.01em;
   text-transform: uppercase;
-  background: linear-gradient(180deg, #fff 0%, #cbd5e1 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  color: var(--ink);
   filter: drop-shadow(0 4px 12px rgba(0,0,0,0.4));
 }
 
