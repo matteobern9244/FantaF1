@@ -36,7 +36,7 @@ public sealed class PortingDocumentationConsistencyTests
     }
 
     [Fact]
-    public void Canonical_plan_keeps_production_like_browser_gates_owned_by_subphase_nine_and_marks_subphase_four_completed()
+    public void Canonical_plan_keeps_production_like_browser_gates_owned_by_subphase_nine_and_marks_subphase_six_completed()
     {
         var canonicalPlan = ReadRepositoryFile("docs", "backend-csharp-porting-plan.md");
         var subphaseFourPlan = ReadRepositoryFile(
@@ -51,7 +51,8 @@ public sealed class PortingDocumentationConsistencyTests
         Assert.Contains("| `Subphase 3` | `completed` |", canonicalPlan, StringComparison.Ordinal);
         Assert.Contains("| `Subphase 4` | `completed` |", canonicalPlan, StringComparison.Ordinal);
         Assert.Contains("| `Subphase 5` | `completed` |", canonicalPlan, StringComparison.Ordinal);
-        Assert.Contains("| `Subphase 6` | `pending` |", canonicalPlan, StringComparison.Ordinal);
+        Assert.Contains("| `Subphase 6` | `completed` |", canonicalPlan, StringComparison.Ordinal);
+        Assert.Contains("| `Subphase 7` | `pending` |", canonicalPlan, StringComparison.Ordinal);
         Assert.Contains(
             "| Canonical launcher and shared verification scripts, including local development and production-like browser gate reuse, and the ban on implicit `fantaf1_dev` fallback | `Subphase 9` |",
             canonicalPlan,
@@ -67,7 +68,7 @@ public sealed class PortingDocumentationConsistencyTests
     }
 
     [Fact]
-    public void Canonical_plan_and_subphase_five_doc_record_the_read_route_slice_as_completed_without_anticipating_subphase_six()
+    public void Canonical_plan_and_subphase_five_doc_record_the_read_route_slice_as_completed_before_subphase_seven()
     {
         var canonicalPlan = ReadRepositoryFile("docs", "backend-csharp-porting-plan.md");
         var subphaseFivePlan = ReadRepositoryFile(
@@ -80,7 +81,11 @@ public sealed class PortingDocumentationConsistencyTests
             canonicalPlan,
             StringComparison.Ordinal);
         Assert.Contains(
-            "| `Subphase 6` | `pending` |",
+            "| `Subphase 6` | `completed` |",
+            canonicalPlan,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "| `Subphase 7` | `pending` |",
             canonicalPlan,
             StringComparison.Ordinal);
         Assert.Contains(

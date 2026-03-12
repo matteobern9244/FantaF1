@@ -204,6 +204,16 @@ public sealed class AppDataReadServiceTests
 
             return Task.FromResult(_document);
         }
+
+        public Task<IReadOnlyList<string>?> ReadPersistedParticipantRosterAsync(CancellationToken cancellationToken)
+        {
+            throw new NotSupportedException();
+        }
+
+        public Task WriteAsync(AppDataDocument document, CancellationToken cancellationToken)
+        {
+            throw new NotSupportedException();
+        }
     }
 
     private sealed class StubWeekendRepository : IWeekendRepository

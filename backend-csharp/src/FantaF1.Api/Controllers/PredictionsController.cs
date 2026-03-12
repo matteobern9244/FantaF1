@@ -6,40 +6,22 @@ using Microsoft.AspNetCore.Mvc.ModelBinding;
 namespace FantaF1.Api.Controllers;
 
 [ApiController]
-[Route("api/data")]
-public sealed class AppDataController : ControllerBase
+[Route("api/predictions")]
+public sealed class PredictionsController : ControllerBase
 {
-    private readonly IAppDataReadService _appDataReadService;
     private readonly ISaveRequestService _saveRequestService;
 
-    public AppDataController(IAppDataReadService appDataReadService, ISaveRequestService saveRequestService)
+    public PredictionsController(ISaveRequestService saveRequestService)
     {
-        _appDataReadService = appDataReadService ?? throw new ArgumentNullException(nameof(appDataReadService));
         _saveRequestService = saveRequestService ?? throw new ArgumentNullException(nameof(saveRequestService));
     }
 
-    [HttpGet]
-    public async Task<IActionResult> GetData(CancellationToken cancellationToken)
-    {
-        try
-        {
-            return Ok(await _appDataReadService.ReadAsync(cancellationToken));
-        }
-        catch
-        {
-            return StatusCode(StatusCodes.Status500InternalServerError, new
-            {
-                error = ReadRouteContract.ReadAppDataFailed,
-            });
-        }
-    }
-
     [HttpPost]
-    public async Task<IActionResult> SaveData(
+    public async Task<IActionResult> SavePredictions(
         [FromBody(EmptyBodyBehavior = EmptyBodyBehavior.Allow)] AppDataDocument? requestBody,
         CancellationToken cancellationToken)
     {
-        var outcome = await _saveRequestService.SaveDataAsync(
+        var outcome = await _saveRequestService.SavePredictionsAsync(
             requestBody,
             Request.Headers.Cookie.ToString(),
             cancellationToken);

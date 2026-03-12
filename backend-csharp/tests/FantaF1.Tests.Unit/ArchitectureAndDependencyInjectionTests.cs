@@ -72,6 +72,7 @@ public sealed class ArchitectureAndDependencyInjectionTests
         Assert.NotNull(serviceProvider.GetRequiredService<IDriverRepository>());
         Assert.NotNull(serviceProvider.GetRequiredService<IDriverReadService>());
         Assert.NotNull(serviceProvider.GetRequiredService<IHealthReportService>());
+        Assert.NotNull(serviceProvider.GetRequiredService<IRequestIdGenerator>());
         Assert.NotNull(serviceProvider.GetRequiredService<IResultsService>());
         Assert.NotNull(serviceProvider.GetRequiredService<IRuntimeEnvironmentProfileResolver>());
         Assert.NotNull(serviceProvider.GetRequiredService<ISaveRequestService>());
@@ -89,6 +90,7 @@ public sealed class ArchitectureAndDependencyInjectionTests
 
         Assert.IsType<AdminSessionService>(serviceProvider.GetRequiredService<IAdminSessionService>());
         Assert.IsType<ContractAdminCredentialRepository>(serviceProvider.GetRequiredService<IAdminCredentialRepository>());
+        Assert.IsType<SaveRequestService>(serviceProvider.GetRequiredService<ISaveRequestService>());
         Assert.NotNull(serviceProvider.GetRequiredService<NodeCompatibleScryptPasswordHasher>());
         Assert.IsType<HmacSignedCookieService>(signedCookieService);
     }

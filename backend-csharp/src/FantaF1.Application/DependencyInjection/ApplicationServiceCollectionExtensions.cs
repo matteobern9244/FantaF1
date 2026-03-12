@@ -1,5 +1,6 @@
 using FantaF1.Application.Abstractions.Services;
 using FantaF1.Domain.ReadModels;
+using FantaF1.Domain.SaveValidation;
 using FantaF1.Application.Services;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -14,6 +15,10 @@ public static class ApplicationServiceCollectionExtensions
         services.AddSingleton<AppDataSanitizer>();
         services.AddSingleton<CalendarOrderingService>();
         services.AddSingleton<DriverOrderingService>();
+        services.AddSingleton<ParticipantRosterValidator>();
+        services.AddSingleton<PredictionCompletenessValidator>();
+        services.AddSingleton<RaceLockValidator>();
+        services.AddScoped<AdminSessionCookieInspector>();
         services.AddScoped<IAdminSessionService, AdminSessionService>();
         services.AddScoped<IAppDataReadService, AppDataReadService>();
         services.AddScoped<IBackgroundSyncService, PlaceholderBackgroundSyncService>();
@@ -21,7 +26,7 @@ public static class ApplicationServiceCollectionExtensions
         services.AddScoped<IDriverReadService, DriverReadService>();
         services.AddScoped<IHealthReportService, HealthReportService>();
         services.AddScoped<IResultsService, PlaceholderResultsService>();
-        services.AddScoped<ISaveRequestService, PlaceholderSaveRequestService>();
+        services.AddScoped<ISaveRequestService, SaveRequestService>();
 
         return services;
     }
@@ -29,6 +34,4 @@ public static class ApplicationServiceCollectionExtensions
     private sealed class PlaceholderBackgroundSyncService : IBackgroundSyncService;
 
     private sealed class PlaceholderResultsService : IResultsService;
-
-    private sealed class PlaceholderSaveRequestService : ISaveRequestService;
 }

@@ -24,9 +24,19 @@ public sealed class AppDataSanitizer
 
     public AppDataDocument Sanitize(AppDataDocument? value, IReadOnlyList<WeekendDocument> calendar, DateTimeOffset now)
     {
+        return Sanitize(value, calendar, now, AppDataSanitizationOptions.Default);
+    }
+
+    public AppDataDocument Sanitize(
+        AppDataDocument? value,
+        IReadOnlyList<WeekendDocument> calendar,
+        DateTimeOffset now,
+        AppDataSanitizationOptions? options)
+    {
+        var sanitizationOptions = options ?? AppDataSanitizationOptions.Default;
         var defaultData = CreateDefaultAppData(calendar, now);
         var incomingUsers = value?.Users ?? [];
-        var normalizedUsers = SanitizeUsers(incomingUsers, defaultData.Users!);
+        var normalizedUsers = SanitizeUsers(incomingUsers, defaultData.Users!, sanitizationOptions.ParticipantRoster);
         var history = (value?.History ?? [])
             .Select(SanitizeRaceRecord)
             .ToArray();
@@ -41,9 +51,10 @@ public sealed class AppDataSanitizer
         var hasPersistedSelectedWeekendState =
             !string.IsNullOrWhiteSpace(resolvedMeetingKey)
             && incomingWeekendStateByMeetingKey.ContainsKey(resolvedMeetingKey);
-        var selectedWeekendState = SanitizeWeekendState(hasPersistedSelectedWeekendState
-            ? GetSelectedWeekendState(incomingWeekendStateByMeetingKey, resolvedMeetingKey)
-            : fallbackSelectedWeekendState);
+        var selectedWeekendState = SanitizeWeekendState(
+            sanitizationOptions.PreferPayloadSelectedWeekend || !hasPersistedSelectedWeekendState
+                ? fallbackSelectedWeekendState
+                : GetSelectedWeekendState(incomingWeekendStateByMeetingKey, resolvedMeetingKey));
         var weekendStateByMeetingKey = UpsertSelectedWeekendState(
             incomingWeekendStateByMeetingKey,
             resolvedMeetingKey,
@@ -94,9 +105,10 @@ public sealed class AppDataSanitizer
 
     private IReadOnlyList<AppDataUserDocument> SanitizeUsers(
         IReadOnlyList<AppDataUserDocument> incomingUsers,
-        IReadOnlyList<AppDataUserDocument> defaultUsers)
+        IReadOnlyList<AppDataUserDocument> defaultUsers,
+        IReadOnlyList<string>? participantRoster)
     {
-        var resolvedIncomingRoster = ResolveParticipantRoster(incomingUsers);
+        var resolvedIncomingRoster = ResolveIncomingRoster(incomingUsers, participantRoster);
 
         if (incomingUsers.Count >= ParticipantSlots)
         {
@@ -126,7 +138,7 @@ public sealed class AppDataSanitizer
 
     private AppDataUserDocument SanitizeUser(AppDataUserDocument? user, string fallbackName)
     {
-        var name = string.IsNullOrWhiteSpace(user?.Name) ? fallbackName : user!.Name!;
+        var name = string.IsNullOrWhiteSpace(user?.Name) ? fallbackName : user!.Name!.Trim();
 
         return new AppDataUserDocument(
             name,
@@ -172,6 +184,15 @@ public sealed class AppDataSanitizer
         return normalizedNames.Distinct(StringComparer.Ordinal).Count() == ParticipantSlots
             ? normalizedNames
             : null;
+    }
+
+    private static IReadOnlyList<string>? ResolveIncomingRoster(
+        IReadOnlyList<AppDataUserDocument> incomingUsers,
+        IReadOnlyList<string>? participantRoster)
+    {
+        return participantRoster is { Count: ParticipantSlots }
+            ? participantRoster
+            : ResolveParticipantRoster(incomingUsers);
     }
 
     private PredictionDocument SanitizePrediction(PredictionDocument? value)

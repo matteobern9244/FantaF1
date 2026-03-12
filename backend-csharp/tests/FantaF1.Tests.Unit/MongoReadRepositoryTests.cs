@@ -1,5 +1,6 @@
 using System.Reflection;
 using FantaF1.Domain.ReadModels;
+using FantaF1.Domain.SaveValidation;
 using FantaF1.Infrastructure.Mongo;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization;
@@ -20,9 +21,12 @@ public sealed class MongoReadRepositoryTests
             [MongoCollectionNames.Weekends] = [],
         });
         var mapper = new MongoLegacyReadDocumentMapper();
+        var writeMapper = new MongoLegacyWriteDocumentMapper();
+        var rosterValidator = new ParticipantRosterValidator();
+        var clock = new StaticClock(new DateTimeOffset(2026, 03, 12, 09, 30, 00, TimeSpan.Zero));
 
-        Assert.Throws<ArgumentNullException>(() => new MongoAppDataRepository(null!, mapper));
-        Assert.Throws<ArgumentNullException>(() => new MongoAppDataRepository(database.Database, null!));
+        Assert.Throws<ArgumentNullException>(() => new MongoAppDataRepository(null!, mapper, writeMapper, rosterValidator, clock));
+        Assert.Throws<ArgumentNullException>(() => new MongoAppDataRepository(database.Database, null!, writeMapper, rosterValidator, clock));
         Assert.Throws<ArgumentNullException>(() => new MongoDriverRepository(null!, mapper));
         Assert.Throws<ArgumentNullException>(() => new MongoDriverRepository(database.Database, null!));
         Assert.Throws<ArgumentNullException>(() => new MongoWeekendRepository(null!, mapper));
@@ -50,7 +54,7 @@ public sealed class MongoReadRepositoryTests
                 },
             ],
         });
-        var repository = new MongoAppDataRepository(harness.Database, new MongoLegacyReadDocumentMapper());
+        var repository = CreateAppDataRepository(harness.Database);
 
         var result = await repository.ReadLatestAsync(CancellationToken.None);
 
@@ -67,7 +71,7 @@ public sealed class MongoReadRepositoryTests
         {
             [MongoCollectionNames.AppDatas] = [],
         });
-        var repository = new MongoAppDataRepository(harness.Database, new MongoLegacyReadDocumentMapper());
+        var repository = CreateAppDataRepository(harness.Database);
 
         var result = await repository.ReadLatestAsync(CancellationToken.None);
 
@@ -161,6 +165,16 @@ public sealed class MongoReadRepositoryTests
         });
 
         return new MongoDatabaseHarness(database, requestedCollectionNames);
+    }
+
+    private static MongoAppDataRepository CreateAppDataRepository(IMongoDatabase database)
+    {
+        return new MongoAppDataRepository(
+            database,
+            new MongoLegacyReadDocumentMapper(),
+            new MongoLegacyWriteDocumentMapper(),
+            new ParticipantRosterValidator(),
+            new StaticClock(new DateTimeOffset(2026, 03, 12, 09, 30, 00, TimeSpan.Zero)));
     }
 
     private static IMongoCollection<BsonDocument> CreateCollection(
@@ -294,6 +308,16 @@ public sealed class MongoReadRepositoryTests
     private sealed record MongoDatabaseHarness(
         IMongoDatabase Database,
         List<string> RequestedCollectionNames);
+
+    private sealed class StaticClock : FantaF1.Application.Abstractions.System.IClock
+    {
+        public StaticClock(DateTimeOffset utcNow)
+        {
+            UtcNow = utcNow;
+        }
+
+        public DateTimeOffset UtcNow { get; }
+    }
 
     private sealed class SingleBatchAsyncCursor<T> : IAsyncCursor<T>
     {

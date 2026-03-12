@@ -19,11 +19,13 @@ public sealed class AdminSessionServiceTests
         var resolver = new StubRuntimeEnvironmentProfileResolver("development");
         var signedCookieService = CreateSignedCookieService();
         var clock = new StubClock(new DateTimeOffset(2026, 03, 12, 09, 30, 00, TimeSpan.Zero));
+        var cookieInspector = new AdminSessionCookieInspector(clock, signedCookieService);
 
-        Assert.Throws<ArgumentNullException>(() => new AdminSessionService(null!, resolver, repository, signedCookieService));
-        Assert.Throws<ArgumentNullException>(() => new AdminSessionService(clock, null!, repository, signedCookieService));
-        Assert.Throws<ArgumentNullException>(() => new AdminSessionService(clock, resolver, null!, signedCookieService));
-        Assert.Throws<ArgumentNullException>(() => new AdminSessionService(clock, resolver, repository, null!));
+        Assert.Throws<ArgumentNullException>(() => new AdminSessionService(null!, resolver, repository, signedCookieService, cookieInspector));
+        Assert.Throws<ArgumentNullException>(() => new AdminSessionService(clock, null!, repository, signedCookieService, cookieInspector));
+        Assert.Throws<ArgumentNullException>(() => new AdminSessionService(clock, resolver, null!, signedCookieService, cookieInspector));
+        Assert.Throws<ArgumentNullException>(() => new AdminSessionService(clock, resolver, repository, null!, cookieInspector));
+        Assert.Throws<ArgumentNullException>(() => new AdminSessionService(clock, resolver, repository, signedCookieService, null!));
     }
 
     [Fact]
@@ -214,7 +216,10 @@ public sealed class AdminSessionServiceTests
             clock ?? new StubClock(new DateTimeOffset(2026, 03, 12, 09, 30, 00, TimeSpan.Zero)),
             new StubRuntimeEnvironmentProfileResolver(environment),
             repository,
-            CreateSignedCookieService());
+            CreateSignedCookieService(),
+            new AdminSessionCookieInspector(
+                clock ?? new StubClock(new DateTimeOffset(2026, 03, 12, 09, 30, 00, TimeSpan.Zero)),
+                CreateSignedCookieService()));
     }
 
     private static HmacSignedCookieService CreateSignedCookieService()

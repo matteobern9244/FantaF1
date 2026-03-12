@@ -10,7 +10,8 @@ public sealed class ReadRouteControllerTests
     [Fact]
     public void Read_route_controllers_reject_null_dependencies()
     {
-        Assert.Throws<ArgumentNullException>(() => new AppDataController(null!));
+        Assert.Throws<ArgumentNullException>(() => new AppDataController(null!, new StubSaveRequestService()));
+        Assert.Throws<ArgumentNullException>(() => new AppDataController(new StubAppDataReadService(), null!));
         Assert.Throws<ArgumentNullException>(() => new DriversController(null!));
         Assert.Throws<ArgumentNullException>(() => new CalendarController(null!));
     }
@@ -18,7 +19,7 @@ public sealed class ReadRouteControllerTests
     [Fact]
     public async Task Read_route_controllers_return_ok_when_the_services_succeed()
     {
-        var appDataController = new AppDataController(new StubAppDataReadService());
+        var appDataController = new AppDataController(new StubAppDataReadService(), new StubSaveRequestService());
         var driversController = new DriversController(new StubDriverReadService());
         var calendarController = new CalendarController(new StubCalendarReadService());
 
@@ -52,6 +53,19 @@ public sealed class ReadRouteControllerTests
         public Task<IReadOnlyList<WeekendDocument>> ReadAllAsync(CancellationToken cancellationToken)
         {
             return Task.FromResult<IReadOnlyList<WeekendDocument>>([]);
+        }
+    }
+
+    private sealed class StubSaveRequestService : ISaveRequestService
+    {
+        public Task<SaveRequestOutcome> SaveDataAsync(AppDataDocument? requestBody, string? cookieHeader, CancellationToken cancellationToken)
+        {
+            throw new NotSupportedException();
+        }
+
+        public Task<SaveRequestOutcome> SavePredictionsAsync(AppDataDocument? requestBody, string? cookieHeader, CancellationToken cancellationToken)
+        {
+            throw new NotSupportedException();
         }
     }
 }

@@ -65,7 +65,7 @@ public sealed class AppDataSanitizerTests
 
         var result = sanitizer.Sanitize(appData, calendar, new DateTimeOffset(2026, 03, 12, 10, 00, 00, TimeSpan.Zero));
 
-        Assert.Equal([" Anna ", "Bruno", "Carlo"], result.Users!.Select(user => user.Name).ToArray());
+        Assert.Equal(["Anna", "Bruno", "Carlo"], result.Users!.Select(user => user.Name).ToArray());
         Assert.Equal(0, result.Users[0].Points);
         Assert.Equal("ham", result.Users[0].Predictions!.Second);
         Assert.Equal("monaco", result.SelectedMeetingKey);
@@ -181,6 +181,21 @@ public sealed class AppDataSanitizerTests
 
         Assert.Equal("imola", result.SelectedMeetingKey);
         Assert.Equal("Imola", result.GpName);
+        Assert.Equal(["Player 1", "Player 2", "Player 3"], result.Users!.Select(user => user.Name ?? string.Empty).ToArray());
+    }
+
+    [Fact]
+    public void Sanitize_four_argument_overload_uses_default_options_when_none_are_provided()
+    {
+        var sanitizer = new AppDataSanitizer();
+
+        var result = sanitizer.Sanitize(
+            new AppDataDocument(null, null, null, null, null, null),
+            [],
+            new DateTimeOffset(2026, 03, 12, 10, 00, 00, TimeSpan.Zero),
+            options: null);
+
+        Assert.Equal(string.Empty, result.SelectedMeetingKey);
         Assert.Equal(["Player 1", "Player 2", "Player 3"], result.Users!.Select(user => user.Name ?? string.Empty).ToArray());
     }
 

@@ -22,6 +22,7 @@ public sealed class SharedAbstractionsContractTests
             typeof(IDriverRepository),
             typeof(IDriverReadService),
             typeof(IHealthReportService),
+            typeof(IRequestIdGenerator),
             typeof(IResultsService),
             typeof(IRuntimeEnvironmentProfileResolver),
             typeof(ISaveRequestService),
@@ -29,7 +30,7 @@ public sealed class SharedAbstractionsContractTests
             typeof(IWeekendRepository),
         };
 
-        Assert.Equal(15, abstractionTypes.Length);
+        Assert.Equal(16, abstractionTypes.Length);
         Assert.All(abstractionTypes, type =>
         {
             Assert.True(type.IsInterface);
@@ -53,6 +54,7 @@ public sealed class SharedAbstractionsContractTests
         Assert.Equal("FantaF1.Application.Abstractions.Services", typeof(IResultsService).Namespace);
         Assert.Equal("FantaF1.Application.Abstractions.Services", typeof(IBackgroundSyncService).Namespace);
         Assert.Equal("FantaF1.Application.Abstractions.System", typeof(IClock).Namespace);
+        Assert.Equal("FantaF1.Application.Abstractions.System", typeof(IRequestIdGenerator).Namespace);
         Assert.Equal("FantaF1.Application.Abstractions.System", typeof(IRuntimeEnvironmentProfileResolver).Namespace);
         Assert.Equal("FantaF1.Application.Abstractions.System", typeof(ISignedCookieService).Namespace);
     }
@@ -86,6 +88,8 @@ public sealed class SharedAbstractionsContractTests
     public void Read_route_abstractions_expose_the_subphase_five_contract_shape()
     {
         var readLatestAsync = typeof(IAppDataRepository).GetMethod(nameof(IAppDataRepository.ReadLatestAsync));
+        var readPersistedParticipantRosterAsync = typeof(IAppDataRepository).GetMethod(nameof(IAppDataRepository.ReadPersistedParticipantRosterAsync));
+        var writeAsync = typeof(IAppDataRepository).GetMethod(nameof(IAppDataRepository.WriteAsync));
         var readDriversAsync = typeof(IDriverRepository).GetMethod(nameof(IDriverRepository.ReadAllAsync));
         var readCalendarAsync = typeof(IWeekendRepository).GetMethod(nameof(IWeekendRepository.ReadAllAsync));
         var readAppDataAsync = typeof(IAppDataReadService).GetMethod(nameof(IAppDataReadService.ReadAsync));
@@ -94,6 +98,12 @@ public sealed class SharedAbstractionsContractTests
 
         Assert.NotNull(readLatestAsync);
         Assert.Equal(typeof(Task<AppDataDocument?>), readLatestAsync.ReturnType);
+
+        Assert.NotNull(readPersistedParticipantRosterAsync);
+        Assert.Equal(typeof(Task<IReadOnlyList<string>?>), readPersistedParticipantRosterAsync.ReturnType);
+
+        Assert.NotNull(writeAsync);
+        Assert.Equal(typeof(Task), writeAsync.ReturnType);
 
         Assert.NotNull(readDriversAsync);
         Assert.Equal(typeof(Task<IReadOnlyList<DriverDocument>>), readDriversAsync.ReturnType);
@@ -109,5 +119,22 @@ public sealed class SharedAbstractionsContractTests
 
         Assert.NotNull(readOrderedCalendarAsync);
         Assert.Equal(typeof(Task<IReadOnlyList<WeekendDocument>>), readOrderedCalendarAsync.ReturnType);
+    }
+
+    [Fact]
+    public void Save_route_abstractions_expose_the_subphase_six_contract_shape()
+    {
+        var saveDataAsync = typeof(ISaveRequestService).GetMethod(nameof(ISaveRequestService.SaveDataAsync));
+        var savePredictionsAsync = typeof(ISaveRequestService).GetMethod(nameof(ISaveRequestService.SavePredictionsAsync));
+        var generate = typeof(IRequestIdGenerator).GetMethod(nameof(IRequestIdGenerator.Generate));
+
+        Assert.NotNull(saveDataAsync);
+        Assert.Equal(typeof(Task<SaveRequestOutcome>), saveDataAsync.ReturnType);
+
+        Assert.NotNull(savePredictionsAsync);
+        Assert.Equal(typeof(Task<SaveRequestOutcome>), savePredictionsAsync.ReturnType);
+
+        Assert.NotNull(generate);
+        Assert.Equal(typeof(string), generate.ReturnType);
     }
 }
