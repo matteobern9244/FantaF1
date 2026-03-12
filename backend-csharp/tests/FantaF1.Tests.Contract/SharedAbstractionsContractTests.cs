@@ -17,13 +17,15 @@ public sealed class SharedAbstractionsContractTests
             typeof(IBackgroundSyncService),
             typeof(IClock),
             typeof(IDriverRepository),
+            typeof(IHealthReportService),
             typeof(IResultsService),
+            typeof(IRuntimeEnvironmentProfileResolver),
             typeof(ISaveRequestService),
             typeof(ISignedCookieService),
             typeof(IWeekendRepository),
         };
 
-        Assert.Equal(10, abstractionTypes.Length);
+        Assert.Equal(12, abstractionTypes.Length);
         Assert.All(abstractionTypes, type =>
         {
             Assert.True(type.IsInterface);
@@ -38,11 +40,13 @@ public sealed class SharedAbstractionsContractTests
         Assert.Equal("FantaF1.Application.Abstractions.Persistence", typeof(IDriverRepository).Namespace);
         Assert.Equal("FantaF1.Application.Abstractions.Persistence", typeof(IWeekendRepository).Namespace);
         Assert.Equal("FantaF1.Application.Abstractions.Persistence", typeof(IAdminCredentialRepository).Namespace);
+        Assert.Equal("FantaF1.Application.Abstractions.Services", typeof(IHealthReportService).Namespace);
         Assert.Equal("FantaF1.Application.Abstractions.Services", typeof(ISaveRequestService).Namespace);
         Assert.Equal("FantaF1.Application.Abstractions.Services", typeof(IAdminSessionService).Namespace);
         Assert.Equal("FantaF1.Application.Abstractions.Services", typeof(IResultsService).Namespace);
         Assert.Equal("FantaF1.Application.Abstractions.Services", typeof(IBackgroundSyncService).Namespace);
         Assert.Equal("FantaF1.Application.Abstractions.System", typeof(IClock).Namespace);
+        Assert.Equal("FantaF1.Application.Abstractions.System", typeof(IRuntimeEnvironmentProfileResolver).Namespace);
         Assert.Equal("FantaF1.Application.Abstractions.System", typeof(ISignedCookieService).Namespace);
     }
 }

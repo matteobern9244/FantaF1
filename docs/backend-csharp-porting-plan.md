@@ -50,7 +50,7 @@ The ledger below is the canonical persistent checkpoint for the temporal executi
 | --- | --- | --- | --- |
 | `Subphase 1` | `completed` | Baseline, safety rails, requirement ownership, branch isolation, and shared TDD/parity rules recorded in the canonical plan. | Keep enforced by every later subphase. |
 | `Subphase 2` | `completed` | C# solution, shared abstractions, DI bootstrap, and controller-based host baseline are verified in isolation. The only blocking browser gate for this closure was the Node baseline in `Development`, while the reusable local `production-like` browser gate remains owned by `Subphase 9`. | Wait for explicit user authorization before starting `Subphase 3`. |
-| `Subphase 3` | `pending` | Not started yet in the canonical ledger. | Execute only after the user explicitly authorizes the next slice. |
+| `Subphase 3` | `completed` | Environment/database target resolution and `GET /api/health` parity are verified in C# for `Development`, `Staging`, and `Production`, while Node remains the authoritative runtime. | Wait for explicit user authorization before starting `Subphase 4`. |
 | `Subphase 4` | `pending` | Not started yet in the canonical ledger. | Wait for `Subphase 3` completion. |
 | `Subphase 5` | `pending` | Not started yet in the canonical ledger. | Wait for `Subphase 4` completion. |
 | `Subphase 6` | `pending` | Not started yet in the canonical ledger. | Wait for `Subphase 5` completion. |

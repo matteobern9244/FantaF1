@@ -1,5 +1,6 @@
 using FantaF1.Application.Abstractions.Persistence;
 using FantaF1.Application.Abstractions.System;
+using FantaF1.Infrastructure.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace FantaF1.Infrastructure.DependencyInjection;
@@ -13,6 +14,7 @@ public static class InfrastructureServiceCollectionExtensions
         services.AddScoped<IAdminCredentialRepository, PlaceholderAdminCredentialRepository>();
         services.AddScoped<IAppDataRepository, PlaceholderAppDataRepository>();
         services.AddScoped<IDriverRepository, PlaceholderDriverRepository>();
+        services.AddSingleton<IRuntimeEnvironmentProfileResolver, ConfigurationRuntimeEnvironmentProfileResolver>();
         services.AddScoped<IWeekendRepository, PlaceholderWeekendRepository>();
         services.AddSingleton<IClock, SystemClock>();
         services.AddSingleton<ISignedCookieService, DeferredSignedCookieService>();

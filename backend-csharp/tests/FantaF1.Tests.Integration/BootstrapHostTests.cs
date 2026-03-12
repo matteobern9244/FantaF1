@@ -48,7 +48,9 @@ public sealed class BootstrapHostTests : IClassFixture<WebApplicationFactory<Pro
         Assert.NotNull(serviceProvider.GetRequiredService<IBackgroundSyncService>());
         Assert.NotNull(serviceProvider.GetRequiredService<IClock>());
         Assert.NotNull(serviceProvider.GetRequiredService<IDriverRepository>());
+        Assert.NotNull(serviceProvider.GetRequiredService<IHealthReportService>());
         Assert.NotNull(serviceProvider.GetRequiredService<IResultsService>());
+        Assert.NotNull(serviceProvider.GetRequiredService<IRuntimeEnvironmentProfileResolver>());
         Assert.NotNull(serviceProvider.GetRequiredService<ISaveRequestService>());
         Assert.NotNull(serviceProvider.GetRequiredService<ISignedCookieService>());
         Assert.NotNull(serviceProvider.GetRequiredService<IWeekendRepository>());
@@ -65,9 +67,9 @@ public sealed class BootstrapHostTests : IClassFixture<WebApplicationFactory<Pro
             .Where(endpoint => endpoint.Action is not null)
             .ToArray();
 
-        Assert.Single(controllerEndpoints);
+        Assert.Equal(2, controllerEndpoints.Length);
         Assert.Contains(controllerEndpoints, endpoint => endpoint.Route.Length == 0);
-        Assert.DoesNotContain(controllerEndpoints, endpoint => endpoint.Route.StartsWith("api/", StringComparison.OrdinalIgnoreCase));
+        Assert.Contains(controllerEndpoints, endpoint => string.Equals(endpoint.Route, "api/health", StringComparison.Ordinal));
     }
 
     [Fact]

@@ -1,4 +1,5 @@
 using FantaF1.Application.Abstractions.Services;
+using FantaF1.Application.Services;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace FantaF1.Application.DependencyInjection;
@@ -11,6 +12,7 @@ public static class ApplicationServiceCollectionExtensions
 
         services.AddScoped<IAdminSessionService, PlaceholderAdminSessionService>();
         services.AddScoped<IBackgroundSyncService, PlaceholderBackgroundSyncService>();
+        services.AddScoped<IHealthReportService, HealthReportService>();
         services.AddScoped<IResultsService, PlaceholderResultsService>();
         services.AddScoped<ISaveRequestService, PlaceholderSaveRequestService>();
 

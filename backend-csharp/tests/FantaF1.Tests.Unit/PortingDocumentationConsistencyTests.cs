@@ -36,7 +36,7 @@ public sealed class PortingDocumentationConsistencyTests
     }
 
     [Fact]
-    public void Canonical_plan_keeps_production_like_browser_gates_owned_by_subphase_nine_and_subphase_three_pending()
+    public void Canonical_plan_keeps_production_like_browser_gates_owned_by_subphase_nine_and_marks_subphase_three_completed()
     {
         var canonicalPlan = ReadRepositoryFile("docs", "backend-csharp-porting-plan.md");
 
@@ -44,7 +44,8 @@ public sealed class PortingDocumentationConsistencyTests
             "For avoidance of doubt, the closure gate for `Subphase 2` is limited to the C# solution scope plus the Node baseline browser check in `Development`. The reusable local `production-like` browser gate remains owned by `Subphase 9` and must not block `Subphase 2` closure.",
             canonicalPlan,
             StringComparison.Ordinal);
-        Assert.Contains("| `Subphase 3` | `pending` |", canonicalPlan, StringComparison.Ordinal);
+        Assert.Contains("| `Subphase 3` | `completed` |", canonicalPlan, StringComparison.Ordinal);
+        Assert.Contains("| `Subphase 4` | `pending` |", canonicalPlan, StringComparison.Ordinal);
         Assert.Contains(
             "| Canonical launcher and shared verification scripts, including local development and production-like browser gate reuse, and the ban on implicit `fantaf1_dev` fallback | `Subphase 9` |",
             canonicalPlan,

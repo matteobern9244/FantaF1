@@ -6,7 +6,10 @@ using FantaF1.Application.DependencyInjection;
 using FantaF1.Domain;
 using FantaF1.Infrastructure;
 using FantaF1.Infrastructure.DependencyInjection;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.FileProviders;
+using Microsoft.Extensions.Hosting;
 using System.Reflection;
 
 namespace FantaF1.Tests.Unit;
@@ -33,10 +36,15 @@ public sealed class ArchitectureAndDependencyInjectionTests
     }
 
     [Fact]
-    public void Application_and_infrastructure_registrations_resolve_all_subphase_two_contracts()
+    public void Application_and_infrastructure_registrations_resolve_all_subphase_three_contracts()
     {
         var services = new ServiceCollection();
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection([])
+            .Build();
 
+        services.AddSingleton<IConfiguration>(configuration);
+        services.AddSingleton<IHostEnvironment>(new TestHostEnvironment("Development"));
         services.AddFantaF1Application();
         services.AddFantaF1Infrastructure();
 
@@ -53,7 +61,9 @@ public sealed class ArchitectureAndDependencyInjectionTests
         Assert.NotNull(serviceProvider.GetRequiredService<IAppDataRepository>());
         Assert.NotNull(serviceProvider.GetRequiredService<IBackgroundSyncService>());
         Assert.NotNull(serviceProvider.GetRequiredService<IDriverRepository>());
+        Assert.NotNull(serviceProvider.GetRequiredService<IHealthReportService>());
         Assert.NotNull(serviceProvider.GetRequiredService<IResultsService>());
+        Assert.NotNull(serviceProvider.GetRequiredService<IRuntimeEnvironmentProfileResolver>());
         Assert.NotNull(serviceProvider.GetRequiredService<ISaveRequestService>());
         Assert.NotNull(serviceProvider.GetRequiredService<IWeekendRepository>());
 
@@ -86,5 +96,21 @@ public sealed class ArchitectureAndDependencyInjectionTests
             .Select(reference => reference.Name)
             .OfType<string>()
             .ToHashSet(StringComparer.Ordinal);
+    }
+
+    private sealed class TestHostEnvironment : IHostEnvironment
+    {
+        public TestHostEnvironment(string environmentName)
+        {
+            EnvironmentName = environmentName;
+        }
+
+        public string EnvironmentName { get; set; }
+
+        public string ApplicationName { get; set; } = "FantaF1.Tests";
+
+        public string ContentRootPath { get; set; } = AppContext.BaseDirectory;
+
+        public IFileProvider ContentRootFileProvider { get; set; } = new NullFileProvider();
     }
 }
