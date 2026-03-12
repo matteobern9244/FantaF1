@@ -2,7 +2,7 @@
 
 Cronologia sintetica delle release documentate del progetto Fanta Formula 1.
 
-## v1.4.2
+## v1.4.2 (2026-03-12)
 
 - **Ristrutturazione Navigazione e UX**: il menu di sezione e' stato spostato all'interno dell'header, direttamente sotto il titolo della stagione, migliorando la gerarchia visiva e l'accessibilità immediata.
 - **Menu Mobile User-Friendly**: rimossa la classe `.panel` dalla navigazione per una perfetta integrazione trasparente nella hero; introdotto un gradiente di mascheramento laterale per segnalare visivamente la possibilità di scorrimento orizzontale.

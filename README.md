@@ -6,7 +6,7 @@ L'applicazione e' pensata per un flusso amministrato: un admin seleziona il week
 
 ## Stato release e confronto con la produzione
 
-La versione attualmente in produzione e pubblicata e' `v1.4.0`. Il repository e' ora allineato alla prossima release `v1.4.1` in `package.json`, mentre la live resta ancora sulla baseline `v1.4.0` finche' non verra' rilasciata.
+La versione attualmente in produzione e pubblicata e' `v1.4.0`. Il repository e' ora allineato alla prossima release `v1.4.2` in `package.json`, mentre la live resta ancora sulla baseline `v1.4.0` finche' non verra' rilasciata.
 
 ### Baseline produzione `v1.4.0`
 
