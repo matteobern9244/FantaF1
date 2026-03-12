@@ -4,6 +4,7 @@ Cronologia sintetica delle release documentate del progetto Fanta Formula 1.
 
 ## v1.4.3 (2026-03-13)
 
+- **Titolo Hero Sempre Bianco e Coerente su Windows**: il titolo principale dell'app nella hero non usa piu' il gradiente testuale con `background-clip`; ora renderizza sempre bianco pieno con lo stesso glow esistente, eliminando il caso Windows in cui il testo appariva grigio.
 - **Classifica Piloti con Volto Più Leggibile**: la vista pubblica applica ora anche in `Classifica piloti` la stessa promozione hi-res e lo stesso crop volto già introdotti nel podio dello `Storico gare`, evitando l'upscaling degli avatar Formula1 a bassa risoluzione e rendendo le foto pilota più nitide.
 - **Classifica Scuderia Riallineata con Logo e Colore Team**: ogni riga costruttori mostra ora il logo ufficiale della scuderia accanto al nome, il nome squadra usa direttamente il colore della scuderia già presente nel dato e la vecchia lineetta colorata è stata rimossa per eliminare lo sfalsamento visivo della card.
 - **Card `Classifica Scuderia` Compattata**: il pannello costruttori mantiene il layout a due colonne ma non viene più stirato in altezza per eguagliare la colonna piloti; il contenuto resta ancorato in alto e lo spazio vuoto verticale interno è stato rimosso senza cambiare ordine, dati o resa responsive a colonna singola.

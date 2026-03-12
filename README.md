@@ -220,6 +220,7 @@ Se il database non contiene ancora stato applicativo, il backend costruisce uno 
 
 - Hero full-width con branding, titolo visibile configurabile, anno corrente dinamico e card riepilogative.
 - Il contenitore del titolo hero non usa blur di backdrop; il focus visivo resta affidato a glow, contrasto e gerarchia tipografica gia' presenti.
+- Il titolo principale della hero renderizza sempre bianco pieno su macOS, Windows e browser mobile/desktop, senza gradiente testuale, per evitare differenze di resa cross-platform.
 - Se `VITE_APP_LOCAL_NAME` estende il titolo base `Fanta Formula 1`, la hero separa il titolo in due righe fisse: titolo base in prima riga e suffisso in seconda.
 - Il titolo hero usa un fit basato sulla larghezza reale del contenitore: sui desktop wide mantiene il massimo visivo corrente, mentre su viewport piu' strette riduce il `font-size` solo quanto necessario per restare interamente visibile senza clipping.
 - Lo sfondo hero del weekend selezionato continua a cambiare dinamicamente in base alla gara attiva e applica una luminosita' aumentata sul solo layer immagine per mantenere leggibilita' invariata sui contenuti in primo piano.
