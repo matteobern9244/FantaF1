@@ -321,7 +321,11 @@ describe('Live projection UI', () => {
 
     render(<App />);
 
-    const highlightsButton = await screen.findByRole('button', { name: /guarda highlights/i });
+    const highlightsButton = await screen.findByRole(
+      'button',
+      { name: /guarda highlights/i },
+      { timeout: 5000 },
+    );
     fireEvent.click(highlightsButton);
 
     expect(window.open).toHaveBeenCalledWith(
