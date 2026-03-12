@@ -5,6 +5,7 @@ type SectionNavigationId =
   | 'calendar-section'
   | 'user-kpi-section'
   | 'user-analytics-section'
+  | 'public-standings'
   | 'season-analysis'
   | 'weekend-live'
   | 'public-guide'
@@ -33,6 +34,11 @@ const sectionNavigationDefinitions: SectionNavigationDefinition[] = [
     id: 'user-analytics-section',
     label: appText.shell.navigation.items.userAnalytics,
     viewModes: ['admin', 'public'],
+  },
+  {
+    id: 'public-standings',
+    label: appText.shell.navigation.items.publicStandings,
+    viewModes: ['public'],
   },
   {
     id: 'season-analysis',

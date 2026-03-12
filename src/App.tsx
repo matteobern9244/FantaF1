@@ -30,6 +30,7 @@ import {
   genericAppTitle,
   predictionsApiUrl,
   predictionFieldOrder,
+  standingsApiUrl,
   visibleAppTitle,
 } from './constants';
 import {
@@ -54,6 +55,7 @@ import type {
   RacePhase,
   RaceWeekend,
   SessionState,
+  StandingsPayload,
   UserData,
   ViewMode,
   WeekendStateByMeetingKey,
@@ -88,6 +90,7 @@ import { splitHeroTitle } from './utils/title';
 import { WeekendStateAssembler } from './utils/weekendStateService';
 import HistoryArchivePanel from './components/HistoryArchivePanel';
 import PublicGuidePanel from './components/PublicGuidePanel';
+import PublicStandingsPanel from './components/PublicStandingsPanel';
 import SeasonAnalysisPanel from './components/SeasonAnalysisPanel';
 import WeekendLivePanel from './components/WeekendLivePanel';
 import WeekendPulseHeroCard from './components/WeekendPulseHeroCard';
@@ -230,6 +233,11 @@ function App() {
   );
   const [drivers, setDrivers] = useState<Driver[]>([]);
   const [calendar, setCalendar] = useState<RaceWeekend[]>([]);
+  const [standings, setStandings] = useState<StandingsPayload>({
+    driverStandings: [],
+    constructorStandings: [],
+    updatedAt: '',
+  });
   const [editingSession, setEditingSession] = useState<{
     record: AppData['history'][number];
     historyIndex: number;
@@ -488,11 +496,12 @@ function App() {
       const requestedHistoryUser = initialUrlSearchParams.get('historyUser');
       const requestedHistorySearch = initialUrlSearchParams.get('historySearch')?.trim() ?? '';
       setLoadingMessage(appText.shell.loadingTelemetryMessage);
-      const [sessionResult, dataResult, driversResult, calendarResult] = await Promise.allSettled([
+      const [sessionResult, dataResult, driversResult, calendarResult, standingsResult] = await Promise.allSettled([
         fetchWithRetry<SessionState>(sessionApiUrl),
         fetchWithRetry<AppData>(dataApiUrl),
         fetchWithRetry<Driver[]>(driversApiUrl),
         fetchWithRetry<RaceWeekend[]>(calendarApiUrl),
+        fetchWithRetry<StandingsPayload>(standingsApiUrl),
       ]);
 
       if (isCancelled) {
@@ -538,6 +547,15 @@ function App() {
 
       setDrivers(loadedDrivers);
       setCalendar(loadedCalendar);
+      setStandings(
+        standingsResult.status === 'fulfilled'
+          ? standingsResult.value
+          : {
+              driverStandings: [],
+              constructorStandings: [],
+              updatedAt: '',
+            },
+      );
       setSessionState(resolvedSessionState);
       setUsers(hydratedIncomingData.users);
       setHistory(hydratedIncomingData.history);
@@ -1208,16 +1226,6 @@ function App() {
     }
   }
 
-  function renderHistoryResults(record: AppData['history'][number]) {
-    return formatText(uiText.history.resultSummaryTemplate, {
-      actualLabel: uiText.history.actualLabel,
-      first: getDriverDisplayNameById(drivers, record.results.first, uiText.history.unknownDriver),
-      second: getDriverDisplayNameById(drivers, record.results.second, uiText.history.unknownDriver),
-      third: getDriverDisplayNameById(drivers, record.results.third, uiText.history.unknownDriver),
-      pole: getDriverDisplayNameById(drivers, record.results.pole, uiText.history.unknownDriver),
-    });
-  }
-
   function formatAverageValue(value: number | null, digits = 1) {
     if (value === null) {
       return uiText.placeholders.emptyOption;
@@ -1265,17 +1273,6 @@ function App() {
     );
   }
 
-  async function handleShareCurrentView() {
-    const shareUrl = window.location.href;
-    try {
-      await navigator.clipboard.writeText(shareUrl);
-      showToastMessage(uiText.status.shareLinkCopied, 'success');
-    } catch (error) {
-      console.error(error);
-      window.alert(shareUrl);
-    }
-  }
-
   function getExpandedHistoryKey(record: AppData['history'][number], index: number) {
     return `${record.gpName}-${record.date}-${index}`;
   }
@@ -1299,6 +1296,23 @@ function App() {
     const winnerDriverId = record.userPredictions[userName]?.prediction.first ?? '';
     const winnerDriver = getDriverById(drivers, winnerDriverId);
     return winnerDriver ? formatDriverDisplayName(winnerDriver.name) : uiText.history.unknownDriver;
+  }
+
+  function getHistoryResultsPodium(record: AppData['history'][number]) {
+    return ([
+      { position: 1 as const, field: 'first' as const },
+      { position: 2 as const, field: 'second' as const },
+      { position: 3 as const, field: 'third' as const },
+    ]).map(({ position, field }) => {
+      const driver = getDriverById(drivers, record.results[field]);
+
+      return {
+        position,
+        driverName: driver ? driver.name : uiText.history.unknownDriver,
+        avatarUrl: driver?.avatarUrl ?? '',
+        color: driver?.color ?? '',
+      };
+    });
   }
 
   function renderSelectedRaceTrackMap({ compact = false } = {}) {
@@ -1476,23 +1490,6 @@ function App() {
         </nav>
 
         <div className="hero-summary-grid">
-          <section className="hero-card rules-panel interactive-surface">
-            <div className="card-heading">
-              <ShieldCheck size={18} />
-              <span>{uiText.headings.rules}</span>
-            </div>
-            <div className="rules-list">
-              {predictionFieldOrder.map((field) => (
-                <div key={`hero-rule-${field}`} className="rule-row">
-                  <span className="rule-points">
-                    +{points[field]} {uiText.pointsSuffix}
-                  </span>
-                  <span>{uiText.rules[field]}</span>
-                </div>
-              ))}
-            </div>
-          </section>
-
           <section className="hero-card next-race-card interactive-surface">
             <div className="card-heading">
               <CalendarDays size={18} />
@@ -1591,7 +1588,7 @@ function App() {
             ) : null}
           </section>
 
-          <section className="hero-card interactive-surface">
+          <section className="hero-card hero-selected-race-card interactive-surface">
             <div className="card-heading">
               <Flag size={18} />
               <span>{selectedRaceRecapTitle}</span>
@@ -1810,7 +1807,6 @@ function App() {
           <SeasonAnalysisPanel
             analyticsEmptyLabel={uiText.history.analyticsEmpty}
             emptyOptionLabel={uiText.placeholders.emptyOption}
-            onShare={handleShareCurrentView}
             predictionLabels={predictionLabels}
             seasonAnalytics={seasonAnalytics}
           />
@@ -1821,6 +1817,14 @@ function App() {
             predictionLabels={predictionLabels}
             weekendComparison={weekendComparison}
           />
+
+          {isPublicView ? (
+            <PublicStandingsPanel
+              constructorStandings={standings.constructorStandings}
+              driverStandings={standings.driverStandings}
+              updatedAt={standings.updatedAt}
+            />
+          ) : null}
 
           {isPublicView ? (
             <PublicGuidePanel />
@@ -2028,7 +2032,7 @@ function App() {
             pointsSuffix={uiText.pointsSuffix}
             predictionFieldOrder={predictionFieldOrder}
             predictionLabels={predictionLabels}
-            renderHistoryResults={renderHistoryResults}
+            resolveHistoryPodium={getHistoryResultsPodium}
             unknownDriverLabel={uiText.history.unknownDriver}
             userDisplayNameForWinner={getHistoryWinnerDriverName}
             users={users}

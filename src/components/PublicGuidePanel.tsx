@@ -11,9 +11,15 @@ function PublicGuidePanel() {
         <h2>{publicGuide.title}</h2>
       </div>
       <div className="weekend-pulse-summary">
-        <div className="spotlight-row">
-          <span>{publicGuide.pointsLabel}</span>
-          <strong>{publicGuide.pointsSummary}</strong>
+        <div className="public-guide-race-strip" aria-label={publicGuide.pointsLabel}>
+          {publicGuide.pointsStrip.map((entry) => (
+            <article key={entry.field} className="race-strip-segment interactive-surface">
+              <span>{entry.label}</span>
+              <strong>
+                +{entry.points} {publicGuide.pointsSuffix}
+              </strong>
+            </article>
+          ))}
         </div>
         <div className="spotlight-row">
           <span>{publicGuide.raceLockLabel}</span>

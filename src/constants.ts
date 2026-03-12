@@ -44,6 +44,7 @@ const dataApiUrl = `${backendOrigin}${appConfig.api.dataPath}`;
 const predictionsApiUrl = `${backendOrigin}${appConfig.api.predictionsPath}`;
 const driversApiUrl = `${backendOrigin}${appConfig.api.driversPath}`;
 const calendarApiUrl = `${backendOrigin}${appConfig.api.calendarPath}`;
+const standingsApiUrl = `${backendOrigin}${appConfig.api.standingsPath}`;
 const healthApiUrl = `${backendOrigin}${appConfig.api.healthPath}`;
 const predictionFieldOrder: PredictionKey[] = ['first', 'second', 'third', 'pole'];
 
@@ -61,5 +62,6 @@ export {
   predictionsApiUrl,
   predictionFieldOrder,
   resolveVisibleAppTitle,
+  standingsApiUrl,
   visibleAppTitle,
 };

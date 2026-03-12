@@ -447,6 +447,7 @@ select,
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 18px;
   align-content: start;
+  justify-items: center;
   z-index: 2;
 }
 
@@ -480,17 +481,6 @@ button.interactive-surface:focus-visible {
   outline: 0;
 }
 
-.rules-panel {
-  border-color: var(--panel-border-strong);
-  background:
-    linear-gradient(160deg, rgba(225, 6, 0, 0.1), rgba(255, 255, 255, 0.02)),
-    var(--panel-glass);
-}
-
-.rules-panel:hover {
-  box-shadow: 0 10px 40px rgba(225, 6, 0, 0.15);
-}
-
 .calendar-panel {
   overflow: hidden;
 }
@@ -518,13 +508,13 @@ button.interactive-surface:focus-visible {
 .hero-summary-grid .hero-card {
   width: 100%;
   padding: clamp(14px, 1.2vw, 18px);
+  max-width: 520px;
 }
 
 .hero-summary-grid .card-heading {
   margin-bottom: 10px;
 }
 
-.hero-summary-grid .rules-list,
 .hero-summary-grid .live-list,
 .hero-summary-grid .driver-spotlight {
   gap: 10px;
@@ -544,6 +534,11 @@ button.interactive-surface:focus-visible {
 .next-race-card {
   min-width: 0;
   container-type: inline-size;
+}
+
+.hero-selected-race-card {
+  max-width: 760px !important;
+  justify-self: center;
 }
 
 .next-race-content {
@@ -925,6 +920,17 @@ select:disabled {
   margin-bottom: 18px;
 }
 
+#weekend-live .analytics-summary-grid {
+  width: 100%;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 320px));
+  justify-content: center;
+  justify-items: center;
+}
+
+#weekend-live .analytics-card {
+  width: min(100%, 320px);
+}
+
 .analytics-card {
   display: grid;
   gap: 8px;
@@ -1261,8 +1267,10 @@ select:disabled {
   margin-bottom: 12px;
 }
 
-.history-top-row > div:first-child {
+.history-race-meta {
   min-width: 0;
+  display: grid;
+  gap: 4px;
 }
 
 .history-top strong {
@@ -1274,10 +1282,82 @@ select:disabled {
   overflow-wrap: anywhere;
 }
 
+.history-race-date {
+  display: block;
+  color: var(--muted);
+  font-size: 0.95rem;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
 .history-summary {
   color: var(--muted);
   font-size: 0.9rem;
   font-style: italic;
+}
+
+.history-podium-block {
+  display: grid;
+  gap: 14px;
+}
+
+.history-podium {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  align-items: end;
+}
+
+.history-podium-slot {
+  min-width: 0;
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  padding: 16px 12px;
+  border-radius: 18px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.03);
+  text-align: center;
+}
+
+.history-podium-slot.position-1 {
+  min-height: 190px;
+}
+
+.history-podium-slot.position-2,
+.history-podium-slot.position-3 {
+  min-height: 170px;
+}
+
+.history-podium-rank {
+  font-family: 'Formula1', 'Titillium Web', 'Segoe UI', sans-serif;
+  color: var(--gold);
+  font-size: calc(0.92rem + 5px);
+}
+
+.history-podium-avatar {
+  width: 92px;
+  height: 92px;
+  border-radius: 50%;
+  object-fit: cover;
+  object-position: center 1%;
+  border: 2px solid rgba(255, 255, 255, 0.28);
+  box-shadow: 0 14px 26px rgba(0, 0, 0, 0.28);
+}
+
+.history-podium-avatar-fallback {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(160deg, var(--podium-color, rgba(225, 6, 0, 0.3)), rgba(255, 255, 255, 0.08));
+  color: #fff;
+  font-family: 'Formula1', sans-serif;
+}
+
+.history-detail-cta-row {
+  margin-top: 22px;
+  padding-top: 18px;
+  border-top: 1px solid var(--line);
 }
 
 .history-actions {
@@ -1353,6 +1433,163 @@ select:disabled {
   justify-content: space-between;
   gap: 12px;
   padding: 8px 0;
+}
+
+.public-guide-race-strip {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.race-strip-segment {
+  min-width: 0;
+  display: grid;
+  gap: 8px;
+  padding: 14px;
+  border-radius: 16px;
+  border: 1px solid var(--line);
+  background: linear-gradient(160deg, rgba(225, 6, 0, 0.12), rgba(255, 255, 255, 0.03));
+}
+
+.race-strip-segment span {
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.race-strip-segment strong {
+  font-family: 'Formula1Digits', sans-serif;
+  color: var(--gold);
+  font-size: 1rem;
+}
+
+.public-standings-panel {
+  overflow: hidden;
+}
+
+.public-standings-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.8fr);
+  gap: 18px;
+}
+
+.public-standings-grid-compact {
+  align-items: start;
+}
+
+.standings-subpanel {
+  display: grid;
+  gap: 14px;
+}
+
+.standings-subpanel-compact {
+  height: fit-content;
+  align-self: start;
+}
+
+.standings-subpanel-title {
+  margin-bottom: 0;
+}
+
+.standings-subpanel .section-title h3 {
+  margin: 0;
+  font-size: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.standings-list {
+  display: grid;
+  gap: 10px;
+}
+
+.standings-row {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  border-radius: 18px;
+  border: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.standings-row.first {
+  background: linear-gradient(145deg, rgba(255, 184, 0, 0.16), rgba(255, 255, 255, 0.03));
+}
+
+.standings-row.second,
+.standings-row.third {
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.03));
+}
+
+.standings-position,
+.standings-points {
+  font-family: 'Formula1Digits', sans-serif;
+}
+
+.standings-position {
+  color: var(--gold);
+}
+
+.standings-driver-media,
+.standings-constructor-copy {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.standings-avatar {
+  width: 56px;
+  height: 56px;
+  object-fit: cover;
+  object-position: center 1%;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.12);
+}
+
+.standings-avatar-fallback {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  font-family: 'Formula1', sans-serif;
+}
+
+.standings-driver-copy {
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.standings-driver-copy span {
+  color: var(--muted);
+}
+
+.standings-row-constructor {
+  grid-template-columns: auto minmax(0, 1fr) auto;
+}
+
+.standings-constructor-copy {
+  gap: 10px;
+}
+
+.standings-team-logo {
+  width: 28px;
+  height: 28px;
+  flex: 0 0 28px;
+  object-fit: contain;
+  filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.28));
+}
+
+.standings-constructor-name {
+  min-width: 0;
+  color: var(--team-color, var(--ink));
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .driver-spotlight .spotlight-row > span {
@@ -1572,6 +1809,7 @@ select:disabled {
   .kpi-grid,
   .analytics-summary-grid,
   .analytics-columns,
+  .public-standings-grid,
   .history-grid-compact,
   .history-filters,
   .season-comparison-row {
@@ -1584,6 +1822,10 @@ select:disabled {
 
   .track-map {
     width: min(240px, 40vw);
+  }
+
+  .standings-row-constructor {
+    grid-template-columns: auto minmax(0, 1fr) auto;
   }
 }
 
@@ -1618,6 +1860,8 @@ select:disabled {
   .kpi-grid,
   .analytics-summary-grid,
   .analytics-columns,
+  .public-guide-race-strip,
+  .public-standings-grid,
   .history-grid-compact,
   .history-filters,
   .season-comparison-row {
@@ -1633,6 +1877,7 @@ select:disabled {
 
   .panel-head,
   .history-top-row,
+  .history-detail-cta-row,
   .selected-race-banner,
   .user-card-head,
   .history-actions,
@@ -1646,6 +1891,23 @@ select:disabled {
   .driver-spotlight .spotlight-row strong {
     white-space: normal;
     text-align: left;
+  }
+
+  .standings-row,
+  .standings-row-constructor {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    gap: 10px;
+    padding: 12px 14px;
+  }
+
+  .standings-constructor-copy {
+    gap: 8px;
+  }
+
+  .standings-team-logo {
+    width: 24px;
+    height: 24px;
+    flex-basis: 24px;
   }
 
   .secondary-button,
@@ -1692,6 +1954,10 @@ select:disabled {
 
   .trend-chart {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .history-podium {
+    grid-template-columns: 1fr;
   }
 
   .track-map {

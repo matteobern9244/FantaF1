@@ -1,6 +1,8 @@
+import type { CSSProperties } from 'react';
 import { ChevronDown, Trophy } from 'lucide-react';
 import type { AppData, PredictionKey, UserData } from '../types';
 import { appText } from '../uiText';
+import { getDriverPortraitUrl } from '../utils/driverAvatar';
 
 interface HistoryArchivePanelProps {
   editingSession: {
@@ -30,7 +32,14 @@ interface HistoryArchivePanelProps {
   pointsSuffix: string;
   predictionFieldOrder: PredictionKey[];
   predictionLabels: Record<PredictionKey, string>;
-  renderHistoryResults: (record: AppData['history'][number]) => string;
+  resolveHistoryPodium: (
+    record: AppData['history'][number],
+  ) => Array<{
+    avatarUrl?: string;
+    color?: string;
+    driverName: string;
+    position: 1 | 2 | 3;
+  }>;
   unknownDriverLabel: string;
   userDisplayNameForWinner: (record: AppData['history'][number], userName: string) => string;
   users: UserData[];
@@ -54,7 +63,7 @@ function HistoryArchivePanel({
   pointsSuffix,
   predictionFieldOrder,
   predictionLabels,
-  renderHistoryResults,
+  resolveHistoryPodium,
   unknownDriverLabel,
   userDisplayNameForWinner,
   users,
@@ -102,14 +111,15 @@ function HistoryArchivePanel({
           {filteredHistoryEntries.map(({ record, index }) => {
             const historyKey = getHistoryKey(record, index);
             const isExpanded = expandedHistoryKey === historyKey;
+            const podiumEntries = resolveHistoryPodium(record);
 
             return (
               <article key={`${record.gpName}-${record.date}-${index}`} className="history-card interactive-surface">
                 <div className="history-top">
                   <div className="history-top-row">
-                    <div>
+                    <div className="history-race-meta">
                       <strong>{record.gpName}</strong>
-                      <span>{record.date}</span>
+                      <span className="history-race-date">{record.date}</span>
                     </div>
                     {!isPublicView ? (
                       <div className="history-actions">
@@ -132,9 +142,37 @@ function HistoryArchivePanel({
                       </div>
                     ) : null}
                   </div>
-                  <span className="history-summary">{renderHistoryResults(record)}</span>
+                  <div className="history-podium-block">
+                    <span className="history-summary">{historyArchive.actualPodiumTitle}</span>
+                    <div className="history-podium">
+                      {podiumEntries.map((entry) => (
+                        <article
+                          key={`${record.gpName}-${entry.position}-${entry.driverName}`}
+                          className={`history-podium-slot interactive-surface position-${entry.position}`}
+                        >
+                          <span className="history-podium-rank">P{entry.position}</span>
+                          {entry.avatarUrl ? (
+                            <img
+                              alt={entry.driverName}
+                              className="history-podium-avatar"
+                              src={getDriverPortraitUrl(entry.avatarUrl)}
+                            />
+                          ) : (
+                            <span
+                              aria-hidden="true"
+                              className="history-podium-avatar history-podium-avatar-fallback"
+                              style={{ '--podium-color': entry.color ?? '' } as CSSProperties}
+                            >
+                              {entry.driverName.slice(0, 1)}
+                            </span>
+                          )}
+                          <strong>{entry.driverName || unknownDriverLabel}</strong>
+                        </article>
+                      ))}
+                    </div>
+                  </div>
                 </div>
-                <div className="history-top-row">
+                <div className="history-detail-cta-row">
                   <button
                     className="secondary-button compact-button"
                     onClick={() => onToggleExpanded(isExpanded ? '' : historyKey)}

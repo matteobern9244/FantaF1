@@ -27,6 +27,8 @@ Rispetto alla produzione `v1.4.0`, il repository contiene gia' il delta tecnico 
 - ottimizzazione performance: eliminato il jank durante lo scorrimento fluido su dispositivi mobili tramite l'uso di `IntersectionObserver` in luogo dei global event listeners sincroni e la disattivazione del `backdrop-filter` in mobile;
 - fix regressione dropdown mobile: ripristinato l'aspetto nativo delle select su smartphone per garantire il corretto posizionamento dei menu opzioni;
 - fix architetturale mappa circuito: il `Recap ultimo GP` visualizza ora la mappa specifica della gara conclusa recuperandola dal calendario, indipendentemente dalla selezione corrente;
+- affinamento delle classifiche reali pubbliche: `Classifica piloti` usa avatar Formula1 più nitidi con crop orientato al volto, mentre `Classifica scuderia` è stata riallineata con logo ufficiale, nome squadra colorato e rimozione del vecchio marker lineare;
+- ottimizzazione del layout standings pubbliche: il riquadro `Classifica scuderia` resta nella colonna destra su desktop ma non viene più allungato artificialmente, eliminando il grande spazio vuoto interno e mantenendo lo stacking invariato su tablet e mobile;
 - integrazione della CTA `INSTALLA APPLICAZIONE` come ultima voce della lista di navigazione unificata;
 - shortcut contestuale `Torna al menu` raffinata: la freccia flottante ancora ora lo scroll direttamente alla barra di navigazione nell'header;
 - ripristino della track map del circuito anche nella vista pubblica, sia nel recap hero del weekend selezionato sia nel pannello `Recap ultimo GP`;
@@ -231,7 +233,8 @@ Se il database non contiene ancora stato applicativo, il backend costruisce uno 
 - Hero results card del weekend selezionato con CTA Highlights YouTube di Sky Sport Italia F1 per i weekend conclusi: se il video e' disponibile il pulsante apre il contenuto all'esterno della SPA, altrimenti resta visibile ma disabilitato con messaggio di indisponibilita'.
 - Sezione risultati del weekend con track map, recupero automatico read-only dei risultati ufficiali, merge solo dei campi mancanti e pulsante conferma con tooltip di stato.
 - Vista pubblica con track map coerente col weekend selezionato sia nel recap hero del weekend sia nel pannello `Recap ultimo GP`, mantenendo la stessa mappa anche nella sezione admin `Risultati del weekend`.
-- Storico gare modificabile con ricalcolo dei punteggi, filtri per giocatore/GP e drill-down dei pronostici dettagliati.
+- Storico gare modificabile con ricalcolo dei punteggi, filtri per giocatore/GP e drill-down dei pronostici dettagliati; il podio reale mostra foto pilota, nome reale in formato naturale, data della gara su riga separata sotto il titolo e lo stesso effetto hover grafico delle altre card interattive dell'app.
+- Le classifiche reali pubbliche mostrano ora avatar piloti Formula1 promossi a una variante hi-res con focus sul volto e, per le scuderie, logo ufficiale accanto al nome colorato con il colore team già presente nei dati.
 - Dashboard KPI per utente, analytics deep-dive, pannello `Analisi stagione`, riepilogo `Weekend pulse`, guida pubblica, storico mobile piu' compatto, status strip, toast operativi e CTA installazione PWA.
 - Loader iniziale con splash logo `FantaF1`, set icone browser/PWA dedicato (`favicon`, `apple-touch-icon`, `192x192`, `512x512`, `maskable`) e layout responsive desktop/mobile.
 
@@ -595,10 +598,10 @@ Il controllo browser `npm run test:ui-responsive` resta disponibile come verific
 - Runner: Vitest.
 - Coverage provider: V8.
 - Baseline coverage verificata corrente sullo scope ufficiale del repository/applicazione:
-  - `4780 / 4780` statements
-  - `393 / 393` functions
-  - `1999 / 1999` branches
-  - `4780 / 4780` lines
+  - `5167 / 5167` statements
+  - `407 / 407` functions
+  - `2093 / 2093` branches
+  - `5167 / 5167` lines
 - Scope coverage configurato:
   - `app.js`
   - `server.js`
