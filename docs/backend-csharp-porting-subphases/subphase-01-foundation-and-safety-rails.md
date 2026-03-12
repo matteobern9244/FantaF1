@@ -63,7 +63,7 @@ Invocazione canonica: `Subphase 1`
 1. Congelare l'inventario di route, cookie, collection, invarianti di dominio e ambienti dal piano canonico.
 2. Formalizzare il divieto di operare su `fantaf1` e `fantaf1_dev`, con `fantaf1_porting` come unico target locale mutabile e `fantaf1_staging` come target esterno di staging.
 3. Formalizzare che ogni subphase deve lasciare il branch releasable, senza commit/push non autorizzati.
-4. Definire la matrice requisiti -> owner che assegna ogni ambito del porting a una sola subphase.
+4. Materializzare nel piano canonico, sotto `## Subphase execution index`, la matrice requisiti -> owner che assegna ogni ambito del porting a una sola subphase.
 5. Definire i gate comuni di parity, coverage 100%, regression test e browser verification da riusare nelle subfasi successive.
 
 ## Test da aggiungere o aggiornare
@@ -71,6 +71,7 @@ Invocazione canonica: `Subphase 1`
 - Nessun nuovo test runtime: il deliverable di questa subphase e' documentale.
 - Rieseguire l'intera baseline Node/React come prova che i safety rails non hanno toccato il comportamento applicativo.
 - Aggiungere controlli strutturali documentali per verificare che ogni requisito del porting abbia un owner univoco.
+- Verificare che la matrice requisito -> owner viva nel piano canonico e non in una source of truth concorrente.
 
 ## Verifiche browser e responsive
 
@@ -91,6 +92,7 @@ Invocazione canonica: `Subphase 1`
 
 - Tutti i requisiti del porting hanno un owner univoco.
 - Tutti i safety rails comuni sono esplicitati senza conflitti con il piano canonico.
+- La matrice requisito -> owner e' materializzata nel piano canonico e referenziata da questa subphase.
 - La baseline Node/React resta verde e con coverage 100%.
 
 ## Blocchi / condizioni di stop

@@ -56,6 +56,24 @@ This document remains the canonical source of truth. The files below are executi
 | `Subphase 10` | [`docs/backend-csharp-porting-subphases/subphase-10-docker-render-staging-and-atlas-operationalization.md`](backend-csharp-porting-subphases/subphase-10-docker-render-staging-and-atlas-operationalization.md) | Operationalize Atlas, Docker, Render staging `FantaF1_staging`, and the staging-only browser gate. | Sections 7, 8, 10.1 staging criteria | `Subphase 9` |
 | `Subphase 11` | [`docs/backend-csharp-porting-subphases/subphase-11-future-cicd-cutover-certification-and-legacy-removal.md`](backend-csharp-porting-subphases/subphase-11-future-cicd-cutover-certification-and-legacy-removal.md) | Introduce future branch-specific C# workflows, formal cutover/certification, and final legacy removal. | Sections 9, 10, backlog items 7 and 10 | `Subphase 10` |
 
+### Requirement ownership matrix
+
+The table below is the canonical requirement-to-owner matrix for the porting program. Each requirement is owned by exactly one subphase, while cross-cutting constraints defined by `Subphase 1` remain globally binding for every later slice.
+
+| Requirement family | Owning subphase | Canonical execution artifact |
+| --- | --- | --- |
+| Node contract freeze, safety rails, branch isolation, no use of `fantaf1` / `fantaf1_dev`, shared TDD/parity/coverage gates | `Subphase 1` | `docs/backend-csharp-porting-subphases/subphase-01-foundation-and-safety-rails.md` |
+| `backend-csharp/` solution, layer layout, shared abstractions, minimal DI, standard C# build/test/coverage commands | `Subphase 2` | `docs/backend-csharp-porting-subphases/subphase-02-backend-csharp-solution-and-shared-abstractions.md` |
+| Environment/database target resolution and `GET /api/health` parity | `Subphase 3` | `docs/backend-csharp-porting-subphases/subphase-03-health-and-environment-database-parity.md` |
+| Session/auth routes, admin cookie semantics, TTL and dev vs production-like auth behavior | `Subphase 4` | `docs/backend-csharp-porting-subphases/subphase-04-session-and-admin-auth-parity.md` |
+| Read routes `GET /api/data`, `GET /api/drivers`, `GET /api/calendar`, including sorting and sanitization parity | `Subphase 5` | `docs/backend-csharp-porting-subphases/subphase-05-read-routes-data-drivers-calendar.md` |
+| Write routes `POST /api/data` and `POST /api/predictions`, including roster, race lock, request-id and persistence parity | `Subphase 6` | `docs/backend-csharp-porting-subphases/subphase-06-write-routes-data-and-predictions.md` |
+| Results route `GET /api/results/:meetingKey`, including `racePhase`, highlights and fallback behavior | `Subphase 7` | `docs/backend-csharp-porting-subphases/subphase-07-results-route-race-phase-and-highlights.md` |
+| Startup/bootstrap, Mongo connection, background sync, cache fallback, startup non-blocking behavior and same-origin React static hosting | `Subphase 8` | `docs/backend-csharp-porting-subphases/subphase-08-startup-sync-bootstrap-and-cache-fallback.md` |
+| Canonical launcher and shared verification scripts, including the ban on implicit `fantaf1_dev` fallback | `Subphase 9` | `docs/backend-csharp-porting-subphases/subphase-09-launcher-and-shared-verification-scripts.md` |
+| Atlas operationalization, Docker image, Render staging `FantaF1_staging` and the staging-only external browser gate | `Subphase 10` | `docs/backend-csharp-porting-subphases/subphase-10-docker-render-staging-and-atlas-operationalization.md` |
+| Future branch-specific C# workflows, cutover certification, final legacy removal and post-porting governance | `Subphase 11` | `docs/backend-csharp-porting-subphases/subphase-11-future-cicd-cutover-certification-and-legacy-removal.md` |
+
 ## 1. Authority and non-negotiables
 
 ### 1.1 Authoritative runtime today
