@@ -93,34 +93,14 @@ function createAppData() {
     ],
     history: [
       {
-        gpName: 'Australian Grand Prix 2099',
-        meetingKey: 'race-1',
-        date: '01/03/2099',
-        results: { first: 'ver', second: 'lec', third: 'nor', pole: 'pia' },
-        userPredictions: {
-          Marco: {
-            prediction: { first: 'ver', second: 'lec', third: 'ham', pole: 'pia' },
-            pointsEarned: 9,
-          },
-          Luca: {
-            prediction: { first: 'ham', second: 'ver', third: 'nor', pole: 'nor' },
-            pointsEarned: 2,
-          },
-          Sara: {
-            prediction: { first: 'ver', second: 'lec', third: 'nor', pole: 'pia' },
-            pointsEarned: 11,
-          },
-        },
-      },
-      {
-        gpName: 'Chinese Grand Prix 2099',
-        meetingKey: 'race-2',
-        date: '15/03/2099',
-        results: { first: 'ham', second: 'nor', third: 'lec', pole: 'ver' },
+        gpName: 'Gran Premio di Gran Bretagna',
+        meetingKey: 'race-gb',
+        date: '05/07/2099',
+        results: { first: 'ham', second: 'nor', third: 'ver', pole: 'ham' },
         userPredictions: {
           Marco: {
             prediction: { first: 'ham', second: 'nor', third: 'lec', pole: 'ver' },
-            pointsEarned: 11,
+            pointsEarned: 9,
           },
           Luca: {
             prediction: { first: 'ham', second: 'nor', third: 'pia', pole: 'ver' },
@@ -133,11 +113,11 @@ function createAppData() {
         },
       },
     ],
-    gpName: 'Australian Grand Prix 2099',
+    gpName: 'Monza',
     raceResults: createEmptyPrediction(),
-    selectedMeetingKey: 'race-1',
+    selectedMeetingKey: 'race-monza',
     weekendStateByMeetingKey: {
-      'race-1': {
+      'race-monza': {
         userPredictions: {
           Marco: { first: 'ver', second: 'lec', third: 'nor', pole: 'pia' },
           Luca: { first: 'ham', second: 'ver', third: 'nor', pole: 'lec' },
@@ -162,18 +142,33 @@ function createDrivers() {
 function createCalendar() {
   return [
     {
-      meetingKey: 'race-1',
-      meetingName: 'Australia',
-      grandPrixTitle: 'Australian Grand Prix 2099',
-      roundNumber: 1,
-      dateRangeLabel: '13 - 15 MAR',
-      detailUrl: 'https://www.formula1.com/en/racing/2099/australia',
+      meetingKey: 'race-monza',
+      meetingName: 'Monza',
+      grandPrixTitle: 'Gran Premio d\'Italia',
+      roundNumber: 15,
+      dateRangeLabel: '01 - 03 SEP',
+      detailUrl: 'https://www.formula1.com/en/racing/2099/italy',
       heroImageUrl: '',
-      trackOutlineUrl: '',
+      trackOutlineUrl: '/images/tracks/monza.png',
       isSprintWeekend: false,
-      startDate: '2099-03-13',
-      endDate: '2099-03-15',
-      raceStartTime: '2099-03-15T14:00:00Z',
+      startDate: '2099-09-01',
+      endDate: '2099-09-03',
+      raceStartTime: '2099-09-03T15:00:00Z',
+      sessions: [],
+    },
+    {
+      meetingKey: 'race-gb',
+      meetingName: 'Silverstone',
+      grandPrixTitle: 'Gran Premio di Gran Bretagna',
+      roundNumber: 10,
+      dateRangeLabel: '03 - 05 JUL',
+      detailUrl: 'https://www.formula1.com/en/racing/2099/great-britain',
+      heroImageUrl: '',
+      trackOutlineUrl: '/images/tracks/silverstone.png',
+      isSprintWeekend: false,
+      startDate: '2099-07-03',
+      endDate: '2099-07-05',
+      raceStartTime: '2099-07-05T15:00:00Z',
       sessions: [],
     },
   ];
@@ -349,10 +344,11 @@ describe('Mockup roadmap UI features', () => {
 
     expect(screen.getByRole('heading', { name: /user kpi dashboard/i })).toBeInTheDocument();
     const kpiPanel = screen.getByTestId('user-kpi-dashboard');
-    expect(within(kpiPanel).getByText('20')).toBeInTheDocument();
-    expect(within(kpiPanel).getByText('1.5')).toBeInTheDocument();
-    expect(within(kpiPanel).getByText('100%')).toBeInTheDocument();
-    expect(within(kpiPanel).getByText('10')).toBeInTheDocument();
+    const kpiCards = within(kpiPanel).getAllByRole('article');
+    expect(within(kpiCards[0]).getByText('9')).toBeInTheDocument();
+    expect(within(kpiCards[1]).getByText('2')).toBeInTheDocument();
+    expect(within(kpiCards[2]).getByText('0%')).toBeInTheDocument();
+    expect(within(kpiCards[3]).getByText('9')).toBeInTheDocument();
     expect(within(kpiPanel).getAllByRole('article').every((card) => card.classList.contains('interactive-surface'))).toBe(
       true,
     );
@@ -360,8 +356,7 @@ describe('Mockup roadmap UI features', () => {
     const analyticsPanel = screen.getByRole('heading', { name: /deep-dive kpi dashboard/i }).closest('section');
     expect(analyticsPanel).not.toBeNull();
     expect(within(analyticsPanel as HTMLElement).getByText(/hamilton lewis/i)).toBeInTheDocument();
-    expect(within(analyticsPanel as HTMLElement).getAllByText(/chinese grand prix 2099/i).length).toBeGreaterThan(0);
-    expect(within(analyticsPanel as HTMLElement).getAllByText(/australian grand prix 2099/i).length).toBeGreaterThan(0);
+    expect(within(analyticsPanel as HTMLElement).getAllByText(/gran premio di gran bretagna/i).length).toBeGreaterThan(0);
     expect(
       (analyticsPanel as HTMLElement).querySelectorAll('.analytics-card.interactive-surface').length,
     ).toBeGreaterThan(0);
@@ -382,6 +377,13 @@ describe('Mockup roadmap UI features', () => {
     expect(screen.getByRole('heading', { name: /analisi stagione/i })).toBeInTheDocument();
     expect(screen.getByText(/chi tiene il passo del leader/i)).toBeInTheDocument();
     expect(screen.getByText(/recap ultimo gp/i)).toBeInTheDocument();
+
+    // La mappa nel recap deve essere quella di Silverstone (history[0] nel mock), non Monza (selectedRace)
+    const recapSection = screen.getByText(/recap ultimo gp/i).closest('.analytics-subpanel');
+    const recapImage = within(recapSection as HTMLElement).getByRole('img');
+    expect(recapImage).toHaveAttribute('src', '/images/tracks/silverstone.png');
+    expect(recapImage).toHaveAttribute('alt', 'Silverstone');
+
     const seasonPanel = screen.getByRole('heading', { name: /analisi stagione/i }).closest('section');
     expect(seasonPanel).not.toBeNull();
     expect((seasonPanel as HTMLElement).querySelectorAll('.analytics-card.interactive-surface').length).toBeGreaterThan(0);
@@ -412,9 +414,9 @@ describe('Mockup roadmap UI features', () => {
     fireEvent.change(screen.getByLabelText(/filtra per giocatore/i), {
       target: { value: 'Marco' },
     });
-    expect(screen.getByText(/2 gran premi mostrati/i)).toBeInTheDocument();
+    expect(screen.getByText(/1 gran premi mostrati/i)).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('button', { name: /dettaglio australian grand prix 2099/i }));
+    fireEvent.click(screen.getByRole('button', { name: /dettaglio gran premio di gran bretagna/i }));
     expect(screen.getByText(/pronostici dettagliati/i)).toBeInTheDocument();
     expect(screen.getAllByText(/marco/i).length).toBeGreaterThan(0);
     expect(document.querySelectorAll('.history-card.interactive-surface').length).toBeGreaterThan(0);
@@ -429,6 +431,9 @@ describe('Mockup roadmap UI features', () => {
       {
         ...createCalendar()[0],
         trackOutlineUrl: australiaMapUrl,
+      },
+      {
+        ...createCalendar()[1], // Silverstone
       },
       {
         meetingKey: 'race-2',
@@ -471,12 +476,13 @@ describe('Mockup roadmap UI features', () => {
       expect(screen.queryByTestId('pitstop-loader')).not.toBeInTheDocument();
     });
 
-    expect(screen.getByRole('img', { name: 'Australia' })).toHaveAttribute('src', australiaMapUrl);
+    expect(screen.getByRole('img', { name: 'Monza' })).toHaveAttribute('src', australiaMapUrl);
 
     fireEvent.click(screen.getByRole('button', { name: /vista pubblica/i }));
 
     await waitFor(() => {
-      expect(screen.getAllByRole('img', { name: 'Australia' })).toHaveLength(2);
+      // 1 nella hero (Monza) e 1 nel recap (Silverstone - ma nel test calendar Silverstone non ha australiaMapUrl)
+      expect(screen.getAllByRole('img', { name: 'Monza' })).toHaveLength(1);
     });
     expect(screen.queryByRole('button', { name: /conferma risultati e assegna i punti/i })).not.toBeInTheDocument();
 
@@ -489,7 +495,9 @@ describe('Mockup roadmap UI features', () => {
     });
 
     await waitFor(() => {
-      expect(screen.getAllByRole('img', { name: 'China' })).toHaveLength(2);
+      // 1 nella hero (Cina) e 1 nel recap (Silverstone - dalla history[0])
+      expect(screen.getAllByRole('img', { name: 'China' })).toHaveLength(1);
+      expect(screen.getByRole('img', { name: 'Silverstone' })).toBeInTheDocument();
     });
     expect(screen.getAllByRole('img', { name: 'China' }).every((image) => image.getAttribute('src') === chinaMapUrl)).toBe(true);
 
@@ -634,7 +642,7 @@ describe('Mockup roadmap UI features', () => {
     window.history.replaceState(
       {},
       '',
-      '/?meeting=race-2&view=public&historyUser=Marco&historySearch=Chinese#history-archive',
+      '/?meeting=race-2&view=public&historyUser=Marco&historySearch=Gran#history-archive',
     );
 
     setupFetchWithOverrides({
@@ -658,7 +666,7 @@ describe('Mockup roadmap UI features', () => {
 
     expect(screen.queryByRole('button', { name: /salva dati inseriti/i })).not.toBeInTheDocument();
     expect(screen.getByLabelText(/filtra per giocatore/i)).toHaveValue('Marco');
-    expect(screen.getByLabelText(/cerca gp/i)).toHaveValue('Chinese');
+    expect(screen.getByLabelText(/cerca gp/i)).toHaveValue('Gran');
     expect(screen.getByDisplayValue(/2\.\s+Chinese Grand Prix 2099/i)).toBeInTheDocument();
     expect(screen.getByText(/1 gran premi mostrati/i)).toBeInTheDocument();
     expect(scrollIntoView).toHaveBeenCalled();
@@ -678,7 +686,7 @@ describe('Mockup roadmap UI features', () => {
       expect.stringContaining('historyUser=Marco'),
     );
     expect(navigator.clipboard.writeText).toHaveBeenCalledWith(
-      expect.stringContaining('historySearch=Chinese'),
+      expect.stringContaining('historySearch=Gran'),
     );
     expect(navigator.clipboard.writeText).toHaveBeenCalledWith(
       expect.stringContaining('#history-archive'),

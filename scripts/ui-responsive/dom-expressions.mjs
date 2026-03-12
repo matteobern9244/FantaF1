@@ -10,6 +10,7 @@ const inspectStateExpression = `() => {
       color: styles?.color ?? '',
       backgroundColor: styles?.backgroundColor ?? '',
       fontFamily: styles?.fontFamily ?? '',
+      appearance: styles?.appearance ?? styles?.webkitAppearance ?? '',
       disabled: element ? Boolean(element.disabled) : false,
       text: normalizeText(
         element?.selectedOptions?.[0]?.textContent ||

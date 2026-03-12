@@ -1440,7 +1440,7 @@ function App() {
           <p className="subtitle">{currentYear}</p>
         </div>
 
-        <nav aria-label={appText.shell.navigation.ariaLabel} className="section-nav panel">
+        <nav aria-label={appText.shell.navigation.ariaLabel} className="section-nav">
           <div className="section-nav-list">
             {sectionNavigationItems.map((item) => (
               <button
@@ -1792,11 +1792,8 @@ function App() {
           <SeasonAnalysisPanel
             analyticsEmptyLabel={uiText.history.analyticsEmpty}
             emptyOptionLabel={uiText.placeholders.emptyOption}
-            isPublicView={isPublicView}
             onShare={handleShareCurrentView}
             predictionLabels={predictionLabels}
-            selectedRaceMeetingName={selectedRace?.meetingName ?? ''}
-            selectedRaceTrackOutlineUrl={selectedRace?.trackOutlineUrl ?? ''}
             seasonAnalytics={seasonAnalytics}
           />
 

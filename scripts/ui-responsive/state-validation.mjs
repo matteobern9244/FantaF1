@@ -213,6 +213,16 @@ function validateState(
     if (isTransparentColor(details.backgroundColor)) {
       failures.push(`${label} con sfondo trasparente o non definito: ${JSON.stringify(details)}`);
     }
+
+    if (state.viewport.width <= 767) {
+      if (details.appearance !== 'auto' && details.appearance !== 'menulist') {
+        failures.push(`${label} non usa appearance nativa su mobile: ${details.appearance}`);
+      }
+    } else {
+      if (details.appearance !== 'none') {
+        failures.push(`${label} non usa appearance: none su desktop: ${details.appearance}`);
+      }
+    }
   }
 
   const optionsToValidate = isPublicView ? {} : optionChecks.adminOnly;

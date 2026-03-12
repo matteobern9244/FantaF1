@@ -5,10 +5,13 @@ Cronologia sintetica delle release documentate del progetto Fanta Formula 1.
 ## v1.4.2
 
 - **Ristrutturazione Navigazione e UX**: il menu di sezione e' stato spostato all'interno dell'header, direttamente sotto il titolo della stagione, migliorando la gerarchia visiva e l'accessibilità immediata.
+- **Menu Mobile User-Friendly**: rimossa la classe `.panel` dalla navigazione per una perfetta integrazione trasparente nella hero; introdotto un gradiente di mascheramento laterale per segnalare visivamente la possibilità di scorrimento orizzontale.
+- **Fix Regressione Dropdown Mobile**: ripristinato il comportamento nativo delle dropdown su dispositivi mobili per risolvere il bug di posizionamento errato delle opzioni riscontrato su Chrome (emulazione mobile).
+- **Fix Mappa Circuito Storico**: il riquadro `Recap ultimo GP` ora visualizza correttamente la mappa della gara conclusa recuperandola dal calendario, indipendentemente dal weekend selezionato globalmente nell'app.
 - **Navigazione Fluida Mobile e Risoluzione Bug**: eliminato l'hamburger menu (Drawer) in favore di una barra a scorrimento orizzontale nativa su dispositivi mobili, risolvendo il bug di visibilità e garantendo che tutte le opzioni siano sempre visibili.
 - **Pulsante PWA Integrato nel Flusso**: la CTA `INSTALLA APPLICAZIONE` e' stata integrata come ultima voce della lista di navigazione, garantendo un layout pulito e coerente su tutte le risoluzioni.
 - **Shortcut "Torna al menu" Raffinata**: la freccia flottante per risalire la pagina ancora ora lo scroll direttamente alla barra di navigazione nell'header, ottimizzando il passaggio tra le sezioni senza dover tornare a inizio pagina.
-- **TDD e Validazione Totale**: aggiornati i test UI e gli script di controllo responsive per coprire la nuova struttura del menu e il comportamento della shortcut di scroll; verificata la coverage totale al 100% e superati tutti i 414 test.
+- **TDD e Validazione Totale**: aggiornati i test UI e gli script di controllo responsive per coprire la nuova struttura del menu e il comportamento della shortcut di scroll; verificata la coverage totale al 100% e superati tutti i 415 test.
 
 ## v1.4.1
 

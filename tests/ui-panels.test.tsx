@@ -21,11 +21,8 @@ describe('isolated UI panels', () => {
       <SeasonAnalysisPanel
         analyticsEmptyLabel="Nessun dato analytics"
         emptyOptionLabel="N/D"
-        isPublicView={true}
         onShare={onShare}
         predictionLabels={predictionLabels}
-        selectedRaceMeetingName="Australia"
-        selectedRaceTrackOutlineUrl="https://media.example.com/australia-track.webp"
         seasonAnalytics={{
           leaderName: 'Marco',
           narratives: [],
@@ -43,10 +40,12 @@ describe('isolated UI panels', () => {
           ],
           recap: {
             gpName: 'Australian Grand Prix 2099',
+            meetingName: 'Australia',
             winnerName: 'Marco',
             winnerPoints: 20,
             swingLabel: 'Gap sul secondo: 0 pt',
             decisiveField: null,
+            trackOutlineUrl: 'https://media.example.com/australia-track.webp',
           },
         }}
       />,
@@ -65,18 +64,40 @@ describe('isolated UI panels', () => {
       <SeasonAnalysisPanel
         analyticsEmptyLabel="Nessun dato analytics"
         emptyOptionLabel="N/D"
-        isPublicView={true}
         onShare={onShare}
         predictionLabels={predictionLabels}
-        selectedRaceMeetingName="Australia"
-        selectedRaceTrackOutlineUrl=""
+        seasonAnalytics={{
+          leaderName: '',
+          narratives: [],
+          comparison: [],
+          recap: {
+            gpName: 'No Map GP',
+            meetingName: 'No Map',
+            winnerName: 'Marco',
+            winnerPoints: 10,
+            swingLabel: 'N/D',
+            decisiveField: null,
+            trackOutlineUrl: '',
+          },
+        }}
+      />
+    );
+
+    expect(screen.queryByRole('img')).not.toBeInTheDocument();
+
+    rerender(
+      <SeasonAnalysisPanel
+        analyticsEmptyLabel="Nessun dato analytics"
+        emptyOptionLabel="N/D"
+        onShare={onShare}
+        predictionLabels={predictionLabels}
         seasonAnalytics={{
           leaderName: '',
           narratives: [],
           comparison: [],
           recap: null,
         }}
-      />,
+      />
     );
 
     expect(screen.getByText('Nessun dato analytics')).toBeInTheDocument();
