@@ -32,6 +32,7 @@ Invocazione canonica: `Subphase 4`
 - `Subphase 2` e `Subphase 3` completate.
 - Servizi `IClock` e `ISignedCookieService` gia' introdotti nella solution.
 - Credenziali admin e storage legacy restano solo riferimenti contrattuali finche' non esiste il bootstrap C# completo.
+- Il seam temporaneo della credenziale admin C# deve restare hash-only e Node-compatible, senza password plaintext versionate, in modo riusabile dal repository Mongo-backed previsto per `Subphase 8`.
 
 ## File/layer toccati
 
@@ -51,9 +52,9 @@ Invocazione canonica: `Subphase 4`
 
 ## Piano TDD esplicito RED -> GREEN -> REFACTOR
 
-- `RED`: aggiungere test che falliscono per cookie flags, TTL, `defaultViewMode` e route auth.
-- `GREEN`: implementare i servizi C# minimi e le tre route fino al verde di parity.
-- `REFACTOR`: centralizzare costanti cookie/sessione e ridurre duplicazioni senza cambiare il wire contract.
+- `RED`: aggiungere test che falliscono per cookie flags, TTL, `defaultViewMode`, route auth e vincolo hash-only della credenziale admin.
+- `GREEN`: implementare i servizi C# minimi e le tre route fino al verde di parity, mantenendo la verifica password solo come `hash + salt` Node-compatible.
+- `REFACTOR`: centralizzare costanti cookie/sessione e seed hash-only della credenziale admin senza cambiare il wire contract.
 
 ## Coverage 100% totale
 
@@ -77,23 +78,27 @@ Invocazione canonica: `Subphase 4`
 
 ## Verifiche browser e responsive
 
-- Desktop admin/public in sviluppo: verificare che la sessione admin e la vista di default restino coerenti quando il frontend puo' puntare al backend C# senza cambiare il frontend stesso.
-- Mobile admin/public in sviluppo: stessa verifica del desktop.
-- Produzione-like locale: obbligatorio verificare cookie `Secure`/`SameSite` e default view mode in modalita' `Staging`.
+- Desktop admin/public in sviluppo: `npm run test:ui-responsive` contro il runtime Node baseline resta obbligatorio.
+- Mobile admin/public in sviluppo: incluso nello stesso baseline browser Node.
+- Produzione-like locale: il browser gate riusabile non blocca la chiusura di questa subphase; la semantica auth/cookie production-like va verificata con integration e contract tests HTTP, mentre il gate browser condiviso resta demandato a `Subphase 9`.
 - Staging: non applicabile finche' non esiste il servizio staging reale; non anticipare deploy.
 
 ## Comandi di validazione da eseguire
 
+- `dotnet build backend-csharp/FantaF1.Backend.sln -c Release`
 - `dotnet test backend-csharp/FantaF1.Backend.sln -c Release`
 - `dotnet test backend-csharp/FantaF1.Backend.sln -c Release /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura`
 - `npm run lint`
 - `npm run build`
 - `npm run test:coverage`
+- `npm run test:ui-responsive`
+- hygiene grep dedicato per assicurare che non restino riferimenti versionati alla vecchia password hardcoded o a naming plaintext.
 
 ## Criteri di completamento
 
 - Le tre route di session/auth sono parity-green tra Node e C#.
 - TTL, cookie flags e `defaultViewMode` sono identici nei contesti previsti.
+- Il seam temporaneo della credenziale admin C# e' hash-only e allineato al seed Node, senza password in chiaro versionate nel repository.
 - Nessuna read/write route ulteriore e' stata migrata.
 - Coverage 100% su tutti i file toccati.
 

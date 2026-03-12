@@ -36,19 +36,32 @@ public sealed class PortingDocumentationConsistencyTests
     }
 
     [Fact]
-    public void Canonical_plan_keeps_production_like_browser_gates_owned_by_subphase_nine_and_marks_subphase_three_completed()
+    public void Canonical_plan_keeps_production_like_browser_gates_owned_by_subphase_nine_and_marks_subphase_four_completed()
     {
         var canonicalPlan = ReadRepositoryFile("docs", "backend-csharp-porting-plan.md");
+        var subphaseFourPlan = ReadRepositoryFile(
+            "docs",
+            "backend-csharp-porting-subphases",
+            "subphase-04-session-and-admin-auth-parity.md");
 
         Assert.Contains(
             "For avoidance of doubt, the closure gate for `Subphase 2` is limited to the C# solution scope plus the Node baseline browser check in `Development`. The reusable local `production-like` browser gate remains owned by `Subphase 9` and must not block `Subphase 2` closure.",
             canonicalPlan,
             StringComparison.Ordinal);
         Assert.Contains("| `Subphase 3` | `completed` |", canonicalPlan, StringComparison.Ordinal);
-        Assert.Contains("| `Subphase 4` | `pending` |", canonicalPlan, StringComparison.Ordinal);
+        Assert.Contains("| `Subphase 4` | `completed` |", canonicalPlan, StringComparison.Ordinal);
+        Assert.Contains("| `Subphase 5` | `pending` |", canonicalPlan, StringComparison.Ordinal);
         Assert.Contains(
             "| Canonical launcher and shared verification scripts, including local development and production-like browser gate reuse, and the ban on implicit `fantaf1_dev` fallback | `Subphase 9` |",
             canonicalPlan,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "- Desktop admin/public in sviluppo: `npm run test:ui-responsive` contro il runtime Node baseline resta obbligatorio.",
+            subphaseFourPlan,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "- Produzione-like locale: il browser gate riusabile non blocca la chiusura di questa subphase; la semantica auth/cookie production-like va verificata con integration e contract tests HTTP, mentre il gate browser condiviso resta demandato a `Subphase 9`.",
+            subphaseFourPlan,
             StringComparison.Ordinal);
     }
 
@@ -90,6 +103,7 @@ public sealed class PortingDocumentationConsistencyTests
             "**Separation Of Concerns:**",
             "**Abstraction Naming:**",
             "**Configuration Discipline:**",
+            "**Credential Secrecy:**",
             "**Localization:**",
             "**Error Handling:**",
             "**Documentation:**",
@@ -98,6 +112,7 @@ public sealed class PortingDocumentationConsistencyTests
             "Prefer edits that improve the seam between old and new systems.",
             "If a task risks breaking parity, state the risk explicitly and verify with targeted tests before finishing.",
             "If the repository contains current migration docs, treat them as part of the specification.",
+            "Passwords and equivalent credentials must never appear in clear text in versioned files, including production code, tests, fixtures, documentation, and examples.",
         };
 
         Assert.All(requiredPhrases, requiredPhrase =>

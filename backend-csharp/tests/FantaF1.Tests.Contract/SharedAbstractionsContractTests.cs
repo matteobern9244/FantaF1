@@ -49,4 +49,29 @@ public sealed class SharedAbstractionsContractTests
         Assert.Equal("FantaF1.Application.Abstractions.System", typeof(IRuntimeEnvironmentProfileResolver).Namespace);
         Assert.Equal("FantaF1.Application.Abstractions.System", typeof(ISignedCookieService).Namespace);
     }
+
+    [Fact]
+    public void Admin_session_and_credential_abstractions_expose_the_subphase_four_contract_shape()
+    {
+        var ensureDefaultCredentialAsync = typeof(IAdminCredentialRepository).GetMethod(nameof(IAdminCredentialRepository.EnsureDefaultCredentialAsync));
+        var verifyPasswordAsync = typeof(IAdminCredentialRepository).GetMethod(nameof(IAdminCredentialRepository.VerifyPasswordAsync));
+        var getSessionAsync = typeof(IAdminSessionService).GetMethod(nameof(IAdminSessionService.GetSessionAsync));
+        var loginAsync = typeof(IAdminSessionService).GetMethod(nameof(IAdminSessionService.LoginAsync));
+        var logout = typeof(IAdminSessionService).GetMethod(nameof(IAdminSessionService.Logout));
+
+        Assert.NotNull(ensureDefaultCredentialAsync);
+        Assert.Equal(typeof(Task), ensureDefaultCredentialAsync.ReturnType);
+
+        Assert.NotNull(verifyPasswordAsync);
+        Assert.Equal(typeof(Task<bool>), verifyPasswordAsync.ReturnType);
+
+        Assert.NotNull(getSessionAsync);
+        Assert.Equal(typeof(Task<AdminSessionResponse>), getSessionAsync.ReturnType);
+
+        Assert.NotNull(loginAsync);
+        Assert.Equal(typeof(Task<AdminSessionLoginResult>), loginAsync.ReturnType);
+
+        Assert.NotNull(logout);
+        Assert.Equal(typeof(AdminSessionCommandResult), logout.ReturnType);
+    }
 }

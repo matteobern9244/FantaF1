@@ -1,3 +1,4 @@
+import { createHash } from 'crypto';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import mongoose from 'mongoose';
 import request from 'supertest';
@@ -40,7 +41,7 @@ describe('auth routes', () => {
   });
 
   it('creates an admin session when the password is valid', async () => {
-    const response = await request(app).post('/api/admin/session').send({ password: 'secret' });
+    const response = await request(app).post('/api/admin/session').send({ password: createPassword('subphase-4-route-valid') });
 
     expect(response.status).toBe(200);
     expect(response.headers['set-cookie']).toEqual(
@@ -51,7 +52,7 @@ describe('auth routes', () => {
   it('rejects the admin login when the password is invalid', async () => {
     verifyAdminPassword.mockResolvedValue(false);
 
-    const response = await request(app).post('/api/admin/session').send({ password: 'wrong' });
+    const response = await request(app).post('/api/admin/session').send({ password: createPassword('subphase-4-route-invalid') });
 
     expect(response.status).toBe(401);
     expect(response.body).toEqual({
@@ -80,4 +81,8 @@ describe('auth routes', () => {
       defaultViewMode: 'admin',
     });
   });
+
+  function createPassword(seedLabel) {
+    return createHash('sha256').update(seedLabel).digest('hex');
+  }
 });

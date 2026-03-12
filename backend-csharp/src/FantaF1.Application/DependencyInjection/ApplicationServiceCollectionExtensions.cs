@@ -10,7 +10,7 @@ public static class ApplicationServiceCollectionExtensions
     {
         ArgumentNullException.ThrowIfNull(services);
 
-        services.AddScoped<IAdminSessionService, PlaceholderAdminSessionService>();
+        services.AddScoped<IAdminSessionService, AdminSessionService>();
         services.AddScoped<IBackgroundSyncService, PlaceholderBackgroundSyncService>();
         services.AddScoped<IHealthReportService, HealthReportService>();
         services.AddScoped<IResultsService, PlaceholderResultsService>();
@@ -18,8 +18,6 @@ public static class ApplicationServiceCollectionExtensions
 
         return services;
     }
-
-    private sealed class PlaceholderAdminSessionService : IAdminSessionService;
 
     private sealed class PlaceholderBackgroundSyncService : IBackgroundSyncService;
 

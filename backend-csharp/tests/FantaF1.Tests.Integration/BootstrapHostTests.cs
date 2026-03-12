@@ -36,7 +36,7 @@ public sealed class BootstrapHostTests : IClassFixture<WebApplicationFactory<Pro
     }
 
     [Fact]
-    public void Host_exposes_only_the_root_controller_action_and_resolves_the_required_subphase_two_contracts()
+    public void Host_exposes_the_subphase_four_controller_actions_and_resolves_the_required_contracts()
     {
         using var factory = _factory;
         using var scope = factory.Services.CreateScope();
@@ -67,9 +67,13 @@ public sealed class BootstrapHostTests : IClassFixture<WebApplicationFactory<Pro
             .Where(endpoint => endpoint.Action is not null)
             .ToArray();
 
-        Assert.Equal(2, controllerEndpoints.Length);
+        Assert.Equal(5, controllerEndpoints.Length);
         Assert.Contains(controllerEndpoints, endpoint => endpoint.Route.Length == 0);
         Assert.Contains(controllerEndpoints, endpoint => string.Equals(endpoint.Route, "api/health", StringComparison.Ordinal));
+        Assert.Contains(controllerEndpoints, endpoint => string.Equals(endpoint.Route, "api/session", StringComparison.Ordinal));
+        Assert.Equal(
+            2,
+            controllerEndpoints.Count(endpoint => string.Equals(endpoint.Route, "api/admin/session", StringComparison.Ordinal)));
     }
 
     [Fact]

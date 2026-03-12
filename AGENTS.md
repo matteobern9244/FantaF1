@@ -56,6 +56,7 @@ Optional helper commands already supported by the repository:
 - **Separation Of Concerns:** Keep UI, application orchestration, domain rules, infrastructure, and migration glue clearly separated.
 - **Abstraction Naming:** Name adapters, translators, facades, and compatibility seams for the boundary they protect, not as generic `Helper` or `Utils` buckets.
 - **Configuration Discipline:** Put migration flags, environment-specific endpoints, file paths, routing toggles, and cutover settings in configuration or constants, not scattered literals.
+- **Credential Secrecy:** Passwords and equivalent credentials must never appear in clear text in versioned files, including production code, tests, fixtures, documentation, and examples. Store only one-way hashes, salts, non-versioned secret references, or runtime-generated test inputs derived from non-secret seeds.
 - **Localization:** New user-facing text must go through the existing centralized UI/config text system instead of ad-hoc literals.
 - **Documentation:** Keep architecture notes, migration progress, known parity gaps, cutover conditions, and verified coverage baselines updated in repository docs.
 - Prefer focused domain objects, explicit collaborators, and clear data flow over oversized orchestration blocks.

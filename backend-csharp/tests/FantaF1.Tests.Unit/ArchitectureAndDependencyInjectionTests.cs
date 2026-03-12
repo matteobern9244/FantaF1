@@ -3,13 +3,16 @@ using FantaF1.Application.Abstractions.Persistence;
 using FantaF1.Application.Abstractions.Services;
 using FantaF1.Application.Abstractions.System;
 using FantaF1.Application.DependencyInjection;
+using FantaF1.Application.Services;
 using FantaF1.Domain;
+using FantaF1.Infrastructure.Authentication;
 using FantaF1.Infrastructure;
 using FantaF1.Infrastructure.DependencyInjection;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Options;
 using System.Reflection;
 
 namespace FantaF1.Tests.Unit;
@@ -36,7 +39,7 @@ public sealed class ArchitectureAndDependencyInjectionTests
     }
 
     [Fact]
-    public void Application_and_infrastructure_registrations_resolve_all_subphase_three_contracts()
+    public void Application_and_infrastructure_registrations_resolve_all_subphase_four_contracts()
     {
         var services = new ServiceCollection();
         var configuration = new ConfigurationBuilder()
@@ -71,17 +74,50 @@ public sealed class ArchitectureAndDependencyInjectionTests
         Assert.NotEqual(default, clock.UtcNow);
 
         var signedCookieService = serviceProvider.GetRequiredService<ISignedCookieService>();
-        var signException = Assert.Throws<NotSupportedException>(() => signedCookieService.Sign("bootstrap-cookie"));
-        var verifyException = Assert.Throws<NotSupportedException>(() => signedCookieService.TryVerify("bootstrap-cookie", out _));
+        var signedValue = signedCookieService.Sign("bootstrap-cookie");
+        var verified = signedCookieService.TryVerify(signedValue, out var unsignedValue);
 
-        Assert.Contains("Subphase 4", signException.Message, StringComparison.Ordinal);
-        Assert.Contains("Subphase 4", verifyException.Message, StringComparison.Ordinal);
+        Assert.True(verified);
+        Assert.Equal("bootstrap-cookie", unsignedValue);
+
+        Assert.IsType<AdminSessionService>(serviceProvider.GetRequiredService<IAdminSessionService>());
+        Assert.IsType<ContractAdminCredentialRepository>(serviceProvider.GetRequiredService<IAdminCredentialRepository>());
+        Assert.NotNull(serviceProvider.GetRequiredService<NodeCompatibleScryptPasswordHasher>());
+        Assert.IsType<HmacSignedCookieService>(signedCookieService);
     }
 
     [Fact]
     public void Application_registration_rejects_a_null_service_collection()
     {
         Assert.Throws<ArgumentNullException>(() => ApplicationServiceCollectionExtensions.AddFantaF1Application(null!));
+    }
+
+    [Fact]
+    public void Infrastructure_registration_uses_the_configured_hash_only_admin_credential_seed()
+    {
+        var services = new ServiceCollection();
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                [ContractAdminCredentialSeedOptions.PasswordHashHexConfigurationPath] = "ab".PadRight(128, 'c'),
+                [ContractAdminCredentialSeedOptions.PasswordSaltConfigurationPath] = "configured-salt",
+            })
+            .Build();
+
+        services.AddSingleton<IConfiguration>(configuration);
+        services.AddSingleton<IHostEnvironment>(new TestHostEnvironment("Development"));
+        services.AddFantaF1Infrastructure();
+
+        using var provider = services.BuildServiceProvider(new ServiceProviderOptions
+        {
+            ValidateOnBuild = true,
+            ValidateScopes = true,
+        });
+
+        var options = provider.GetRequiredService<IOptions<ContractAdminCredentialSeedOptions>>().Value;
+
+        Assert.Equal("ab".PadRight(128, 'c'), options.PasswordHashHex);
+        Assert.Equal("configured-salt", options.PasswordSalt);
     }
 
     [Fact]
