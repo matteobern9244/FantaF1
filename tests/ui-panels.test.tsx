@@ -1,7 +1,7 @@
 /**
  * @vitest-environment jsdom
  */
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import HistoryArchivePanel from '../src/components/HistoryArchivePanel';
 import PublicGuidePanel from '../src/components/PublicGuidePanel';
@@ -158,6 +158,14 @@ describe('isolated UI panels', () => {
       />,
     );
 
+    const historyCard = screen.getByText('Australian Grand Prix 2099').closest('.history-card');
+    expect(historyCard).not.toBeNull();
+    const raceMeta = (historyCard as HTMLElement).querySelector('.history-race-meta');
+    expect(raceMeta).not.toBeNull();
+    expect(within(raceMeta as HTMLElement).getByText('Australian Grand Prix 2099')).toBeInTheDocument();
+    expect((raceMeta as HTMLElement).querySelector('.history-race-date')).toHaveTextContent('01/03/2099');
+    const podiumSlots = (historyCard as HTMLElement).querySelectorAll('.history-podium-slot.interactive-surface');
+    expect(podiumSlots).toHaveLength(3);
     expect(screen.getAllByText('Pilota sconosciuto')).toHaveLength(2);
     expect(screen.getByText(appText.panels.historyArchive.actualPodiumTitle)).toBeInTheDocument();
     expect(screen.getByAltText('Lando Norris')).toBeInTheDocument();

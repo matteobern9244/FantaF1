@@ -124,7 +124,7 @@ async function writeStandingsCache(standings) {
         constructorStandings: standings.constructorStandings ?? [],
         updatedAt: standings.updatedAt ?? '',
       },
-      { upsert: true, new: true, setDefaultsOnInsert: true },
+      { upsert: true, returnDocument: 'after', setDefaultsOnInsert: true },
     );
     return standings;
   } catch (error) {

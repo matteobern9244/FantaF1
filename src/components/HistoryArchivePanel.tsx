@@ -116,9 +116,9 @@ function HistoryArchivePanel({
               <article key={`${record.gpName}-${record.date}-${index}`} className="history-card interactive-surface">
                 <div className="history-top">
                   <div className="history-top-row">
-                    <div>
+                    <div className="history-race-meta">
                       <strong>{record.gpName}</strong>
-                      <span>{record.date}</span>
+                      <span className="history-race-date">{record.date}</span>
                     </div>
                     {!isPublicView ? (
                       <div className="history-actions">
@@ -147,7 +147,7 @@ function HistoryArchivePanel({
                       {podiumEntries.map((entry) => (
                         <article
                           key={`${record.gpName}-${entry.position}-${entry.driverName}`}
-                          className={`history-podium-slot position-${entry.position}`}
+                          className={`history-podium-slot interactive-surface position-${entry.position}`}
                         >
                           <span className="history-podium-rank">P{entry.position}</span>
                           {entry.avatarUrl ? (

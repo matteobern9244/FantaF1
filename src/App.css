@@ -1267,8 +1267,10 @@ select:disabled {
   margin-bottom: 12px;
 }
 
-.history-top-row > div:first-child {
+.history-race-meta {
   min-width: 0;
+  display: grid;
+  gap: 4px;
 }
 
 .history-top strong {
@@ -1277,6 +1279,14 @@ select:disabled {
   font-size: 1.1rem;
   color: var(--ink);
   letter-spacing: 0.02em;
+  overflow-wrap: anywhere;
+}
+
+.history-race-date {
+  display: block;
+  color: var(--muted);
+  font-size: 0.95rem;
+  line-height: 1.4;
   overflow-wrap: anywhere;
 }
 
@@ -1320,18 +1330,19 @@ select:disabled {
 }
 
 .history-podium-rank {
-  font-family: 'Formula1Digits', sans-serif;
+  font-family: 'Formula1', 'Titillium Web', 'Segoe UI', sans-serif;
   color: var(--gold);
-  font-size: 0.92rem;
+  font-size: calc(0.92rem + 5px);
 }
 
 .history-podium-avatar {
-  width: 72px;
-  height: 72px;
+  width: 92px;
+  height: 92px;
   border-radius: 50%;
   object-fit: cover;
-  border: 2px solid rgba(255, 255, 255, 0.18);
-  box-shadow: 0 12px 22px rgba(0, 0, 0, 0.24);
+  object-position: center 18%;
+  border: 2px solid rgba(255, 255, 255, 0.28);
+  box-shadow: 0 14px 26px rgba(0, 0, 0, 0.28);
 }
 
 .history-podium-avatar-fallback {

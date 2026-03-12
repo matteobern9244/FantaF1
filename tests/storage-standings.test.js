@@ -76,7 +76,28 @@ describe('standings storage helpers', () => {
     await expect(writeStandingsCache(payload)).resolves.toEqual(payload);
     await expect(writeStandingsCache(partialPayload)).resolves.toEqual(partialPayload);
     await expect(writeStandingsCache(payload)).resolves.toEqual(payload);
-    expect(findOneAndUpdate).toHaveBeenCalled();
+    expect(findOneAndUpdate).toHaveBeenNthCalledWith(
+      1,
+      { cacheKey: 'current' },
+      {
+        cacheKey: 'current',
+        driverStandings: payload.driverStandings,
+        constructorStandings: payload.constructorStandings,
+        updatedAt: payload.updatedAt,
+      },
+      { upsert: true, returnDocument: 'after', setDefaultsOnInsert: true },
+    );
+    expect(findOneAndUpdate).toHaveBeenNthCalledWith(
+      2,
+      { cacheKey: 'current' },
+      {
+        cacheKey: 'current',
+        driverStandings: [],
+        constructorStandings: [],
+        updatedAt: '',
+      },
+      { upsert: true, returnDocument: 'after', setDefaultsOnInsert: true },
+    );
 
     errorSpy.mockRestore();
   });

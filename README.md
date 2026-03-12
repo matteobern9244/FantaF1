@@ -231,7 +231,7 @@ Se il database non contiene ancora stato applicativo, il backend costruisce uno 
 - Hero results card del weekend selezionato con CTA Highlights YouTube di Sky Sport Italia F1 per i weekend conclusi: se il video e' disponibile il pulsante apre il contenuto all'esterno della SPA, altrimenti resta visibile ma disabilitato con messaggio di indisponibilita'.
 - Sezione risultati del weekend con track map, recupero automatico read-only dei risultati ufficiali, merge solo dei campi mancanti e pulsante conferma con tooltip di stato.
 - Vista pubblica con track map coerente col weekend selezionato sia nel recap hero del weekend sia nel pannello `Recap ultimo GP`, mantenendo la stessa mappa anche nella sezione admin `Risultati del weekend`.
-- Storico gare modificabile con ricalcolo dei punteggi, filtri per giocatore/GP e drill-down dei pronostici dettagliati.
+- Storico gare modificabile con ricalcolo dei punteggi, filtri per giocatore/GP e drill-down dei pronostici dettagliati; il podio reale mostra foto pilota, nome reale in formato naturale, data della gara su riga separata sotto il titolo e lo stesso effetto hover grafico delle altre card interattive dell'app.
 - Dashboard KPI per utente, analytics deep-dive, pannello `Analisi stagione`, riepilogo `Weekend pulse`, guida pubblica, storico mobile piu' compatto, status strip, toast operativi e CTA installazione PWA.
 - Loader iniziale con splash logo `FantaF1`, set icone browser/PWA dedicato (`favicon`, `apple-touch-icon`, `192x192`, `512x512`, `maskable`) e layout responsive desktop/mobile.
 

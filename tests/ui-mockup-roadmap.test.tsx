@@ -449,6 +449,8 @@ describe('Mockup roadmap UI features', () => {
     expect(screen.getByAltText('Lewis Hamilton')).toBeInTheDocument();
     expect(screen.getAllByText(/marco/i).length).toBeGreaterThan(0);
     expect(document.querySelectorAll('.history-card.interactive-surface').length).toBeGreaterThan(0);
+    expect(document.querySelectorAll('.history-podium-slot.interactive-surface').length).toBeGreaterThan(0);
+    expect(document.querySelector('.history-race-date')).toHaveTextContent('05/07/2099');
     expect(document.querySelectorAll('.history-user-card.interactive-surface').length).toBeGreaterThan(0);
     expect(document.querySelectorAll('.history-detail-panel .analytics-subpanel.interactive-surface').length).toBeGreaterThan(0);
   });
