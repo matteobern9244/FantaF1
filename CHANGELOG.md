@@ -2,7 +2,7 @@
 
 Cronologia sintetica delle release documentate del progetto Fanta Formula 1.
 
-## v1.4.3 (2026-03-13)
+## v1.4.4 (2026-03-13)
 
 - **Titolo Hero Sempre Bianco e Coerente su Windows**: il titolo principale dell'app nella hero non usa piu' il gradiente testuale con `background-clip`; ora renderizza sempre bianco pieno con lo stesso glow esistente, eliminando il caso Windows in cui il testo appariva grigio.
 - **Classifica Piloti con Volto Più Leggibile**: la vista pubblica applica ora anche in `Classifica piloti` la stessa promozione hi-res e lo stesso crop volto già introdotti nel podio dello `Storico gare`, evitando l'upscaling degli avatar Formula1 a bassa risoluzione e rendendo le foto pilota più nitide.

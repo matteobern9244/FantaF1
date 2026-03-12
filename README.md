@@ -6,20 +6,20 @@ L'applicazione e' pensata per un flusso amministrato: un admin seleziona il week
 
 ## Stato release e confronto con la produzione
 
-La versione attualmente in produzione e pubblicata e' `v1.4.3`. Il repository e' allineato alla stessa release `v1.4.3` in `package.json`, senza delta pendenti tra codice versionato e baseline live.
+La versione attualmente in produzione e pubblicata e' `v1.4.4`. Il repository e' allineato alla stessa release `v1.4.4` in `package.json`, senza delta pendenti tra codice versionato e baseline live.
 
-### Baseline produzione `v1.4.3`
+### Baseline produzione `v1.4.4`
 
-La baseline live corrisponde alle capability gia' rilasciate e documentate in `CHANGELOG.md` sotto `v1.4.3`:
+La baseline live corrisponde alle capability gia' rilasciate e documentate in `CHANGELOG.md` sotto `v1.4.4`:
 
 - navigation shell responsive con menu desktop/mobile, deep link di sezione e shortcut contestuale per tornare rapidamente in cima;
 - refactor OO di calendario, persistenza, scoring, analytics e bootstrap runtime;
 - sessioni admin/public reali, analytics stagionali, CTA installazione PWA e recap highlights;
 - validazione release con `lint`, `test`, `test:coverage`, `build`, `test:ui-responsive` e `test:save-local`.
 
-### Delta del workspace corrente rispetto a `v1.4.3`
+### Delta del workspace corrente rispetto a `v1.4.4`
 
-Il workspace corrente e' allineato alla produzione `v1.4.3`; non risultano delta funzionali non rilasciati rispetto alla baseline live. Le capability rilevanti della release corrente sono:
+Il workspace corrente e' allineato alla produzione `v1.4.4`; non risultano delta funzionali non rilasciati rispetto alla baseline live. Le capability rilevanti della release corrente sono:
 
 - ristrutturazione completa della navigazione con spostamento del menu all'interno dell'header, sotto il titolo della stagione;
 - navigazione fluida su dispositivi mobili tramite barra a scorrimento orizzontale nativa e rimozione del Drawer (hamburger menu), risolvendo i bug di visibilità mobile;
@@ -37,7 +37,7 @@ Il workspace corrente e' allineato alla produzione `v1.4.3`; non risultano delta
 - baseline coverage verificata mantenuta al 100% su statements, functions, branches e lines;
 - validazione finale completa rieseguita con `test:ui-responsive`, `test:save-local` e `npm run build`.
 
-In sintesi: produzione e repository sono ora riallineati sulla stessa release `v1.4.3`.
+In sintesi: produzione e repository sono ora riallineati sulla stessa release `v1.4.4`.
 
 ## Panoramica funzionale
 
