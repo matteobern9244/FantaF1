@@ -1,5 +1,4 @@
 using FantaF1.Api.DependencyInjection;
-using FantaF1.Api.Endpoints;
 using FantaF1.Application.DependencyInjection;
 using FantaF1.Infrastructure.DependencyInjection;
 
@@ -11,7 +10,7 @@ builder.Services.AddFantaF1Infrastructure();
 
 var app = builder.Build();
 
-app.MapPortingBootstrapEndpoints();
+app.MapControllers();
 
 app.Run();
 

@@ -10,7 +10,7 @@ Invocazione canonica: `Subphase 1`
 ## Source of truth e runtime autorevole
 
 - Il runtime autorevole resta il backend Node.js in `backend/`, `app.js` e `server.js` fino a cutover esplicitamente approvato.
-- Le fonti vincolanti sono `AGENTS.md`, `PROJECT.md`, `docs/backend-csharp-porting-plan.md`, `guide-porting-c#/backend-csharp-porting-plan.md`.
+- Le fonti vincolanti sono `AGENTS.md`, `PROJECT.md`, `docs/backend-csharp-porting-plan.md` e i documenti esecutivi in `docs/backend-csharp-porting-subphases/`.
 - Senza eccezioni sono vincolanti anche tutte le sezioni-principio di `guide-porting-c#/AGENTS_migration_template.md`: `Engineering Principles`, `Migration-Specific Rules`, `Testing Strategy`, `Verification`, `Development Conventions`, `Notes For AI Coding Agents`.
 - Questa subphase non autorizza modifiche a `/api/*`, payload, cookie, business logic o mutazioni verso `fantaf1` e `fantaf1_dev`.
 

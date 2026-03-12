@@ -83,9 +83,9 @@ Invocazione canonica: `Subphase 2`
 
 ## Verifiche browser e responsive
 
-- Desktop admin/public in sviluppo: nessuna nuova superficie utente C#; verificare che il runtime Node resti invariato.
-- Mobile admin/public in sviluppo: nessuna nuova superficie utente C#; verificare che il runtime Node resti invariato.
-- Produzione-like locale: non applicabile finche' non esistono slice C# raggiungibili dal frontend.
+- Desktop admin/public in sviluppo: `npm run test:ui-responsive` contro il runtime Node baseline resta obbligatorio.
+- Mobile admin/public in sviluppo: lo stesso `npm run test:ui-responsive` resta obbligatorio sul baseline Node.
+- Produzione-like locale: non applicabile come gate di chiusura di questa subphase; il riuso condiviso del responsive check resta demandato a `Subphase 9`.
 - Staging: non applicabile in questa subphase.
 
 ## Comandi di validazione da eseguire
@@ -96,13 +96,17 @@ Invocazione canonica: `Subphase 2`
 - `dotnet test backend-csharp/FantaF1.Backend.sln -c Release /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura`
 - `npm run lint`
 - `npm run build`
+- `npm run test`
 - `npm run test:coverage`
+- `npm run test:ui-responsive`
 
 ## Criteri di completamento
 
 - La solution C# compila e testa in modo deterministico.
 - Tutte le astrazioni condivise richieste dal piano canonico esistono.
 - Non esistono ancora route migrate oltre al minimo strettamente necessario al bootstrap.
+- Il browser gate baseline Node in `development` resta verde tramite `npm run test:ui-responsive`.
+- Il browser gate locale `production-like` non blocca la chiusura di `Subphase 2` e resta demandato a `Subphase 9`.
 - Coverage 100% su Node/React e su tutto lo scope C# introdotto.
 
 ## Blocchi / condizioni di stop

@@ -8,6 +8,7 @@ public static class ApiServiceCollectionExtensions
     {
         ArgumentNullException.ThrowIfNull(services);
 
+        services.AddControllers();
         services.AddProblemDetails();
 
         return services;

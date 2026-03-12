@@ -6,7 +6,7 @@ It consolidates:
 
 - the current repository rules in `AGENTS.md`
 - the business and safety constraints in `PROJECT.md`
-- the migration material prepared in `guide-porting-c#/backend-csharp-porting-plan.md`
+- the execution-oriented migration material under `docs/backend-csharp-porting-subphases/`
 - the migration governance model from `guide-porting-c#/AGENTS_migration_template.md`
 
 When this document conflicts with provisional notes in `guide-porting-c#`, this document wins.
@@ -49,8 +49,8 @@ The ledger below is the canonical persistent checkpoint for the temporal executi
 | Subphase | Status | Last known outcome | Next action |
 | --- | --- | --- | --- |
 | `Subphase 1` | `completed` | Baseline, safety rails, requirement ownership, branch isolation, and shared TDD/parity rules recorded in the canonical plan. | Keep enforced by every later subphase. |
-| `Subphase 2` | `current` | C# solution/bootstrap milestone verified and flaky UI coverage blocker stabilized, with `npm run test:coverage` returned to green before moving on. | Start `Subphase 3`. |
-| `Subphase 3` | `pending` | Not started yet in the canonical ledger. | Execute after the `Subphase 2` checkpoint is superseded. |
+| `Subphase 2` | `completed` | C# solution, shared abstractions, DI bootstrap, and controller-based host baseline are verified in isolation. The only blocking browser gate for this closure was the Node baseline in `Development`, while the reusable local `production-like` browser gate remains owned by `Subphase 9`. | Wait for explicit user authorization before starting `Subphase 3`. |
+| `Subphase 3` | `pending` | Not started yet in the canonical ledger. | Execute only after the user explicitly authorizes the next slice. |
 | `Subphase 4` | `pending` | Not started yet in the canonical ledger. | Wait for `Subphase 3` completion. |
 | `Subphase 5` | `pending` | Not started yet in the canonical ledger. | Wait for `Subphase 4` completion. |
 | `Subphase 6` | `pending` | Not started yet in the canonical ledger. | Wait for `Subphase 5` completion. |
@@ -59,6 +59,8 @@ The ledger below is the canonical persistent checkpoint for the temporal executi
 | `Subphase 9` | `pending` | Not started yet in the canonical ledger. | Wait for `Subphase 8` completion. |
 | `Subphase 10` | `pending` | Not started yet in the canonical ledger. | Wait for `Subphase 9` completion. |
 | `Subphase 11` | `pending` | Not started yet in the canonical ledger. | Wait for `Subphase 10` completion. |
+
+For avoidance of doubt, the closure gate for `Subphase 2` is limited to the C# solution scope plus the Node baseline browser check in `Development`. The reusable local `production-like` browser gate remains owned by `Subphase 9` and must not block `Subphase 2` closure.
 
 | Subphase | Document | Objective | Canonical anchors | Prerequisites |
 | --- | --- | --- | --- | --- |
@@ -70,7 +72,7 @@ The ledger below is the canonical persistent checkpoint for the temporal executi
 | `Subphase 6` | [`docs/backend-csharp-porting-subphases/subphase-06-write-routes-data-and-predictions.md`](backend-csharp-porting-subphases/subphase-06-write-routes-data-and-predictions.md) | Port `POST /api/data` and `POST /api/predictions` with roster, completeness, race lock, save error, and request-id parity. | Sections 2.5 critical invariants, 5.1 step 4, 5.3 persistence parity | `Subphase 5` |
 | `Subphase 7` | [`docs/backend-csharp-porting-subphases/subphase-07-results-route-race-phase-and-highlights.md`](backend-csharp-porting-subphases/subphase-07-results-route-race-phase-and-highlights.md) | Port `GET /api/results/:meetingKey` with `racePhase`, highlights, parsing, and fallback parity. | Sections 2.2 results route, 2.5 results invariants, 5.1 step 5 | `Subphase 6` |
 | `Subphase 8` | [`docs/backend-csharp-porting-subphases/subphase-08-startup-sync-bootstrap-and-cache-fallback.md`](backend-csharp-porting-subphases/subphase-08-startup-sync-bootstrap-and-cache-fallback.md) | Port bootstrap, Mongo connection, background sync, cache fallback, startup non-blocking behavior, and same-origin React static hosting. | Sections 2.1 bootstrap services, 2.5 startup invariants, 5.1 step 6 | `Subphase 7` |
-| `Subphase 9` | [`docs/backend-csharp-porting-subphases/subphase-09-launcher-and-shared-verification-scripts.md`](backend-csharp-porting-subphases/subphase-09-launcher-and-shared-verification-scripts.md) | Update `start_fantaf1.command` and parameterize shared verification scripts without any `fantaf1_dev` fallback. | Sections 6.3, 6.4, backlog items 8 and 9, launcher rules in `AGENTS.md` | `Subphase 8` |
+| `Subphase 9` | [`docs/backend-csharp-porting-subphases/subphase-09-launcher-and-shared-verification-scripts.md`](backend-csharp-porting-subphases/subphase-09-launcher-and-shared-verification-scripts.md) | Update `start_fantaf1.command` and parameterize shared verification scripts, including reusable local development and production-like browser gates, without any `fantaf1_dev` fallback. | Sections 6.3, 6.4, backlog items 8 and 9, launcher rules in `AGENTS.md` | `Subphase 8` |
 | `Subphase 10` | [`docs/backend-csharp-porting-subphases/subphase-10-docker-render-staging-and-atlas-operationalization.md`](backend-csharp-porting-subphases/subphase-10-docker-render-staging-and-atlas-operationalization.md) | Operationalize Atlas, Docker, Render staging `FantaF1_staging`, and the staging-only browser gate. | Sections 7, 8, 10.1 staging criteria | `Subphase 9` |
 | `Subphase 11` | [`docs/backend-csharp-porting-subphases/subphase-11-future-cicd-cutover-certification-and-legacy-removal.md`](backend-csharp-porting-subphases/subphase-11-future-cicd-cutover-certification-and-legacy-removal.md) | Introduce future branch-specific C# workflows, formal cutover/certification, and final legacy removal. | Sections 9, 10, backlog items 7 and 10 | `Subphase 10` |
 
@@ -88,7 +90,7 @@ The table below is the canonical requirement-to-owner matrix for the porting pro
 | Write routes `POST /api/data` and `POST /api/predictions`, including roster, race lock, request-id and persistence parity | `Subphase 6` | `docs/backend-csharp-porting-subphases/subphase-06-write-routes-data-and-predictions.md` |
 | Results route `GET /api/results/:meetingKey`, including `racePhase`, highlights and fallback behavior | `Subphase 7` | `docs/backend-csharp-porting-subphases/subphase-07-results-route-race-phase-and-highlights.md` |
 | Startup/bootstrap, Mongo connection, background sync, cache fallback, startup non-blocking behavior and same-origin React static hosting | `Subphase 8` | `docs/backend-csharp-porting-subphases/subphase-08-startup-sync-bootstrap-and-cache-fallback.md` |
-| Canonical launcher and shared verification scripts, including the ban on implicit `fantaf1_dev` fallback | `Subphase 9` | `docs/backend-csharp-porting-subphases/subphase-09-launcher-and-shared-verification-scripts.md` |
+| Canonical launcher and shared verification scripts, including local development and production-like browser gate reuse, and the ban on implicit `fantaf1_dev` fallback | `Subphase 9` | `docs/backend-csharp-porting-subphases/subphase-09-launcher-and-shared-verification-scripts.md` |
 | Atlas operationalization, Docker image, Render staging `FantaF1_staging` and the staging-only external browser gate | `Subphase 10` | `docs/backend-csharp-porting-subphases/subphase-10-docker-render-staging-and-atlas-operationalization.md` |
 | Future branch-specific C# workflows, cutover certification, final legacy removal and post-porting governance | `Subphase 11` | `docs/backend-csharp-porting-subphases/subphase-11-future-cicd-cutover-certification-and-legacy-removal.md` |
 
@@ -703,7 +705,7 @@ Repository sources:
 
 - `AGENTS.md`
 - `PROJECT.md`
-- `guide-porting-c#/backend-csharp-porting-plan.md`
+- `docs/backend-csharp-porting-subphases/`
 - `guide-porting-c#/AGENTS_migration_template.md`
 
 Official platform references:

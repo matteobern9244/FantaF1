@@ -1,8 +1,10 @@
+using FantaF1.Api.Controllers;
 using FantaF1.Api.DependencyInjection;
-using FantaF1.Api.Endpoints;
 using FantaF1.Application.Abstractions.Persistence;
 using FantaF1.Application.Abstractions.Services;
 using FantaF1.Application.Abstractions.System;
+using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
@@ -29,14 +31,15 @@ public sealed class BootstrapHostTests : IClassFixture<WebApplicationFactory<Pro
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.Equal("text/plain", response.Content.Headers.ContentType?.ToString());
         Assert.Equal(
-            PortingBootstrapEndpointRouteBuilderExtensions.ReadyMessage,
+            PortingBootstrapController.ReadyMessage,
             await response.Content.ReadAsStringAsync());
     }
 
     [Fact]
-    public void Host_exposes_only_the_bootstrap_route_and_resolves_the_required_contracts()
+    public void Host_exposes_only_the_root_controller_action_and_resolves_the_required_subphase_two_contracts()
     {
-        using var scope = _factory.Services.CreateScope();
+        using var factory = _factory;
+        using var scope = factory.Services.CreateScope();
         var serviceProvider = scope.ServiceProvider;
 
         Assert.NotNull(serviceProvider.GetRequiredService<IAdminCredentialRepository>());
@@ -50,16 +53,21 @@ public sealed class BootstrapHostTests : IClassFixture<WebApplicationFactory<Pro
         Assert.NotNull(serviceProvider.GetRequiredService<ISignedCookieService>());
         Assert.NotNull(serviceProvider.GetRequiredService<IWeekendRepository>());
 
-        var routePatterns = _factory.Services
+        var controllerEndpoints = factory.Services
             .GetServices<EndpointDataSource>()
             .SelectMany(source => source.Endpoints)
             .OfType<RouteEndpoint>()
-            .Select(endpoint => endpoint.RoutePattern.RawText)
-            .OfType<string>()
+            .Select(endpoint => new
+            {
+                Route = endpoint.RoutePattern.RawText ?? string.Empty,
+                Action = endpoint.Metadata.GetMetadata<ControllerActionDescriptor>(),
+            })
+            .Where(endpoint => endpoint.Action is not null)
             .ToArray();
 
-        Assert.Contains("/", routePatterns);
-        Assert.DoesNotContain(routePatterns, route => route.StartsWith("/api/", StringComparison.OrdinalIgnoreCase));
+        Assert.Single(controllerEndpoints);
+        Assert.Contains(controllerEndpoints, endpoint => endpoint.Route.Length == 0);
+        Assert.DoesNotContain(controllerEndpoints, endpoint => endpoint.Route.StartsWith("api/", StringComparison.OrdinalIgnoreCase));
     }
 
     [Fact]
@@ -71,6 +79,28 @@ public sealed class BootstrapHostTests : IClassFixture<WebApplicationFactory<Pro
     [Fact]
     public void Bootstrap_endpoint_registration_rejects_a_null_route_builder()
     {
-        Assert.Throws<ArgumentNullException>(() => PortingBootstrapEndpointRouteBuilderExtensions.MapPortingBootstrapEndpoints(null!));
+        Assert.Throws<ArgumentNullException>(() => PortingBootstrapController.ValidateRouteBuilder(null!));
+    }
+
+    [Fact]
+    public void Bootstrap_endpoint_registration_returns_the_same_route_builder_instance_when_valid()
+    {
+        IEndpointRouteBuilder routeBuilder = new TestEndpointRouteBuilder();
+
+        var result = PortingBootstrapController.ValidateRouteBuilder(routeBuilder);
+
+        Assert.Same(routeBuilder, result);
+    }
+
+    private sealed class TestEndpointRouteBuilder : IEndpointRouteBuilder
+    {
+        public ICollection<EndpointDataSource> DataSources { get; } = [];
+
+        public IServiceProvider ServiceProvider { get; } = new ServiceCollection().BuildServiceProvider();
+
+        public IApplicationBuilder CreateApplicationBuilder()
+        {
+            return new ApplicationBuilder(ServiceProvider);
+        }
     }
 }
