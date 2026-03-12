@@ -673,6 +673,8 @@ Production cutover may begin only when:
 - rollback instructions are documented and verified
 - explicit user certification on branch `porting-backend-c#` exists
 
+Only after those criteria are green does the C# stack become the verified runtime for legacy removal.
+
 ### 10.2 Rollback strategy
 
 Rollback must remain simple:
@@ -697,7 +699,7 @@ The execution-oriented breakdown for this backlog is the numbered subphase set u
 7. Create the future branch-specific C# workflow files only when the post-porting stack is real in the repository.
 8. Reparameterize `scripts/save-local-check.mjs` and `scripts/ui-responsive-check.mjs` before any porting execution so they cannot fall back to `fantaf1_dev`.
 9. Update `start_fantaf1.command` so it launches the migrated stack and remains the canonical monitored launcher before legacy backend removal.
-10. Remove the legacy Node backend files, including `backend/`, `app.js`, `server.js`, and obsolete backend-specific runtime paths, only after full parity, staging validation, browser validation on staging, rollback readiness, and explicit user certification.
+10. Remove the legacy Node backend files, including `backend/`, `app.js`, `server.js`, and obsolete backend-specific runtime paths, only after the C# stack becomes the verified runtime through full parity, local and staging browser validation, launcher migration, workflow migration, rollback readiness, and explicit user certification; use an explicit remove/migrate/keep inventory and a minimal diff with no permanent bridges.
 
 ## 12. Reference material
 

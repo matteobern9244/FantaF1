@@ -98,6 +98,55 @@ public sealed class PortingDocumentationConsistencyTests
     }
 
     [Fact]
+    public void Subphase_eleven_doc_makes_legacy_removal_inventory_and_verified_runtime_rules_explicit()
+    {
+        var canonicalPlan = ReadRepositoryFile("docs", "backend-csharp-porting-plan.md");
+        var subphaseElevenPlan = ReadRepositoryFile(
+            "docs",
+            "backend-csharp-porting-subphases",
+            "subphase-11-future-cicd-cutover-certification-and-legacy-removal.md");
+
+        Assert.Contains(
+            "| `Subphase 11` | [`docs/backend-csharp-porting-subphases/subphase-11-future-cicd-cutover-certification-and-legacy-removal.md`",
+            canonicalPlan,
+            StringComparison.Ordinal);
+        Assert.DoesNotContain("| `Subphase 12` |", canonicalPlan, StringComparison.Ordinal);
+        Assert.Contains(
+            "Only after those criteria are green does the C# stack become the verified runtime for legacy removal.",
+            canonicalPlan,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "use an explicit remove/migrate/keep inventory and a minimal diff with no permanent bridges.",
+            canonicalPlan,
+            StringComparison.Ordinal);
+        Assert.Contains("## Inventario esplicito dei path legacy", subphaseElevenPlan, StringComparison.Ordinal);
+        Assert.Contains("- Da rimuovere:", subphaseElevenPlan, StringComparison.Ordinal);
+        Assert.Contains("- Da migrare o aggiornare:", subphaseElevenPlan, StringComparison.Ordinal);
+        Assert.Contains("- Da conservare:", subphaseElevenPlan, StringComparison.Ordinal);
+        Assert.Contains("`backend/`", subphaseElevenPlan, StringComparison.Ordinal);
+        Assert.Contains("`app.js`", subphaseElevenPlan, StringComparison.Ordinal);
+        Assert.Contains("`server.js`", subphaseElevenPlan, StringComparison.Ordinal);
+        Assert.Contains("`start_fantaf1.command`", subphaseElevenPlan, StringComparison.Ordinal);
+        Assert.Contains("`src/`", subphaseElevenPlan, StringComparison.Ordinal);
+        Assert.Contains("`public/`", subphaseElevenPlan, StringComparison.Ordinal);
+        Assert.Contains("`vite.config.ts`", subphaseElevenPlan, StringComparison.Ordinal);
+        Assert.Contains("remove only after C# becomes the verified runtime", subphaseElevenPlan, StringComparison.Ordinal);
+        Assert.Contains("diff minimale e senza bridge permanenti", subphaseElevenPlan, StringComparison.Ordinal);
+        Assert.Contains(
+            "- non spostare il backend Node in cartelle `legacy/`, `archive/` o simili;",
+            subphaseElevenPlan,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "- non lasciare stub `app.js`/`server.js`;",
+            subphaseElevenPlan,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "- non mantenere proxy, shim o wrapper che inoltrano al runtime C# solo per \"compatibilita' storica\" interna al repository;",
+            subphaseElevenPlan,
+            StringComparison.Ordinal);
+    }
+
+    [Fact]
     public void Agents_doc_explicitly_records_the_required_migration_template_principles()
     {
         var agents = ReadRepositoryFile("AGENTS.md");
