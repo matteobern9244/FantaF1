@@ -1,4 +1,4 @@
-import { BarChart3, Share2 } from 'lucide-react';
+import { BarChart3 } from 'lucide-react';
 import type {
   PredictionKey,
   SeasonAnalyticsSummary,
@@ -8,7 +8,6 @@ import { appText } from '../uiText';
 interface SeasonAnalysisPanelProps {
   analyticsEmptyLabel: string;
   emptyOptionLabel: string;
-  onShare: () => void;
   predictionLabels: Record<PredictionKey, string>;
   seasonAnalytics: SeasonAnalyticsSummary;
 }
@@ -16,7 +15,6 @@ interface SeasonAnalysisPanelProps {
 function SeasonAnalysisPanel({
   analyticsEmptyLabel,
   emptyOptionLabel,
-  onShare,
   predictionLabels,
   seasonAnalytics,
 }: SeasonAnalysisPanelProps) {
@@ -24,15 +22,9 @@ function SeasonAnalysisPanel({
 
   return (
     <section className="panel" id="season-analysis">
-      <div className="panel-head">
-        <div className="section-title">
-          <BarChart3 size={20} />
-          <h2>{seasonAnalysis.title}</h2>
-        </div>
-        <button className="secondary-button compact-button" onClick={onShare} type="button">
-          <Share2 size={16} />
-          {seasonAnalysis.shareButton}
-        </button>
+      <div className="section-title">
+        <BarChart3 size={20} />
+        <h2>{seasonAnalysis.title}</h2>
       </div>
       <div className="analytics-summary-grid">
         {seasonAnalytics.narratives.map((entry) => (

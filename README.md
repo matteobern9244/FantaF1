@@ -6,20 +6,20 @@ L'applicazione e' pensata per un flusso amministrato: un admin seleziona il week
 
 ## Stato release e confronto con la produzione
 
-La versione attualmente in produzione e pubblicata e' `v1.4.0`. Il repository e' ora allineato alla prossima release `v1.4.2` in `package.json`, mentre la live resta ancora sulla baseline `v1.4.0` finche' non verra' rilasciata.
+La versione attualmente in produzione e pubblicata e' `v1.4.3`. Il repository e' allineato alla stessa release `v1.4.3` in `package.json`, senza delta pendenti tra codice versionato e baseline live.
 
-### Baseline produzione `v1.4.0`
+### Baseline produzione `v1.4.3`
 
-La baseline live corrisponde alle capability gia' rilasciate e documentate in `CHANGELOG.md` sotto `v1.4.0`:
+La baseline live corrisponde alle capability gia' rilasciate e documentate in `CHANGELOG.md` sotto `v1.4.3`:
 
 - navigation shell responsive con menu desktop/mobile, deep link di sezione e shortcut contestuale per tornare rapidamente in cima;
 - refactor OO di calendario, persistenza, scoring, analytics e bootstrap runtime;
 - sessioni admin/public reali, analytics stagionali, CTA installazione PWA e recap highlights;
 - validazione release con `lint`, `test`, `test:coverage`, `build`, `test:ui-responsive` e `test:save-local`.
 
-### Delta del workspace corrente rispetto a `v1.4.0`
+### Delta del workspace corrente rispetto a `v1.4.3`
 
-Rispetto alla produzione `v1.4.0`, il repository contiene gia' il delta tecnico della release `v1.4.2`:
+Il workspace corrente e' allineato alla produzione `v1.4.3`; non risultano delta funzionali non rilasciati rispetto alla baseline live. Le capability rilevanti della release corrente sono:
 
 - ristrutturazione completa della navigazione con spostamento del menu all'interno dell'header, sotto il titolo della stagione;
 - navigazione fluida su dispositivi mobili tramite barra a scorrimento orizzontale nativa e rimozione del Drawer (hamburger menu), risolvendo i bug di visibilità mobile;
@@ -27,15 +27,17 @@ Rispetto alla produzione `v1.4.0`, il repository contiene gia' il delta tecnico 
 - ottimizzazione performance: eliminato il jank durante lo scorrimento fluido su dispositivi mobili tramite l'uso di `IntersectionObserver` in luogo dei global event listeners sincroni e la disattivazione del `backdrop-filter` in mobile;
 - fix regressione dropdown mobile: ripristinato l'aspetto nativo delle select su smartphone per garantire il corretto posizionamento dei menu opzioni;
 - fix architetturale mappa circuito: il `Recap ultimo GP` visualizza ora la mappa specifica della gara conclusa recuperandola dal calendario, indipendentemente dalla selezione corrente;
+- affinamento delle classifiche reali pubbliche: `Classifica piloti` usa avatar Formula1 più nitidi con crop orientato al volto, mentre `Classifica scuderia` è stata riallineata con logo ufficiale, nome squadra colorato e rimozione del vecchio marker lineare;
+- ottimizzazione del layout standings pubbliche: il riquadro `Classifica scuderia` resta nella colonna destra su desktop ma non viene più allungato artificialmente, eliminando il grande spazio vuoto interno e mantenendo lo stacking invariato su tablet e mobile;
 - integrazione della CTA `INSTALLA APPLICAZIONE` come ultima voce della lista di navigazione unificata;
 - shortcut contestuale `Torna al menu` raffinata: la freccia flottante ancora ora lo scroll direttamente alla barra di navigazione nell'header;
 - ripristino della track map del circuito anche nella vista pubblica, sia nel recap hero del weekend selezionato sia nel pannello `Recap ultimo GP`;
 - hero iniziale riallineata con rimozione del blur dal contenitore del titolo e con sfondo dinamico della gara selezionata reso piu' luminoso;
 - test regressivi e controlli responsive aggiornati per coprire la nuova UX e la navigazione fluida;
-- baseline coverage verificata mantenuta al 100% su statement, functions, branches e lines;
+- baseline coverage verificata mantenuta al 100% su statements, functions, branches e lines;
 - validazione finale completa rieseguita con `test:ui-responsive`, `test:save-local` e `npm run build`.
 
-In sintesi: la produzione `v1.4.0` descrive la baseline live, mentre questo README documenta anche il delta tecnico gia' presente nel repository e versionato come `v1.4.2`, non ancora deployato.
+In sintesi: produzione e repository sono ora riallineati sulla stessa release `v1.4.3`.
 
 ## Panoramica funzionale
 
@@ -231,7 +233,8 @@ Se il database non contiene ancora stato applicativo, il backend costruisce uno 
 - Hero results card del weekend selezionato con CTA Highlights YouTube di Sky Sport Italia F1 per i weekend conclusi: se il video e' disponibile il pulsante apre il contenuto all'esterno della SPA, altrimenti resta visibile ma disabilitato con messaggio di indisponibilita'.
 - Sezione risultati del weekend con track map, recupero automatico read-only dei risultati ufficiali, merge solo dei campi mancanti e pulsante conferma con tooltip di stato.
 - Vista pubblica con track map coerente col weekend selezionato sia nel recap hero del weekend sia nel pannello `Recap ultimo GP`, mantenendo la stessa mappa anche nella sezione admin `Risultati del weekend`.
-- Storico gare modificabile con ricalcolo dei punteggi, filtri per giocatore/GP e drill-down dei pronostici dettagliati.
+- Storico gare modificabile con ricalcolo dei punteggi, filtri per giocatore/GP e drill-down dei pronostici dettagliati; il podio reale mostra foto pilota, nome reale in formato naturale, data della gara su riga separata sotto il titolo e lo stesso effetto hover grafico delle altre card interattive dell'app.
+- Le classifiche reali pubbliche mostrano ora avatar piloti Formula1 promossi a una variante hi-res con focus sul volto e, per le scuderie, logo ufficiale accanto al nome colorato con il colore team già presente nei dati.
 - Dashboard KPI per utente, analytics deep-dive, pannello `Analisi stagione`, riepilogo `Weekend pulse`, guida pubblica, storico mobile piu' compatto, status strip, toast operativi e CTA installazione PWA.
 - Loader iniziale con splash logo `FantaF1`, set icone browser/PWA dedicato (`favicon`, `apple-touch-icon`, `192x192`, `512x512`, `maskable`) e layout responsive desktop/mobile.
 
@@ -595,10 +598,10 @@ Il controllo browser `npm run test:ui-responsive` resta disponibile come verific
 - Runner: Vitest.
 - Coverage provider: V8.
 - Baseline coverage verificata corrente sullo scope ufficiale del repository/applicazione:
-  - `4780 / 4780` statements
-  - `393 / 393` functions
-  - `1999 / 1999` branches
-  - `4780 / 4780` lines
+  - `5167 / 5167` statements
+  - `407 / 407` functions
+  - `2093 / 2093` branches
+  - `5167 / 5167` lines
 - Scope coverage configurato:
   - `app.js`
   - `server.js`

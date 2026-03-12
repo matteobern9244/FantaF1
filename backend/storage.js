@@ -1,4 +1,4 @@
-import { AppData, Driver, Weekend } from './models.js';
+import { AppData, Driver, StandingsCache, Weekend } from './models.js';
 import { backendText } from './text.js';
 import { resolveParticipantRoster } from './validation.js';
 import {
@@ -94,6 +94,45 @@ async function writeCalendarCache(calendar) {
   }
 }
 
+async function readStandingsCache() {
+  try {
+    const standings = await StandingsCache.findOne({ cacheKey: 'current' });
+    const plainStandings = standings ? standings.toObject() : null;
+
+    return {
+      driverStandings: plainStandings?.driverStandings ?? [],
+      constructorStandings: plainStandings?.constructorStandings ?? [],
+      updatedAt: plainStandings?.updatedAt ?? '',
+    };
+  } catch (error) {
+    console.error(backendText.storage.readStandingsError, error);
+    return {
+      driverStandings: [],
+      constructorStandings: [],
+      updatedAt: '',
+    };
+  }
+}
+
+async function writeStandingsCache(standings) {
+  try {
+    await StandingsCache.findOneAndUpdate(
+      { cacheKey: 'current' },
+      {
+        cacheKey: 'current',
+        driverStandings: standings.driverStandings ?? [],
+        constructorStandings: standings.constructorStandings ?? [],
+        updatedAt: standings.updatedAt ?? '',
+      },
+      { upsert: true, returnDocument: 'after', setDefaultsOnInsert: true },
+    );
+    return standings;
+  } catch (error) {
+    console.error(backendText.storage.writeStandingsError, error);
+    return standings;
+  }
+}
+
 // Keep ensureDataDirectory for backward compatibility if imported elsewhere, 
 // but it does nothing now.
 function ensureDataDirectory() {}
@@ -108,5 +147,7 @@ export {
   writeDriversCache,
   readCalendarCache,
   writeCalendarCache,
+  readStandingsCache,
+  writeStandingsCache,
   sanitizeAppData,
 };

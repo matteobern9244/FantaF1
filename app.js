@@ -26,12 +26,14 @@ import {
   verifyAdminPassword,
 } from './backend/auth.js';
 import { sortDriversAlphabetically } from './backend/drivers.js';
+import { syncStandingsFromOfficialSource } from './backend/standings.js';
 import { backendText, formatBackendText } from './backend/text.js';
 import {
   readAppData,
   readCalendarCache,
   readDriversCache,
   readPersistedParticipantRoster,
+  readStandingsCache,
   writeAppData,
 } from './backend/storage.js';
 import { isRaceLocked, validateParticipants, validatePredictions } from './backend/validation.js';
@@ -146,6 +148,23 @@ app.get(appConfig.api.calendarPath, async (req, res) => {
     res.json(cachedCalendar);
   } catch {
     res.status(500).json({ error: backendText.apiErrors.readCalendarFailed });
+  }
+});
+
+app.get(appConfig.api.standingsPath, async (req, res) => {
+  try {
+    const standings = await readStandingsCache();
+    const hasCachedStandings =
+      standings.driverStandings.length > 0 || standings.constructorStandings.length > 0;
+
+    if (hasCachedStandings) {
+      return res.json(standings);
+    }
+
+    const syncedStandings = await syncStandingsFromOfficialSource();
+    res.json(syncedStandings);
+  } catch {
+    res.status(500).json({ error: backendText.apiErrors.readStandingsFailed });
   }
 });
 

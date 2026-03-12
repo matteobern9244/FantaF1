@@ -44,8 +44,13 @@ describe('production admin guard routes', () => {
       readAppData: vi.fn(() => Promise.resolve({ users: [] })),
       readCalendarCache: vi.fn(() => Promise.resolve([])),
       readDriversCache: vi.fn(() => Promise.resolve([])),
+      readStandingsCache: vi.fn(() => Promise.resolve({ driverStandings: [], constructorStandings: [], updatedAt: '' })),
       readPersistedParticipantRoster: vi.fn(() => Promise.resolve(['Player 1', 'Player 2', 'Player 3'])),
       writeAppData: vi.fn(() => Promise.resolve()),
+    }));
+
+    vi.doMock('../backend/standings.js', () => ({
+      syncStandingsFromOfficialSource: vi.fn(() => Promise.resolve({ driverStandings: [], constructorStandings: [], updatedAt: '' })),
     }));
 
     vi.doMock('../backend/auth.js', () => ({
@@ -71,8 +76,13 @@ describe('production admin guard routes', () => {
       readAppData: vi.fn(() => Promise.resolve({ users: [] })),
       readCalendarCache: vi.fn(() => Promise.resolve([])),
       readDriversCache: vi.fn(() => Promise.resolve([])),
+      readStandingsCache: vi.fn(() => Promise.resolve({ driverStandings: [], constructorStandings: [], updatedAt: '' })),
       readPersistedParticipantRoster: vi.fn(() => Promise.resolve(['Player 1', 'Player 2', 'Player 3'])),
       writeAppData: vi.fn(() => Promise.resolve()),
+    }));
+
+    vi.doMock('../backend/standings.js', () => ({
+      syncStandingsFromOfficialSource: vi.fn(() => Promise.resolve({ driverStandings: [], constructorStandings: [], updatedAt: '' })),
     }));
 
     vi.doMock('../backend/auth.js', () => ({
@@ -112,8 +122,13 @@ describe('production admin guard routes', () => {
       readAppData: vi.fn(() => Promise.resolve({ users: [] })),
       readCalendarCache: vi.fn(() => Promise.resolve([])),
       readDriversCache: vi.fn(() => Promise.resolve([])),
+      readStandingsCache: vi.fn(() => Promise.resolve({ driverStandings: [], constructorStandings: [], updatedAt: '' })),
       readPersistedParticipantRoster: vi.fn(() => Promise.resolve(['Player 1', 'Player 2', 'Player 3'])),
       writeAppData: vi.fn(() => Promise.resolve()),
+    }));
+
+    vi.doMock('../backend/standings.js', () => ({
+      syncStandingsFromOfficialSource: vi.fn(() => Promise.resolve({ driverStandings: [], constructorStandings: [], updatedAt: '' })),
     }));
 
     vi.doMock('../backend/auth.js', () => ({

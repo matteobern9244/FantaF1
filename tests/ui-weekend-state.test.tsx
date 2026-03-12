@@ -173,6 +173,10 @@ function setupFetch({
       return Promise.resolve(createResponse(calendar));
     }
 
+    if (url.includes('/api/standings')) {
+      return Promise.resolve(createResponse({ driverStandings: [], constructorStandings: [], updatedAt: '' }));
+    }
+
     if (url.includes('/api/predictions')) {
       return Promise.resolve(createResponse({ message: 'Dati salvati correttamente.' }));
     }

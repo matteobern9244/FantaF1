@@ -85,6 +85,13 @@ describe('Manual predictions save UI', () => {
         } as Response);
       }
 
+      if (url.includes('/api/standings')) {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({ driverStandings: [], constructorStandings: [], updatedAt: '' }),
+        } as Response);
+      }
+
       return Promise.reject(new Error(`Unhandled fetch to ${url}`));
     });
 
@@ -138,6 +145,13 @@ describe('Manual predictions save UI', () => {
         return Promise.resolve({
           ok: true,
           json: () => Promise.resolve([]),
+        } as Response);
+      }
+
+      if (url.includes('/api/standings')) {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({ driverStandings: [], constructorStandings: [], updatedAt: '' }),
         } as Response);
       }
 

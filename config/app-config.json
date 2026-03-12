@@ -24,6 +24,7 @@
     "predictionsPath": "/api/predictions",
     "driversPath": "/api/drivers",
     "calendarPath": "/api/calendar",
+    "standingsPath": "/api/standings",
     "healthPath": "/api/health"
   },
   "storage": {
@@ -101,6 +102,11 @@
       "abu dhabi": ["yas marina"]
     }
   },
+  "standingsSource": {
+    "baseUrl": "https://www.formula1.com/en/results.html",
+    "driversPathTemplate": "{year}/drivers.html",
+    "constructorsPathTemplate": "{year}/team.html"
+  },
   "driverAliases": {
     "Alex Albon": "Alexander Albon",
     "Ollie Bearman": "Oliver Bearman"
@@ -168,6 +174,41 @@
     "Cadillac": "#C5A66A",
     "default": "#5F6673"
   },
+  "teamAssets": {
+    "McLaren": {
+      "logoUrl": "https://media.formula1.com/image/upload/c_fit,h_64/q_auto/v1740000000/common/f1/2025/mclaren/2025mclarenlogowhite.webp"
+    },
+    "Mercedes": {
+      "logoUrl": "https://media.formula1.com/image/upload/c_fit,h_64/q_auto/v1740000000/common/f1/2025/mercedes/2025mercedeslogowhite.webp"
+    },
+    "Red Bull": {
+      "logoUrl": "https://media.formula1.com/image/upload/c_fit,h_64/q_auto/v1740000000/common/f1/2025/redbullracing/2025redbullracinglogowhite.webp"
+    },
+    "Ferrari": {
+      "logoUrl": "https://media.formula1.com/image/upload/c_fit,h_64/q_auto/v1740000000/common/f1/2025/ferrari/2025ferrarilogolight.webp"
+    },
+    "Williams": {
+      "logoUrl": "https://media.formula1.com/image/upload/c_fit,h_64/q_auto/v1740000000/common/f1/2025/williams/2025williamslogowhite.webp"
+    },
+    "Racing Bulls": {
+      "logoUrl": "https://media.formula1.com/image/upload/c_fit,h_64/q_auto/v1740000000/common/f1/2025/racingbulls/2025racingbullslogowhite.webp"
+    },
+    "Aston Martin": {
+      "logoUrl": "https://media.formula1.com/image/upload/c_fit,h_64/q_auto/v1740000000/common/f1/2025/astonmartin/2025astonmartinlogowhite.webp"
+    },
+    "Haas": {
+      "logoUrl": "https://media.formula1.com/image/upload/c_fit,h_64/q_auto/v1740000000/common/f1/2025/haas/2025haaslogowhite.webp"
+    },
+    "Audi": {
+      "logoUrl": "https://media.formula1.com/image/upload/c_fit,h_64/q_auto/v1740000000/common/f1/2026/audi/2026audilogowhite.webp"
+    },
+    "Alpine": {
+      "logoUrl": "https://media.formula1.com/image/upload/c_fit,h_64/q_auto/v1740000000/common/f1/2025/alpine/2025alpinelogowhite.webp"
+    },
+    "Cadillac": {
+      "logoUrl": "https://media.formula1.com/image/upload/c_fit,h_64/q_auto/v1740000000/common/f1/2026/cadillac/2026cadillaclogowhite.webp"
+    }
+  },
   "uiText": {
     "loading": "Caricamento dati Fanta Formula 1...",
     "loadError": "Impossibile caricare i dati necessari. Verifica che il backend sia attivo.",
@@ -204,7 +245,6 @@
       "predictionEntry": "Pronostici dei giocatori",
       "results": "Risultati del weekend",
       "history": "Storico gare",
-      "rules": "Regole del gioco",
       "live": "Classifica live",
       "calendar": "Calendario stagione",
       "nextRace": "Prossimo weekend",
@@ -328,7 +368,12 @@
       "publicGuide": {
         "title": "Come funziona",
         "pointsLabel": "Punti gara",
-        "pointsSummaryTemplate": "1° {first} {pointsSuffix}, 2° {second} {pointsSuffix}, 3° {third} {pointsSuffix}, Pole/Sprint {pole} {pointsSuffix}",
+        "pointsStripLabels": {
+          "first": "1° posto",
+          "second": "2° posto",
+          "third": "3° posto",
+          "pole": "Pole / Sprint"
+        },
         "raceLockLabel": "Race lock",
         "raceLockValue": "I pronostici si chiudono all'orario ufficiale di partenza.",
         "liveViewLabel": "Vista live",
@@ -352,7 +397,6 @@
       },
       "seasonAnalysis": {
         "title": "Analisi stagione",
-        "shareButton": "Copia link vista corrente",
         "leaderGapTemplate": "Gap leader {gap}",
         "hitRateTemplate": "Hit rate {hitRate}%",
         "consistencyTemplate": "Costanza {consistency}",
@@ -365,6 +409,7 @@
       },
       "historyArchive": {
         "title": "Storico gare",
+        "actualPodiumTitle": "Podio reale",
         "userFilterLabel": "Filtra per giocatore",
         "allUsersOption": "Tutti",
         "searchLabel": "Cerca GP",
@@ -373,12 +418,21 @@
         "deleteButton": "Elimina",
         "detailButtonTemplate": "Dettaglio {gpName}",
         "detailTitle": "Pronostici dettagliati"
+      },
+      "publicStandings": {
+        "title": "Classifiche reali",
+        "driversTitle": "Classifica piloti",
+        "constructorsTitle": "Classifica scuderia",
+        "updatedAtLabel": "Ultimo aggiornamento",
+        "pointsSuffix": "pt",
+        "emptyLabel": "Classifiche reali non disponibili al momento."
       }
     },
     "navigation": {
       "calendar": "Calendario stagione",
       "userKpi": "User KPI Dashboard",
       "userAnalytics": "Deep-dive KPI dashboard",
+      "publicStandings": "Classifiche reali",
       "seasonAnalysis": "Analisi stagione",
       "weekendLive": "Weekend pulse",
       "publicGuide": "Come funziona",
@@ -398,6 +452,7 @@
         "readAppDataFailed": "Failed to read app data",
         "readDriversFailed": "Failed to read drivers",
         "readCalendarFailed": "Failed to read calendar",
+        "readStandingsFailed": "Failed to read standings",
         "fetchResultsFailed": "Failed to fetch results",
         "apiNotFound": "API Endpoint not found"
       },
@@ -425,14 +480,18 @@
         "readDriversError": "Error reading drivers from DB:",
         "writeDriversError": "Error writing drivers to DB:",
         "readCalendarError": "Error reading calendar from DB:",
-        "writeCalendarError": "Error writing calendar to DB:"
+        "writeCalendarError": "Error writing calendar to DB:",
+        "readStandingsError": "Error reading standings from DB:",
+        "writeStandingsError": "Error writing standings to DB:"
       },
       "sync": {
         "startBackground": "[Sync] Starting background synchronization...",
         "driversSynchronizedTemplate": "[Sync] Drivers synchronized: {count}",
         "calendarSynchronizedTemplate": "[Sync] Calendar synchronized: {count}",
+        "standingsSynchronizedTemplate": "[Sync] Standings synchronized: drivers={driversCount}, constructors={constructorsCount}",
         "driverSyncWarning": "[Sync] Driver sync warning:",
-        "calendarSyncWarning": "[Sync] Calendar sync warning:"
+        "calendarSyncWarning": "[Sync] Calendar sync warning:",
+        "standingsSyncWarning": "[Sync] Standings sync warning:"
       },
       "logs": {
         "driverSyncStart": "Sincronizzazione roster piloti in corso...",
@@ -453,6 +512,7 @@
         "saveFailed": "Impossibile salvare i dati.",
         "driversUnavailable": "Lista piloti non disponibile.",
         "calendarUnavailable": "Calendario non disponibile.",
+        "standingsUnavailable": "Classifiche reali non disponibili.",
         "invalidDriverSource": "La fonte roster non contiene abbastanza piloti validi.",
         "invalidCalendarSource": "La fonte calendario non contiene abbastanza weekend validi."
       }
