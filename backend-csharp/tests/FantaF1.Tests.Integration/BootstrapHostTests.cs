@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using System.Net;
 
@@ -24,7 +25,8 @@ public sealed class BootstrapHostTests : IClassFixture<WebApplicationFactory<Pro
     [Fact]
     public async Task Root_endpoint_returns_the_bootstrap_ready_message()
     {
-        using var client = _factory.CreateClient();
+        await using var factory = CreateFactory();
+        using var client = factory.CreateClient();
 
         var response = await client.GetAsync("/");
 
@@ -38,16 +40,19 @@ public sealed class BootstrapHostTests : IClassFixture<WebApplicationFactory<Pro
     [Fact]
     public void Host_exposes_the_subphase_four_controller_actions_and_resolves_the_required_contracts()
     {
-        using var factory = _factory;
+        using var factory = CreateFactory();
         using var scope = factory.Services.CreateScope();
         var serviceProvider = scope.ServiceProvider;
 
         Assert.NotNull(serviceProvider.GetRequiredService<IAdminCredentialRepository>());
         Assert.NotNull(serviceProvider.GetRequiredService<IAdminSessionService>());
         Assert.NotNull(serviceProvider.GetRequiredService<IAppDataRepository>());
+        Assert.NotNull(serviceProvider.GetRequiredService<IAppDataReadService>());
         Assert.NotNull(serviceProvider.GetRequiredService<IBackgroundSyncService>());
+        Assert.NotNull(serviceProvider.GetRequiredService<ICalendarReadService>());
         Assert.NotNull(serviceProvider.GetRequiredService<IClock>());
         Assert.NotNull(serviceProvider.GetRequiredService<IDriverRepository>());
+        Assert.NotNull(serviceProvider.GetRequiredService<IDriverReadService>());
         Assert.NotNull(serviceProvider.GetRequiredService<IHealthReportService>());
         Assert.NotNull(serviceProvider.GetRequiredService<IResultsService>());
         Assert.NotNull(serviceProvider.GetRequiredService<IRuntimeEnvironmentProfileResolver>());
@@ -67,8 +72,11 @@ public sealed class BootstrapHostTests : IClassFixture<WebApplicationFactory<Pro
             .Where(endpoint => endpoint.Action is not null)
             .ToArray();
 
-        Assert.Equal(5, controllerEndpoints.Length);
+        Assert.Equal(8, controllerEndpoints.Length);
         Assert.Contains(controllerEndpoints, endpoint => endpoint.Route.Length == 0);
+        Assert.Contains(controllerEndpoints, endpoint => string.Equals(endpoint.Route, "api/data", StringComparison.Ordinal));
+        Assert.Contains(controllerEndpoints, endpoint => string.Equals(endpoint.Route, "api/drivers", StringComparison.Ordinal));
+        Assert.Contains(controllerEndpoints, endpoint => string.Equals(endpoint.Route, "api/calendar", StringComparison.Ordinal));
         Assert.Contains(controllerEndpoints, endpoint => string.Equals(endpoint.Route, "api/health", StringComparison.Ordinal));
         Assert.Contains(controllerEndpoints, endpoint => string.Equals(endpoint.Route, "api/session", StringComparison.Ordinal));
         Assert.Equal(
@@ -108,5 +116,20 @@ public sealed class BootstrapHostTests : IClassFixture<WebApplicationFactory<Pro
         {
             return new ApplicationBuilder(ServiceProvider);
         }
+    }
+
+    private WebApplicationFactory<Program> CreateFactory()
+    {
+        return _factory.WithWebHostBuilder(builder =>
+        {
+            builder.ConfigureAppConfiguration((_, configurationBuilder) =>
+            {
+                configurationBuilder.AddInMemoryCollection(new Dictionary<string, string?>
+                {
+                    ["MONGODB_URI"] = "mongodb+srv://user:pass@cluster.mongodb.net/fantaf1_porting?retryWrites=true&w=majority",
+                    ["ADMIN_SESSION_SECRET"] = "integration-admin-secret",
+                });
+            });
+        });
     }
 }

@@ -1,6 +1,7 @@
 using FantaF1.Application.Abstractions.Persistence;
 using FantaF1.Application.Abstractions.Services;
 using FantaF1.Application.Abstractions.System;
+using FantaF1.Domain.ReadModels;
 
 namespace FantaF1.Tests.Contract;
 
@@ -14,9 +15,12 @@ public sealed class SharedAbstractionsContractTests
             typeof(IAdminCredentialRepository),
             typeof(IAdminSessionService),
             typeof(IAppDataRepository),
+            typeof(IAppDataReadService),
             typeof(IBackgroundSyncService),
+            typeof(ICalendarReadService),
             typeof(IClock),
             typeof(IDriverRepository),
+            typeof(IDriverReadService),
             typeof(IHealthReportService),
             typeof(IResultsService),
             typeof(IRuntimeEnvironmentProfileResolver),
@@ -25,7 +29,7 @@ public sealed class SharedAbstractionsContractTests
             typeof(IWeekendRepository),
         };
 
-        Assert.Equal(12, abstractionTypes.Length);
+        Assert.Equal(15, abstractionTypes.Length);
         Assert.All(abstractionTypes, type =>
         {
             Assert.True(type.IsInterface);
@@ -41,6 +45,9 @@ public sealed class SharedAbstractionsContractTests
         Assert.Equal("FantaF1.Application.Abstractions.Persistence", typeof(IWeekendRepository).Namespace);
         Assert.Equal("FantaF1.Application.Abstractions.Persistence", typeof(IAdminCredentialRepository).Namespace);
         Assert.Equal("FantaF1.Application.Abstractions.Services", typeof(IHealthReportService).Namespace);
+        Assert.Equal("FantaF1.Application.Abstractions.Services", typeof(IAppDataReadService).Namespace);
+        Assert.Equal("FantaF1.Application.Abstractions.Services", typeof(IDriverReadService).Namespace);
+        Assert.Equal("FantaF1.Application.Abstractions.Services", typeof(ICalendarReadService).Namespace);
         Assert.Equal("FantaF1.Application.Abstractions.Services", typeof(ISaveRequestService).Namespace);
         Assert.Equal("FantaF1.Application.Abstractions.Services", typeof(IAdminSessionService).Namespace);
         Assert.Equal("FantaF1.Application.Abstractions.Services", typeof(IResultsService).Namespace);
@@ -73,5 +80,34 @@ public sealed class SharedAbstractionsContractTests
 
         Assert.NotNull(logout);
         Assert.Equal(typeof(AdminSessionCommandResult), logout.ReturnType);
+    }
+
+    [Fact]
+    public void Read_route_abstractions_expose_the_subphase_five_contract_shape()
+    {
+        var readLatestAsync = typeof(IAppDataRepository).GetMethod(nameof(IAppDataRepository.ReadLatestAsync));
+        var readDriversAsync = typeof(IDriverRepository).GetMethod(nameof(IDriverRepository.ReadAllAsync));
+        var readCalendarAsync = typeof(IWeekendRepository).GetMethod(nameof(IWeekendRepository.ReadAllAsync));
+        var readAppDataAsync = typeof(IAppDataReadService).GetMethod(nameof(IAppDataReadService.ReadAsync));
+        var readOrderedDriversAsync = typeof(IDriverReadService).GetMethod(nameof(IDriverReadService.ReadAllAsync));
+        var readOrderedCalendarAsync = typeof(ICalendarReadService).GetMethod(nameof(ICalendarReadService.ReadAllAsync));
+
+        Assert.NotNull(readLatestAsync);
+        Assert.Equal(typeof(Task<AppDataDocument?>), readLatestAsync.ReturnType);
+
+        Assert.NotNull(readDriversAsync);
+        Assert.Equal(typeof(Task<IReadOnlyList<DriverDocument>>), readDriversAsync.ReturnType);
+
+        Assert.NotNull(readCalendarAsync);
+        Assert.Equal(typeof(Task<IReadOnlyList<WeekendDocument>>), readCalendarAsync.ReturnType);
+
+        Assert.NotNull(readAppDataAsync);
+        Assert.Equal(typeof(Task<AppDataDocument>), readAppDataAsync.ReturnType);
+
+        Assert.NotNull(readOrderedDriversAsync);
+        Assert.Equal(typeof(Task<IReadOnlyList<DriverDocument>>), readOrderedDriversAsync.ReturnType);
+
+        Assert.NotNull(readOrderedCalendarAsync);
+        Assert.Equal(typeof(Task<IReadOnlyList<WeekendDocument>>), readOrderedCalendarAsync.ReturnType);
     }
 }

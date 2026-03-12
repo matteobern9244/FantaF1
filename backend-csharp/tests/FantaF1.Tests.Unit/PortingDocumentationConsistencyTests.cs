@@ -50,7 +50,8 @@ public sealed class PortingDocumentationConsistencyTests
             StringComparison.Ordinal);
         Assert.Contains("| `Subphase 3` | `completed` |", canonicalPlan, StringComparison.Ordinal);
         Assert.Contains("| `Subphase 4` | `completed` |", canonicalPlan, StringComparison.Ordinal);
-        Assert.Contains("| `Subphase 5` | `pending` |", canonicalPlan, StringComparison.Ordinal);
+        Assert.Contains("| `Subphase 5` | `completed` |", canonicalPlan, StringComparison.Ordinal);
+        Assert.Contains("| `Subphase 6` | `pending` |", canonicalPlan, StringComparison.Ordinal);
         Assert.Contains(
             "| Canonical launcher and shared verification scripts, including local development and production-like browser gate reuse, and the ban on implicit `fantaf1_dev` fallback | `Subphase 9` |",
             canonicalPlan,
@@ -62,6 +63,37 @@ public sealed class PortingDocumentationConsistencyTests
         Assert.Contains(
             "- Produzione-like locale: il browser gate riusabile non blocca la chiusura di questa subphase; la semantica auth/cookie production-like va verificata con integration e contract tests HTTP, mentre il gate browser condiviso resta demandato a `Subphase 9`.",
             subphaseFourPlan,
+            StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Canonical_plan_and_subphase_five_doc_record_the_read_route_slice_as_completed_without_anticipating_subphase_six()
+    {
+        var canonicalPlan = ReadRepositoryFile("docs", "backend-csharp-porting-plan.md");
+        var subphaseFivePlan = ReadRepositoryFile(
+            "docs",
+            "backend-csharp-porting-subphases",
+            "subphase-05-read-routes-data-drivers-calendar.md");
+
+        Assert.Contains(
+            "| `Subphase 5` | `completed` |",
+            canonicalPlan,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "| `Subphase 6` | `pending` |",
+            canonicalPlan,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "- `GET /api/data`",
+            subphaseFivePlan,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "- `GET /api/drivers`",
+            subphaseFivePlan,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "- `GET /api/calendar`",
+            subphaseFivePlan,
             StringComparison.Ordinal);
     }
 
@@ -117,6 +149,22 @@ public sealed class PortingDocumentationConsistencyTests
 
         Assert.All(requiredPhrases, requiredPhrase =>
             Assert.Contains(requiredPhrase, agents, StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public void Coverage_baseline_numbers_are_aligned_between_readme_and_agents()
+    {
+        var readme = ReadRepositoryFile("README.md");
+        var agents = ReadRepositoryFile("AGENTS.md");
+
+        Assert.Contains("`4777 / 4777` statements", readme, StringComparison.Ordinal);
+        Assert.Contains("`388 / 388` functions", readme, StringComparison.Ordinal);
+        Assert.Contains("`1984 / 1984` branches", readme, StringComparison.Ordinal);
+        Assert.Contains("`4777 / 4777` lines", readme, StringComparison.Ordinal);
+        Assert.Contains(
+            "**100% statements (4777 / 4777)**, **100% functions (388 / 388)**, **100% branches (1984 / 1984)**, and **100% lines (4777 / 4777)**",
+            agents,
+            StringComparison.Ordinal);
     }
 
     [Fact]

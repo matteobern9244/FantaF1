@@ -1,4 +1,5 @@
 using FantaF1.Application.Abstractions.Services;
+using FantaF1.Domain.ReadModels;
 using FantaF1.Application.Services;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -10,8 +11,14 @@ public static class ApplicationServiceCollectionExtensions
     {
         ArgumentNullException.ThrowIfNull(services);
 
+        services.AddSingleton<AppDataSanitizer>();
+        services.AddSingleton<CalendarOrderingService>();
+        services.AddSingleton<DriverOrderingService>();
         services.AddScoped<IAdminSessionService, AdminSessionService>();
+        services.AddScoped<IAppDataReadService, AppDataReadService>();
         services.AddScoped<IBackgroundSyncService, PlaceholderBackgroundSyncService>();
+        services.AddScoped<ICalendarReadService, CalendarReadService>();
+        services.AddScoped<IDriverReadService, DriverReadService>();
         services.AddScoped<IHealthReportService, HealthReportService>();
         services.AddScoped<IResultsService, PlaceholderResultsService>();
         services.AddScoped<ISaveRequestService, PlaceholderSaveRequestService>();

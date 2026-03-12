@@ -13,6 +13,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
+using MongoDB.Driver;
 using System.Reflection;
 
 namespace FantaF1.Tests.Unit;
@@ -43,7 +44,10 @@ public sealed class ArchitectureAndDependencyInjectionTests
     {
         var services = new ServiceCollection();
         var configuration = new ConfigurationBuilder()
-            .AddInMemoryCollection([])
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["MONGODB_URI"] = "mongodb+srv://user:pass@cluster.mongodb.net/fantaf1_porting?retryWrites=true&w=majority",
+            })
             .Build();
 
         services.AddSingleton<IConfiguration>(configuration);
@@ -62,8 +66,11 @@ public sealed class ArchitectureAndDependencyInjectionTests
         Assert.NotNull(serviceProvider.GetRequiredService<IAdminCredentialRepository>());
         Assert.NotNull(serviceProvider.GetRequiredService<IAdminSessionService>());
         Assert.NotNull(serviceProvider.GetRequiredService<IAppDataRepository>());
+        Assert.NotNull(serviceProvider.GetRequiredService<IAppDataReadService>());
         Assert.NotNull(serviceProvider.GetRequiredService<IBackgroundSyncService>());
+        Assert.NotNull(serviceProvider.GetRequiredService<ICalendarReadService>());
         Assert.NotNull(serviceProvider.GetRequiredService<IDriverRepository>());
+        Assert.NotNull(serviceProvider.GetRequiredService<IDriverReadService>());
         Assert.NotNull(serviceProvider.GetRequiredService<IHealthReportService>());
         Assert.NotNull(serviceProvider.GetRequiredService<IResultsService>());
         Assert.NotNull(serviceProvider.GetRequiredService<IRuntimeEnvironmentProfileResolver>());
@@ -101,6 +108,7 @@ public sealed class ArchitectureAndDependencyInjectionTests
             {
                 [ContractAdminCredentialSeedOptions.PasswordHashHexConfigurationPath] = "ab".PadRight(128, 'c'),
                 [ContractAdminCredentialSeedOptions.PasswordSaltConfigurationPath] = "configured-salt",
+                ["MONGODB_URI"] = "mongodb+srv://user:pass@cluster.mongodb.net/fantaf1_porting?retryWrites=true&w=majority",
             })
             .Build();
 
@@ -124,6 +132,30 @@ public sealed class ArchitectureAndDependencyInjectionTests
     public void Infrastructure_registration_rejects_a_null_service_collection()
     {
         Assert.Throws<ArgumentNullException>(() => InfrastructureServiceCollectionExtensions.AddFantaF1Infrastructure(null!));
+    }
+
+    [Fact]
+    public void Infrastructure_registration_requires_mongodb_uri_when_the_mongo_client_is_resolved()
+    {
+        var services = new ServiceCollection();
+        var configuration = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>())
+            .Build();
+
+        services.AddSingleton<IConfiguration>(configuration);
+        services.AddSingleton<IHostEnvironment>(new TestHostEnvironment("Development"));
+        services.AddFantaF1Application();
+        services.AddFantaF1Infrastructure();
+
+        using var provider = services.BuildServiceProvider(new ServiceProviderOptions
+        {
+            ValidateOnBuild = true,
+            ValidateScopes = true,
+        });
+
+        var exception = Assert.Throws<InvalidOperationException>(() => provider.GetRequiredService<IMongoClient>());
+
+        Assert.Equal("MONGODB_URI environment variable is not defined", exception.Message);
     }
 
     private static HashSet<string> GetReferenceNames(Assembly assembly)

@@ -27,7 +27,7 @@ Rispetto alla produzione `v1.4.0`, il repository contiene gia' il delta tecnico 
 - menu di sezione sempre visibile durante lo scroll, con rimozione della freccia `Torna al menu`;
 - CTA `INSTALLA APPLICAZIONE` sempre visibile su browser desktop e mobile, con feedback esplicito quando l'installazione non e' disponibile o l'app e' gia' installata;
 - test regressivi aggiuntivi per mappa pubblica, cambio weekend e navigation shell desktop/public;
-- baseline coverage verificata riallineata a `4780 / 4780` statements, `393 / 393` functions, `1999 / 1999` branches e `4780 / 4780` lines;
+- baseline coverage verificata riallineata a `4777 / 4777` statements, `388 / 388` functions, `1984 / 1984` branches e `4777 / 4777` lines;
 - validazione finale completa rieseguita anche con `test:ui-responsive`, `test:save-local`, controllo sintassi di `start_fantaf1.command` e verifica di coerenza dei workflow GitHub Actions.
 
 In sintesi: la produzione `v1.4.0` descrive la baseline live, mentre questo README documenta anche il delta tecnico gia' presente nel repository e versionato come `v1.4.1`, non ancora deployato.
@@ -590,10 +590,10 @@ Il controllo browser `npm run test:ui-responsive` resta disponibile come verific
 - Runner: Vitest.
 - Coverage provider: V8.
 - Baseline coverage verificata corrente sullo scope ufficiale del repository/applicazione:
-  - `4780 / 4780` statements
-  - `393 / 393` functions
-  - `1999 / 1999` branches
-  - `4780 / 4780` lines
+  - `4777 / 4777` statements
+  - `388 / 388` functions
+  - `1984 / 1984` branches
+  - `4777 / 4777` lines
 - Scope coverage configurato:
   - `app.js`
   - `server.js`

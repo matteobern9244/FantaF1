@@ -1,8 +1,8 @@
 using FantaF1.Domain.ReadModels;
 
-namespace FantaF1.Application.Abstractions.Persistence;
+namespace FantaF1.Application.Abstractions.Services;
 
-public interface IDriverRepository
+public interface IDriverReadService
 {
     Task<IReadOnlyList<DriverDocument>> ReadAllAsync(CancellationToken cancellationToken);
 }

@@ -52,8 +52,8 @@ The ledger below is the canonical persistent checkpoint for the temporal executi
 | `Subphase 2` | `completed` | C# solution, shared abstractions, DI bootstrap, and controller-based host baseline are verified in isolation. The only blocking browser gate for this closure was the Node baseline in `Development`, while the reusable local `production-like` browser gate remains owned by `Subphase 9`. | Wait for explicit user authorization before starting `Subphase 3`. |
 | `Subphase 3` | `completed` | Environment/database target resolution and `GET /api/health` parity are verified in C# for `Development`, `Staging`, and `Production`, while Node remains the authoritative runtime. | Wait for explicit user authorization before starting `Subphase 4`. |
 | `Subphase 4` | `completed` | `GET /api/session`, `POST /api/admin/session`, and `DELETE /api/admin/session` are parity-green in C# for `Development` and production-like environments, including cookie signing, TTL, default view mode, hash-only admin credential seeding, and Node-compatible `Set-Cookie` headers. | Wait for explicit user authorization before starting `Subphase 5`. |
-| `Subphase 5` | `pending` | Not started yet in the canonical ledger. | Wait for `Subphase 4` completion. |
-| `Subphase 6` | `pending` | Not started yet in the canonical ledger. | Wait for `Subphase 5` completion. |
+| `Subphase 5` | `completed` | `GET /api/data`, `GET /api/drivers`, and `GET /api/calendar` are parity-green in C# for payload shape, app-data sanitization, sorting, legacy Mongo collection compatibility, and read-only fallback behavior while Node remains authoritative. | Wait for explicit user authorization before starting `Subphase 6`. |
+| `Subphase 6` | `pending` | Not started yet in the canonical ledger. | Wait for explicit user authorization before starting `Subphase 6`. |
 | `Subphase 7` | `pending` | Not started yet in the canonical ledger. | Wait for `Subphase 6` completion. |
 | `Subphase 8` | `pending` | Not started yet in the canonical ledger. | Wait for `Subphase 7` completion. |
 | `Subphase 9` | `pending` | Not started yet in the canonical ledger. | Wait for `Subphase 8` completion. |
