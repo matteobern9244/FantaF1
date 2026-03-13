@@ -100,25 +100,25 @@ public sealed class SaveRouteContractTests
         Assert.Equal(SaveRouteContract.ForbiddenStatusCode, SaveRouteContract.ResolveStatusCode(SaveRouteContract.RaceLockedCode));
         Assert.Equal(SaveRouteContract.InternalServerErrorStatusCode, SaveRouteContract.ResolveStatusCode("not_mapped"));
     }
+}
 
-    private sealed class NullStringConvertible : IConvertible
-    {
-        public TypeCode GetTypeCode() => TypeCode.Object;
-        public bool ToBoolean(IFormatProvider? provider) => throw new NotSupportedException();
-        public byte ToByte(IFormatProvider? provider) => throw new NotSupportedException();
-        public char ToChar(IFormatProvider? provider) => throw new NotSupportedException();
-        public DateTime ToDateTime(IFormatProvider? provider) => throw new NotSupportedException();
-        public decimal ToDecimal(IFormatProvider? provider) => throw new NotSupportedException();
-        public double ToDouble(IFormatProvider? provider) => throw new NotSupportedException();
-        public short ToInt16(IFormatProvider? provider) => throw new NotSupportedException();
-        public int ToInt32(IFormatProvider? provider) => throw new NotSupportedException();
-        public long ToInt64(IFormatProvider? provider) => throw new NotSupportedException();
-        public sbyte ToSByte(IFormatProvider? provider) => throw new NotSupportedException();
-        public float ToSingle(IFormatProvider? provider) => throw new NotSupportedException();
-        public string? ToString(IFormatProvider? provider) => null;
-        public object ToType(Type conversionType, IFormatProvider? provider) => throw new NotSupportedException();
-        public ushort ToUInt16(IFormatProvider? provider) => throw new NotSupportedException();
-        public uint ToUInt32(IFormatProvider? provider) => throw new NotSupportedException();
-        public ulong ToUInt64(IFormatProvider? provider) => throw new NotSupportedException();
-    }
+sealed class NullStringConvertible : IConvertible
+{
+    public TypeCode GetTypeCode() => TypeCode.Object;
+    public bool ToBoolean(IFormatProvider? provider) => throw new NotSupportedException();
+    public byte ToByte(IFormatProvider? provider) => throw new NotSupportedException();
+    public char ToChar(IFormatProvider? provider) => throw new NotSupportedException();
+    public DateTime ToDateTime(IFormatProvider? provider) => throw new NotSupportedException();
+    public decimal ToDecimal(IFormatProvider? provider) => throw new NotSupportedException();
+    public double ToDouble(IFormatProvider? provider) => throw new NotSupportedException();
+    public short ToInt16(IFormatProvider? provider) => throw new NotSupportedException();
+    public int ToInt32(IFormatProvider? provider) => throw new NotSupportedException();
+    public long ToInt64(IFormatProvider? provider) => throw new NotSupportedException();
+    public sbyte ToSByte(IFormatProvider? provider) => throw new NotSupportedException();
+    public float ToSingle(IFormatProvider? provider) => throw new NotSupportedException();
+    public string ToString(IFormatProvider? provider) => null!;
+    public object ToType(Type conversionType, IFormatProvider? provider) => throw new NotSupportedException();
+    public ushort ToUInt16(IFormatProvider? provider) => throw new NotSupportedException();
+    public uint ToUInt32(IFormatProvider? provider) => throw new NotSupportedException();
+    public ulong ToUInt64(IFormatProvider? provider) => throw new NotSupportedException();
 }

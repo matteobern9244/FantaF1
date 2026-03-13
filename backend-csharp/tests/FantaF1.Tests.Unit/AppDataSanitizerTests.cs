@@ -65,11 +65,17 @@ public sealed class AppDataSanitizerTests
 
         var result = sanitizer.Sanitize(appData, calendar, new DateTimeOffset(2026, 03, 12, 10, 00, 00, TimeSpan.Zero));
 
-        Assert.Equal(["Anna", "Bruno", "Carlo"], result.Users!.Select(user => user.Name).ToArray());
-        Assert.Equal(0, result.Users[0].Points);
-        Assert.Equal("ham", result.Users[0].Predictions!.Second);
+        Assert.NotNull(result.Users);
+        var users = result.Users;
+
+        Assert.Equal(["Anna", "Bruno", "Carlo"], users.Select(user => user.Name ?? string.Empty).ToArray());
+        Assert.Equal(0, users[0].Points);
+        var firstUserPredictions = users[0].Predictions;
+        Assert.NotNull(firstUserPredictions);
+        Assert.Equal("ham", firstUserPredictions.Second);
         Assert.Equal("monaco", result.SelectedMeetingKey);
-        Assert.True(result.WeekendStateByMeetingKey!.ContainsKey("monaco"));
+        Assert.NotNull(result.WeekendStateByMeetingKey);
+        Assert.True(result.WeekendStateByMeetingKey.ContainsKey("monaco"));
     }
 
     [Fact]
@@ -104,10 +110,18 @@ public sealed class AppDataSanitizerTests
             [CreateWeekendDocument("monza", "Monza", "Italian Grand Prix", 16, "2026-09-06", "2026-09-06")],
             new DateTimeOffset(2026, 03, 12, 10, 00, 00, TimeSpan.Zero));
 
-        Assert.Equal(["Mario", "Mario", "Luigi"], result.Users!.Select(user => user.Name).ToArray());
-        Assert.Equal("ver", result.Users[0].Predictions!.First);
-        Assert.Equal("ver", result.Users[1].Predictions!.First);
-        Assert.Equal("pia", result.RaceResults!.Pole);
+        Assert.NotNull(result.Users);
+        var users = result.Users;
+
+        Assert.Equal(["Mario", "Mario", "Luigi"], users.Select(user => user.Name ?? string.Empty).ToArray());
+        var firstUserPredictions = users[0].Predictions;
+        Assert.NotNull(firstUserPredictions);
+        Assert.Equal("ver", firstUserPredictions.First);
+        var secondUserPredictions = users[1].Predictions;
+        Assert.NotNull(secondUserPredictions);
+        Assert.Equal("ver", secondUserPredictions.First);
+        Assert.NotNull(result.RaceResults);
+        Assert.Equal("pia", result.RaceResults.Pole);
     }
 
     [Fact]
@@ -132,8 +146,13 @@ public sealed class AppDataSanitizerTests
             [CreateWeekendDocument("imola", "Imola", "Emilia Romagna Grand Prix", 7, "2026-05-18", "2026-05-18")],
             new DateTimeOffset(2026, 03, 12, 10, 00, 00, TimeSpan.Zero));
 
-        Assert.Equal(["Mario", "Unknown", "Luigi"], result.Users!.Select(user => user.Name).ToArray());
-        Assert.Equal("ham", result.Users[1].Predictions!.Second);
+        Assert.NotNull(result.Users);
+        var users = result.Users;
+
+        Assert.Equal(["Mario", "Unknown", "Luigi"], users.Select(user => user.Name ?? string.Empty).ToArray());
+        var secondUserPredictions = users[1].Predictions;
+        Assert.NotNull(secondUserPredictions);
+        Assert.Equal("ham", secondUserPredictions.Second);
     }
 
     [Fact]
@@ -165,8 +184,12 @@ public sealed class AppDataSanitizerTests
         var result = sanitizer.Sanitize(appData, [], new DateTimeOffset(2026, 03, 12, 10, 00, 00, TimeSpan.Zero));
 
         Assert.Equal("  ", result.SelectedMeetingKey);
-        Assert.Equal(["imola"], result.WeekendStateByMeetingKey!.Keys.ToArray());
-        Assert.Equal("lec", result.WeekendStateByMeetingKey["imola"].UserPredictions!["Player 1"].First);
+        Assert.NotNull(result.WeekendStateByMeetingKey);
+        var weekendStateByMeetingKey = result.WeekendStateByMeetingKey;
+        Assert.Equal(["imola"], weekendStateByMeetingKey.Keys.ToArray());
+        var imolaPredictions = weekendStateByMeetingKey["imola"].UserPredictions;
+        Assert.NotNull(imolaPredictions);
+        Assert.Equal("lec", imolaPredictions["Player 1"].First);
     }
 
     [Fact]
@@ -181,7 +204,8 @@ public sealed class AppDataSanitizerTests
 
         Assert.Equal("imola", result.SelectedMeetingKey);
         Assert.Equal("Imola", result.GpName);
-        Assert.Equal(["Player 1", "Player 2", "Player 3"], result.Users!.Select(user => user.Name ?? string.Empty).ToArray());
+        Assert.NotNull(result.Users);
+        Assert.Equal(["Player 1", "Player 2", "Player 3"], result.Users.Select(user => user.Name ?? string.Empty).ToArray());
     }
 
     [Fact]
@@ -196,7 +220,8 @@ public sealed class AppDataSanitizerTests
             options: null);
 
         Assert.Equal(string.Empty, result.SelectedMeetingKey);
-        Assert.Equal(["Player 1", "Player 2", "Player 3"], result.Users!.Select(user => user.Name ?? string.Empty).ToArray());
+        Assert.NotNull(result.Users);
+        Assert.Equal(["Player 1", "Player 2", "Player 3"], result.Users.Select(user => user.Name ?? string.Empty).ToArray());
     }
 
     [Fact]
@@ -211,10 +236,14 @@ public sealed class AppDataSanitizerTests
 
         Assert.Equal(string.Empty, result.SelectedMeetingKey);
         Assert.Equal(string.Empty, result.GpName);
-        Assert.Equal(["Player 1", "Player 2", "Player 3"], result.Users!.Select(user => user.Name ?? string.Empty).ToArray());
-        Assert.Equal(string.Empty, result.RaceResults!.First);
-        Assert.Empty(result.History!);
-        Assert.Empty(result.WeekendStateByMeetingKey!);
+        Assert.NotNull(result.Users);
+        Assert.Equal(["Player 1", "Player 2", "Player 3"], result.Users.Select(user => user.Name ?? string.Empty).ToArray());
+        Assert.NotNull(result.RaceResults);
+        Assert.Equal(string.Empty, result.RaceResults.First);
+        Assert.NotNull(result.History);
+        Assert.Empty(result.History);
+        Assert.NotNull(result.WeekendStateByMeetingKey);
+        Assert.Empty(result.WeekendStateByMeetingKey);
     }
 
     [Fact]
@@ -245,9 +274,13 @@ public sealed class AppDataSanitizerTests
             [CreateWeekendDocument("imola", "Imola", "Emilia Romagna Grand Prix", 7, "2026-05-18", "2026-05-18")],
             new DateTimeOffset(2026, 03, 12, 10, 00, 00, TimeSpan.Zero));
 
-        Assert.Null(result.History!.Single().MeetingKey);
-        Assert.Empty(result.History.Single().UserPredictions!);
-        Assert.Equal(string.Empty, result.RaceResults!.First);
+        Assert.NotNull(result.History);
+        var historyRecord = result.History.Single();
+        Assert.Null(historyRecord.MeetingKey);
+        Assert.NotNull(historyRecord.UserPredictions);
+        Assert.Empty(historyRecord.UserPredictions);
+        Assert.NotNull(result.RaceResults);
+        Assert.Equal(string.Empty, result.RaceResults.First);
         Assert.Equal(string.Empty, result.RaceResults.Pole);
     }
 
@@ -282,8 +315,13 @@ public sealed class AppDataSanitizerTests
             [CreateWeekendDocument("imola", "Imola", "Emilia Romagna Grand Prix", 7, "2026-05-18", "2026-05-18")],
             new DateTimeOffset(2026, 03, 12, 10, 00, 00, TimeSpan.Zero));
 
-        Assert.Equal(string.Empty, result.History!.Single().UserPredictions!["Player 1"].Prediction!.First);
-        Assert.Equal(0, result.History.Single().UserPredictions["Player 1"].PointsEarned);
+        Assert.NotNull(result.History);
+        var historyRecord = result.History.Single();
+        Assert.NotNull(historyRecord.UserPredictions);
+        var playerPrediction = historyRecord.UserPredictions["Player 1"];
+        Assert.NotNull(playerPrediction.Prediction);
+        Assert.Equal(string.Empty, playerPrediction.Prediction.First);
+        Assert.Equal(0, playerPrediction.PointsEarned);
     }
 
     [Fact]

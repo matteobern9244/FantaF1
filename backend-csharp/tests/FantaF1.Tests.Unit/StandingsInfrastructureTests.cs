@@ -58,7 +58,7 @@ public sealed class StandingsInfrastructureTests
                 "https://www.formula1.com/en/results.html/2026/drivers.html",
                 "https://www.formula1.com/en/results.html/2026/team.html",
             ],
-            requests.Select(request => request.RequestUri?.ToString()).ToArray());
+            requests.Select(request => request.RequestUri?.ToString() ?? string.Empty).ToArray());
         Assert.All(requests, request =>
         {
             Assert.True(request.Headers.TryGetValues("user-agent", out var userAgentValues));

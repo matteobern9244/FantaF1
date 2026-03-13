@@ -112,7 +112,9 @@ public sealed class ReadRouteEndpointTests
         var fallbackPayload = await fallbackClient.GetFromJsonAsync<List<Dictionary<string, object>>>("/api/drivers");
 
         Assert.NotNull(sortedPayload);
-        Assert.Equal(["Alpha Driver", "Zed Driver"], sortedPayload.Select(driver => driver["name"].ToString()).ToArray());
+        Assert.Equal(
+            ["Alpha Driver", "Zed Driver"],
+            sortedPayload.Select(driver => driver["name"]?.ToString() ?? string.Empty).ToArray());
         Assert.NotNull(fallbackPayload);
         Assert.Empty(fallbackPayload);
     }
@@ -159,7 +161,9 @@ public sealed class ReadRouteEndpointTests
         var fallbackPayload = await fallbackClient.GetFromJsonAsync<List<Dictionary<string, object>>>("/api/calendar");
 
         Assert.NotNull(sortedPayload);
-        Assert.Equal(["race-1", "race-2"], sortedPayload.Select(weekend => weekend["meetingKey"].ToString()).ToArray());
+        Assert.Equal(
+            ["race-1", "race-2"],
+            sortedPayload.Select(weekend => weekend["meetingKey"]?.ToString() ?? string.Empty).ToArray());
         Assert.NotNull(fallbackPayload);
         Assert.Empty(fallbackPayload);
     }

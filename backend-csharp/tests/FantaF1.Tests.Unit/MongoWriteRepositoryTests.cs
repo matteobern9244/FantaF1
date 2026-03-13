@@ -484,7 +484,7 @@ public sealed class MongoWriteRepositoryTests
             return bsonDateTime.ToUniversalTime();
         }
 
-        return value.IsString ? value.AsString : value.ToString();
+        return value.IsString ? value.AsString : value.ToString() ?? string.Empty;
     }
 
     private static object CreateCompletedTask(Type taskType, object result)

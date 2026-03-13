@@ -100,14 +100,25 @@ public sealed class AppDataReadServiceTests
 
         Assert.Equal("monaco", payload.SelectedMeetingKey);
         Assert.Equal("Monaco Grand Prix", payload.GpName);
+        Assert.NotNull(payload.Users);
+        var users = payload.Users;
         Assert.Equal(
             ["Unknown", "Valid User", "Player 3"],
-            payload.Users.Select(user => user.Name).ToArray());
-        Assert.Equal(0, payload.Users[0].Points);
-        Assert.Equal("ver", payload.Users[0].Predictions.First);
+            users.Select(user => user.Name ?? string.Empty).ToArray());
+        Assert.Equal(0, users[0].Points);
+        var firstUserPredictions = users[0].Predictions;
+        Assert.NotNull(firstUserPredictions);
+        Assert.Equal("ver", firstUserPredictions.First);
+        Assert.NotNull(payload.RaceResults);
         Assert.Equal("pia", payload.RaceResults.Pole);
-        Assert.Equal(0, payload.History.Single().UserPredictions["Player 1"].PointsEarned);
-        Assert.Equal("ver", payload.WeekendStateByMeetingKey["monaco"].UserPredictions["Unknown"].First);
+        Assert.NotNull(payload.History);
+        var historyRecord = payload.History.Single();
+        Assert.NotNull(historyRecord.UserPredictions);
+        Assert.Equal(0, historyRecord.UserPredictions["Player 1"].PointsEarned);
+        Assert.NotNull(payload.WeekendStateByMeetingKey);
+        var monacoPredictions = payload.WeekendStateByMeetingKey["monaco"].UserPredictions;
+        Assert.NotNull(monacoPredictions);
+        Assert.Equal("ver", monacoPredictions["Unknown"].First);
     }
 
     [Fact]
@@ -161,6 +172,7 @@ public sealed class AppDataReadServiceTests
 
         Assert.Equal("future", payload.SelectedMeetingKey);
         Assert.Equal("Future Grand Prix", payload.GpName);
+        Assert.NotNull(payload.Users);
         Assert.Equal(3, payload.Users.Count);
         Assert.Equal("Player 1", payload.Users[0].Name);
         Assert.Equal("Player 2", payload.Users[1].Name);
@@ -180,7 +192,9 @@ public sealed class AppDataReadServiceTests
 
         Assert.Equal(string.Empty, payload.SelectedMeetingKey);
         Assert.Equal(string.Empty, payload.GpName);
+        Assert.NotNull(payload.History);
         Assert.Empty(payload.History);
+        Assert.NotNull(payload.WeekendStateByMeetingKey);
         Assert.Empty(payload.WeekendStateByMeetingKey);
     }
 

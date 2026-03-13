@@ -522,11 +522,22 @@ public sealed class SaveValidationTests
                 PreferPayloadSelectedWeekend: true,
                 ParticipantRoster: ["Adriano", "Fabio", "Matteo"]));
 
-        Assert.Equal(["Adriano", "Fabio", "Matteo"], sanitized.Users.Select(user => user.Name).ToArray());
-        Assert.Equal("ham", sanitized.Users[0].Predictions!.First);
-        Assert.Equal("lec", sanitized.Users[1].Predictions!.First);
-        Assert.Equal("ver", sanitized.Users[2].Predictions!.First);
-        Assert.Equal("ver", sanitized.WeekendStateByMeetingKey!["race-1"].UserPredictions!["Matteo"].First);
+        Assert.NotNull(sanitized.Users);
+        var users = sanitized.Users;
+        Assert.Equal(["Adriano", "Fabio", "Matteo"], users.Select(user => user.Name ?? string.Empty).ToArray());
+        var firstUserPredictions = users[0].Predictions;
+        Assert.NotNull(firstUserPredictions);
+        Assert.Equal("ham", firstUserPredictions.First);
+        var secondUserPredictions = users[1].Predictions;
+        Assert.NotNull(secondUserPredictions);
+        Assert.Equal("lec", secondUserPredictions.First);
+        var thirdUserPredictions = users[2].Predictions;
+        Assert.NotNull(thirdUserPredictions);
+        Assert.Equal("ver", thirdUserPredictions.First);
+        Assert.NotNull(sanitized.WeekendStateByMeetingKey);
+        var racePredictions = sanitized.WeekendStateByMeetingKey["race-1"].UserPredictions;
+        Assert.NotNull(racePredictions);
+        Assert.Equal("ver", racePredictions["Matteo"].First);
     }
 
     private static AppDataDocument CreatePayload(string firstPrediction)

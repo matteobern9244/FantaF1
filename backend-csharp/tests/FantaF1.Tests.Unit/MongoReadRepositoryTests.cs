@@ -292,7 +292,7 @@ public sealed class MongoReadRepositoryTests
             return value.AsString;
         }
 
-        return value.ToString();
+        return value.ToString() ?? string.Empty;
     }
 
     private static object CreateCompletedTask(Type taskType, object result)
