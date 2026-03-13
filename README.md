@@ -542,6 +542,7 @@ Il backend verifica in startup che `MONGODB_URI` sia allineata con `fantaf1_dev`
 
 - `npm run start:local`
 - `./start_fantaf1.command`
+- `./clean_google_chrome.command`
 
 Lo script integrato:
 
@@ -562,6 +563,19 @@ Esempi:
 - `./start_fantaf1.command` -> target canonico `node-dev`
 - `FANTAF1_LOCAL_RUNTIME=csharp-dev ./start_fantaf1.command`
 - `FANTAF1_LOCAL_RUNTIME=csharp-staging-local ./start_fantaf1.command`
+
+### Ripristino rapido di Google Chrome
+
+Se Google Chrome non si apre correttamente dopo esecuzioni Playwright o altri tool di automazione locali, il repository include:
+
+- `./clean_google_chrome.command`
+
+Lo script:
+
+- chiude solo i processi Chrome di automazione riconoscibili collegati a profili `playwright_chromiumdev_profile-*` o a `chrome-devtools-mcp`;
+- non modifica il launcher principale `./start_fantaf1.command`;
+- rilancia Google Chrome da `/Applications/Google Chrome.app`;
+- esegue un controllo breve per verificare che Chrome sia tornato attivo.
 
 ## Deploy su Render
 
