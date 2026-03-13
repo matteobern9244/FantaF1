@@ -489,6 +489,7 @@ Migration rules:
 - C# application code must ship with 100% verified line, branch, and method coverage
 - Coverlet remains the collection engine for the C# solution, while the repository-level source of truth is `npm run test:csharp-coverage`
 - `npm run test:csharp-coverage` aggregates unit, integration, and contract coverage only for `backend-csharp/src/`, excludes generated artifacts such as `obj/` and `*.g.cs`, and writes the auditable summary to `backend-csharp/TestResults/OfficialCoverage/Summary.txt` and `backend-csharp/TestResults/OfficialCoverage/summary.json`
+- Current verified official backend-csharp summary is `2283 / 2283` lines, `1276 / 1276` branches, and `413 / 413` methods across `64` included files
 - No migrated slice is complete if either stack falls below 100%
 
 ### 6.3 Browser regression requirements

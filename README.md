@@ -604,6 +604,11 @@ Il controllo browser `npm run test:ui-responsive` resta disponibile come verific
   - `407 / 407` functions
   - `2093 / 2093` branches
   - `5167 / 5167` lines
+- Coverage ufficiale verificata corrente del backend C# sullo scope `backend-csharp/src/`:
+  - `2283 / 2283` lines
+  - `1276 / 1276` branches
+  - `413 / 413` methods
+  - `64` file inclusi nel riepilogo ufficiale
 - Scope coverage configurato:
   - `app.js`
   - `server.js`
@@ -632,6 +637,7 @@ Su errori di navigazione o shell UI bloccata raccoglie artefatti diagnostici in 
 Per il salvataggio locale e' disponibile `npm run test:save-local`, che legge `/api/data`, re-invia lo stesso payload su `POST /api/data`, verifica `environment=development`, `databaseTarget=fantaf1_dev` e controlla che lo stato resti invariato dopo il round-trip. Questo smoke test copre il canale di persistenza generica, non il salvataggio manuale dei pronostici su `POST /api/predictions`.
 Per la CI e' disponibile anche `npm run test:coverage`, mentre lo smoke di persistenza puo' essere eseguito sul database isolato di pipeline impostando `MONGODB_DB_NAME_OVERRIDE`, `SAVE_SMOKE_EXPECTED_ENVIRONMENT` e `SAVE_SMOKE_EXPECTED_DATABASE_TARGET` senza toccare `fantaf1_dev` o `fantaf1`.
 Per il backend C# e' disponibile `npm run test:csharp-coverage`, comando ufficiale che esegue la raccolta coverlet sui test unit/integration/contract, filtra `obj/` e generated code, limita lo scope a `backend-csharp/src/` e scrive il riepilogo verificabile in `backend-csharp/TestResults/OfficialCoverage/Summary.txt` e `backend-csharp/TestResults/OfficialCoverage/summary.json`.
+L'ultimo riepilogo ufficiale verificato per il backend C# chiude a `100%` su linee, branch e metodi per tutti i `64` file inclusi nello scope `backend-csharp/src/`.
 Per una verifica browser production-like coerente con il guardrail sul database, il repository supporta anche l'avvio con `NODE_ENV=production MONGODB_DB_NAME_OVERRIDE=fantaf1_dev npm start`, mantenendo runtime `production` ma puntando in modo esplicito al database locale di sviluppo per smoke desktop/mobile della build servita da Express.
 Per ripulire documenti legacy che contengono ancora campi del `Weekend Boost` e' disponibile `npm run migrate:remove-weekend-boost`, script idempotente che riscrive gli `AppData` del database corrente in forma sanificata.
 

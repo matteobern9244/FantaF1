@@ -7,6 +7,7 @@ Invocazione canonica: `Subphase 7`
 - `GET /api/results/:meetingKey` e' portata in C# con payload flat Node-compatible.
 - `racePhase`, parsing risultati, scelta `qualifying` vs `sprint-results`, cache TTL, highlights `found`/`missing`, fallback a highlight persistiti e `500 { error, details }` sono parity-green.
 - La scrittura dei metadati highlights resta limitata al documento legacy `weekends`.
+- La coverage ufficiale `npm run test:csharp-coverage` e' ora al `100%` su linee, branch e metodi per tutto lo scope `backend-csharp/src/`, inclusi i rami residui del lookup highlights della results route.
 - Il runtime autorevole per gli utenti resta Node; nessuna attivita' di `Subphase 8+` e' stata anticipata.
 
 ## Scopo della subphase
@@ -65,6 +66,7 @@ Invocazione canonica: `Subphase 7`
 
 - Tutto il codice C# introdotto per risultati, highlights e fallback deve essere coperto al 100%.
 - La baseline Node/React deve restare al 100%.
+- Il riepilogo ufficiale verificato del backend C# per questa slice e' `2283 / 2283` linee, `1276 / 1276` branch e `413 / 413` metodi sui `64` file inclusi nello scope `backend-csharp/src/`.
 
 ## Piano di implementazione passo-passo
 
@@ -103,7 +105,7 @@ Invocazione canonica: `Subphase 7`
 - `GET /api/results/:meetingKey` e' parity-green tra Node e C#.
 - `racePhase`, highlights e fallback restano invariati.
 - Nessun bootstrap runtime, launcher o staging operation e' stata anticipata.
-- Coverage 100% su tutti i file toccati.
+- Coverage 100% su tutti i file toccati e report ufficiale `npm run test:csharp-coverage` chiuso al `100%`.
 
 ## Blocchi / condizioni di stop
 

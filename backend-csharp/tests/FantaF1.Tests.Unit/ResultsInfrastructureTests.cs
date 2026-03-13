@@ -1,5 +1,7 @@
 using System.Net;
 using System.Net.Http;
+using System.Reflection;
+using System.Text.Json;
 using FantaF1.Application.Abstractions.System;
 using FantaF1.Domain.ReadModels;
 using FantaF1.Infrastructure.Results;
@@ -1282,6 +1284,234 @@ public sealed class ResultsInfrastructureTests
         Assert.Equal("missing", result.HighlightsLookupStatus);
     }
 
+    [Fact]
+    public async Task Highlights_lookup_service_returns_missing_when_global_search_transport_throws()
+    {
+        var handler = new RecordingHttpMessageHandler(request =>
+        {
+            var uri = request.RequestUri!.AbsoluteUri;
+            if (uri.Contains("/feeds/videos.xml?channel_id=", StringComparison.Ordinal))
+            {
+                return new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = new StringContent("""<?xml version="1.0" encoding="UTF-8"?><feed xmlns:yt="http://www.youtube.com/xml/schemas/2015" xmlns="http://www.w3.org/2005/Atom"></feed>"""),
+                };
+            }
+
+            if (uri.Contains("/@skysportf1/search?query=", StringComparison.Ordinal))
+            {
+                return new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = new StringContent("no renderers here"),
+                };
+            }
+
+            if (uri.Contains("/results?search_query=", StringComparison.Ordinal))
+            {
+                throw new HttpRequestException("network down");
+            }
+
+            return new HttpResponseMessage(HttpStatusCode.NotFound);
+        });
+        using var httpClient = new HttpClient(handler);
+        var service = new RaceHighlightsLookupService(httpClient, new StubClock(new DateTimeOffset(2026, 03, 01, 18, 00, 00, TimeSpan.Zero)));
+
+        var result = await service.ResolveAsync(CreateWeekend(), CancellationToken.None);
+
+        Assert.Equal(string.Empty, result.HighlightsVideoUrl);
+        Assert.Equal("missing", result.HighlightsLookupStatus);
+        Assert.Equal(string.Empty, result.HighlightsLookupSource);
+    }
+
+    [Fact]
+    public void Highlights_lookup_service_private_helpers_cover_unclosed_json_blocks()
+    {
+        var malformedRenderer = "{\"videoRenderer\":{\"videoId\":\"broken-json\"";
+
+        var renderers = InvokePrivateStaticMethod<IEnumerable<JsonElement>>(
+            typeof(RaceHighlightsLookupService),
+            "ExtractJsonVideoRenderers",
+            malformedRenderer);
+        var matchingBraceIndex = InvokePrivateStaticMethod<int>(
+            typeof(RaceHighlightsLookupService),
+            "FindMatchingBraceIndex",
+            malformedRenderer,
+            0);
+
+        Assert.Empty(renderers);
+        Assert.Equal(-1, matchingBraceIndex);
+    }
+
+    [Fact]
+    public void Highlights_lookup_service_private_markup_parser_prefers_direct_video_id_and_rejects_unsupported_title_shape()
+    {
+        using var httpClient = new HttpClient(new RecordingHttpMessageHandler(_ => new HttpResponseMessage(HttpStatusCode.OK)));
+        var service = new RaceHighlightsLookupService(httpClient, new StubClock(new DateTimeOffset(2026, 03, 01, 18, 00, 00, TimeSpan.Zero)));
+        var rawContent =
+            """{"videoRenderer":{"videoId":"direct-video-id","title":{"unexpected":"value"},"ownerText":{"simpleText":"Sky Sport F1"},"navigationEndpoint":{"watchEndpoint":{"videoId":"watch-endpoint-id"}}}}""";
+
+        var candidates = InvokePrivateInstanceMethod<IReadOnlyList<object>>(
+            service,
+            "ExtractCandidatesFromMarkup",
+            rawContent,
+            "channel-search",
+            "Sky Sport F1",
+            "https://www.youtube.com/@skysportf1");
+
+        var candidate = Assert.Single(candidates);
+        var candidateType = candidate.GetType();
+
+        Assert.Equal("direct-video-id", candidateType.GetProperty("VideoId")!.GetValue(candidate));
+        Assert.Equal("https://www.youtube.com/watch?v=direct-video-id", candidateType.GetProperty("VideoUrl")!.GetValue(candidate));
+        Assert.Equal(string.Empty, candidateType.GetProperty("Title")!.GetValue(candidate));
+    }
+
+    [Fact]
+    public async Task Highlights_lookup_service_returns_missing_when_oembed_json_is_invalid()
+    {
+        var handler = new RecordingHttpMessageHandler(request =>
+        {
+            var uri = request.RequestUri!.AbsoluteUri;
+            if (uri.Contains("/feeds/videos.xml?channel_id=", StringComparison.Ordinal))
+            {
+                return new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = new StringContent("""<?xml version="1.0" encoding="UTF-8"?><feed xmlns:yt="http://www.youtube.com/xml/schemas/2015" xmlns="http://www.w3.org/2005/Atom"></feed>"""),
+                };
+            }
+
+            if (uri.Contains("/@skysportf1/search?query=", StringComparison.Ordinal))
+            {
+                return new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = new StringContent(
+                        """{"videoRenderer":{"videoId":"invalid-oembed-json","title":{"simpleText":"F1 GP Australia highlights 2026"},"ownerText":{"simpleText":"Sky Sport F1"},"navigationEndpoint":{"watchEndpoint":{"videoId":"invalid-oembed-json"}}}}"""),
+                };
+            }
+
+            if (uri.Contains("/oembed?", StringComparison.Ordinal))
+            {
+                return new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = new StringContent("{ invalid json"),
+                };
+            }
+
+            return new HttpResponseMessage(HttpStatusCode.NotFound);
+        });
+        using var httpClient = new HttpClient(handler);
+        var service = new RaceHighlightsLookupService(httpClient, new StubClock(new DateTimeOffset(2026, 03, 01, 18, 00, 00, TimeSpan.Zero)));
+
+        var result = await service.ResolveAsync(CreateWeekend(), CancellationToken.None);
+
+        Assert.Equal(string.Empty, result.HighlightsVideoUrl);
+        Assert.Equal("missing", result.HighlightsLookupStatus);
+    }
+
+    [Fact]
+    public async Task Highlights_lookup_service_uses_end_date_when_start_date_is_invalid()
+    {
+        var handler = new RecordingHttpMessageHandler(request =>
+        {
+            var uri = request.RequestUri!.AbsoluteUri;
+            if (uri.Contains("/feeds/videos.xml?channel_id=", StringComparison.Ordinal))
+            {
+                return new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = new StringContent(
+                        """
+                        <?xml version="1.0" encoding="UTF-8"?>
+                        <feed xmlns:yt="http://www.youtube.com/xml/schemas/2015" xmlns="http://www.w3.org/2005/Atom">
+                          <entry>
+                            <yt:videoId>end-date-fallback</yt:videoId>
+                            <title>F1, GP d'Australia, gli highlights della gara 2026</title>
+                            <author><name>Sky Sport F1</name><uri>https://www.youtube.com/@skysportf1</uri></author>
+                            <published>2026-03-01T16:00:00+00:00</published>
+                          </entry>
+                        </feed>
+                        """),
+                };
+            }
+
+            if (uri.Contains("/oembed?", StringComparison.Ordinal))
+            {
+                return new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = new StringContent(
+                        """{"title":"F1, GP d'Australia, gli highlights della gara 2026","author_name":"Sky Sport F1","author_url":"https://www.youtube.com/@skysportf1"}"""),
+                };
+            }
+
+            return new HttpResponseMessage(HttpStatusCode.NotFound);
+        });
+        using var httpClient = new HttpClient(handler);
+        var service = new RaceHighlightsLookupService(httpClient, new StubClock(new DateTimeOffset(2026, 03, 01, 18, 00, 00, TimeSpan.Zero)));
+        var race = CreateWeekend() with
+        {
+            StartDate = "not-a-date",
+            EndDate = "2026-03-01T15:00:00Z",
+        };
+
+        var result = await service.ResolveAsync(race, CancellationToken.None);
+
+        Assert.Equal("https://www.youtube.com/watch?v=end-date-fallback", result.HighlightsVideoUrl);
+        Assert.Equal("found", result.HighlightsLookupStatus);
+    }
+
+    [Fact]
+    public void Highlights_lookup_service_private_markup_parser_covers_short_byline_and_default_author_fallback()
+    {
+        using var httpClient = new HttpClient(new RecordingHttpMessageHandler(_ => new HttpResponseMessage(HttpStatusCode.OK)));
+        var service = new RaceHighlightsLookupService(httpClient, new StubClock(new DateTimeOffset(2026, 03, 01, 18, 00, 00, TimeSpan.Zero)));
+        var rawContent =
+            """
+            {"videoRenderer":{"videoId":"short-byline-video","title":{"simpleText":"F1 GP Australia highlights 2026"},"shortBylineText":{"simpleText":"Sky Sport F1"},"navigationEndpoint":{"watchEndpoint":{"videoId":"short-byline-video"}}}}
+            {"videoRenderer":{"videoId":"default-author-video","title":{"simpleText":"F1 GP Australia highlights 2026"},"navigationEndpoint":{"watchEndpoint":{"videoId":"default-author-video"}}}}
+            """;
+
+        var candidates = InvokePrivateInstanceMethod<IReadOnlyList<object>>(
+            service,
+            "ExtractCandidatesFromMarkup",
+            rawContent,
+            "channel-search",
+            "Default Sky Sport F1",
+            "https://www.youtube.com/@skysportf1");
+
+        Assert.Equal(2, candidates.Count);
+        Assert.Equal("Sky Sport F1", candidates[0].GetType().GetProperty("AuthorName")!.GetValue(candidates[0]));
+        Assert.Equal("Default Sky Sport F1", candidates[1].GetType().GetProperty("AuthorName")!.GetValue(candidates[1]));
+    }
+
+    [Fact]
+    public void Highlights_lookup_service_private_build_search_query_handles_empty_title_seed()
+    {
+        var race = new WeekendDocument(
+            "",
+            null!,
+            null!,
+            1,
+            "01 - 03 MAR",
+            null!,
+            null,
+            null,
+            false,
+            "2026-03-01",
+            "2026-03-01",
+            "2026-03-01T14:00:00Z",
+            [],
+            "",
+            "",
+            "",
+            "");
+
+        var query = InvokePrivateStaticMethod<string>(
+            typeof(RaceHighlightsLookupService),
+            "BuildSearchQuery",
+            race);
+
+        Assert.Equal("highlights Sky Sport Italia F1", query);
+    }
+
     private static WeekendDocument CreateWeekend()
     {
         return new WeekendDocument(
@@ -1330,5 +1560,36 @@ public sealed class ResultsInfrastructureTests
             LastRequest = request;
             return Task.FromResult(_handler(request));
         }
+    }
+
+    private static T InvokePrivateInstanceMethod<T>(object instance, string methodName, params object?[] arguments)
+    {
+        var method = instance.GetType().GetMethod(methodName, BindingFlags.Instance | BindingFlags.NonPublic)!;
+        var result = method.Invoke(instance, arguments);
+
+        if (result is T typedResult)
+        {
+            return typedResult;
+        }
+
+        if (result is System.Collections.IEnumerable enumerable && typeof(T) == typeof(IReadOnlyList<object>))
+        {
+            return (T)(object)enumerable.Cast<object>().ToArray();
+        }
+
+        throw new InvalidOperationException($"Unexpected result type for {methodName}.");
+    }
+
+    private static T InvokePrivateStaticMethod<T>(Type type, string methodName, params object?[] arguments)
+    {
+        var method = type.GetMethod(methodName, BindingFlags.Static | BindingFlags.NonPublic)!;
+        var result = method.Invoke(null, arguments);
+
+        if (result is T typedResult)
+        {
+            return typedResult;
+        }
+
+        throw new InvalidOperationException($"Unexpected result type for {methodName}.");
     }
 }
