@@ -7,9 +7,11 @@ import {
   readCalendarCache,
   readDriversCache,
   readPersistedParticipantRoster,
+  readStandingsCache,
   writeAppData,
 } from '../backend/storage.js';
 import { fetchRaceResultsWithStatus } from '../backend/calendar.js';
+import { syncStandingsFromOfficialSource } from '../backend/standings.js';
 import app from '../app.js';
 
 // Mocking storage so we don't hit the DB during integration tests for routes
@@ -18,6 +20,7 @@ vi.mock('../backend/storage.js', () => ({
   readCalendarCache: vi.fn(() => Promise.resolve([])),
   readDriversCache: vi.fn(() => Promise.resolve([])),
   readPersistedParticipantRoster: vi.fn(() => Promise.resolve(['Player 1', 'Player 2', 'Player 3'])),
+  readStandingsCache: vi.fn(() => Promise.resolve({ driverStandings: [], constructorStandings: [], updatedAt: '' })),
   writeAppData: vi.fn(() => Promise.resolve()),
 }));
 
@@ -40,6 +43,10 @@ vi.mock('../backend/database.js', async () => {
     verifyMongoDatabaseName: vi.fn(),
   };
 });
+
+vi.mock('../backend/standings.js', () => ({
+  syncStandingsFromOfficialSource: vi.fn(() => Promise.resolve({ driverStandings: [], constructorStandings: [], updatedAt: '' })),
+}));
 
 function createEmptyPrediction() {
   return {
@@ -76,6 +83,7 @@ describe('API Integration - Routes', () => {
     readAppData.mockResolvedValue({ users: createUsers() });
     readCalendarCache.mockResolvedValue([]);
     readDriversCache.mockResolvedValue([]);
+    readStandingsCache.mockResolvedValue({ driverStandings: [], constructorStandings: [], updatedAt: '' });
     readPersistedParticipantRoster.mockResolvedValue(['Player 1', 'Player 2', 'Player 3']);
     writeAppData.mockResolvedValue();
     fetchRaceResultsWithStatus.mockResolvedValue({
@@ -153,6 +161,43 @@ describe('API Integration - Routes', () => {
       { meetingKey: 'race-2', roundNumber: 2 },
       { meetingKey: 'race-1', roundNumber: 1 },
     ]);
+  });
+
+  it('GET /api/standings should return cached standings when available', async () => {
+    readStandingsCache.mockResolvedValueOnce({
+      driverStandings: [{ position: 1, driverId: 'pia', name: 'Oscar Piastri', team: 'McLaren', points: 99 }],
+      constructorStandings: [{ position: 1, team: 'McLaren', points: 188 }],
+      updatedAt: '2026-03-12T09:00:00.000Z',
+    });
+
+    const response = await request(app).get('/api/standings');
+
+    expect(response.status).toBe(200);
+    expect(response.body.updatedAt).toBe('2026-03-12T09:00:00.000Z');
+    expect(syncStandingsFromOfficialSource).not.toHaveBeenCalled();
+  });
+
+  it('GET /api/standings should trigger a sync when the cache is empty', async () => {
+    syncStandingsFromOfficialSource.mockResolvedValueOnce({
+      driverStandings: [{ position: 1, driverId: 'pia', name: 'Oscar Piastri', team: 'McLaren', points: 99 }],
+      constructorStandings: [{ position: 1, team: 'McLaren', points: 188 }],
+      updatedAt: '2026-03-12T09:00:00.000Z',
+    });
+
+    const response = await request(app).get('/api/standings');
+
+    expect(response.status).toBe(200);
+    expect(syncStandingsFromOfficialSource).toHaveBeenCalled();
+    expect(response.body.driverStandings).toHaveLength(1);
+  });
+
+  it('GET /api/standings should return 500 when both cache read and sync path fail', async () => {
+    readStandingsCache.mockRejectedValueOnce(new Error('standings read error'));
+
+    const response = await request(app).get('/api/standings');
+
+    expect(response.status).toBe(500);
+    expect(response.body).toEqual({ error: 'Failed to read standings' });
   });
 
   it('GET /api/results/:meetingKey should return 500 when official results fetch fails', async () => {

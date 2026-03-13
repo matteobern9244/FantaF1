@@ -344,11 +344,20 @@ class SeasonAnalyticsBuilder {
     ];
   }
 
-  buildRaceRecap(history: RaceRecord[]): RaceRecapSummary | null {
+  buildRaceRecap(history: RaceRecord[], calendar: RaceWeekend[]): RaceRecapSummary | null {
     const lastRecord = history[0];
     if (!lastRecord) {
       return null;
     }
+
+    const matchedWeekend = calendar.find((weekend) => {
+      if (lastRecord.meetingKey) {
+        return weekend.meetingKey === lastRecord.meetingKey;
+      }
+      return (
+        weekend.grandPrixTitle === lastRecord.gpName || weekend.meetingName === lastRecord.gpName
+      );
+    });
 
     const ranking = Object.entries(lastRecord.userPredictions).sort((firstEntry, secondEntry) => {
       if (secondEntry[1].pointsEarned !== firstEntry[1].pointsEarned) {
@@ -360,10 +369,12 @@ class SeasonAnalyticsBuilder {
     if (ranking.length === 0) {
       return {
         gpName: lastRecord.gpName,
+        meetingName: matchedWeekend?.meetingName ?? lastRecord.gpName,
         winnerName: '',
         winnerPoints: 0,
         swingLabel: 'Weekend senza inseguitori diretti',
         decisiveField: trackedFields[0],
+        trackOutlineUrl: matchedWeekend?.trackOutlineUrl ?? '',
       };
     }
 
@@ -384,12 +395,14 @@ class SeasonAnalyticsBuilder {
 
     return {
       gpName: lastRecord.gpName,
+      meetingName: matchedWeekend?.meetingName ?? lastRecord.gpName,
       winnerName: winnerEntry[0],
       winnerPoints: winnerEntry[1].pointsEarned,
       swingLabel: runnerUpEntry
         ? `Gap sul secondo: ${winnerEntry[1].pointsEarned - runnerUpEntry[1].pointsEarned} pt`
         : 'Weekend senza inseguitori diretti',
       decisiveField: fieldHits[0].field,
+      trackOutlineUrl: matchedWeekend?.trackOutlineUrl ?? '',
     };
   }
 
@@ -400,7 +413,7 @@ class SeasonAnalyticsBuilder {
       comparison,
       leaderName: comparison[0]?.userName ?? '',
       narratives: this.buildSeasonNarratives(comparison),
-      recap: this.buildRaceRecap(history),
+      recap: this.buildRaceRecap(history, calendar),
     };
   }
 }

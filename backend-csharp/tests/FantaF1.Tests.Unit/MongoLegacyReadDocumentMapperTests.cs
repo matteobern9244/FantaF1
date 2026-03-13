@@ -348,6 +348,62 @@ public sealed class MongoLegacyReadDocumentMapperTests
     }
 
     [Fact]
+    public void Mapper_reads_and_defaults_standings_documents_with_legacy_shapes()
+    {
+        var mapper = new MongoLegacyReadDocumentMapper();
+        var document = new BsonDocument
+        {
+            ["driverStandings"] = new BsonArray
+            {
+                new BsonDocument
+                {
+                    ["position"] = BsonNull.Value,
+                    ["driverId"] = 42,
+                    ["name"] = BsonNull.Value,
+                    ["team"] = 7,
+                    ["points"] = "invalid",
+                    ["avatarUrl"] = BsonNull.Value,
+                    ["color"] = 8,
+                },
+            },
+            ["constructorStandings"] = new BsonArray
+            {
+                new BsonDocument
+                {
+                    ["position"] = "invalid",
+                    ["team"] = BsonNull.Value,
+                    ["points"] = BsonNull.Value,
+                    ["color"] = 1,
+                    ["logoUrl"] = BsonNull.Value,
+                },
+            },
+            ["updatedAt"] = BsonNull.Value,
+        };
+
+        var populatedResult = mapper.MapStandings(document);
+        var emptyResult = mapper.MapStandings(null);
+
+        Assert.Single(populatedResult.DriverStandings);
+        Assert.Equal(0, populatedResult.DriverStandings[0].Position);
+        Assert.Equal(string.Empty, populatedResult.DriverStandings[0].DriverId);
+        Assert.Equal(string.Empty, populatedResult.DriverStandings[0].Name);
+        Assert.Equal(string.Empty, populatedResult.DriverStandings[0].Team);
+        Assert.Equal(0, populatedResult.DriverStandings[0].Points);
+        Assert.Equal(string.Empty, populatedResult.DriverStandings[0].AvatarUrl);
+        Assert.Equal(string.Empty, populatedResult.DriverStandings[0].Color);
+        Assert.Single(populatedResult.ConstructorStandings);
+        Assert.Equal(0, populatedResult.ConstructorStandings[0].Position);
+        Assert.Equal(string.Empty, populatedResult.ConstructorStandings[0].Team);
+        Assert.Equal(0, populatedResult.ConstructorStandings[0].Points);
+        Assert.Equal(string.Empty, populatedResult.ConstructorStandings[0].Color);
+        Assert.Equal(string.Empty, populatedResult.ConstructorStandings[0].LogoUrl);
+        Assert.Equal(string.Empty, populatedResult.UpdatedAt);
+        Assert.Empty(emptyResult.DriverStandings);
+        Assert.Empty(emptyResult.ConstructorStandings);
+        Assert.Equal(string.Empty, emptyResult.UpdatedAt);
+    }
+
+    [Fact]
     public void Read_dictionary_throws_when_the_mapper_returns_null()
     {
         var readDictionary = typeof(MongoLegacyReadDocumentMapper)

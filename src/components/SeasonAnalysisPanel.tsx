@@ -1,4 +1,4 @@
-import { BarChart3, Share2 } from 'lucide-react';
+import { BarChart3 } from 'lucide-react';
 import type {
   PredictionKey,
   SeasonAnalyticsSummary,
@@ -8,37 +8,23 @@ import { appText } from '../uiText';
 interface SeasonAnalysisPanelProps {
   analyticsEmptyLabel: string;
   emptyOptionLabel: string;
-  isPublicView: boolean;
-  onShare: () => void;
   predictionLabels: Record<PredictionKey, string>;
-  selectedRaceMeetingName: string;
-  selectedRaceTrackOutlineUrl: string;
   seasonAnalytics: SeasonAnalyticsSummary;
 }
 
 function SeasonAnalysisPanel({
   analyticsEmptyLabel,
   emptyOptionLabel,
-  isPublicView,
-  onShare,
   predictionLabels,
-  selectedRaceMeetingName,
-  selectedRaceTrackOutlineUrl,
   seasonAnalytics,
 }: SeasonAnalysisPanelProps) {
   const { seasonAnalysis } = appText.panels;
 
   return (
     <section className="panel" id="season-analysis">
-      <div className="panel-head">
-        <div className="section-title">
-          <BarChart3 size={20} />
-          <h2>{seasonAnalysis.title}</h2>
-        </div>
-        <button className="secondary-button compact-button" onClick={onShare} type="button">
-          <Share2 size={16} />
-          {seasonAnalysis.shareButton}
-        </button>
+      <div className="section-title">
+        <BarChart3 size={20} />
+        <h2>{seasonAnalysis.title}</h2>
       </div>
       <div className="analytics-summary-grid">
         {seasonAnalytics.narratives.map((entry) => (
@@ -89,12 +75,12 @@ function SeasonAnalysisPanel({
           <h3>{seasonAnalysis.latestGpTitle}</h3>
           {seasonAnalytics.recap ? (
             <div className="weekend-pulse-summary">
-              {isPublicView && selectedRaceTrackOutlineUrl ? (
+              {seasonAnalytics.recap.trackOutlineUrl ? (
                 <div className="track-map-container track-map-container-compact">
                   <img
-                    alt={selectedRaceMeetingName}
+                    alt={seasonAnalytics.recap.meetingName}
                     className="track-map track-map-compact"
-                    src={selectedRaceTrackOutlineUrl}
+                    src={seasonAnalytics.recap.trackOutlineUrl}
                   />
                 </div>
               ) : null}

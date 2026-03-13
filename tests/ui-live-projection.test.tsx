@@ -168,6 +168,13 @@ function mockAppFetches({
       } as Response);
     }
 
+    if (url.includes('/api/standings')) {
+      return Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve({ driverStandings: [], constructorStandings: [], updatedAt: '' }),
+      } as Response);
+    }
+
     const resultsEntry = Object.entries(resultsByMeetingKey).find(([meetingKey]) =>
       url.includes(`/api/results/${meetingKey}`),
     );
@@ -327,7 +334,6 @@ describe('Live projection UI', () => {
 
     const selectedRaceHeroCard = getSelectedRaceHeroCard();
     expect(selectedRaceHeroCard).not.toBeNull();
-
     const highlightsButton = await screen.findByRole(
       'button',
       { name: /guarda highlights/i },
@@ -611,6 +617,12 @@ describe('Live projection UI', () => {
           json: () => Promise.resolve(createCalendar()),
         } as Response);
       }
+      if (url.includes('/api/standings')) {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({ driverStandings: [], constructorStandings: [], updatedAt: '' }),
+        } as Response);
+      }
       if (url.includes('/api/results/race-1')) {
         return Promise.resolve({
           ok: true,
@@ -663,6 +675,12 @@ describe('Live projection UI', () => {
         return Promise.resolve({
           ok: true,
           json: () => Promise.resolve(createCalendar()),
+        } as Response);
+      }
+      if (url.includes('/api/standings')) {
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({ driverStandings: [], constructorStandings: [], updatedAt: '' }),
         } as Response);
       }
       if (url.includes('/api/results/race-1')) {

@@ -36,7 +36,7 @@ public sealed class PortingDocumentationConsistencyTests
     }
 
     [Fact]
-    public void Canonical_plan_keeps_production_like_browser_gates_owned_by_subphase_nine_and_marks_subphase_six_completed()
+    public void Canonical_plan_keeps_production_like_browser_gates_owned_by_subphase_nine_and_marks_subphase_six_a_completed_before_subphase_seven()
     {
         var canonicalPlan = ReadRepositoryFile("docs", "backend-csharp-porting-plan.md");
         var subphaseFourPlan = ReadRepositoryFile(
@@ -52,6 +52,7 @@ public sealed class PortingDocumentationConsistencyTests
         Assert.Contains("| `Subphase 4` | `completed` |", canonicalPlan, StringComparison.Ordinal);
         Assert.Contains("| `Subphase 5` | `completed` |", canonicalPlan, StringComparison.Ordinal);
         Assert.Contains("| `Subphase 6` | `completed` |", canonicalPlan, StringComparison.Ordinal);
+        Assert.Contains("| `Subphase 6A` | `completed` |", canonicalPlan, StringComparison.Ordinal);
         Assert.Contains("| `Subphase 7` | `pending` |", canonicalPlan, StringComparison.Ordinal);
         Assert.Contains(
             "| Canonical launcher and shared verification scripts, including local development and production-like browser gate reuse, and the ban on implicit `fantaf1_dev` fallback | `Subphase 9` |",
@@ -85,6 +86,10 @@ public sealed class PortingDocumentationConsistencyTests
             canonicalPlan,
             StringComparison.Ordinal);
         Assert.Contains(
+            "| `Subphase 6A` | `completed` |",
+            canonicalPlan,
+            StringComparison.Ordinal);
+        Assert.Contains(
             "| `Subphase 7` | `pending` |",
             canonicalPlan,
             StringComparison.Ordinal);
@@ -100,6 +105,65 @@ public sealed class PortingDocumentationConsistencyTests
             "- `GET /api/calendar`",
             subphaseFivePlan,
             StringComparison.Ordinal);
+        Assert.Contains(
+            "- `GET /api/standings`, demandata a `Subphase 6A`.",
+            subphaseFivePlan,
+            StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Canonical_plan_records_subphase_six_a_and_the_main_delta_assimilation_matrix()
+    {
+        var canonicalPlan = ReadRepositoryFile("docs", "backend-csharp-porting-plan.md");
+        var subphaseSixAPlan = ReadRepositoryFile(
+            "docs",
+            "backend-csharp-porting-subphases",
+            "subphase-06a-main-delta-assimilation-and-standings-parity.md");
+
+        Assert.Contains("| `Subphase 6A` | `completed` |", canonicalPlan, StringComparison.Ordinal);
+        Assert.Contains(
+            "| `Subphase 6A` | [`docs/backend-csharp-porting-subphases/subphase-06a-main-delta-assimilation-and-standings-parity.md`",
+            canonicalPlan,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "Wait for explicit user authorization before starting `Subphase 7`.",
+            canonicalPlan,
+            StringComparison.Ordinal);
+        Assert.Contains(
+            "| Standings route `GET /api/standings`, standings cache, official-source parsing, and reusable standings sync capability | `Subphase 6A` |",
+            canonicalPlan,
+            StringComparison.Ordinal);
+        Assert.Contains("### Delta assimilation matrix (`2c53c157..main`)", canonicalPlan, StringComparison.Ordinal);
+        Assert.Contains("| File | Delta type | Merge status | C# porting impact | Subphase owner | Validation evidence |", canonicalPlan, StringComparison.Ordinal);
+        Assert.Contains("| `backend/standings.js` | `feature` | `merged` | New backend baseline to port with parity in C#. | `Subphase 6A` |", canonicalPlan, StringComparison.Ordinal);
+        Assert.Contains("| `src/App.tsx` | `fix+feature` | `merged` | Consumes `/api/standings` and the new navigation baseline that later browser gates must preserve. | `Subphase 9` |", canonicalPlan, StringComparison.Ordinal);
+        Assert.Contains("| `scripts/ui-responsive/state-validation.mjs` | `fix` | `merged` | Shared browser validation baseline to be parameterized for the migrated stack. | `Subphase 9` |", canonicalPlan, StringComparison.Ordinal);
+        Assert.Contains("| `tests/standings.test.js` | `test` | `merged` | Legacy parity reference for C# standings parser and sync behavior. | `Subphase 6A` |", canonicalPlan, StringComparison.Ordinal);
+        Assert.Contains("Invocazione canonica: `Subphase 6A`", subphaseSixAPlan, StringComparison.Ordinal);
+        Assert.Contains("- Portare in C# `GET /api/standings`.", subphaseSixAPlan, StringComparison.Ordinal);
+        Assert.Contains("- Portare in C# la capability riusabile di sync standings con fallback a cache.", subphaseSixAPlan, StringComparison.Ordinal);
+        Assert.Contains("`npm run test:csharp-coverage`", canonicalPlan, StringComparison.Ordinal);
+        Assert.Contains("`npm run test:csharp-coverage`", subphaseSixAPlan, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Canonical_porting_docs_use_the_official_csharp_coverage_command()
+    {
+        var canonicalPlan = ReadRepositoryFile("docs", "backend-csharp-porting-plan.md");
+        var portingDocs = Directory.GetFiles(
+            GetRepositoryPath("docs", "backend-csharp-porting-subphases"),
+            "*.md",
+            SearchOption.TopDirectoryOnly)
+            .Select(path => File.ReadAllText(path, Encoding.UTF8))
+            .Append(canonicalPlan)
+            .ToArray();
+
+        Assert.All(portingDocs, content =>
+            Assert.DoesNotContain(
+                "dotnet test backend-csharp/FantaF1.Backend.sln -c Release /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura",
+                content,
+                StringComparison.Ordinal));
+        Assert.Contains("`npm run test:csharp-coverage`", canonicalPlan, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -131,6 +195,7 @@ public sealed class PortingDocumentationConsistencyTests
         Assert.Contains("`backend/`", subphaseElevenPlan, StringComparison.Ordinal);
         Assert.Contains("`app.js`", subphaseElevenPlan, StringComparison.Ordinal);
         Assert.Contains("`server.js`", subphaseElevenPlan, StringComparison.Ordinal);
+        Assert.Contains("`backend/standings.js`", subphaseElevenPlan, StringComparison.Ordinal);
         Assert.Contains("`start_fantaf1.command`", subphaseElevenPlan, StringComparison.Ordinal);
         Assert.Contains("`src/`", subphaseElevenPlan, StringComparison.Ordinal);
         Assert.Contains("`public/`", subphaseElevenPlan, StringComparison.Ordinal);
@@ -211,12 +276,12 @@ public sealed class PortingDocumentationConsistencyTests
         var readme = ReadRepositoryFile("README.md");
         var agents = ReadRepositoryFile("AGENTS.md");
 
-        Assert.Contains("`4777 / 4777` statements", readme, StringComparison.Ordinal);
-        Assert.Contains("`388 / 388` functions", readme, StringComparison.Ordinal);
-        Assert.Contains("`1984 / 1984` branches", readme, StringComparison.Ordinal);
-        Assert.Contains("`4777 / 4777` lines", readme, StringComparison.Ordinal);
+        Assert.Contains("`5167 / 5167` statements", readme, StringComparison.Ordinal);
+        Assert.Contains("`407 / 407` functions", readme, StringComparison.Ordinal);
+        Assert.Contains("`2093 / 2093` branches", readme, StringComparison.Ordinal);
+        Assert.Contains("`5167 / 5167` lines", readme, StringComparison.Ordinal);
         Assert.Contains(
-            "**100% statements (4777 / 4777)**, **100% functions (388 / 388)**, **100% branches (1984 / 1984)**, and **100% lines (4777 / 4777)**",
+            "**100% statements (5167 / 5167)**, **100% functions (407 / 407)**, **100% branches (2093 / 2093)**, and **100% lines (5167 / 5167)**",
             agents,
             StringComparison.Ordinal);
     }

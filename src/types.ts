@@ -7,6 +7,30 @@ export interface Driver {
   teamSlug?: string;
 }
 
+export interface DriverStanding {
+  position: number;
+  driverId: string;
+  name: string;
+  team: string;
+  points: number;
+  avatarUrl?: string;
+  color?: string;
+}
+
+export interface ConstructorStanding {
+  position: number;
+  team: string;
+  points: number;
+  color?: string;
+  logoUrl?: string;
+}
+
+export interface StandingsPayload {
+  driverStandings: DriverStanding[];
+  constructorStandings: ConstructorStanding[];
+  updatedAt: string;
+}
+
 export type PredictionKey = 'first' | 'second' | 'third' | 'pole';
 
 export interface Prediction {
@@ -151,10 +175,12 @@ export interface SeasonNarrative {
 
 export interface RaceRecapSummary {
   gpName: string;
+  meetingName: string;
   winnerName: string;
   winnerPoints: number;
   swingLabel: string;
   decisiveField: PredictionKey | null;
+  trackOutlineUrl: string;
 }
 
 export interface SeasonAnalyticsSummary {

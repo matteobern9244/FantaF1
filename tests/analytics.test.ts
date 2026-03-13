@@ -198,10 +198,12 @@ describe('analytics utils', () => {
     ]);
     expect(season.recap).toEqual({
       gpName: 'Australian Grand Prix 2099',
+      meetingName: 'Australia',
       winnerName: 'Sara',
       winnerPoints: 11,
       swingLabel: 'Gap sul secondo: 2 pt',
       decisiveField: 'first',
+      trackOutlineUrl: '',
     });
   });
 
@@ -210,10 +212,12 @@ describe('analytics utils', () => {
 
     expect(buildSeasonAnalytics(users, newestFirstHistory, calendar).recap).toEqual({
       gpName: 'Chinese Grand Prix 2099',
+      meetingName: 'China',
       winnerName: 'Marco',
       winnerPoints: 11,
       swingLabel: 'Gap sul secondo: 2 pt',
       decisiveField: 'first',
+      trackOutlineUrl: '',
     });
   });
 
@@ -298,19 +302,23 @@ describe('analytics utils', () => {
     ]);
     expect(edgeSeason.recap).toEqual({
       gpName: 'Solo Sprint Recap',
+      meetingName: 'Solo Sprint Recap',
       winnerName: 'Anna',
       winnerPoints: 5,
       swingLabel: 'Weekend senza inseguitori diretti',
       decisiveField: 'second',
+      trackOutlineUrl: '',
     });
 
     const tieRecapSeason = buildSeasonAnalytics(edgeUsers, [edgeHistory[1], edgeHistory[0]], edgeCalendar);
     expect(tieRecapSeason.recap).toEqual({
       gpName: 'Alpha Tie Break',
+      meetingName: 'Sprint Weekend',
       winnerName: 'Anna',
       winnerPoints: 4,
       swingLabel: 'Gap sul secondo: 0 pt',
       decisiveField: 'first',
+      trackOutlineUrl: '',
     });
 
     const emptyRankingSeason = buildSeasonAnalytics(
@@ -327,10 +335,12 @@ describe('analytics utils', () => {
     );
     expect(emptyRankingSeason.recap).toEqual({
       gpName: 'No Predictions Grand Prix',
+      meetingName: 'No Predictions Grand Prix',
       winnerName: '',
       winnerPoints: 0,
       swingLabel: 'Weekend senza inseguitori diretti',
       decisiveField: 'first',
+      trackOutlineUrl: '',
     });
 
     const unknownSprintSeason = buildSeasonAnalytics(
@@ -544,6 +554,47 @@ describe('analytics utils', () => {
     expect(summaries.find((entry) => entry.userName === 'Luca')).toMatchObject({
       averagePosition: 4,
       podiums: 0,
+    });
+  });
+
+  it('covers matched weekend details in race recap summary when user predictions are empty', () => {
+    const users = [{ name: 'Marco', predictions: createEmptyPrediction(), points: 0 }];
+    const history = [
+      {
+        gpName: 'Matched GP',
+        meetingKey: 'sprint-meeting',
+        date: '01/01/2099',
+        results: createEmptyPrediction(),
+        userPredictions: {},
+      },
+    ];
+    const calendar = [
+      {
+        meetingKey: 'sprint-meeting',
+        meetingName: 'Sprint Weekend',
+        grandPrixTitle: 'Solo Sprint Recap',
+        roundNumber: 1,
+        dateRangeLabel: '01-03 JAN',
+        detailUrl: '',
+        heroImageUrl: '',
+        trackOutlineUrl: '/maps/sprint.png',
+        isSprintWeekend: true,
+        startDate: '2099-01-01',
+        endDate: '2099-01-03',
+        raceStartTime: '2099-01-03T14:00:00Z',
+        sessions: [],
+      },
+    ];
+
+    const analytics = buildSeasonAnalytics(users, history, calendar);
+    expect(analytics.recap).toEqual({
+      gpName: 'Matched GP',
+      meetingName: 'Sprint Weekend',
+      winnerName: '',
+      winnerPoints: 0,
+      swingLabel: 'Weekend senza inseguitori diretti',
+      decisiveField: 'first',
+      trackOutlineUrl: '/maps/sprint.png',
     });
   });
 });

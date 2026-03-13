@@ -16,7 +16,7 @@ Invocazione canonica: `Subphase 1`
 
 ## In scope
 
-- Inventario definitivo delle route, dei cookie, delle collection e degli invarianti Node da preservare.
+- Inventario definitivo delle route, dei cookie, delle collection e degli invarianti Node da preservare, incluso `GET /api/standings` e `standingscaches` dopo l'assimilazione del delta `main`.
 - Matrice ambienti/database con regole esplicite per `Development`, `Staging` e `Production`.
 - Regole comuni di branch isolation, releasability, no commit/push non autorizzati e no fallback silenziosi.
 - Piano comune `RED -> GREEN -> REFACTOR`, parity, coverage 100% e regression gates per tutte le subfasi successive.
@@ -25,7 +25,7 @@ Invocazione canonica: `Subphase 1`
 ## Out of scope
 
 - La creazione della solution `backend-csharp/` e delle astrazioni condivise, demandata a `Subphase 2`.
-- L'implementazione di route, bootstrap runtime, launcher, staging e attivita' finali di chiusura del porting, demandata alle `Subphase 3`-`Subphase 11`.
+- L'implementazione di route, bootstrap runtime, launcher, staging e attivita' finali di chiusura del porting, demandata alle `Subphase 3`-`Subphase 11`, inclusa la `Subphase 6A` per il delta standings proveniente da `main`.
 
 ## Dipendenze e precondizioni
 

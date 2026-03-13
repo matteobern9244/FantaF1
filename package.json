@@ -1,7 +1,7 @@
 {
   "name": "fantaf1",
   "private": true,
-  "version": "1.4.1",
+  "version": "1.4.4",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -14,6 +14,7 @@
     "preview": "vite preview",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
+    "test:csharp-coverage": "node scripts/verify-csharp-coverage.mjs",
     "test:save-local": "node scripts/save-local-check.mjs",
     "test:ui-responsive": "node scripts/ui-responsive-check.mjs",
     "migrate:remove-weekend-boost": "node scripts/remove-weekend-boost.mjs"

@@ -53,8 +53,9 @@ The ledger below is the canonical persistent checkpoint for the temporal executi
 | `Subphase 3` | `completed` | Environment/database target resolution and `GET /api/health` parity are verified in C# for `Development`, `Staging`, and `Production`, while Node remains the authoritative runtime. | Wait for explicit user authorization before starting `Subphase 4`. |
 | `Subphase 4` | `completed` | `GET /api/session`, `POST /api/admin/session`, and `DELETE /api/admin/session` are parity-green in C# for `Development` and production-like environments, including cookie signing, TTL, default view mode, hash-only admin credential seeding, and Node-compatible `Set-Cookie` headers. | Wait for explicit user authorization before starting `Subphase 5`. |
 | `Subphase 5` | `completed` | `GET /api/data`, `GET /api/drivers`, and `GET /api/calendar` are parity-green in C# for payload shape, app-data sanitization, sorting, legacy Mongo collection compatibility, and read-only fallback behavior while Node remains authoritative. | Wait for explicit user authorization before starting `Subphase 6`. |
-| `Subphase 6` | `completed` | `POST /api/data` and `POST /api/predictions` are parity-green in C# for roster validation, prediction completeness, race lock, Node-compatible save error payloads with `requestId`, legacy `appdatas` round-trip persistence, and production-like admin guard behavior while Node remains authoritative. | Wait for explicit user authorization before starting `Subphase 7`. |
-| `Subphase 7` | `pending` | Not started yet in the canonical ledger. | Wait for `Subphase 6` completion. |
+| `Subphase 6` | `completed` | `POST /api/data` and `POST /api/predictions` are parity-green in C# for roster validation, prediction completeness, race lock, Node-compatible save error payloads with `requestId`, legacy `appdatas` round-trip persistence, and production-like admin guard behavior while Node remains authoritative. | Wait for explicit user authorization before starting `Subphase 6A`. |
+| `Subphase 6A` | `completed` | `GET /api/standings` is parity-green in C# for cache-first reads, official-source parsing, cache compatibility with `standingscaches`, reusable standings sync capability, fallback to cache on invalid source or fetch failures, and the canonical `main` delta assimilation matrix. | Wait for explicit user authorization before starting `Subphase 7`. |
+| `Subphase 7` | `pending` | Not started yet in the canonical ledger. | Wait for `Subphase 6A` completion. |
 | `Subphase 8` | `pending` | Not started yet in the canonical ledger. | Wait for `Subphase 7` completion. |
 | `Subphase 9` | `pending` | Not started yet in the canonical ledger. | Wait for `Subphase 8` completion. |
 | `Subphase 10` | `pending` | Not started yet in the canonical ledger. | Wait for `Subphase 9` completion. |
@@ -70,10 +71,11 @@ For avoidance of doubt, the closure gate for `Subphase 2` is limited to the C# s
 | `Subphase 4` | [`docs/backend-csharp-porting-subphases/subphase-04-session-and-admin-auth-parity.md`](backend-csharp-porting-subphases/subphase-04-session-and-admin-auth-parity.md) | Port `GET /api/session`, `POST /api/admin/session`, and `DELETE /api/admin/session` with cookie/session parity. | Sections 2.2 session/auth routes, 2.3, 5.1 step 2 | `Subphase 3` |
 | `Subphase 5` | [`docs/backend-csharp-porting-subphases/subphase-05-read-routes-data-drivers-calendar.md`](backend-csharp-porting-subphases/subphase-05-read-routes-data-drivers-calendar.md) | Port `GET /api/data`, `GET /api/drivers`, and `GET /api/calendar` with sorting, sanitization, and document-shape parity. | Sections 2.2 read routes, 5.1 step 3 | `Subphase 4` |
 | `Subphase 6` | [`docs/backend-csharp-porting-subphases/subphase-06-write-routes-data-and-predictions.md`](backend-csharp-porting-subphases/subphase-06-write-routes-data-and-predictions.md) | Port `POST /api/data` and `POST /api/predictions` with roster, completeness, race lock, save error, and request-id parity. | Sections 2.5 critical invariants, 5.1 step 4, 5.3 persistence parity | `Subphase 5` |
-| `Subphase 7` | [`docs/backend-csharp-porting-subphases/subphase-07-results-route-race-phase-and-highlights.md`](backend-csharp-porting-subphases/subphase-07-results-route-race-phase-and-highlights.md) | Port `GET /api/results/:meetingKey` with `racePhase`, highlights, parsing, and fallback parity. | Sections 2.2 results route, 2.5 results invariants, 5.1 step 5 | `Subphase 6` |
-| `Subphase 8` | [`docs/backend-csharp-porting-subphases/subphase-08-startup-sync-bootstrap-and-cache-fallback.md`](backend-csharp-porting-subphases/subphase-08-startup-sync-bootstrap-and-cache-fallback.md) | Port bootstrap, Mongo connection, background sync, cache fallback, startup non-blocking behavior, and same-origin React static hosting. | Sections 2.1 bootstrap services, 2.5 startup invariants, 5.1 step 6 | `Subphase 7` |
-| `Subphase 9` | [`docs/backend-csharp-porting-subphases/subphase-09-launcher-and-shared-verification-scripts.md`](backend-csharp-porting-subphases/subphase-09-launcher-and-shared-verification-scripts.md) | Update `start_fantaf1.command` and parameterize shared verification scripts, including reusable local development and production-like browser gates, without any `fantaf1_dev` fallback. | Sections 6.3, 6.4, backlog items 8 and 9, launcher rules in `AGENTS.md` | `Subphase 8` |
-| `Subphase 10` | [`docs/backend-csharp-porting-subphases/subphase-10-docker-render-staging-and-atlas-operationalization.md`](backend-csharp-porting-subphases/subphase-10-docker-render-staging-and-atlas-operationalization.md) | Operationalize Atlas, Docker, Render staging `FantaF1_staging`, and the staging-only browser gate. | Sections 7, 8, 10.1 staging criteria | `Subphase 9` |
+| `Subphase 6A` | [`docs/backend-csharp-porting-subphases/subphase-06a-main-delta-assimilation-and-standings-parity.md`](backend-csharp-porting-subphases/subphase-06a-main-delta-assimilation-and-standings-parity.md) | Assimilate the `main` standings delta and port `GET /api/standings`, standings cache, official-source parsing, and reusable standings sync capability. | Sections 2.1, 2.2 standings route, 2.4 persistence parity, 5.1 step 5 | `Subphase 6` |
+| `Subphase 7` | [`docs/backend-csharp-porting-subphases/subphase-07-results-route-race-phase-and-highlights.md`](backend-csharp-porting-subphases/subphase-07-results-route-race-phase-and-highlights.md) | Port `GET /api/results/:meetingKey` with `racePhase`, highlights, parsing, and fallback parity. | Sections 2.2 results route, 2.5 results invariants, 5.1 step 6 | `Subphase 6A` |
+| `Subphase 8` | [`docs/backend-csharp-porting-subphases/subphase-08-startup-sync-bootstrap-and-cache-fallback.md`](backend-csharp-porting-subphases/subphase-08-startup-sync-bootstrap-and-cache-fallback.md) | Port bootstrap, Mongo connection, background sync for drivers/calendar/standings, cache fallback, startup non-blocking behavior, and same-origin React static hosting. | Sections 2.1 bootstrap services, 2.5 startup invariants, 5.1 step 7 | `Subphase 7` |
+| `Subphase 9` | [`docs/backend-csharp-porting-subphases/subphase-09-launcher-and-shared-verification-scripts.md`](backend-csharp-porting-subphases/subphase-09-launcher-and-shared-verification-scripts.md) | Update `start_fantaf1.command` and parameterize shared verification scripts, including reusable local development and production-like browser gates, the merged navigation baseline, mobile select behavior, `back-to-top`, and standings UI without any `fantaf1_dev` fallback. | Sections 6.3, 6.4, backlog items 8 and 9, launcher rules in `AGENTS.md` | `Subphase 8` |
+| `Subphase 10` | [`docs/backend-csharp-porting-subphases/subphase-10-docker-render-staging-and-atlas-operationalization.md`](backend-csharp-porting-subphases/subphase-10-docker-render-staging-and-atlas-operationalization.md) | Operationalize Atlas, Docker, Render staging `FantaF1_staging`, and the staging-only browser gate, including standings endpoint, standings cache, and standings UI verification. | Sections 7, 8, 10.1 staging criteria | `Subphase 9` |
 | `Subphase 11` | [`docs/backend-csharp-porting-subphases/subphase-11-future-cicd-cutover-certification-and-legacy-removal.md`](backend-csharp-porting-subphases/subphase-11-future-cicd-cutover-certification-and-legacy-removal.md) | Introduce future branch-specific C# workflows, formal cutover/certification, and final legacy removal. | Sections 9, 10, backlog items 7 and 10 | `Subphase 10` |
 
 ### Requirement ownership matrix
@@ -88,11 +90,73 @@ The table below is the canonical requirement-to-owner matrix for the porting pro
 | Session/auth routes, admin cookie semantics, TTL and dev vs production-like auth behavior | `Subphase 4` | `docs/backend-csharp-porting-subphases/subphase-04-session-and-admin-auth-parity.md` |
 | Read routes `GET /api/data`, `GET /api/drivers`, `GET /api/calendar`, including sorting and sanitization parity | `Subphase 5` | `docs/backend-csharp-porting-subphases/subphase-05-read-routes-data-drivers-calendar.md` |
 | Write routes `POST /api/data` and `POST /api/predictions`, including roster, race lock, request-id and persistence parity | `Subphase 6` | `docs/backend-csharp-porting-subphases/subphase-06-write-routes-data-and-predictions.md` |
+| Standings route `GET /api/standings`, standings cache, official-source parsing, and reusable standings sync capability | `Subphase 6A` | `docs/backend-csharp-porting-subphases/subphase-06a-main-delta-assimilation-and-standings-parity.md` |
 | Results route `GET /api/results/:meetingKey`, including `racePhase`, highlights and fallback behavior | `Subphase 7` | `docs/backend-csharp-porting-subphases/subphase-07-results-route-race-phase-and-highlights.md` |
-| Startup/bootstrap, Mongo connection, background sync, cache fallback, startup non-blocking behavior and same-origin React static hosting | `Subphase 8` | `docs/backend-csharp-porting-subphases/subphase-08-startup-sync-bootstrap-and-cache-fallback.md` |
+| Startup/bootstrap, Mongo connection, background sync for drivers/calendar/standings, cache fallback, startup non-blocking behavior and same-origin React static hosting | `Subphase 8` | `docs/backend-csharp-porting-subphases/subphase-08-startup-sync-bootstrap-and-cache-fallback.md` |
 | Canonical launcher and shared verification scripts, including local development and production-like browser gate reuse, and the ban on implicit `fantaf1_dev` fallback | `Subphase 9` | `docs/backend-csharp-porting-subphases/subphase-09-launcher-and-shared-verification-scripts.md` |
 | Atlas operationalization, Docker image, Render staging `FantaF1_staging` and the staging-only external browser gate | `Subphase 10` | `docs/backend-csharp-porting-subphases/subphase-10-docker-render-staging-and-atlas-operationalization.md` |
 | Future branch-specific C# workflows, cutover certification, final legacy removal and post-porting governance | `Subphase 11` | `docs/backend-csharp-porting-subphases/subphase-11-future-cicd-cutover-certification-and-legacy-removal.md` |
+
+### Delta assimilation matrix (`2c53c157..main`)
+
+This matrix is mandatory after the real `git merge --no-ff main` on `porting-backend-c#`. Every file advanced on `main` from `2c53c1573a06cc8518b544f461deba4be3c7072f` to `aa9bfd494e222304eaca4d050350221a81e4746e` must appear exactly once below so no fix, feature, test, or runtime contract is silently dropped from the porting branch.
+
+| File | Delta type | Merge status | C# porting impact | Subphase owner | Validation evidence |
+| --- | --- | --- | --- | --- | --- |
+| `.gitignore` | `config` | `merged` | Baseline ignore rules now include `conductor/` and C# artifacts, which must remain noise-free during porting. | `Subphase 1` | `git merge --no-ff main`, `git status --short --branch` |
+| `AGENTS.md` | `docs` | `merged` | Updated execution guardrails and verified merged coverage baseline bind every later porting slice. | `Subphase 1` | `dotnet test backend-csharp/FantaF1.Backend.sln -c Release`, `npm run test:coverage` |
+| `README.md` | `docs` | `merged` | Release/runtime baseline must stay aligned with the authoritative Node/React behavior while C# remains in parity mode. | `Subphase 1` | `npm run build`, `npm run test:coverage` |
+| `CHANGELOG.md` | `docs` | `merged` | Records the `main` release baseline that the porting branch must preserve before any C# cutover claims. | `Subphase 1` | `git merge --no-ff main`, `npm run test` |
+| `package.json` | `config` | `merged` | Script and release metadata baseline used by the merged Node/React runtime and shared validations. | `Subphase 1` | `npm run lint`, `npm run build`, `npm run test` |
+| `package-lock.json` | `config` | `merged` | Locks the dependency graph that the merged baseline and browser checks rely on. | `Subphase 1` | `npm run test`, `npm run test:coverage` |
+| `app.js` | `fix+feature` | `merged` | New authoritative route contract includes `/api/standings`; the C# API surface must match it without regressing existing read/write routes. | `Subphase 6A` | `tests/api-integration.test.js`, `backend-csharp/tests/FantaF1.Tests.Integration/ReadRouteEndpointTests.cs` |
+| `server.js` | `fix+feature` | `merged` | Startup flow now includes standings synchronization warnings and must later be wired into the integrated C# host. | `Subphase 8` | `tests/server.test.js`, `backend-csharp/tests/FantaF1.Tests.Integration/BootstrapHostTests.cs` |
+| `backend/config.js` | `fix+feature` | `merged` | Introduces authoritative standings source URLs and browser headers that the C# standings source client must preserve. | `Subphase 6A` | `tests/standings.test.js`, `backend-csharp/tests/FantaF1.Tests.Unit/StandingsServiceTests.cs` |
+| `backend/models.js` | `fix+feature` | `merged` | Adds the standings cache schema and collection contract that the C# Mongo repository must remain compatible with. | `Subphase 6A` | `tests/storage-standings.test.js`, `backend-csharp/tests/FantaF1.Tests.Unit/StandingsInfrastructureTests.cs` |
+| `backend/server-bootstrap-service.js` | `fix+feature` | `merged` | Startup sync now covers standings warnings and non-blocking behavior that the later integrated C# runtime must reproduce. | `Subphase 8` | `tests/server-bootstrap-service.test.js`, future `Subphase 8` host tests |
+| `backend/standings.js` | `feature` | `merged` | New backend baseline to port with parity in C#. | `Subphase 6A` | `tests/standings.test.js`, `backend-csharp/tests/FantaF1.Tests.Unit/StandingsServiceTests.cs` |
+| `backend/storage.js` | `fix+feature` | `merged` | Defines standings cache read/write fallback semantics and cache shape compatibility for the C# repository. | `Subphase 6A` | `tests/storage-standings.test.js`, `backend-csharp/tests/FantaF1.Tests.Unit/StandingsInfrastructureTests.cs` |
+| `backend/text.js` | `fix+feature` | `merged` | Adds standings route and startup warning messages that must remain wire-compatible in C# failures and logs. | `Subphase 6A` | `tests/api-integration.test.js`, `backend-csharp/tests/FantaF1.Tests.Integration/ReadRouteEndpointTests.cs` |
+| `config/app-config.json` | `config` | `merged` | New standings paths, team aliases/colors/assets, and UI text feed both the Node baseline and the C# parity implementation. | `Subphase 6A` | `tests/standings.test.js`, `backend-csharp/tests/FantaF1.Tests.Unit/StandingsServiceTests.cs` |
+| `scripts/ui-responsive/dom-expressions.mjs` | `fix` | `merged` | Shared browser selector baseline changed with the merged navigation and standings UI. | `Subphase 9` | `npm run test:ui-responsive` |
+| `scripts/ui-responsive/run-responsive-check.mjs` | `fix` | `merged` | Shared responsive orchestration must continue to validate the merged UI against both Node and future C# runtimes. | `Subphase 9` | `npm run test:ui-responsive` |
+| `scripts/ui-responsive/scenarios.mjs` | `fix` | `merged` | Scenario coverage now reflects the new navigation, standings panel, and responsive expectations. | `Subphase 9` | `npm run test:ui-responsive` |
+| `scripts/ui-responsive/state-validation.mjs` | `fix` | `merged` | Shared browser validation baseline to be parameterized for the migrated stack. | `Subphase 9` | `npm run test:ui-responsive` |
+| `src/App.css` | `fix+feature` | `merged` | Layout, navigation, public standings, and mobile behavior became authoritative UI baseline constraints for future browser gates. | `Subphase 9` | `npm run build`, `npm run test:ui-responsive` |
+| `src/App.tsx` | `fix+feature` | `merged` | Consumes `/api/standings` and the new navigation baseline that later browser gates must preserve. | `Subphase 9` | `tests/ui-integration.test.tsx`, `npm run test:ui-responsive` |
+| `src/components/HistoryArchivePanel.tsx` | `fix` | `merged` | History/podium/avatar rendering fixes become UI parity requirements for the merged baseline. | `Subphase 9` | `tests/ui-panels.test.tsx`, `tests/ui-integration.test.tsx` |
+| `src/components/PublicGuidePanel.tsx` | `fix` | `merged` | Public navigation and guide layout now depend on the merged UI structure. | `Subphase 9` | `tests/ui-panels.test.tsx`, `npm run test:ui-responsive` |
+| `src/components/PublicStandingsPanel.tsx` | `feature` | `merged` | New public standings UI consumes the authoritative standings contract and must remain non-regressive through C# porting. | `Subphase 9` | `tests/ui-public-standings-panel.test.tsx`, `npm run test:ui-responsive` |
+| `src/components/SeasonAnalysisPanel.tsx` | `fix` | `merged` | Analytics and standings-related panel behavior changed in the merged frontend baseline. | `Subphase 9` | `tests/ui-panels.test.tsx`, `tests/analytics.test.ts` |
+| `src/constants.ts` | `fix+feature` | `merged` | Shared frontend constants now include standings/navigation assumptions that browser gates must keep stable. | `Subphase 9` | `tests/ui-integration.test.tsx`, `npm run test` |
+| `src/types.ts` | `fix+feature` | `merged` | Frontend payload contracts expanded with standings types that the C# route must keep wire-compatible. | `Subphase 6A` | `tests/standings-client.test.ts`, `backend-csharp/tests/FantaF1.Tests.Integration/ReadRouteEndpointTests.cs` |
+| `src/uiText.ts` | `fix+feature` | `merged` | UI text additions for standings and navigation become part of the merged public/admin experience. | `Subphase 9` | `tests/ui-public-standings-panel.test.tsx`, `npm run test` |
+| `src/utils/analyticsService.ts` | `fix` | `merged` | Analytics helpers now reflect merged UI/data behavior and must stay aligned with standings-enabled screens. | `Subphase 9` | `tests/analytics.test.ts` |
+| `src/utils/driverAvatar.ts` | `feature` | `merged` | Driver avatar selection now participates in merged public/history rendering and must remain visually stable. | `Subphase 9` | `tests/driver-avatar.test.ts`, `tests/ui-panels.test.tsx` |
+| `src/utils/sectionNavigation.ts` | `fix` | `merged` | Section navigation behavior changed with the hero-integrated navigation and responsive baseline. | `Subphase 9` | `tests/ui-live-projection.test.tsx`, `npm run test:ui-responsive` |
+| `src/utils/standingsApi.ts` | `feature` | `merged` | Frontend standings API client defines the live contract that the new C# standings route must satisfy. | `Subphase 6A` | `tests/standings-client.test.ts`, `backend-csharp/tests/FantaF1.Tests.Integration/ReadRouteEndpointTests.cs` |
+| `tests/analytics.test.ts` | `test` | `merged` | Guards analytics regressions introduced by the merged standings/navigation UI baseline. | `Subphase 9` | `npm run test` |
+| `tests/api-integration.test.js` | `test` | `merged` | Legacy Node reference for `/api/standings` route semantics and fallback behavior. | `Subphase 6A` | `npm run test` |
+| `tests/app-production-routes.test.js` | `test` | `merged` | Production-like routing baseline now includes standings and the merged public navigation assumptions. | `Subphase 9` | `npm run test` |
+| `tests/app-race-lock-coverage.test.js` | `test` | `merged` | Confirms that merged UI/backend fixes did not regress high-risk race lock flows already ported. | `Subphase 6` | `npm run test:coverage` |
+| `tests/auth-routes.test.js` | `test` | `merged` | Auth route regression baseline remains authoritative after the merge hotspot resolution. | `Subphase 4` | `npm run test` |
+| `tests/driver-avatar.test.ts` | `test` | `merged` | Verifies the merged avatar helper used by history and public standings panels. | `Subphase 9` | `npm run test` |
+| `tests/fixtures/formula1-standings-constructors.html` | `test` | `merged` | Canonical constructor standings fixture for Node-vs-C# parsing parity. | `Subphase 6A` | `tests/standings.test.js`, `backend-csharp/tests/FantaF1.Tests.Unit/StandingsServiceTests.cs` |
+| `tests/fixtures/formula1-standings-drivers.html` | `test` | `merged` | Canonical driver standings fixture for Node-vs-C# parsing parity. | `Subphase 6A` | `tests/standings.test.js`, `backend-csharp/tests/FantaF1.Tests.Unit/StandingsServiceTests.cs` |
+| `tests/server-bootstrap-service.test.js` | `test` | `merged` | Startup warnings and non-blocking standings sync behavior become explicit parity gates for the later integrated runtime. | `Subphase 8` | `npm run test` |
+| `tests/server.test.js` | `test` | `merged` | Bootstrap/runtime server baseline now includes standings sync warnings and startup behavior. | `Subphase 8` | `npm run test` |
+| `tests/standings-client.test.ts` | `test` | `merged` | Frontend client contract reference for the new standings endpoint. | `Subphase 6A` | `npm run test`, `backend-csharp/tests/FantaF1.Tests.Integration/ReadRouteEndpointTests.cs` |
+| `tests/standings-sync-wrapper.test.js` | `test` | `merged` | Defines wrapper-level expectations for standings sync orchestration in the authoritative Node runtime. | `Subphase 6A` | `npm run test` |
+| `tests/standings.test.js` | `test` | `merged` | Legacy parity reference for C# standings parser and sync behavior. | `Subphase 6A` | `npm run test`, `backend-csharp/tests/FantaF1.Tests.Unit/StandingsServiceTests.cs` |
+| `tests/storage-standings.test.js` | `test` | `merged` | Defines the cache read/write fallback contract that the C# Mongo standings repository must preserve. | `Subphase 6A` | `npm run test`, `backend-csharp/tests/FantaF1.Tests.Unit/StandingsInfrastructureTests.cs` |
+| `tests/ui-integration.test.tsx` | `test` | `merged` | End-to-end UI contract now includes standings consumption and merged navigation behavior. | `Subphase 9` | `npm run test` |
+| `tests/ui-live-projection.test.tsx` | `test` | `merged` | Live projection rendering must remain stable after the merge hotspot resolution and UI baseline changes. | `Subphase 9` | `npm run test` |
+| `tests/ui-mockup-roadmap.test.tsx` | `test` | `merged` | Public/admin mockup expectations changed with the merged UI structure and standings section. | `Subphase 9` | `npm run test` |
+| `tests/ui-panels.test.tsx` | `test` | `merged` | Shared panel behavior baseline covers history, guide, analysis, and standings-adjacent regressions. | `Subphase 9` | `npm run test` |
+| `tests/ui-predictions-save.test.tsx` | `test` | `merged` | Save flow UI must remain non-regressive while the merged standings UI lands beside existing admin behavior. | `Subphase 9` | `npm run test:save-local`, `npm run test` |
+| `tests/ui-public-standings-panel.test.tsx` | `test` | `merged` | New public standings panel must remain green on the merged baseline and later C# runtime. | `Subphase 9` | `npm run test` |
+| `tests/ui-responsive-validation.test.js` | `test` | `merged` | Shared responsive validation now asserts the merged navigation, mobile select, and standings UI behavior. | `Subphase 9` | `npm run test:ui-responsive` |
+| `tests/ui-weekend-state.test.tsx` | `test` | `merged` | Weekend state rendering must remain stable alongside standings and navigation fixes. | `Subphase 9` | `npm run test` |
 
 ## 1. Authority and non-negotiables
 
@@ -149,6 +213,7 @@ The current backend behavior is implemented in:
 - `backend/server-bootstrap-service.js`: database/bootstrap and background sync orchestration
 - `backend/drivers.js`: driver sync and sorting
 - `backend/calendar.js`: calendar sync, results orchestration, highlights persistence
+- `backend/standings.js`: standings parsing, cache sync, and official-source fallback
 - `backend/race-results-service.js`: results resolution, `racePhase`, cache behavior
 - `backend/highlights.js`: highlight resolution strategies
 - `backend/http.js`: health payload and save error payload construction
@@ -166,6 +231,7 @@ The current backend behavior is implemented in:
 | `POST /api/predictions` | admin-only in production, open in development | Manual save flow, rejects all-empty predictions |
 | `GET /api/drivers` | public | Returns alphabetically sorted roster |
 | `GET /api/calendar` | public | Returns round-sorted calendar |
+| `GET /api/standings` | public | Returns cached standings, or triggers official-source sync when the cache is empty |
 | `GET /api/results/:meetingKey` | public | Returns race result fields, `racePhase`, optional `highlightsVideoUrl` |
 
 ### 2.3 Session and environment behavior that must remain stable
@@ -188,6 +254,7 @@ The C# backend must preserve the current runtime collection names:
 - `appdatas`
 - `drivers`
 - `weekends`
+- `standingscaches`
 - `admincredentials`
 
 Important compatibility note:
@@ -288,6 +355,10 @@ The first implementation slices must introduce explicit abstractions for:
 - `IAdminSessionService`
 - `IResultsService`
 - `IBackgroundSyncService`
+- `IStandingsRepository`
+- `IStandingsReadService`
+- `IStandingsSyncService`
+- `IStandingsSourceClient`
 - `IClock`
 - `ISignedCookieService`
 
@@ -346,9 +417,10 @@ Migration must proceed in this exact order unless a later verified dependency re
 4. write routes
    - `POST /api/data`
    - `POST /api/predictions`
-5. `GET /api/results/:meetingKey`
-6. startup bootstrap, background sync, and cache fallback
-7. React static hosting from ASP.NET Core
+5. `GET /api/standings`
+6. `GET /api/results/:meetingKey`
+7. startup bootstrap, background sync, and cache fallback
+8. React static hosting from ASP.NET Core
 
 ### 5.2 Mandatory TDD flow for every slice
 
@@ -415,7 +487,8 @@ Migration rules:
 
 - Node/React coverage must remain 100% for the official repository/application scope
 - C# application code must ship with 100% verified line, branch, and method coverage
-- Coverlet and ReportGenerator are the required tooling direction for the C# solution
+- Coverlet remains the collection engine for the C# solution, while the repository-level source of truth is `npm run test:csharp-coverage`
+- `npm run test:csharp-coverage` aggregates unit, integration, and contract coverage only for `backend-csharp/src/`, excludes generated artifacts such as `obj/` and `*.g.cs`, and writes the auditable summary to `backend-csharp/TestResults/OfficialCoverage/Summary.txt` and `backend-csharp/TestResults/OfficialCoverage/summary.json`
 - No migrated slice is complete if either stack falls below 100%
 
 ### 6.3 Browser regression requirements
@@ -486,10 +559,11 @@ Perform these steps only when implementation work starts:
 4. Create collection `appdatas`.
 5. Create collection `drivers`.
 6. Create collection `weekends`.
-7. Create collection `admincredentials`.
-8. Create a dedicated application user with least-privilege permissions for `fantaf1_porting`.
-9. If IP allowlisting is enabled, authorize the required local or CI source IPs.
-10. Store the URI separately from legacy development and production credentials.
+7. Create collection `standingscaches`.
+8. Create collection `admincredentials`.
+9. Create a dedicated application user with least-privilege permissions for `fantaf1_porting`.
+10. If IP allowlisting is enabled, authorize the required local or CI source IPs.
+11. Store the URI separately from legacy development and production credentials.
 
 ### 7.4 `fantaf1_staging` provisioning steps
 
@@ -500,6 +574,7 @@ Perform these steps before the first Render staging deploy:
    - `appdatas`
    - `drivers`
    - `weekends`
+   - `standingscaches`
    - `admincredentials`
 3. Create a staging-only least-privilege database user.
 4. Configure any required network access or IP allowlisting for Render.
@@ -699,7 +774,7 @@ The execution-oriented breakdown for this backlog is the numbered subphase set u
 7. Create the future branch-specific C# workflow files only when the post-porting stack is real in the repository.
 8. Reparameterize `scripts/save-local-check.mjs` and `scripts/ui-responsive-check.mjs` before any porting execution so they cannot fall back to `fantaf1_dev`.
 9. Update `start_fantaf1.command` so it launches the migrated stack and remains the canonical monitored launcher before legacy backend removal.
-10. Remove the legacy Node backend files, including `backend/`, `app.js`, `server.js`, and obsolete backend-specific runtime paths, only after the C# stack becomes the verified runtime through full parity, local and staging browser validation, launcher migration, workflow migration, rollback readiness, and explicit user certification; use an explicit remove/migrate/keep inventory and a minimal diff with no permanent bridges.
+10. Remove the legacy Node backend files, including `backend/`, `backend/standings.js`, `app.js`, `server.js`, and obsolete backend-specific runtime paths, only after the C# stack becomes the verified runtime through full parity, local and staging browser validation, launcher migration, workflow migration, rollback readiness, and explicit user certification; use an explicit remove/migrate/keep inventory and a minimal diff with no permanent bridges.
 
 ## 12. Reference material
 

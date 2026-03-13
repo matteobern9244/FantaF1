@@ -27,6 +27,8 @@ public static class ApplicationServiceCollectionExtensions
         services.AddScoped<IHealthReportService, HealthReportService>();
         services.AddScoped<IResultsService, PlaceholderResultsService>();
         services.AddScoped<ISaveRequestService, SaveRequestService>();
+        services.AddScoped<IStandingsReadService, StandingsReadService>();
+        services.AddScoped<IStandingsSyncService, StandingsSyncService>();
 
         return services;
     }

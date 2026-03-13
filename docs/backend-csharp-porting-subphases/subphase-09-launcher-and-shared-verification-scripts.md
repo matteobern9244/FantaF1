@@ -21,6 +21,7 @@ Invocazione canonica: `Subphase 9`
 - Parametrizzazione di `scripts/ui-responsive-check.mjs`.
 - Esplicitazione di base URL, backend target, expected environment e expected database target.
 - Blocco di ogni fallback implicito verso `fantaf1_dev`.
+- Preservazione del baseline UI mergeato di `main`: navigation nell'hero, select native su mobile, `back-to-top` e standings pubbliche.
 
 ## Out of scope
 
@@ -66,7 +67,7 @@ Invocazione canonica: `Subphase 9`
 2. Rendere `scripts/ui-responsive-check.mjs` esplicito sugli stessi target, senza fallback legacy.
 3. Aggiornare `start_fantaf1.command` per avviare il runtime migrato reale mantenendo il monitoraggio e i preflight esistenti.
 4. Verificare che il launcher non inglobi `npm run test:ui-responsive`.
-5. Verificare che gli stessi script possano colpire Node baseline, C# locale e C# locale production-like con parametri espliciti.
+5. Verificare che gli stessi script possano colpire Node baseline, C# locale e C# locale production-like con parametri espliciti, preservando il nuovo baseline UI mergeato di `main`.
 
 ## Test da aggiungere o aggiornare
 
@@ -91,7 +92,7 @@ Invocazione canonica: `Subphase 9`
 - `npm run build`
 - `npm run test:coverage`
 - `dotnet test backend-csharp/FantaF1.Backend.sln -c Release`
-- `dotnet test backend-csharp/FantaF1.Backend.sln -c Release /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura`
+- `npm run test:csharp-coverage`
 
 ## Criteri di completamento
 

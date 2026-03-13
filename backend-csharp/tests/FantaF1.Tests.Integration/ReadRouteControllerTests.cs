@@ -14,6 +14,7 @@ public sealed class ReadRouteControllerTests
         Assert.Throws<ArgumentNullException>(() => new AppDataController(new StubAppDataReadService(), null!));
         Assert.Throws<ArgumentNullException>(() => new DriversController(null!));
         Assert.Throws<ArgumentNullException>(() => new CalendarController(null!));
+        Assert.Throws<ArgumentNullException>(() => new StandingsController(null!));
     }
 
     [Fact]
@@ -22,14 +23,17 @@ public sealed class ReadRouteControllerTests
         var appDataController = new AppDataController(new StubAppDataReadService(), new StubSaveRequestService());
         var driversController = new DriversController(new StubDriverReadService());
         var calendarController = new CalendarController(new StubCalendarReadService());
+        var standingsController = new StandingsController(new StubStandingsReadService());
 
         var dataResult = await appDataController.GetData(CancellationToken.None);
         var driversResult = await driversController.GetDrivers(CancellationToken.None);
         var calendarResult = await calendarController.GetCalendar(CancellationToken.None);
+        var standingsResult = await standingsController.GetStandings(CancellationToken.None);
 
         Assert.IsType<OkObjectResult>(dataResult);
         Assert.IsType<OkObjectResult>(driversResult);
         Assert.IsType<OkObjectResult>(calendarResult);
+        Assert.IsType<OkObjectResult>(standingsResult);
     }
 
     private sealed class StubAppDataReadService : IAppDataReadService
@@ -53,6 +57,14 @@ public sealed class ReadRouteControllerTests
         public Task<IReadOnlyList<WeekendDocument>> ReadAllAsync(CancellationToken cancellationToken)
         {
             return Task.FromResult<IReadOnlyList<WeekendDocument>>([]);
+        }
+    }
+
+    private sealed class StubStandingsReadService : IStandingsReadService
+    {
+        public Task<StandingsDocument> ReadAsync(CancellationToken cancellationToken)
+        {
+            return Task.FromResult(new StandingsDocument([], [], string.Empty));
         }
     }
 

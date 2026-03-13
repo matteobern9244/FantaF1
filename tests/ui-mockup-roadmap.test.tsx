@@ -93,34 +93,14 @@ function createAppData() {
     ],
     history: [
       {
-        gpName: 'Australian Grand Prix 2099',
-        meetingKey: 'race-1',
-        date: '01/03/2099',
-        results: { first: 'ver', second: 'lec', third: 'nor', pole: 'pia' },
-        userPredictions: {
-          Marco: {
-            prediction: { first: 'ver', second: 'lec', third: 'ham', pole: 'pia' },
-            pointsEarned: 9,
-          },
-          Luca: {
-            prediction: { first: 'ham', second: 'ver', third: 'nor', pole: 'nor' },
-            pointsEarned: 2,
-          },
-          Sara: {
-            prediction: { first: 'ver', second: 'lec', third: 'nor', pole: 'pia' },
-            pointsEarned: 11,
-          },
-        },
-      },
-      {
-        gpName: 'Chinese Grand Prix 2099',
-        meetingKey: 'race-2',
-        date: '15/03/2099',
-        results: { first: 'ham', second: 'nor', third: 'lec', pole: 'ver' },
+        gpName: 'Gran Premio di Gran Bretagna',
+        meetingKey: 'race-gb',
+        date: '05/07/2099',
+        results: { first: 'ham', second: 'nor', third: 'ver', pole: 'ham' },
         userPredictions: {
           Marco: {
             prediction: { first: 'ham', second: 'nor', third: 'lec', pole: 'ver' },
-            pointsEarned: 11,
+            pointsEarned: 9,
           },
           Luca: {
             prediction: { first: 'ham', second: 'nor', third: 'pia', pole: 'ver' },
@@ -133,11 +113,11 @@ function createAppData() {
         },
       },
     ],
-    gpName: 'Australian Grand Prix 2099',
+    gpName: 'Monza',
     raceResults: createEmptyPrediction(),
-    selectedMeetingKey: 'race-1',
+    selectedMeetingKey: 'race-monza',
     weekendStateByMeetingKey: {
-      'race-1': {
+      'race-monza': {
         userPredictions: {
           Marco: { first: 'ver', second: 'lec', third: 'nor', pole: 'pia' },
           Luca: { first: 'ham', second: 'ver', third: 'nor', pole: 'lec' },
@@ -151,29 +131,60 @@ function createAppData() {
 
 function createDrivers() {
   return [
-    { id: 'ver', name: 'Max Verstappen', team: 'Red Bull', color: '#0000ff' },
-    { id: 'lec', name: 'Charles Leclerc', team: 'Ferrari', color: '#ff0000' },
-    { id: 'nor', name: 'Lando Norris', team: 'McLaren', color: '#ff8000' },
-    { id: 'pia', name: 'Oscar Piastri', team: 'McLaren', color: '#ff8000' },
-    { id: 'ham', name: 'Lewis Hamilton', team: 'Ferrari', color: '#ff0000' },
+    { id: 'ver', name: 'Max Verstappen', team: 'Red Bull', color: '#0000ff', avatarUrl: 'https://media.example.com/ver.webp' },
+    { id: 'lec', name: 'Charles Leclerc', team: 'Ferrari', color: '#ff0000', avatarUrl: 'https://media.example.com/lec.webp' },
+    { id: 'nor', name: 'Lando Norris', team: 'McLaren', color: '#ff8000', avatarUrl: 'https://media.example.com/nor.webp' },
+    { id: 'pia', name: 'Oscar Piastri', team: 'McLaren', color: '#ff8000', avatarUrl: 'https://media.example.com/pia.webp' },
+    { id: 'ham', name: 'Lewis Hamilton', team: 'Ferrari', color: '#ff0000', avatarUrl: 'https://media.example.com/ham.webp' },
   ];
+}
+
+function createStandings() {
+  return {
+    driverStandings: [
+      { position: 1, driverId: 'pia', name: 'Oscar Piastri', team: 'McLaren', points: 99, avatarUrl: 'https://media.example.com/pia.webp', color: '#ff8000' },
+      { position: 2, driverId: 'nor', name: 'Lando Norris', team: 'McLaren', points: 89, avatarUrl: 'https://media.example.com/nor.webp', color: '#ff8000' },
+      { position: 3, driverId: 'lec', name: 'Charles Leclerc', team: 'Ferrari', points: 71, avatarUrl: 'https://media.example.com/lec.webp', color: '#ff0000' },
+    ],
+    constructorStandings: [
+      { position: 1, team: 'McLaren', points: 188, color: '#ff8000', logoUrl: 'https://media.example.com/mclaren-logo.webp' },
+      { position: 2, team: 'Ferrari', points: 144, color: '#ff0000', logoUrl: 'https://media.example.com/ferrari-logo.webp' },
+      { position: 3, team: 'Red Bull', points: 121, color: '#0000ff', logoUrl: 'https://media.example.com/red-bull-logo.webp' },
+    ],
+    updatedAt: '2026-03-12T10:00:00.000Z',
+  };
 }
 
 function createCalendar() {
   return [
     {
-      meetingKey: 'race-1',
-      meetingName: 'Australia',
-      grandPrixTitle: 'Australian Grand Prix 2099',
-      roundNumber: 1,
-      dateRangeLabel: '13 - 15 MAR',
-      detailUrl: 'https://www.formula1.com/en/racing/2099/australia',
+      meetingKey: 'race-monza',
+      meetingName: 'Monza',
+      grandPrixTitle: 'Gran Premio d\'Italia',
+      roundNumber: 15,
+      dateRangeLabel: '01 - 03 SEP',
+      detailUrl: 'https://www.formula1.com/en/racing/2099/italy',
       heroImageUrl: '',
-      trackOutlineUrl: '',
+      trackOutlineUrl: '/images/tracks/monza.png',
       isSprintWeekend: false,
-      startDate: '2099-03-13',
-      endDate: '2099-03-15',
-      raceStartTime: '2099-03-15T14:00:00Z',
+      startDate: '2099-09-01',
+      endDate: '2099-09-03',
+      raceStartTime: '2099-09-03T15:00:00Z',
+      sessions: [],
+    },
+    {
+      meetingKey: 'race-gb',
+      meetingName: 'Silverstone',
+      grandPrixTitle: 'Gran Premio di Gran Bretagna',
+      roundNumber: 10,
+      dateRangeLabel: '03 - 05 JUL',
+      detailUrl: 'https://www.formula1.com/en/racing/2099/great-britain',
+      heroImageUrl: '',
+      trackOutlineUrl: '/images/tracks/silverstone.png',
+      isSprintWeekend: false,
+      startDate: '2099-07-03',
+      endDate: '2099-07-05',
+      raceStartTime: '2099-07-05T15:00:00Z',
       sessions: [],
     },
   ];
@@ -192,8 +203,10 @@ function setupFetch() {
   const sessionState = { isAdmin: true, defaultViewMode: 'admin' };
   const calendar = createCalendar();
   const resultsByMeetingKey = {
-    'race-1': { racePhase: 'open', results: createEmptyPrediction() },
+    'race-monza': { racePhase: 'open', results: createEmptyPrediction() },
+    'race-gb': { racePhase: 'open', results: createEmptyPrediction() },
   } as Record<string, { racePhase?: 'open' | 'live' | 'finished'; results: ReturnType<typeof createEmptyPrediction> }>;
+  const standings = createStandings();
 
   fetchMock.mockImplementation((url: string, options?: RequestInit) => {
     if (url.includes('/api/session')) {
@@ -210,6 +223,10 @@ function setupFetch() {
 
     if (url.includes('/api/calendar')) {
       return Promise.resolve(createResponse(calendar));
+    }
+
+    if (url.includes('/api/standings')) {
+      return Promise.resolve(createResponse(standings));
     }
 
     if (url.includes('/api/predictions')) {
@@ -240,13 +257,16 @@ function setupFetchWithOverrides({
   calendar = createCalendar(),
   sessionState = { isAdmin: true, defaultViewMode: 'admin' as const },
   resultsByMeetingKey = {
-    'race-1': { racePhase: 'open', results: createEmptyPrediction() },
+    'race-monza': { racePhase: 'open', results: createEmptyPrediction() },
+    'race-gb': { racePhase: 'open', results: createEmptyPrediction() },
   } as Record<string, { racePhase?: 'open' | 'live' | 'finished'; results: ReturnType<typeof createEmptyPrediction> }>,
+  standings = createStandings(),
 }: {
   appData?: ReturnType<typeof createAppData>;
   calendar?: ReturnType<typeof createCalendar>;
   sessionState?: { isAdmin: boolean; defaultViewMode: 'admin' | 'public' };
   resultsByMeetingKey?: Record<string, { racePhase?: 'open' | 'live' | 'finished'; results: ReturnType<typeof createEmptyPrediction> }>;
+  standings?: ReturnType<typeof createStandings>;
 }) {
   const fetchMock = global.fetch as ReturnType<typeof vi.fn>;
 
@@ -265,6 +285,10 @@ function setupFetchWithOverrides({
 
     if (url.includes('/api/calendar')) {
       return Promise.resolve(createResponse(calendar));
+    }
+
+    if (url.includes('/api/standings')) {
+      return Promise.resolve(createResponse(standings));
     }
 
     if (url.includes('/api/predictions')) {
@@ -322,6 +346,7 @@ describe('Mockup roadmap UI features', () => {
       expect(screen.queryByTestId('pitstop-loader')).not.toBeInTheDocument();
     });
 
+    expect(screen.queryByText(/regole del gioco/i)).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: /modalita' admin/i })).toHaveAttribute(
       'aria-pressed',
       'true',
@@ -349,10 +374,11 @@ describe('Mockup roadmap UI features', () => {
 
     expect(screen.getByRole('heading', { name: /user kpi dashboard/i })).toBeInTheDocument();
     const kpiPanel = screen.getByTestId('user-kpi-dashboard');
-    expect(within(kpiPanel).getByText('20')).toBeInTheDocument();
-    expect(within(kpiPanel).getByText('1.5')).toBeInTheDocument();
-    expect(within(kpiPanel).getByText('100%')).toBeInTheDocument();
-    expect(within(kpiPanel).getByText('10')).toBeInTheDocument();
+    const kpiCards = within(kpiPanel).getAllByRole('article');
+    expect(within(kpiCards[0]).getByText('9')).toBeInTheDocument();
+    expect(within(kpiCards[1]).getByText('2')).toBeInTheDocument();
+    expect(within(kpiCards[2]).getByText('0%')).toBeInTheDocument();
+    expect(within(kpiCards[3]).getByText('9')).toBeInTheDocument();
     expect(within(kpiPanel).getAllByRole('article').every((card) => card.classList.contains('interactive-surface'))).toBe(
       true,
     );
@@ -360,8 +386,7 @@ describe('Mockup roadmap UI features', () => {
     const analyticsPanel = screen.getByRole('heading', { name: /deep-dive kpi dashboard/i }).closest('section');
     expect(analyticsPanel).not.toBeNull();
     expect(within(analyticsPanel as HTMLElement).getByText(/hamilton lewis/i)).toBeInTheDocument();
-    expect(within(analyticsPanel as HTMLElement).getAllByText(/chinese grand prix 2099/i).length).toBeGreaterThan(0);
-    expect(within(analyticsPanel as HTMLElement).getAllByText(/australian grand prix 2099/i).length).toBeGreaterThan(0);
+    expect(within(analyticsPanel as HTMLElement).getAllByText(/gran premio di gran bretagna/i).length).toBeGreaterThan(0);
     expect(
       (analyticsPanel as HTMLElement).querySelectorAll('.analytics-card.interactive-surface').length,
     ).toBeGreaterThan(0);
@@ -370,7 +395,7 @@ describe('Mockup roadmap UI features', () => {
     ).toBeGreaterThan(0);
   });
 
-  it('renders season analysis, public guide, share action and history drill-down', async () => {
+  it('renders season analysis, public guide, real standings and history drill-down', async () => {
     setupFetch();
 
     render(<App />);
@@ -382,6 +407,13 @@ describe('Mockup roadmap UI features', () => {
     expect(screen.getByRole('heading', { name: /analisi stagione/i })).toBeInTheDocument();
     expect(screen.getByText(/chi tiene il passo del leader/i)).toBeInTheDocument();
     expect(screen.getByText(/recap ultimo gp/i)).toBeInTheDocument();
+
+    // La mappa nel recap deve essere quella di Silverstone (history[0] nel mock), non Monza (selectedRace)
+    const recapSection = screen.getByText(/recap ultimo gp/i).closest('.analytics-subpanel');
+    const recapImage = within(recapSection as HTMLElement).getByRole('img');
+    expect(recapImage).toHaveAttribute('src', '/images/tracks/silverstone.png');
+    expect(recapImage).toHaveAttribute('alt', 'Silverstone');
+
     const seasonPanel = screen.getByRole('heading', { name: /analisi stagione/i }).closest('section');
     expect(seasonPanel).not.toBeNull();
     expect((seasonPanel as HTMLElement).querySelectorAll('.analytics-card.interactive-surface').length).toBeGreaterThan(0);
@@ -399,25 +431,30 @@ describe('Mockup roadmap UI features', () => {
     fireEvent.click(screen.getByRole('button', { name: /vista pubblica/i }));
 
     expect(screen.getByRole('heading', { name: /come funziona/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /copia link vista corrente/i })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /classifica piloti/i })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /classifica scuderia/i })).toBeInTheDocument();
+    expect(screen.getByAltText('McLaren logo')).toBeInTheDocument();
+    expect(document.querySelector('.standings-team-marker')).toBeNull();
+    expect(document.querySelector('.public-standings-grid.public-standings-grid-compact')).not.toBeNull();
+    expect(document.querySelectorAll('.standings-subpanel.standings-subpanel-compact')).toHaveLength(2);
+    expect(screen.queryByRole('button', { name: /copia link vista corrente/i })).not.toBeInTheDocument();
     expect(
       screen.getAllByRole('article').some((card) => card.classList.contains('interactive-surface')),
     ).toBe(true);
 
-    fireEvent.click(screen.getByRole('button', { name: /copia link vista corrente/i }));
-    await waitFor(() => {
-      expect(navigator.clipboard.writeText).toHaveBeenCalled();
-    });
-
     fireEvent.change(screen.getByLabelText(/filtra per giocatore/i), {
       target: { value: 'Marco' },
     });
-    expect(screen.getByText(/2 gran premi mostrati/i)).toBeInTheDocument();
+    expect(screen.getByText(/1 gran premi mostrati/i)).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('button', { name: /dettaglio australian grand prix 2099/i }));
+    fireEvent.click(screen.getByRole('button', { name: /dettaglio gran premio di gran bretagna/i }));
     expect(screen.getByText(/pronostici dettagliati/i)).toBeInTheDocument();
+    expect(screen.getByText(/podio reale/i)).toBeInTheDocument();
+    expect(screen.getByAltText('Lewis Hamilton')).toBeInTheDocument();
     expect(screen.getAllByText(/marco/i).length).toBeGreaterThan(0);
     expect(document.querySelectorAll('.history-card.interactive-surface').length).toBeGreaterThan(0);
+    expect(document.querySelectorAll('.history-podium-slot.interactive-surface').length).toBeGreaterThan(0);
+    expect(document.querySelector('.history-race-date')).toHaveTextContent('05/07/2099');
     expect(document.querySelectorAll('.history-user-card.interactive-surface').length).toBeGreaterThan(0);
     expect(document.querySelectorAll('.history-detail-panel .analytics-subpanel.interactive-surface').length).toBeGreaterThan(0);
   });
@@ -429,6 +466,9 @@ describe('Mockup roadmap UI features', () => {
       {
         ...createCalendar()[0],
         trackOutlineUrl: australiaMapUrl,
+      },
+      {
+        ...createCalendar()[1], // Silverstone
       },
       {
         meetingKey: 'race-2',
@@ -460,7 +500,7 @@ describe('Mockup roadmap UI features', () => {
       appData,
       calendar,
       resultsByMeetingKey: {
-        'race-1': { racePhase: 'open', results: createEmptyPrediction() },
+        'race-monza': { racePhase: 'open', results: createEmptyPrediction() },
         'race-2': { racePhase: 'open', results: createEmptyPrediction() },
       },
     });
@@ -471,12 +511,13 @@ describe('Mockup roadmap UI features', () => {
       expect(screen.queryByTestId('pitstop-loader')).not.toBeInTheDocument();
     });
 
-    expect(screen.getByRole('img', { name: 'Australia' })).toHaveAttribute('src', australiaMapUrl);
+    expect(screen.getByRole('img', { name: 'Monza' })).toHaveAttribute('src', australiaMapUrl);
 
     fireEvent.click(screen.getByRole('button', { name: /vista pubblica/i }));
 
     await waitFor(() => {
-      expect(screen.getAllByRole('img', { name: 'Australia' })).toHaveLength(2);
+      // 1 nella hero (Monza) e 1 nel recap (Silverstone - ma nel test calendar Silverstone non ha australiaMapUrl)
+      expect(screen.getAllByRole('img', { name: 'Monza' })).toHaveLength(1);
     });
     expect(screen.queryByRole('button', { name: /conferma risultati e assegna i punti/i })).not.toBeInTheDocument();
 
@@ -489,7 +530,9 @@ describe('Mockup roadmap UI features', () => {
     });
 
     await waitFor(() => {
-      expect(screen.getAllByRole('img', { name: 'China' })).toHaveLength(2);
+      // 1 nella hero (Cina) e 1 nel recap (Silverstone - dalla history[0])
+      expect(screen.getAllByRole('img', { name: 'China' })).toHaveLength(1);
+      expect(screen.getByRole('img', { name: 'Silverstone' })).toBeInTheDocument();
     });
     expect(screen.getAllByRole('img', { name: 'China' }).every((image) => image.getAttribute('src') === chinaMapUrl)).toBe(true);
 
@@ -595,7 +638,7 @@ describe('Mockup roadmap UI features', () => {
     expect(screen.getByRole('status')).toHaveTextContent(/non disponibile/i);
   });
 
-  it('hydrates the shared public url state from query params and preserves the hash when copying the link', async () => {
+  it('hydrates the shared public url state from query params and preserves the requested public filters', async () => {
     const scrollIntoView = vi.fn();
     Object.defineProperty(HTMLElement.prototype, 'scrollIntoView', {
       configurable: true,
@@ -634,14 +677,14 @@ describe('Mockup roadmap UI features', () => {
     window.history.replaceState(
       {},
       '',
-      '/?meeting=race-2&view=public&historyUser=Marco&historySearch=Chinese#history-archive',
+      '/?meeting=race-2&view=public&historyUser=Marco&historySearch=Gran#history-archive',
     );
 
     setupFetchWithOverrides({
       appData,
       calendar,
       resultsByMeetingKey: {
-        'race-1': { racePhase: 'open', results: createEmptyPrediction() },
+        'race-monza': { racePhase: 'open', results: createEmptyPrediction() },
         'race-2': { racePhase: 'open', results: createEmptyPrediction() },
       },
     });
@@ -658,31 +701,16 @@ describe('Mockup roadmap UI features', () => {
 
     expect(screen.queryByRole('button', { name: /salva dati inseriti/i })).not.toBeInTheDocument();
     expect(screen.getByLabelText(/filtra per giocatore/i)).toHaveValue('Marco');
-    expect(screen.getByLabelText(/cerca gp/i)).toHaveValue('Chinese');
+    expect(screen.getByLabelText(/cerca gp/i)).toHaveValue('Gran');
     expect(screen.getByDisplayValue(/2\.\s+Chinese Grand Prix 2099/i)).toBeInTheDocument();
     expect(screen.getByText(/1 gran premi mostrati/i)).toBeInTheDocument();
     expect(scrollIntoView).toHaveBeenCalled();
 
-    fireEvent.click(screen.getByRole('button', { name: /copia link vista corrente/i }));
-
-    await waitFor(() => {
-      expect(navigator.clipboard.writeText).toHaveBeenCalledWith(
-        expect.stringContaining('meeting=race-2'),
-      );
-    });
-
-    expect(navigator.clipboard.writeText).toHaveBeenCalledWith(
-      expect.stringContaining('view=public'),
-    );
-    expect(navigator.clipboard.writeText).toHaveBeenCalledWith(
-      expect.stringContaining('historyUser=Marco'),
-    );
-    expect(navigator.clipboard.writeText).toHaveBeenCalledWith(
-      expect.stringContaining('historySearch=Chinese'),
-    );
-    expect(navigator.clipboard.writeText).toHaveBeenCalledWith(
-      expect.stringContaining('#history-archive'),
-    );
+    expect(window.location.search).toContain('meeting=race-2');
+    expect(window.location.search).toContain('view=public');
+    expect(window.location.search).toContain('historyUser=Marco');
+    expect(window.location.search).toContain('historySearch=Gran');
+    expect(window.location.hash).toBe('#history-archive');
   });
 
   it('does not grant admin access from a shared admin url when the session is not admin', async () => {
@@ -716,55 +744,22 @@ describe('Mockup roadmap UI features', () => {
     expect(within(navigation).getByRole('button', { name: /calendario stagione/i })).toBeInTheDocument();
     expect(within(navigation).getByRole('button', { name: /risultati del weekend/i })).toBeInTheDocument();
     expect(within(navigation).queryByRole('button', { name: /come funziona/i })).not.toBeInTheDocument();
+    expect(within(navigation).queryByRole('button', { name: /classifiche reali/i })).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: /vista pubblica/i }));
 
     expect(within(navigation).getByRole('button', { name: /come funziona/i })).toBeInTheDocument();
+    expect(within(navigation).getByRole('button', { name: /classifiche reali/i })).toBeInTheDocument();
     expect(within(navigation).queryByRole('button', { name: /risultati del weekend/i })).not.toBeInTheDocument();
   });
 
-  it('opens and closes the mobile section drawer and updates the hash on navigation', async () => {
+  it('renders navigation directly in the header and updates the hash on navigation', async () => {
     setupFetch();
-    mockMediaMatches({ '(max-width: 767px)': true });
     const scrollIntoView = vi.fn();
     Object.defineProperty(HTMLElement.prototype, 'scrollIntoView', {
       configurable: true,
       value: scrollIntoView,
     });
-
-    render(<App />);
-
-    await waitFor(() => {
-      expect(screen.queryByTestId('pitstop-loader')).not.toBeInTheDocument();
-    });
-
-    const openButton = screen.getByRole('button', { name: /^sezioni$/i });
-    expect(openButton).toBeInTheDocument();
-    expect(screen.queryByRole('dialog', { name: /sezioni applicazione/i })).not.toBeInTheDocument();
-
-    fireEvent.click(openButton);
-
-    const drawer = screen.getByRole('dialog', { name: /sezioni applicazione/i });
-    const seasonAnalysisButton = within(drawer).getByRole('button', { name: /analisi stagione/i });
-    fireEvent.click(seasonAnalysisButton);
-
-    expect(window.location.hash).toBe('#season-analysis');
-    expect(scrollIntoView).toHaveBeenCalled();
-    expect(screen.queryByRole('dialog', { name: /sezioni applicazione/i })).not.toBeInTheDocument();
-
-    fireEvent.click(openButton);
-    expect(screen.getByRole('dialog', { name: /sezioni applicazione/i })).toBeInTheDocument();
-
-    fireEvent.keyDown(document, { key: 'Escape' });
-
-    await waitFor(() => {
-      expect(screen.queryByRole('dialog', { name: /sezioni applicazione/i })).not.toBeInTheDocument();
-    });
-    expect(document.activeElement).toBe(openButton);
-  });
-
-  it('keeps the desktop section navigation available after scrolling without showing the back-to-top shortcut', async () => {
-    setupFetch();
 
     render(<App />);
 
@@ -773,27 +768,42 @@ describe('Mockup roadmap UI features', () => {
     });
 
     const navigation = screen.getByRole('navigation', { name: /sezioni applicazione/i });
-    expect(within(navigation).getByRole('button', { name: /calendario stagione/i })).toBeInTheDocument();
+    expect(navigation).toBeInTheDocument();
 
-    Object.defineProperty(window, 'scrollY', {
-      configurable: true,
-      value: 420,
-    });
+    const navList = navigation.querySelector('.section-nav-list');
+    expect(navList).toBeInTheDocument();
 
-    fireEvent.scroll(window);
+    const seasonAnalysisButton = within(navigation).getByRole('button', { name: /analisi stagione/i });
+    fireEvent.click(seasonAnalysisButton);
 
-    expect(within(navigation).getByRole('button', { name: /analisi stagione/i })).toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /torna al menu/i })).not.toBeInTheDocument();
+    expect(window.location.hash).toBe('#season-analysis');
+    expect(scrollIntoView).toHaveBeenCalled();
   });
 
-  it('keeps the mobile sections trigger available after scrolling and the drawer still navigates correctly', async () => {
+  it('renders the install button as the last item in the navigation list', async () => {
     setupFetch();
-    mockMediaMatches({ '(max-width: 767px)': true });
-    const scrollIntoView = vi.fn();
-    Object.defineProperty(HTMLElement.prototype, 'scrollIntoView', {
-      configurable: true,
-      value: scrollIntoView,
+    render(<App />);
+
+    await waitFor(() => {
+      expect(screen.queryByTestId('pitstop-loader')).not.toBeInTheDocument();
     });
+
+    const navList = screen.getByRole('navigation', { name: /sezioni applicazione/i }).querySelector('.section-nav-list');
+    const buttons = within(navList as HTMLElement).getAllByRole('button');
+    const lastButton = buttons[buttons.length - 1];
+
+    expect(lastButton).toHaveTextContent(/installa applicazione/i);
+  });
+
+  it('shows the back-to-top button when the hero panel is scrolled out of view and scrolls back to the navigation element', async () => {
+    const originalObserver = window.IntersectionObserver;
+    Object.defineProperty(window, 'IntersectionObserver', {
+      writable: true,
+      value: undefined,
+    });
+
+    setupFetch();
+    const scrollIntoViewMock = vi.fn();
 
     render(<App />);
 
@@ -801,25 +811,28 @@ describe('Mockup roadmap UI features', () => {
       expect(screen.queryByTestId('pitstop-loader')).not.toBeInTheDocument();
     });
 
-    Object.defineProperty(window, 'scrollY', {
+    const navigation = screen.getByRole('navigation', { name: /sezioni applicazione/i });
+    Object.defineProperty(navigation, 'scrollIntoView', {
       configurable: true,
-      value: 420,
+      value: scrollIntoViewMock,
     });
 
-    fireEvent.scroll(window);
-
-    const openButton = screen.getByRole('button', { name: /^sezioni$/i });
-    expect(openButton).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /torna al menu/i })).not.toBeInTheDocument();
 
-    fireEvent.click(openButton);
-    const drawer = screen.getByRole('dialog', { name: /sezioni applicazione/i });
-    fireEvent.click(within(drawer).getByRole('button', { name: /storico gare/i }));
+    await act(async () => {
+      Object.defineProperty(window, 'scrollY', { value: 500, configurable: true });
+      window.dispatchEvent(new Event('scroll'));
+    });
 
-    expect(window.location.hash).toBe('#history-archive');
-    expect(scrollIntoView).toHaveBeenCalled();
-    await waitFor(() => {
-      expect(screen.queryByRole('dialog', { name: /sezioni applicazione/i })).not.toBeInTheDocument();
+    const backToTopButton = screen.getByRole('button', { name: /torna al menu/i });
+    expect(backToTopButton).toBeInTheDocument();
+
+    fireEvent.click(backToTopButton);
+    expect(scrollIntoViewMock).toHaveBeenCalledWith({ behavior: 'smooth' });
+
+    Object.defineProperty(window, 'IntersectionObserver', {
+      writable: true,
+      value: originalObserver,
     });
   });
 });

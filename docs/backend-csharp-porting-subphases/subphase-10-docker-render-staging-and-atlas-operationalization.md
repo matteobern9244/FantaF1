@@ -5,7 +5,7 @@ Invocazione canonica: `Subphase 10`
 ## Scopo della subphase
 
 - Operazionalizzare `backend-csharp/Dockerfile`, Atlas `fantaf1_porting` e `fantaf1_staging`, e il deploy staging Render `FantaF1_staging`.
-- Eseguire la checklist completa di validazione staging, incluso il browser gate esterno staging-only.
+- Eseguire la checklist completa di validazione staging, incluso il browser gate esterno staging-only e la validazione di standings endpoint/cache/UI.
 
 ## Source of truth e runtime autorevole
 
@@ -19,7 +19,7 @@ Invocazione canonica: `Subphase 10`
 - Build multi-stage con React + ASP.NET Core same-origin.
 - Provisioning Atlas di `fantaf1_porting` e `fantaf1_staging`.
 - Creazione/configurazione del servizio Render `FantaF1_staging`.
-- Checklist di validazione staging, compresi health, route migrate, startup sync e browser gate esterno.
+- Checklist di validazione staging, compresi health, route migrate, standings, startup sync e browser gate esterno.
 
 ## Out of scope
 
@@ -84,7 +84,7 @@ Invocazione canonica: `Subphase 10`
 
 - `dotnet build backend-csharp/FantaF1.Backend.sln -c Release`
 - `dotnet test backend-csharp/FantaF1.Backend.sln -c Release`
-- `dotnet test backend-csharp/FantaF1.Backend.sln -c Release /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura`
+- `npm run test:csharp-coverage`
 - `npm run lint`
 - `npm run build`
 - `npm run test:coverage`

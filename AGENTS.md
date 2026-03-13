@@ -46,6 +46,7 @@ All three files are mandatory and complementary.
 
 Optional helper commands already supported by the repository:
 
+- `npm run test:csharp-coverage`
 - `npm run test:save-local`
 - `npm run test:ui-responsive`
 - `npm run preview`
@@ -234,6 +235,7 @@ Where applicable this includes:
 - Build: `npm run build`
 - Local smoke startup when relevant: `npm run start:local`
 - Additional targeted checks when relevant:
+  - `npm run test:csharp-coverage` for the official backend-csharp application coverage summary on `backend-csharp/src/`
   - `npm run test:save-local`
   - `npm run test:ui-responsive` for responsive/UI-impacting changes
 
@@ -258,7 +260,7 @@ Where applicable this includes:
 
 - Main automated test stack: Vitest, React Testing Library, and Supertest.
 - Coverage provider: V8.
-- Current verified merged baseline for the configured official application-code scope is **100% statements (4777 / 4777)**, **100% functions (388 / 388)**, **100% branches (1984 / 1984)**, and **100% lines (4777 / 4777)**, aligned with the thresholds currently documented in `README.md`.
+- Current verified merged baseline for the configured official application-code scope is **100% statements (5167 / 5167)**, **100% functions (407 / 407)**, **100% branches (2093 / 2093)**, and **100% lines (5167 / 5167)**, aligned with the thresholds currently documented in `README.md`.
 - Whenever a task produces a new verified merged Release coverage result, update this baseline in `AGENTS.md` to the new numbers.
 - If a task produces a new verified merged coverage result for the tracked scope, update the baseline in `AGENTS.md` and never accept a regression below that verified baseline.
 

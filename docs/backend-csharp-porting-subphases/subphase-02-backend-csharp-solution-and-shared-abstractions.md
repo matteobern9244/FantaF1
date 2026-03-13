@@ -72,7 +72,7 @@ Invocazione canonica: `Subphase 2`
    - `dotnet restore backend-csharp/FantaF1.Backend.sln`
    - `dotnet build backend-csharp/FantaF1.Backend.sln -c Release`
    - `dotnet test backend-csharp/FantaF1.Backend.sln -c Release`
-   - `dotnet test backend-csharp/FantaF1.Backend.sln -c Release /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura`
+   - `npm run test:csharp-coverage`
 
 ## Test da aggiungere o aggiornare
 
@@ -93,7 +93,7 @@ Invocazione canonica: `Subphase 2`
 - `dotnet restore backend-csharp/FantaF1.Backend.sln`
 - `dotnet build backend-csharp/FantaF1.Backend.sln -c Release`
 - `dotnet test backend-csharp/FantaF1.Backend.sln -c Release`
-- `dotnet test backend-csharp/FantaF1.Backend.sln -c Release /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura`
+- `npm run test:csharp-coverage`
 - `npm run lint`
 - `npm run build`
 - `npm run test`

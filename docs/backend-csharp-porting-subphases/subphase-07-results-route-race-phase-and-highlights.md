@@ -28,7 +28,7 @@ Invocazione canonica: `Subphase 7`
 
 ## Dipendenze e precondizioni
 
-- `Subphase 2`-`Subphase 6` completate.
+- `Subphase 2`-`Subphase 6A` completate.
 - Regole `racePhase`, highlights e fallback congelate in `Subphase 1`.
 - Read/write parity gia' disponibile per alimentare il contesto dati necessario alla route risultati.
 
@@ -85,7 +85,7 @@ Invocazione canonica: `Subphase 7`
 ## Comandi di validazione da eseguire
 
 - `dotnet test backend-csharp/FantaF1.Backend.sln -c Release`
-- `dotnet test backend-csharp/FantaF1.Backend.sln -c Release /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura`
+- `npm run test:csharp-coverage`
 - `npm run lint`
 - `npm run build`
 - `npm run test:coverage`

@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import {
+  ArrowUp,
   CalendarDays,
   Flag,
   ListChecks,
-  Menu,
   ShieldCheck,
   Save,
   Trash2,
@@ -18,7 +18,6 @@ import {
   LockKeyhole,
   Download,
   LogOut,
-  X,
 } from 'lucide-react';
 import './App.css';
 import {
@@ -31,6 +30,7 @@ import {
   genericAppTitle,
   predictionsApiUrl,
   predictionFieldOrder,
+  standingsApiUrl,
   visibleAppTitle,
 } from './constants';
 import {
@@ -55,6 +55,7 @@ import type {
   RacePhase,
   RaceWeekend,
   SessionState,
+  StandingsPayload,
   UserData,
   ViewMode,
   WeekendStateByMeetingKey,
@@ -89,6 +90,7 @@ import { splitHeroTitle } from './utils/title';
 import { WeekendStateAssembler } from './utils/weekendStateService';
 import HistoryArchivePanel from './components/HistoryArchivePanel';
 import PublicGuidePanel from './components/PublicGuidePanel';
+import PublicStandingsPanel from './components/PublicStandingsPanel';
 import SeasonAnalysisPanel from './components/SeasonAnalysisPanel';
 import WeekendLivePanel from './components/WeekendLivePanel';
 import WeekendPulseHeroCard from './components/WeekendPulseHeroCard';
@@ -231,6 +233,11 @@ function App() {
   );
   const [drivers, setDrivers] = useState<Driver[]>([]);
   const [calendar, setCalendar] = useState<RaceWeekend[]>([]);
+  const [standings, setStandings] = useState<StandingsPayload>({
+    driverStandings: [],
+    constructorStandings: [],
+    updatedAt: '',
+  });
   const [editingSession, setEditingSession] = useState<{
     record: AppData['history'][number];
     historyIndex: number;
@@ -251,7 +258,6 @@ function App() {
   const [isMobileViewport, setIsMobileViewport] = useState(() => window.matchMedia('(max-width: 767px)').matches);
   const [showInstallInstructions, setShowInstallInstructions] = useState(false);
   const [showAdminLogin, setShowAdminLogin] = useState(false);
-  const [isSectionDrawerOpen, setIsSectionDrawerOpen] = useState(false);
   const [adminPassword, setAdminPassword] = useState('');
   const [adminLoginError, setAdminLoginError] = useState('');
   const [historySearch, setHistorySearch] = useState('');
@@ -260,11 +266,10 @@ function App() {
   const [selectedRacePhase, setSelectedRacePhase] = useState<RacePhase>('open');
   const [selectedRaceHighlightsVideoUrl, setSelectedRaceHighlightsVideoUrl] = useState('');
   const [activeSectionId, setActiveSectionId] = useState('');
+  const [showBackToTop, setShowBackToTop] = useState(false);
   const selectedMeetingKeyRef = useRef(selectedMeetingKey);
   const toastTimeoutRef = useRef<number | null>(null);
   const initialHashHandledRef = useRef(false);
-  const sectionDrawerRef = useRef<HTMLDivElement | null>(null);
-  const sectionDrawerTriggerRef = useRef<HTMLButtonElement | null>(null);
 
   // Derived state (declared before effects to avoid TS errors)
   const sortedDrivers = sortDriversBySurname(drivers, driversSource.sortLocale);
@@ -375,14 +380,6 @@ function App() {
     }, 3200);
   }
 
-  function closeSectionDrawer({ restoreFocus = false } = {}) {
-    setIsSectionDrawerOpen(false);
-
-    if (restoreFocus) {
-      sectionDrawerTriggerRef.current?.focus();
-    }
-  }
-
   function navigateToSection(sectionId: string) {
     const targetElement = document.getElementById(sectionId);
     if (!targetElement) {
@@ -392,7 +389,6 @@ function App() {
     window.history.replaceState({}, '', buildHashUrl(sectionId));
     targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
     setActiveSectionId(sectionId);
-    closeSectionDrawer();
   }
 
   useEffect(() => {
@@ -456,14 +452,39 @@ function App() {
   }, []);
 
   useEffect(() => {
-    setIsSectionDrawerOpen(false);
+    // viewMode effect placeholder
   }, [viewMode]);
 
   useEffect(() => {
-    if (!isMobileViewport) {
-      setIsSectionDrawerOpen(false);
-    }
+    // isMobileViewport effect placeholder
   }, [isMobileViewport]);
+
+  useEffect(() => {
+    const heroPanel = document.querySelector('header.hero-panel');
+
+    if (typeof window.IntersectionObserver === 'function' && heroPanel) {
+      const observer = new window.IntersectionObserver(
+        ([entry]) => {
+          setShowBackToTop(!entry.isIntersecting);
+        },
+        { threshold: 0 }
+      );
+
+      observer.observe(heroPanel);
+
+      return () => {
+        observer.disconnect();
+      };
+    } else {
+      // Fallback
+      function handleScroll() {
+        setShowBackToTop(window.scrollY > 400);
+      }
+
+      window.addEventListener('scroll', handleScroll);
+      return () => window.removeEventListener('scroll', handleScroll);
+    }
+  }, []);
 
   useEffect(() => {
     let isCancelled = false;
@@ -475,11 +496,12 @@ function App() {
       const requestedHistoryUser = initialUrlSearchParams.get('historyUser');
       const requestedHistorySearch = initialUrlSearchParams.get('historySearch')?.trim() ?? '';
       setLoadingMessage(appText.shell.loadingTelemetryMessage);
-      const [sessionResult, dataResult, driversResult, calendarResult] = await Promise.allSettled([
+      const [sessionResult, dataResult, driversResult, calendarResult, standingsResult] = await Promise.allSettled([
         fetchWithRetry<SessionState>(sessionApiUrl),
         fetchWithRetry<AppData>(dataApiUrl),
         fetchWithRetry<Driver[]>(driversApiUrl),
         fetchWithRetry<RaceWeekend[]>(calendarApiUrl),
+        fetchWithRetry<StandingsPayload>(standingsApiUrl),
       ]);
 
       if (isCancelled) {
@@ -525,6 +547,15 @@ function App() {
 
       setDrivers(loadedDrivers);
       setCalendar(loadedCalendar);
+      setStandings(
+        standingsResult.status === 'fulfilled'
+          ? standingsResult.value
+          : {
+              driverStandings: [],
+              constructorStandings: [],
+              updatedAt: '',
+            },
+      );
       setSessionState(resolvedSessionState);
       setUsers(hydratedIncomingData.users);
       setHistory(hydratedIncomingData.history);
@@ -639,53 +670,6 @@ function App() {
       sectionObserver.disconnect();
     };
   }, [firstSectionId, loading, sectionNavigationItems]);
-
-  useEffect(() => {
-    if (!isSectionDrawerOpen) {
-      return;
-    }
-
-    const previousBodyOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-
-    const drawerElement = sectionDrawerRef.current;
-    const focusableElements = drawerElement
-      ? Array.from(drawerElement.querySelectorAll<HTMLButtonElement>('button:not(:disabled)'))
-      : [];
-    const firstFocusableElement = focusableElements[0];
-    const lastFocusableElement = focusableElements[focusableElements.length - 1];
-    firstFocusableElement?.focus();
-
-    function handleDrawerKeydown(event: KeyboardEvent) {
-      if (event.key === 'Escape') {
-        event.preventDefault();
-        closeSectionDrawer({ restoreFocus: true });
-        return;
-      }
-
-      if (event.key !== 'Tab' || focusableElements.length === 0) {
-        return;
-      }
-
-      if (event.shiftKey && document.activeElement === firstFocusableElement) {
-        event.preventDefault();
-        lastFocusableElement?.focus();
-        return;
-      }
-
-      if (!event.shiftKey && document.activeElement === lastFocusableElement) {
-        event.preventDefault();
-        firstFocusableElement?.focus();
-      }
-    }
-
-    document.addEventListener('keydown', handleDrawerKeydown);
-
-    return () => {
-      document.body.style.overflow = previousBodyOverflow;
-      document.removeEventListener('keydown', handleDrawerKeydown);
-    };
-  }, [isSectionDrawerOpen]);
 
   useEffect(() => {
     if (loading) {
@@ -1242,16 +1226,6 @@ function App() {
     }
   }
 
-  function renderHistoryResults(record: AppData['history'][number]) {
-    return formatText(uiText.history.resultSummaryTemplate, {
-      actualLabel: uiText.history.actualLabel,
-      first: getDriverDisplayNameById(drivers, record.results.first, uiText.history.unknownDriver),
-      second: getDriverDisplayNameById(drivers, record.results.second, uiText.history.unknownDriver),
-      third: getDriverDisplayNameById(drivers, record.results.third, uiText.history.unknownDriver),
-      pole: getDriverDisplayNameById(drivers, record.results.pole, uiText.history.unknownDriver),
-    });
-  }
-
   function formatAverageValue(value: number | null, digits = 1) {
     if (value === null) {
       return uiText.placeholders.emptyOption;
@@ -1299,17 +1273,6 @@ function App() {
     );
   }
 
-  async function handleShareCurrentView() {
-    const shareUrl = window.location.href;
-    try {
-      await navigator.clipboard.writeText(shareUrl);
-      showToastMessage(uiText.status.shareLinkCopied, 'success');
-    } catch (error) {
-      console.error(error);
-      window.alert(shareUrl);
-    }
-  }
-
   function getExpandedHistoryKey(record: AppData['history'][number], index: number) {
     return `${record.gpName}-${record.date}-${index}`;
   }
@@ -1333,6 +1296,23 @@ function App() {
     const winnerDriverId = record.userPredictions[userName]?.prediction.first ?? '';
     const winnerDriver = getDriverById(drivers, winnerDriverId);
     return winnerDriver ? formatDriverDisplayName(winnerDriver.name) : uiText.history.unknownDriver;
+  }
+
+  function getHistoryResultsPodium(record: AppData['history'][number]) {
+    return ([
+      { position: 1 as const, field: 'first' as const },
+      { position: 2 as const, field: 'second' as const },
+      { position: 3 as const, field: 'third' as const },
+    ]).map(({ position, field }) => {
+      const driver = getDriverById(drivers, record.results[field]);
+
+      return {
+        position,
+        driverName: driver ? driver.name : uiText.history.unknownDriver,
+        avatarUrl: driver?.avatarUrl ?? '',
+        color: driver?.color ?? '',
+      };
+    });
   }
 
   function renderSelectedRaceTrackMap({ compact = false } = {}) {
@@ -1492,24 +1472,24 @@ function App() {
           <p className="subtitle">{currentYear}</p>
         </div>
 
-        <div className="hero-summary-grid">
-          <section className="hero-card rules-panel interactive-surface">
-            <div className="card-heading">
-              <ShieldCheck size={18} />
-              <span>{uiText.headings.rules}</span>
-            </div>
-            <div className="rules-list">
-              {predictionFieldOrder.map((field) => (
-                <div key={`hero-rule-${field}`} className="rule-row">
-                  <span className="rule-points">
-                    +{points[field]} {uiText.pointsSuffix}
-                  </span>
-                  <span>{uiText.rules[field]}</span>
-                </div>
-              ))}
-            </div>
-          </section>
+        <nav aria-label={appText.shell.navigation.ariaLabel} className="section-nav">
+          <div className="section-nav-list">
+            {sectionNavigationItems.map((item) => (
+              <button
+                key={item.id}
+                aria-pressed={activeSectionId === item.id}
+                className={`secondary-button section-nav-button ${activeSectionId === item.id ? 'active' : ''}`.trim()}
+                onClick={() => navigateToSection(item.id)}
+                type="button"
+              >
+                {item.label}
+              </button>
+            ))}
+            {renderInstallButton()}
+          </div>
+        </nav>
 
+        <div className="hero-summary-grid">
           <section className="hero-card next-race-card interactive-surface">
             <div className="card-heading">
               <CalendarDays size={18} />
@@ -1608,7 +1588,7 @@ function App() {
             ) : null}
           </section>
 
-          <section className="hero-card interactive-surface">
+          <section className="hero-card hero-selected-race-card interactive-surface">
             <div className="card-heading">
               <Flag size={18} />
               <span>{selectedRaceRecapTitle}</span>
@@ -1647,41 +1627,6 @@ function App() {
           </section>
         </div>
       </header>
-
-      {isMobileViewport ? (
-        <div className="section-drawer-entry">
-          <button
-            ref={sectionDrawerTriggerRef}
-            aria-controls="section-drawer"
-            aria-expanded={isSectionDrawerOpen}
-            aria-label={appText.shell.navigation.openButton}
-            className="secondary-button section-drawer-trigger"
-            onClick={() => setIsSectionDrawerOpen(true)}
-            type="button"
-          >
-            <Menu size={18} />
-            {appText.shell.navigation.openButton}
-          </button>
-          {renderInstallButton()}
-        </div>
-      ) : (
-        <nav aria-label={appText.shell.navigation.ariaLabel} className="section-nav panel">
-          <div className="section-nav-list">
-            {sectionNavigationItems.map((item) => (
-              <button
-                key={item.id}
-                aria-pressed={activeSectionId === item.id}
-                className={`secondary-button section-nav-button ${activeSectionId === item.id ? 'active' : ''}`.trim()}
-                onClick={() => navigateToSection(item.id)}
-                type="button"
-              >
-                {item.label}
-              </button>
-            ))}
-          </div>
-          {renderInstallButton()}
-        </nav>
-      )}
 
       <main className="dashboard-grid">
         <section className="content-column">
@@ -1862,11 +1807,7 @@ function App() {
           <SeasonAnalysisPanel
             analyticsEmptyLabel={uiText.history.analyticsEmpty}
             emptyOptionLabel={uiText.placeholders.emptyOption}
-            isPublicView={isPublicView}
-            onShare={handleShareCurrentView}
             predictionLabels={predictionLabels}
-            selectedRaceMeetingName={selectedRace?.meetingName ?? ''}
-            selectedRaceTrackOutlineUrl={selectedRace?.trackOutlineUrl ?? ''}
             seasonAnalytics={seasonAnalytics}
           />
 
@@ -1876,6 +1817,14 @@ function App() {
             predictionLabels={predictionLabels}
             weekendComparison={weekendComparison}
           />
+
+          {isPublicView ? (
+            <PublicStandingsPanel
+              constructorStandings={standings.constructorStandings}
+              driverStandings={standings.driverStandings}
+              updatedAt={standings.updatedAt}
+            />
+          ) : null}
 
           {isPublicView ? (
             <PublicGuidePanel />
@@ -2083,56 +2032,13 @@ function App() {
             pointsSuffix={uiText.pointsSuffix}
             predictionFieldOrder={predictionFieldOrder}
             predictionLabels={predictionLabels}
-            renderHistoryResults={renderHistoryResults}
+            resolveHistoryPodium={getHistoryResultsPodium}
             unknownDriverLabel={uiText.history.unknownDriver}
             userDisplayNameForWinner={getHistoryWinnerDriverName}
             users={users}
           />
         </section>
       </main>
-
-      {isMobileViewport && isSectionDrawerOpen ? (
-        <div
-          className="section-drawer-backdrop"
-          role="presentation"
-          onClick={() => closeSectionDrawer({ restoreFocus: true })}
-        >
-          <div
-            ref={sectionDrawerRef}
-            aria-label={appText.shell.navigation.ariaLabel}
-            className="section-drawer"
-            id="section-drawer"
-            role="dialog"
-            aria-modal="true"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <div className="section-drawer-head">
-              <p className="section-drawer-title">{appText.shell.navigation.ariaLabel}</p>
-              <button
-                aria-label={appText.shell.navigation.closeButton}
-                className="secondary-button section-drawer-close"
-                onClick={() => closeSectionDrawer({ restoreFocus: true })}
-                type="button"
-              >
-                <X size={18} />
-              </button>
-            </div>
-            <nav aria-label={appText.shell.navigation.ariaLabel} className="section-drawer-nav">
-              {sectionNavigationItems.map((item) => (
-                <button
-                  key={item.id}
-                  aria-pressed={activeSectionId === item.id}
-                  className={`secondary-button section-drawer-item ${activeSectionId === item.id ? 'active' : ''}`.trim()}
-                  onClick={() => navigateToSection(item.id)}
-                  type="button"
-                >
-                  {item.label}
-                </button>
-              ))}
-            </nav>
-          </div>
-        </div>
-      ) : null}
 
       {showAdminLogin ? (
         <div className="auth-modal-backdrop" role="presentation" onClick={() => setShowAdminLogin(false)}>
@@ -2201,6 +2107,20 @@ function App() {
         <div className={`toast-shell toast-${toast.tone}`} role="status" aria-live="polite">
           {toast.message}
         </div>
+      ) : null}
+
+      {showBackToTop ? (
+        <button
+          aria-label="Torna al menu"
+          className="secondary-button back-to-top"
+          onClick={() => {
+            const navElement = document.querySelector('.section-nav');
+            navElement?.scrollIntoView({ behavior: 'smooth' });
+          }}
+          type="button"
+        >
+          <ArrowUp size={20} />
+        </button>
       ) : null}
 
       <footer className="app-footer">

@@ -7,8 +7,13 @@ vi.mock('../backend/storage.js', () => ({
   readAppData: vi.fn(() => Promise.resolve({ users: [] })),
   readCalendarCache: vi.fn(() => Promise.resolve([])),
   readDriversCache: vi.fn(() => Promise.resolve([])),
+  readStandingsCache: vi.fn(() => Promise.resolve({ driverStandings: [], constructorStandings: [], updatedAt: '' })),
   readPersistedParticipantRoster: vi.fn(() => Promise.resolve(['Adriano', 'Fabio', 'Matteo'])),
   writeAppData: vi.fn(() => Promise.resolve()),
+}));
+
+vi.mock('../backend/standings.js', () => ({
+  syncStandingsFromOfficialSource: vi.fn(() => Promise.resolve({ driverStandings: [], constructorStandings: [], updatedAt: '' })),
 }));
 
 vi.mock('../backend/auth.js', () => ({

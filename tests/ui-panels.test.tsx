@@ -1,16 +1,16 @@
 /**
  * @vitest-environment jsdom
  */
-import { fireEvent, render, screen } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import { fireEvent, render, screen, within } from '@testing-library/react';
+import { describe, expect, it } from 'vitest';
 import HistoryArchivePanel from '../src/components/HistoryArchivePanel';
+import PublicGuidePanel from '../src/components/PublicGuidePanel';
 import SeasonAnalysisPanel from '../src/components/SeasonAnalysisPanel';
 import { appText } from '../src/uiText';
 import { createEmptyPrediction } from '../src/utils/game';
 
 describe('isolated UI panels', () => {
   it('renders season analysis fallbacks when recap data is partial or missing', () => {
-    const onShare = vi.fn();
     const predictionLabels = {
       first: 'Primo',
       second: 'Secondo',
@@ -21,11 +21,7 @@ describe('isolated UI panels', () => {
       <SeasonAnalysisPanel
         analyticsEmptyLabel="Nessun dato analytics"
         emptyOptionLabel="N/D"
-        isPublicView={true}
-        onShare={onShare}
         predictionLabels={predictionLabels}
-        selectedRaceMeetingName="Australia"
-        selectedRaceTrackOutlineUrl="https://media.example.com/australia-track.webp"
         seasonAnalytics={{
           leaderName: 'Marco',
           narratives: [],
@@ -43,10 +39,12 @@ describe('isolated UI panels', () => {
           ],
           recap: {
             gpName: 'Australian Grand Prix 2099',
+            meetingName: 'Australia',
             winnerName: 'Marco',
             winnerPoints: 20,
             swingLabel: 'Gap sul secondo: 0 pt',
             decisiveField: null,
+            trackOutlineUrl: 'https://media.example.com/australia-track.webp',
           },
         }}
       />,
@@ -58,25 +56,44 @@ describe('isolated UI panels', () => {
       'https://media.example.com/australia-track.webp',
     );
 
-    fireEvent.click(screen.getByRole('button', { name: appText.panels.seasonAnalysis.shareButton }));
-    expect(onShare).toHaveBeenCalledTimes(1);
+    expect(screen.queryByRole('button', { name: /copia link vista corrente/i })).not.toBeInTheDocument();
 
     rerender(
       <SeasonAnalysisPanel
         analyticsEmptyLabel="Nessun dato analytics"
         emptyOptionLabel="N/D"
-        isPublicView={true}
-        onShare={onShare}
         predictionLabels={predictionLabels}
-        selectedRaceMeetingName="Australia"
-        selectedRaceTrackOutlineUrl=""
+        seasonAnalytics={{
+          leaderName: '',
+          narratives: [],
+          comparison: [],
+          recap: {
+            gpName: 'No Map GP',
+            meetingName: 'No Map',
+            winnerName: 'Marco',
+            winnerPoints: 10,
+            swingLabel: 'N/D',
+            decisiveField: null,
+            trackOutlineUrl: '',
+          },
+        }}
+      />
+    );
+
+    expect(screen.queryByRole('img')).not.toBeInTheDocument();
+
+    rerender(
+      <SeasonAnalysisPanel
+        analyticsEmptyLabel="Nessun dato analytics"
+        emptyOptionLabel="N/D"
+        predictionLabels={predictionLabels}
         seasonAnalytics={{
           leaderName: '',
           narratives: [],
           comparison: [],
           recap: null,
         }}
-      />,
+      />
     );
 
     expect(screen.getByText('Nessun dato analytics')).toBeInTheDocument();
@@ -124,7 +141,16 @@ describe('isolated UI panels', () => {
         third: 'Terzo',
         pole: 'Pole',
       },
-      renderHistoryResults: () => 'Recap risultati',
+      resolveHistoryPodium: () => ([
+        { position: 1 as const, driverName: '', avatarUrl: '' },
+        {
+          position: 2 as const,
+          driverName: 'Lando Norris',
+          avatarUrl:
+            'https://media.formula1.com/image/upload/c_lfill,w_64/q_auto/v1740000000/common/f1/2026/mclaren/norlan01/2026mclarennorlan01right.webp',
+        },
+        { position: 3 as const, driverName: 'Max Verstappen', avatarUrl: '' },
+      ]),
       unknownDriverLabel: 'Pilota sconosciuto',
       userDisplayNameForWinner: () => '',
       users: [{ name: 'Marco', predictions: createEmptyPrediction(), points: 0 }],
@@ -137,7 +163,20 @@ describe('isolated UI panels', () => {
       />,
     );
 
-    expect(screen.getByText('Pilota sconosciuto')).toBeInTheDocument();
+    const historyCard = screen.getByText('Australian Grand Prix 2099').closest('.history-card');
+    expect(historyCard).not.toBeNull();
+    const raceMeta = (historyCard as HTMLElement).querySelector('.history-race-meta');
+    expect(raceMeta).not.toBeNull();
+    expect(within(raceMeta as HTMLElement).getByText('Australian Grand Prix 2099')).toBeInTheDocument();
+    expect((raceMeta as HTMLElement).querySelector('.history-race-date')).toHaveTextContent('01/03/2099');
+    const podiumSlots = (historyCard as HTMLElement).querySelectorAll('.history-podium-slot.interactive-surface');
+    expect(podiumSlots).toHaveLength(3);
+    expect(screen.getAllByText('Pilota sconosciuto')).toHaveLength(2);
+    expect(screen.getByText(appText.panels.historyArchive.actualPodiumTitle)).toBeInTheDocument();
+    expect(screen.getByAltText('Lando Norris')).toHaveAttribute(
+      'src',
+      'https://media.formula1.com/image/upload/c_lfill,w_256/q_auto/v1740000000/common/f1/2026/mclaren/norlan01/2026mclarennorlan01right.webp',
+    );
     expect(
       screen.getByRole('heading', { name: appText.panels.historyArchive.title }),
     ).toBeInTheDocument();
@@ -174,5 +213,14 @@ describe('isolated UI panels', () => {
     expect(onDeleteHistoryRace).toHaveBeenCalledWith(0);
     expect(onHistoryUserFilterChange).toHaveBeenCalledWith('Marco');
     expect(onHistorySearchChange).toHaveBeenCalledWith('Australia');
+  });
+
+  it('renders the public guide with the new race strip points layout', () => {
+    render(<PublicGuidePanel />);
+
+    expect(screen.getByRole('heading', { name: appText.panels.publicGuide.title })).toBeInTheDocument();
+    expect(screen.getByLabelText(appText.panels.publicGuide.pointsLabel)).toBeInTheDocument();
+    expect(screen.getByText(/\+5 pt/i)).toBeInTheDocument();
+    expect(screen.getByText(/\+1 pt/i)).toBeInTheDocument();
   });
 });

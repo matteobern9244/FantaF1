@@ -252,6 +252,41 @@ public sealed class AppDataSanitizerTests
     }
 
     [Fact]
+    public void Sanitize_tolerates_null_history_user_prediction_entries()
+    {
+        var sanitizer = new AppDataSanitizer();
+        var result = sanitizer.Sanitize(
+            new AppDataDocument(
+                Users:
+                [
+                    new AppDataUserDocument("Player 1", null, 1),
+                    new AppDataUserDocument("Player 2", null, 2),
+                    new AppDataUserDocument("Player 3", null, 3),
+                ],
+                History:
+                [
+                    new AppDataHistoryRecordDocument(
+                        "Historic GP",
+                        "historic",
+                        "01/01/2026",
+                        null,
+                        new Dictionary<string, AppDataHistoryUserPredictionDocument>
+                        {
+                            ["Player 1"] = null!,
+                        }),
+                ],
+                GpName: null,
+                RaceResults: null,
+                SelectedMeetingKey: "imola",
+                WeekendStateByMeetingKey: null),
+            [CreateWeekendDocument("imola", "Imola", "Emilia Romagna Grand Prix", 7, "2026-05-18", "2026-05-18")],
+            new DateTimeOffset(2026, 03, 12, 10, 00, 00, TimeSpan.Zero));
+
+        Assert.Equal(string.Empty, result.History!.Single().UserPredictions!["Player 1"].Prediction!.First);
+        Assert.Equal(0, result.History.Single().UserPredictions["Player 1"].PointsEarned);
+    }
+
+    [Fact]
     public void Sanitize_uses_payload_gp_name_and_selected_meeting_key_when_the_calendar_is_empty()
     {
         var sanitizer = new AppDataSanitizer();

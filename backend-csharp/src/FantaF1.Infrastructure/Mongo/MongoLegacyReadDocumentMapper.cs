@@ -56,6 +56,14 @@ public sealed class MongoLegacyReadDocumentMapper
             ReadOptionalString(document, "highlightsLookupSource") ?? string.Empty);
     }
 
+    public StandingsDocument MapStandings(BsonDocument? document)
+    {
+        return new StandingsDocument(
+            ReadArray(document, "driverStandings", MapDriverStanding),
+            ReadArray(document, "constructorStandings", MapConstructorStanding),
+            ReadOptionalString(document, "updatedAt") ?? string.Empty);
+    }
+
     private static AppDataUserDocument MapUser(BsonValue value)
     {
         var document = value as BsonDocument;
@@ -107,6 +115,32 @@ public sealed class MongoLegacyReadDocumentMapper
         return new WeekendSessionDocument(
             ReadOptionalString(document, "name"),
             ReadOptionalString(document, "startTime"));
+    }
+
+    private static DriverStandingDocument MapDriverStanding(BsonValue value)
+    {
+        var document = value as BsonDocument;
+
+        return new DriverStandingDocument(
+            ReadOptionalInt(document, "position") ?? 0,
+            ReadOptionalString(document, "driverId") ?? string.Empty,
+            ReadOptionalString(document, "name") ?? string.Empty,
+            ReadOptionalString(document, "team") ?? string.Empty,
+            ReadOptionalInt(document, "points") ?? 0,
+            ReadOptionalString(document, "avatarUrl") ?? string.Empty,
+            ReadOptionalString(document, "color") ?? string.Empty);
+    }
+
+    private static ConstructorStandingDocument MapConstructorStanding(BsonValue value)
+    {
+        var document = value as BsonDocument;
+
+        return new ConstructorStandingDocument(
+            ReadOptionalInt(document, "position") ?? 0,
+            ReadOptionalString(document, "team") ?? string.Empty,
+            ReadOptionalInt(document, "points") ?? 0,
+            ReadOptionalString(document, "color") ?? string.Empty,
+            ReadOptionalString(document, "logoUrl") ?? string.Empty);
     }
 
     private static PredictionDocument? MapPrediction(BsonValue? value)

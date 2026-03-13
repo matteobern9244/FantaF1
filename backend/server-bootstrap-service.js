@@ -53,6 +53,7 @@ class BackgroundSyncService {
   constructor({
     syncDriversFromOfficialSource,
     syncCalendarFromOfficialSource,
+    syncStandingsFromOfficialSource,
     backendText,
     formatBackendText,
     appConfig,
@@ -60,6 +61,7 @@ class BackgroundSyncService {
     Object.assign(this, {
       syncDriversFromOfficialSource,
       syncCalendarFromOfficialSource,
+      syncStandingsFromOfficialSource,
       backendText,
       formatBackendText,
       appConfig,
@@ -89,6 +91,22 @@ class BackgroundSyncService {
       }
     } catch (error) {
       console.warn(this.backendText.sync.calendarSyncWarning, error.message);
+    }
+
+    try {
+      const standings = await this.syncStandingsFromOfficialSource();
+      if (standings.driverStandings.length === 0 || standings.constructorStandings.length === 0) {
+        console.warn(this.appConfig.uiText.backend.errors.standingsUnavailable);
+      } else {
+        console.log(
+          this.formatBackendText(this.backendText.sync.standingsSynchronizedTemplate, {
+            driversCount: standings.driverStandings.length,
+            constructorsCount: standings.constructorStandings.length,
+          }),
+        );
+      }
+    } catch (error) {
+      console.warn(this.backendText.sync.standingsSyncWarning, error.message);
     }
   }
 }

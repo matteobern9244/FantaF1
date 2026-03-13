@@ -1,8 +1,10 @@
 using FantaF1.Application.Abstractions.Persistence;
+using FantaF1.Application.Abstractions.Services;
 using FantaF1.Application.Abstractions.System;
 using FantaF1.Infrastructure.Authentication;
 using FantaF1.Infrastructure.Configuration;
 using FantaF1.Infrastructure.Mongo;
+using FantaF1.Infrastructure.Standings;
 using FantaF1.Domain.SaveValidation;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
@@ -59,7 +61,10 @@ public static class InfrastructureServiceCollectionExtensions
         services.AddSingleton<IRuntimeEnvironmentProfileResolver, ConfigurationRuntimeEnvironmentProfileResolver>();
         services.AddSingleton<IRequestIdGenerator, GuidRequestIdGenerator>();
         services.AddScoped<IDriverRepository, MongoDriverRepository>();
+        services.AddScoped<IStandingsRepository, MongoStandingsRepository>();
         services.AddScoped<IWeekendRepository, MongoWeekendRepository>();
+        services.AddSingleton<IStandingsParser, OfficialStandingsParser>();
+        services.AddHttpClient<IStandingsSourceClient, StandingsSourceClient>();
         services.AddSingleton<IClock, SystemClock>();
         services.AddSingleton<ISignedCookieService, HmacSignedCookieService>();
 

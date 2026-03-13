@@ -36,6 +36,11 @@ const appConfig = {
     ...baseConfig.calendarSource,
     seasonUrl: `${baseConfig.calendarSource.baseUrl}/${currentYear}`,
   },
+  standingsSource: {
+    ...baseConfig.standingsSource,
+    driversUrl: `${baseConfig.standingsSource.baseUrl}/${formatConfigText(baseConfig.standingsSource.driversPathTemplate, { year: currentYear })}`,
+    constructorsUrl: `${baseConfig.standingsSource.baseUrl}/${formatConfigText(baseConfig.standingsSource.constructorsPathTemplate, { year: currentYear })}`,
+  },
 };
 
 function formatConfigText(template, replacements = {}) {

@@ -74,6 +74,31 @@ const WeekendSchema = new mongoose.Schema({
   highlightsLookupSource: { type: String, default: '' },
 });
 
+const DriverStandingSchema = new mongoose.Schema({
+  position: { type: Number, required: true },
+  driverId: { type: String, default: '' },
+  name: { type: String, required: true },
+  team: { type: String, required: true },
+  points: { type: Number, required: true },
+  avatarUrl: { type: String, default: '' },
+  color: { type: String, default: '' },
+}, { _id: false });
+
+const ConstructorStandingSchema = new mongoose.Schema({
+  position: { type: Number, required: true },
+  team: { type: String, required: true },
+  points: { type: Number, required: true },
+  color: { type: String, default: '' },
+  logoUrl: { type: String, default: '' },
+}, { _id: false });
+
+const StandingsCacheSchema = new mongoose.Schema({
+  cacheKey: { type: String, required: true, unique: true, default: 'current' },
+  driverStandings: { type: [DriverStandingSchema], default: () => [] },
+  constructorStandings: { type: [ConstructorStandingSchema], default: () => [] },
+  updatedAt: { type: String, default: '' },
+}, { timestamps: true });
+
 const AppDataSchema = new mongoose.Schema({
   users: [UserSchema],
   history: [RaceResultSchema],
@@ -92,6 +117,9 @@ const AppDataSchema = new mongoose.Schema({
 export const AppData = mongoose.model('AppData', AppDataSchema);
 export const Driver = mongoose.model('Driver', DriverSchema);
 export const Weekend = mongoose.model('Weekend', WeekendSchema);
+export const StandingsCache =
+  mongoose.models.StandingsCache ||
+  mongoose.model('StandingsCache', StandingsCacheSchema);
 export const AdminCredential =
   mongoose.models.AdminCredential ||
   mongoose.model(

@@ -64,3 +64,24 @@ public sealed record WeekendDocument(
     string? HighlightsLookupCheckedAt,
     string? HighlightsLookupStatus,
     string? HighlightsLookupSource);
+
+public sealed record DriverStandingDocument(
+    int Position,
+    string DriverId,
+    string Name,
+    string Team,
+    int Points,
+    string AvatarUrl,
+    string Color);
+
+public sealed record ConstructorStandingDocument(
+    int Position,
+    string Team,
+    int Points,
+    string Color,
+    string LogoUrl);
+
+public sealed record StandingsDocument(
+    IReadOnlyList<DriverStandingDocument> DriverStandings,
+    IReadOnlyList<ConstructorStandingDocument> ConstructorStandings,
+    string UpdatedAt);

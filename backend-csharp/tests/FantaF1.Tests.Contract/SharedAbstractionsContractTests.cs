@@ -27,10 +27,14 @@ public sealed class SharedAbstractionsContractTests
             typeof(IRuntimeEnvironmentProfileResolver),
             typeof(ISaveRequestService),
             typeof(ISignedCookieService),
+            typeof(IStandingsReadService),
+            typeof(IStandingsRepository),
+            typeof(IStandingsSourceClient),
+            typeof(IStandingsSyncService),
             typeof(IWeekendRepository),
         };
 
-        Assert.Equal(16, abstractionTypes.Length);
+        Assert.Equal(20, abstractionTypes.Length);
         Assert.All(abstractionTypes, type =>
         {
             Assert.True(type.IsInterface);
@@ -45,6 +49,7 @@ public sealed class SharedAbstractionsContractTests
         Assert.Equal("FantaF1.Application.Abstractions.Persistence", typeof(IDriverRepository).Namespace);
         Assert.Equal("FantaF1.Application.Abstractions.Persistence", typeof(IWeekendRepository).Namespace);
         Assert.Equal("FantaF1.Application.Abstractions.Persistence", typeof(IAdminCredentialRepository).Namespace);
+        Assert.Equal("FantaF1.Application.Abstractions.Persistence", typeof(IStandingsRepository).Namespace);
         Assert.Equal("FantaF1.Application.Abstractions.Services", typeof(IHealthReportService).Namespace);
         Assert.Equal("FantaF1.Application.Abstractions.Services", typeof(IAppDataReadService).Namespace);
         Assert.Equal("FantaF1.Application.Abstractions.Services", typeof(IDriverReadService).Namespace);
@@ -53,6 +58,9 @@ public sealed class SharedAbstractionsContractTests
         Assert.Equal("FantaF1.Application.Abstractions.Services", typeof(IAdminSessionService).Namespace);
         Assert.Equal("FantaF1.Application.Abstractions.Services", typeof(IResultsService).Namespace);
         Assert.Equal("FantaF1.Application.Abstractions.Services", typeof(IBackgroundSyncService).Namespace);
+        Assert.Equal("FantaF1.Application.Abstractions.Services", typeof(IStandingsReadService).Namespace);
+        Assert.Equal("FantaF1.Application.Abstractions.Services", typeof(IStandingsSourceClient).Namespace);
+        Assert.Equal("FantaF1.Application.Abstractions.Services", typeof(IStandingsSyncService).Namespace);
         Assert.Equal("FantaF1.Application.Abstractions.System", typeof(IClock).Namespace);
         Assert.Equal("FantaF1.Application.Abstractions.System", typeof(IRequestIdGenerator).Namespace);
         Assert.Equal("FantaF1.Application.Abstractions.System", typeof(IRuntimeEnvironmentProfileResolver).Namespace);
@@ -119,6 +127,35 @@ public sealed class SharedAbstractionsContractTests
 
         Assert.NotNull(readOrderedCalendarAsync);
         Assert.Equal(typeof(Task<IReadOnlyList<WeekendDocument>>), readOrderedCalendarAsync.ReturnType);
+    }
+
+    [Fact]
+    public void Standings_abstractions_expose_the_subphase_six_a_contract_shape()
+    {
+        var readCurrentStandingsAsync = typeof(IStandingsRepository).GetMethod(nameof(IStandingsRepository.ReadCurrentAsync));
+        var writeCurrentStandingsAsync = typeof(IStandingsRepository).GetMethod(nameof(IStandingsRepository.WriteCurrentAsync));
+        var readStandingsAsync = typeof(IStandingsReadService).GetMethod(nameof(IStandingsReadService.ReadAsync));
+        var syncStandingsAsync = typeof(IStandingsSyncService).GetMethod(nameof(IStandingsSyncService.SyncAsync));
+        var fetchDriverStandingsHtmlAsync = typeof(IStandingsSourceClient).GetMethod(nameof(IStandingsSourceClient.FetchDriverStandingsHtmlAsync));
+        var fetchConstructorStandingsHtmlAsync = typeof(IStandingsSourceClient).GetMethod(nameof(IStandingsSourceClient.FetchConstructorStandingsHtmlAsync));
+
+        Assert.NotNull(readCurrentStandingsAsync);
+        Assert.Equal(typeof(Task<StandingsDocument>), readCurrentStandingsAsync.ReturnType);
+
+        Assert.NotNull(writeCurrentStandingsAsync);
+        Assert.Equal(typeof(Task), writeCurrentStandingsAsync.ReturnType);
+
+        Assert.NotNull(readStandingsAsync);
+        Assert.Equal(typeof(Task<StandingsDocument>), readStandingsAsync.ReturnType);
+
+        Assert.NotNull(syncStandingsAsync);
+        Assert.Equal(typeof(Task<StandingsDocument>), syncStandingsAsync.ReturnType);
+
+        Assert.NotNull(fetchDriverStandingsHtmlAsync);
+        Assert.Equal(typeof(Task<string>), fetchDriverStandingsHtmlAsync.ReturnType);
+
+        Assert.NotNull(fetchConstructorStandingsHtmlAsync);
+        Assert.Equal(typeof(Task<string>), fetchConstructorStandingsHtmlAsync.ReturnType);
     }
 
     [Fact]

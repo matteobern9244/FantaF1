@@ -25,6 +25,7 @@ Invocazione canonica: `Subphase 5`
 ## Out of scope
 
 - Write routes, demandate a `Subphase 6`.
+- `GET /api/standings`, demandata a `Subphase 6A`.
 - Results route, demandata a `Subphase 7`.
 - Bootstrap completo e static hosting same-origin, demandati a `Subphase 8`.
 - Launcher, staging e attivita' finali di governance del porting, demandati a `Subphase 9`-`Subphase 11`.
@@ -87,7 +88,7 @@ Invocazione canonica: `Subphase 5`
 ## Comandi di validazione da eseguire
 
 - `dotnet test backend-csharp/FantaF1.Backend.sln -c Release`
-- `dotnet test backend-csharp/FantaF1.Backend.sln -c Release /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura`
+- `npm run test:csharp-coverage`
 - `npm run lint`
 - `npm run build`
 - `npm run test:coverage`

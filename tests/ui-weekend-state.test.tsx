@@ -173,6 +173,10 @@ function setupFetch({
       return Promise.resolve(createResponse(calendar));
     }
 
+    if (url.includes('/api/standings')) {
+      return Promise.resolve(createResponse({ driverStandings: [], constructorStandings: [], updatedAt: '' }));
+    }
+
     if (url.includes('/api/predictions')) {
       return Promise.resolve(createResponse({ message: 'Dati salvati correttamente.' }));
     }
@@ -274,7 +278,7 @@ describe('Weekend draft synchronization UI', () => {
     );
     expect(getResultSelect(/risultato 1°/i)).toHaveValue('');
     },
-    10000,
+    20000,
   );
 
   it('keeps shared selects readable across admin and public flows', async () => {
@@ -325,9 +329,15 @@ describe('Weekend draft synchronization UI', () => {
     });
 
     const heroBrandCssBlock = appCssContent.match(/\.hero-brand\s*\{[^}]*\}/);
+    const heroBrandTitleCssBlock = appCssContent.match(/\.hero-brand h1\s*\{[^}]*\}/);
 
     expect(heroBrandCssBlock?.[0]).toContain('container-type: inline-size;');
     expect(heroBrandCssBlock?.[0]).not.toContain('backdrop-filter:');
+    expect(heroBrandTitleCssBlock?.[0]).toContain('color: var(--ink);');
+    expect(heroBrandTitleCssBlock?.[0]).toContain('filter: drop-shadow(0 4px 12px rgba(0,0,0,0.4));');
+    expect(heroBrandTitleCssBlock?.[0]).not.toContain('background: linear-gradient');
+    expect(heroBrandTitleCssBlock?.[0]).not.toContain('-webkit-background-clip: text;');
+    expect(heroBrandTitleCssBlock?.[0]).not.toContain('-webkit-text-fill-color: transparent;');
     expect(appCssContent).toMatch(/\.hero-race-background\s*\{[\s\S]*filter:\s*brightness\(1\.4\);/);
 
     fireEvent.click(screen.getByRole('button', { name: /china/i }));

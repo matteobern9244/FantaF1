@@ -4,7 +4,7 @@ Invocazione canonica: `Subphase 8`
 
 ## Scopo della subphase
 
-- Portare in C# il bootstrap server completo, la connessione Mongo, il bootstrap credenziali admin, la sync drivers/calendar con retry e cache fallback.
+- Portare in C# il bootstrap server completo, la connessione Mongo, il bootstrap credenziali admin, la sync drivers/calendar/standings con retry e cache fallback.
 - Abilitare il serving same-origin degli asset React dal backend C# come prerequisito per i browser gate integrati.
 - Garantire startup non bloccante anche in presenza di failure delle sincronizzazioni esterne.
 
@@ -19,7 +19,7 @@ Invocazione canonica: `Subphase 8`
 - Bootstrap host C# completo.
 - Connessione Mongo compatibile con il target locale del porting.
 - Bootstrap credenziali admin.
-- Background sync per drivers/calendar con retry e fallback a cache.
+- Background sync per drivers/calendar/standings con retry e fallback a cache.
 - Startup non bloccante in caso di fallimento sync.
 - Serving same-origin degli asset React dal backend C#.
 
@@ -44,7 +44,7 @@ Invocazione canonica: `Subphase 8`
 
 ## Contratti e invarianti da preservare
 
-- Lo startup non deve bloccarsi per failure di sync drivers/calendar.
+- Lo startup non deve bloccarsi per failure di sync drivers/calendar/standings.
 - Il fallback a cache deve restare disponibile.
 - Le credenziali admin devono essere bootstrapate senza mutare target non consentiti.
 - Il backend C# deve servire React e API dallo stesso origin senza alterare i contratti `/api/*`.
@@ -65,7 +65,7 @@ Invocazione canonica: `Subphase 8`
 
 1. Implementare il bootstrap host C# con connessione Mongo e gestione delle failure coerente con Node.
 2. Implementare bootstrap credenziali admin e cache bootstrap in modo idempotente.
-3. Implementare background sync drivers/calendar con retry e fallback a cache.
+3. Implementare background sync drivers/calendar/standings con retry e fallback a cache.
 4. Configurare static file serving e SPA fallback per servire il build React dallo stesso origin.
 5. Verificare che tutte le route migrate restino parity-green una volta eseguite dietro il runtime C# integrato.
 
@@ -88,7 +88,7 @@ Invocazione canonica: `Subphase 8`
 
 - `dotnet build backend-csharp/FantaF1.Backend.sln -c Release`
 - `dotnet test backend-csharp/FantaF1.Backend.sln -c Release`
-- `dotnet test backend-csharp/FantaF1.Backend.sln -c Release /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura`
+- `npm run test:csharp-coverage`
 - `npm run lint`
 - `npm run build`
 - `npm run test:coverage`

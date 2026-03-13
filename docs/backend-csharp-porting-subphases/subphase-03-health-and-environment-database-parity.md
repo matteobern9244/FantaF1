@@ -84,7 +84,7 @@ Invocazione canonica: `Subphase 3`
 
 - `dotnet build backend-csharp/FantaF1.Backend.sln -c Release`
 - `dotnet test backend-csharp/FantaF1.Backend.sln -c Release`
-- `dotnet test backend-csharp/FantaF1.Backend.sln -c Release /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura`
+- `npm run test:csharp-coverage`
 - `npm run lint`
 - `npm run build`
 - `npm run test:coverage`

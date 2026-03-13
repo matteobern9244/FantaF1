@@ -182,6 +182,50 @@ public sealed class ReadRouteEndpointTests
         Assert.Equal("Failed to read calendar", payload["error"]?.ToString());
     }
 
+    [Fact]
+    public async Task Standings_endpoint_returns_the_cached_payload()
+    {
+        await using var factory = CreateFactory(services =>
+        {
+            services.RemoveAll<IStandingsReadService>();
+            services.AddSingleton<IStandingsReadService>(new StubStandingsReadService(
+                new StandingsDocument(
+                [
+                    new DriverStandingDocument(1, "pia", "Oscar Piastri", "McLaren", 99, "https://media.example.com/pia.webp", "#FF8700"),
+                ],
+                [
+                    new ConstructorStandingDocument(1, "McLaren", 188, "#FF8700", "https://media.example.com/mclaren.webp"),
+                ],
+                "2026-03-13T10:00:00.000Z")));
+        });
+        using var client = factory.CreateClient();
+
+        var payload = await client.GetFromJsonAsync<Dictionary<string, object>>("/api/standings");
+
+        Assert.NotNull(payload);
+        Assert.Equal("2026-03-13T10:00:00.000Z", payload["updatedAt"]?.ToString());
+        Assert.True(payload.ContainsKey("driverStandings"));
+        Assert.True(payload.ContainsKey("constructorStandings"));
+    }
+
+    [Fact]
+    public async Task Standings_endpoint_returns_a_node_compatible_500_when_the_service_throws_unexpectedly()
+    {
+        await using var factory = CreateFactory(services =>
+        {
+            services.RemoveAll<IStandingsReadService>();
+            services.AddSingleton<IStandingsReadService>(new ThrowingStandingsReadService());
+        });
+        using var client = factory.CreateClient();
+
+        var response = await client.GetAsync("/api/standings");
+        var payload = await response.Content.ReadFromJsonAsync<Dictionary<string, object>>();
+
+        Assert.Equal(HttpStatusCode.InternalServerError, response.StatusCode);
+        Assert.NotNull(payload);
+        Assert.Equal("Failed to read standings", payload["error"]?.ToString());
+    }
+
     private static WebApplicationFactory<Program> CreateFactory(Action<IServiceCollection>? configureServices = null)
     {
         return new WebApplicationFactory<Program>()
@@ -308,6 +352,29 @@ public sealed class ReadRouteEndpointTests
     private sealed class ThrowingCalendarReadService : ICalendarReadService
     {
         public Task<IReadOnlyList<WeekendDocument>> ReadAllAsync(CancellationToken cancellationToken)
+        {
+            throw new InvalidOperationException("unexpected service failure");
+        }
+    }
+
+    private sealed class StubStandingsReadService : IStandingsReadService
+    {
+        private readonly StandingsDocument _document;
+
+        public StubStandingsReadService(StandingsDocument document)
+        {
+            _document = document;
+        }
+
+        public Task<StandingsDocument> ReadAsync(CancellationToken cancellationToken)
+        {
+            return Task.FromResult(_document);
+        }
+    }
+
+    private sealed class ThrowingStandingsReadService : IStandingsReadService
+    {
+        public Task<StandingsDocument> ReadAsync(CancellationToken cancellationToken)
         {
             throw new InvalidOperationException("unexpected service failure");
         }

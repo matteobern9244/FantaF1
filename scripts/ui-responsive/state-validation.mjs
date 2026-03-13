@@ -77,7 +77,6 @@ function validateState(
   {
     expectSprintBadge = false,
     expectVisibleTooltip = false,
-    expectPersistentNavigationVisible = false,
     expectInstallCtaVisible = false,
     expectedViewMode = null,
     expectedWeekendChangeFrom = null,
@@ -129,57 +128,12 @@ function validateState(
     failures.push(`Sezioni principali mancanti: ${JSON.stringify(state.mainSections)}`);
   }
 
-  if (state.viewport.width <= 767) {
-    if (!state.navigation?.mobileTriggerPresent) {
-      failures.push('Trigger menu mobile non rilevato.');
-    }
-    if (state.navigation?.mobileDrawerPresent && Number(state.navigation?.itemCount ?? 0) <= 0) {
-      failures.push('Navigazione sezioni senza voci disponibili.');
-    }
-  } else {
-    if (!state.navigation?.desktopPresent) {
-      failures.push('Navigazione sezioni desktop non rilevata.');
-    }
-
-    if (Number(state.navigation?.itemCount ?? 0) <= 0) {
-      failures.push('Navigazione sezioni senza voci disponibili.');
-    }
+  if (!state.navigation?.present) {
+    failures.push('Navigazione sezioni non rilevata.');
   }
 
-  if (expectPersistentNavigationVisible) {
-    if (state.viewport.width <= 767) {
-      const mobileTriggerAnchor = state.navigation?.mobileEntryAnchor ?? state.navigation?.mobileTriggerAnchor;
-
-      if (!mobileTriggerAnchor?.present) {
-        failures.push('Trigger menu mobile scrollato non rilevato.');
-      } else {
-        if (!['sticky', 'fixed'].includes(mobileTriggerAnchor.position)) {
-          failures.push('Trigger menu mobile scrollato non usa un ancoraggio sticky o fixed.');
-        }
-
-        if (mobileTriggerAnchor.top < -1 || mobileTriggerAnchor.bottom > (state.viewport?.height ?? 0) + 1) {
-          failures.push('Trigger menu mobile scrollato non resta visibile in viewport.');
-        }
-      }
-    } else {
-      const desktopAnchor = state.navigation?.desktopAnchor;
-
-      if (!desktopAnchor?.present) {
-        failures.push('Navigazione desktop scrollata non rilevata.');
-      } else {
-        if (!['sticky', 'fixed'].includes(desktopAnchor.position)) {
-          failures.push('Navigazione desktop scrollata non usa un ancoraggio sticky o fixed.');
-        }
-
-        if (desktopAnchor.top < -1 || desktopAnchor.bottom > (state.viewport?.height ?? 0) + 1) {
-          failures.push('Navigazione desktop scrollata non resta visibile in viewport.');
-        }
-      }
-    }
-
-    if (state.navigation?.backToTopPresent) {
-      failures.push('Scorciatoia torna-su ancora presente nello scenario scrollato.');
-    }
+  if (Number(state.navigation?.itemCount ?? 0) <= 0) {
+    failures.push('Navigazione sezioni senza voci disponibili.');
   }
 
   if (expectInstallCtaVisible) {
@@ -258,6 +212,16 @@ function validateState(
 
     if (isTransparentColor(details.backgroundColor)) {
       failures.push(`${label} con sfondo trasparente o non definito: ${JSON.stringify(details)}`);
+    }
+
+    if (state.viewport.width <= 767) {
+      if (details.appearance !== 'auto' && details.appearance !== 'menulist') {
+        failures.push(`${label} non usa appearance nativa su mobile: ${details.appearance}`);
+      }
+    } else {
+      if (details.appearance !== 'none') {
+        failures.push(`${label} non usa appearance: none su desktop: ${details.appearance}`);
+      }
     }
   }
 

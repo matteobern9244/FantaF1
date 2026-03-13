@@ -76,6 +76,10 @@ public sealed class ArchitectureAndDependencyInjectionTests
         Assert.NotNull(serviceProvider.GetRequiredService<IResultsService>());
         Assert.NotNull(serviceProvider.GetRequiredService<IRuntimeEnvironmentProfileResolver>());
         Assert.NotNull(serviceProvider.GetRequiredService<ISaveRequestService>());
+        Assert.NotNull(serviceProvider.GetRequiredService<IStandingsReadService>());
+        Assert.NotNull(serviceProvider.GetRequiredService<IStandingsRepository>());
+        Assert.NotNull(serviceProvider.GetRequiredService<IStandingsSourceClient>());
+        Assert.NotNull(serviceProvider.GetRequiredService<IStandingsSyncService>());
         Assert.NotNull(serviceProvider.GetRequiredService<IWeekendRepository>());
 
         var clock = serviceProvider.GetRequiredService<IClock>();
