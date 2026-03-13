@@ -2,6 +2,13 @@
 
 Invocazione canonica: `Subphase 7`
 
+## Stato verificato di chiusura
+
+- `GET /api/results/:meetingKey` e' portata in C# con payload flat Node-compatible.
+- `racePhase`, parsing risultati, scelta `qualifying` vs `sprint-results`, cache TTL, highlights `found`/`missing`, fallback a highlight persistiti e `500 { error, details }` sono parity-green.
+- La scrittura dei metadati highlights resta limitata al documento legacy `weekends`.
+- Il runtime autorevole per gli utenti resta Node; nessuna attivita' di `Subphase 8+` e' stata anticipata.
+
 ## Scopo della subphase
 
 - Portare in C# `GET /api/results/:meetingKey`.
@@ -79,7 +86,7 @@ Invocazione canonica: `Subphase 7`
 
 - Desktop admin/public in sviluppo: verificare recap gara, stato risultati e CTA highlight contro il backend C#.
 - Mobile admin/public in sviluppo: stessa verifica del desktop.
-- Produzione-like locale: eseguire smoke locale se il frontend puo' raggiungere il backend C# in modalita' `Staging`.
+- Produzione-like locale: smoke opzionale solo se il frontend puo' raggiungere il backend C# senza anticipare `Subphase 8`; il browser gate riusabile resta formalmente demandato a `Subphase 9`.
 - Staging: non applicabile finche' non esiste il servizio staging reale.
 
 ## Comandi di validazione da eseguire
@@ -89,6 +96,7 @@ Invocazione canonica: `Subphase 7`
 - `npm run lint`
 - `npm run build`
 - `npm run test:coverage`
+- `npm run test:ui-responsive`
 
 ## Criteri di completamento
 

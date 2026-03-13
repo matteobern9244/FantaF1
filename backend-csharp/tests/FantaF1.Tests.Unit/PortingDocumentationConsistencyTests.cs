@@ -36,7 +36,7 @@ public sealed class PortingDocumentationConsistencyTests
     }
 
     [Fact]
-    public void Canonical_plan_keeps_production_like_browser_gates_owned_by_subphase_nine_and_marks_subphase_six_a_completed_before_subphase_seven()
+    public void Canonical_plan_keeps_production_like_browser_gates_owned_by_subphase_nine_and_marks_subphase_seven_completed()
     {
         var canonicalPlan = ReadRepositoryFile("docs", "backend-csharp-porting-plan.md");
         var subphaseFourPlan = ReadRepositoryFile(
@@ -53,7 +53,8 @@ public sealed class PortingDocumentationConsistencyTests
         Assert.Contains("| `Subphase 5` | `completed` |", canonicalPlan, StringComparison.Ordinal);
         Assert.Contains("| `Subphase 6` | `completed` |", canonicalPlan, StringComparison.Ordinal);
         Assert.Contains("| `Subphase 6A` | `completed` |", canonicalPlan, StringComparison.Ordinal);
-        Assert.Contains("| `Subphase 7` | `pending` |", canonicalPlan, StringComparison.Ordinal);
+        Assert.Contains("| `Subphase 7` | `completed` |", canonicalPlan, StringComparison.Ordinal);
+        Assert.Contains("Wait for explicit user authorization before starting `Subphase 8`.", canonicalPlan, StringComparison.Ordinal);
         Assert.Contains(
             "| Canonical launcher and shared verification scripts, including local development and production-like browser gate reuse, and the ban on implicit `fantaf1_dev` fallback | `Subphase 9` |",
             canonicalPlan,
@@ -90,7 +91,7 @@ public sealed class PortingDocumentationConsistencyTests
             canonicalPlan,
             StringComparison.Ordinal);
         Assert.Contains(
-            "| `Subphase 7` | `pending` |",
+            "| `Subphase 7` | `completed` |",
             canonicalPlan,
             StringComparison.Ordinal);
         Assert.Contains(
@@ -130,6 +131,10 @@ public sealed class PortingDocumentationConsistencyTests
             canonicalPlan,
             StringComparison.Ordinal);
         Assert.Contains(
+            "| Results route `GET /api/results/:meetingKey`, including `racePhase`, highlights and fallback behavior | `Subphase 7` |",
+            canonicalPlan,
+            StringComparison.Ordinal);
+        Assert.Contains(
             "| Standings route `GET /api/standings`, standings cache, official-source parsing, and reusable standings sync capability | `Subphase 6A` |",
             canonicalPlan,
             StringComparison.Ordinal);
@@ -144,6 +149,23 @@ public sealed class PortingDocumentationConsistencyTests
         Assert.Contains("- Portare in C# la capability riusabile di sync standings con fallback a cache.", subphaseSixAPlan, StringComparison.Ordinal);
         Assert.Contains("`npm run test:csharp-coverage`", canonicalPlan, StringComparison.Ordinal);
         Assert.Contains("`npm run test:csharp-coverage`", subphaseSixAPlan, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Canonical_plan_and_subphase_seven_doc_record_the_results_route_slice_as_completed()
+    {
+        var canonicalPlan = ReadRepositoryFile("docs", "backend-csharp-porting-plan.md");
+        var subphaseSevenPlan = ReadRepositoryFile(
+            "docs",
+            "backend-csharp-porting-subphases",
+            "subphase-07-results-route-race-phase-and-highlights.md");
+
+        Assert.Contains("| `Subphase 7` | `completed` |", canonicalPlan, StringComparison.Ordinal);
+        Assert.Contains("Invocazione canonica: `Subphase 7`", subphaseSevenPlan, StringComparison.Ordinal);
+        Assert.Contains("## Stato verificato di chiusura", subphaseSevenPlan, StringComparison.Ordinal);
+        Assert.Contains("- `GET /api/results/:meetingKey` e' portata in C# con payload flat Node-compatible.", subphaseSevenPlan, StringComparison.Ordinal);
+        Assert.Contains("- `npm run test:ui-responsive`", subphaseSevenPlan, StringComparison.Ordinal);
+        Assert.Contains("il browser gate riusabile resta formalmente demandato a `Subphase 9`", subphaseSevenPlan, StringComparison.Ordinal);
     }
 
     [Fact]

@@ -22,8 +22,10 @@ public sealed class SharedAbstractionsContractTests
             typeof(IDriverRepository),
             typeof(IDriverReadService),
             typeof(IHealthReportService),
+            typeof(IRaceHighlightsLookupService),
             typeof(IRequestIdGenerator),
             typeof(IResultsService),
+            typeof(IResultsSourceClient),
             typeof(IRuntimeEnvironmentProfileResolver),
             typeof(ISaveRequestService),
             typeof(ISignedCookieService),
@@ -34,7 +36,7 @@ public sealed class SharedAbstractionsContractTests
             typeof(IWeekendRepository),
         };
 
-        Assert.Equal(20, abstractionTypes.Length);
+        Assert.Equal(22, abstractionTypes.Length);
         Assert.All(abstractionTypes, type =>
         {
             Assert.True(type.IsInterface);
@@ -54,9 +56,11 @@ public sealed class SharedAbstractionsContractTests
         Assert.Equal("FantaF1.Application.Abstractions.Services", typeof(IAppDataReadService).Namespace);
         Assert.Equal("FantaF1.Application.Abstractions.Services", typeof(IDriverReadService).Namespace);
         Assert.Equal("FantaF1.Application.Abstractions.Services", typeof(ICalendarReadService).Namespace);
+        Assert.Equal("FantaF1.Application.Abstractions.Services", typeof(IRaceHighlightsLookupService).Namespace);
         Assert.Equal("FantaF1.Application.Abstractions.Services", typeof(ISaveRequestService).Namespace);
         Assert.Equal("FantaF1.Application.Abstractions.Services", typeof(IAdminSessionService).Namespace);
         Assert.Equal("FantaF1.Application.Abstractions.Services", typeof(IResultsService).Namespace);
+        Assert.Equal("FantaF1.Application.Abstractions.Services", typeof(IResultsSourceClient).Namespace);
         Assert.Equal("FantaF1.Application.Abstractions.Services", typeof(IBackgroundSyncService).Namespace);
         Assert.Equal("FantaF1.Application.Abstractions.Services", typeof(IStandingsReadService).Namespace);
         Assert.Equal("FantaF1.Application.Abstractions.Services", typeof(IStandingsSourceClient).Namespace);
@@ -100,6 +104,7 @@ public sealed class SharedAbstractionsContractTests
         var writeAsync = typeof(IAppDataRepository).GetMethod(nameof(IAppDataRepository.WriteAsync));
         var readDriversAsync = typeof(IDriverRepository).GetMethod(nameof(IDriverRepository.ReadAllAsync));
         var readCalendarAsync = typeof(IWeekendRepository).GetMethod(nameof(IWeekendRepository.ReadAllAsync));
+        var writeHighlightsLookupAsync = typeof(IWeekendRepository).GetMethod(nameof(IWeekendRepository.WriteHighlightsLookupAsync));
         var readAppDataAsync = typeof(IAppDataReadService).GetMethod(nameof(IAppDataReadService.ReadAsync));
         var readOrderedDriversAsync = typeof(IDriverReadService).GetMethod(nameof(IDriverReadService.ReadAllAsync));
         var readOrderedCalendarAsync = typeof(ICalendarReadService).GetMethod(nameof(ICalendarReadService.ReadAllAsync));
@@ -118,6 +123,9 @@ public sealed class SharedAbstractionsContractTests
 
         Assert.NotNull(readCalendarAsync);
         Assert.Equal(typeof(Task<IReadOnlyList<WeekendDocument>>), readCalendarAsync.ReturnType);
+
+        Assert.NotNull(writeHighlightsLookupAsync);
+        Assert.Equal(typeof(Task), writeHighlightsLookupAsync.ReturnType);
 
         Assert.NotNull(readAppDataAsync);
         Assert.Equal(typeof(Task<AppDataDocument>), readAppDataAsync.ReturnType);
@@ -156,6 +164,27 @@ public sealed class SharedAbstractionsContractTests
 
         Assert.NotNull(fetchConstructorStandingsHtmlAsync);
         Assert.Equal(typeof(Task<string>), fetchConstructorStandingsHtmlAsync.ReturnType);
+    }
+
+    [Fact]
+    public void Results_abstractions_expose_the_subphase_seven_contract_shape()
+    {
+        var readResultsAsync = typeof(IResultsService).GetMethod(nameof(IResultsService.ReadAsync));
+        var fetchResultsHtmlAsync = typeof(IResultsSourceClient).GetMethod(nameof(IResultsSourceClient.FetchHtmlAsync));
+        var shouldLookup = typeof(IRaceHighlightsLookupService).GetMethod(nameof(IRaceHighlightsLookupService.ShouldLookup));
+        var resolveLookupAsync = typeof(IRaceHighlightsLookupService).GetMethod(nameof(IRaceHighlightsLookupService.ResolveAsync));
+
+        Assert.NotNull(readResultsAsync);
+        Assert.Equal(typeof(Task<OfficialResultsDocument>), readResultsAsync.ReturnType);
+
+        Assert.NotNull(fetchResultsHtmlAsync);
+        Assert.Equal(typeof(Task<string>), fetchResultsHtmlAsync.ReturnType);
+
+        Assert.NotNull(shouldLookup);
+        Assert.Equal(typeof(bool), shouldLookup.ReturnType);
+
+        Assert.NotNull(resolveLookupAsync);
+        Assert.Equal(typeof(Task<HighlightsLookupDocument>), resolveLookupAsync.ReturnType);
     }
 
     [Fact]

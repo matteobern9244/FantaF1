@@ -815,6 +815,11 @@ public sealed class SaveRequestServiceTests
 
             return Task.FromResult(_weekends);
         }
+
+        public Task WriteHighlightsLookupAsync(string meetingKey, HighlightsLookupDocument lookup, CancellationToken cancellationToken)
+        {
+            throw new NotSupportedException();
+        }
     }
 
     private sealed class StubClock : IClock

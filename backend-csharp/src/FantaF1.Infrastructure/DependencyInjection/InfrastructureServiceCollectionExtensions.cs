@@ -4,6 +4,7 @@ using FantaF1.Application.Abstractions.System;
 using FantaF1.Infrastructure.Authentication;
 using FantaF1.Infrastructure.Configuration;
 using FantaF1.Infrastructure.Mongo;
+using FantaF1.Infrastructure.Results;
 using FantaF1.Infrastructure.Standings;
 using FantaF1.Domain.SaveValidation;
 using Microsoft.Extensions.DependencyInjection;
@@ -61,6 +62,8 @@ public static class InfrastructureServiceCollectionExtensions
         services.AddSingleton<IRuntimeEnvironmentProfileResolver, ConfigurationRuntimeEnvironmentProfileResolver>();
         services.AddSingleton<IRequestIdGenerator, GuidRequestIdGenerator>();
         services.AddScoped<IDriverRepository, MongoDriverRepository>();
+        services.AddHttpClient<IRaceHighlightsLookupService, RaceHighlightsLookupService>();
+        services.AddHttpClient<IResultsSourceClient, ResultsSourceClient>();
         services.AddScoped<IStandingsRepository, MongoStandingsRepository>();
         services.AddScoped<IWeekendRepository, MongoWeekendRepository>();
         services.AddSingleton<IStandingsParser, OfficialStandingsParser>();

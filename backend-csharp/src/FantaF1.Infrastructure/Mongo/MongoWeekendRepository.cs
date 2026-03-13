@@ -27,4 +27,21 @@ public sealed class MongoWeekendRepository : IWeekendRepository
 
         return documents.Select(_mapper.MapWeekend).ToArray();
     }
+
+    public async Task WriteHighlightsLookupAsync(string meetingKey, HighlightsLookupDocument lookup, CancellationToken cancellationToken)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(meetingKey);
+        ArgumentNullException.ThrowIfNull(lookup);
+
+        var updateDefinition = Builders<BsonDocument>.Update
+            .Set("highlightsVideoUrl", lookup.HighlightsVideoUrl ?? string.Empty)
+            .Set("highlightsLookupCheckedAt", lookup.HighlightsLookupCheckedAt ?? string.Empty)
+            .Set("highlightsLookupStatus", lookup.HighlightsLookupStatus ?? string.Empty)
+            .Set("highlightsLookupSource", lookup.HighlightsLookupSource ?? string.Empty);
+
+        await _collection.UpdateOneAsync(
+            Builders<BsonDocument>.Filter.Eq("meetingKey", meetingKey),
+            updateDefinition,
+            cancellationToken: cancellationToken);
+    }
 }

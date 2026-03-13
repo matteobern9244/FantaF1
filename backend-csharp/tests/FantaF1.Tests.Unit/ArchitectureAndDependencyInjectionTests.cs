@@ -8,6 +8,7 @@ using FantaF1.Domain;
 using FantaF1.Infrastructure.Authentication;
 using FantaF1.Infrastructure;
 using FantaF1.Infrastructure.DependencyInjection;
+using FantaF1.Infrastructure.Results;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
@@ -40,7 +41,7 @@ public sealed class ArchitectureAndDependencyInjectionTests
     }
 
     [Fact]
-    public void Application_and_infrastructure_registrations_resolve_all_subphase_four_contracts()
+    public void Application_and_infrastructure_registrations_resolve_all_subphase_seven_contracts()
     {
         var services = new ServiceCollection();
         var configuration = new ConfigurationBuilder()
@@ -72,8 +73,10 @@ public sealed class ArchitectureAndDependencyInjectionTests
         Assert.NotNull(serviceProvider.GetRequiredService<IDriverRepository>());
         Assert.NotNull(serviceProvider.GetRequiredService<IDriverReadService>());
         Assert.NotNull(serviceProvider.GetRequiredService<IHealthReportService>());
+        Assert.NotNull(serviceProvider.GetRequiredService<IRaceHighlightsLookupService>());
         Assert.NotNull(serviceProvider.GetRequiredService<IRequestIdGenerator>());
         Assert.NotNull(serviceProvider.GetRequiredService<IResultsService>());
+        Assert.NotNull(serviceProvider.GetRequiredService<IResultsSourceClient>());
         Assert.NotNull(serviceProvider.GetRequiredService<IRuntimeEnvironmentProfileResolver>());
         Assert.NotNull(serviceProvider.GetRequiredService<ISaveRequestService>());
         Assert.NotNull(serviceProvider.GetRequiredService<IStandingsReadService>());
@@ -94,6 +97,9 @@ public sealed class ArchitectureAndDependencyInjectionTests
 
         Assert.IsType<AdminSessionService>(serviceProvider.GetRequiredService<IAdminSessionService>());
         Assert.IsType<ContractAdminCredentialRepository>(serviceProvider.GetRequiredService<IAdminCredentialRepository>());
+        Assert.IsType<RaceHighlightsLookupService>(serviceProvider.GetRequiredService<IRaceHighlightsLookupService>());
+        Assert.IsType<ResultsService>(serviceProvider.GetRequiredService<IResultsService>());
+        Assert.IsType<ResultsSourceClient>(serviceProvider.GetRequiredService<IResultsSourceClient>());
         Assert.IsType<SaveRequestService>(serviceProvider.GetRequiredService<ISaveRequestService>());
         Assert.NotNull(serviceProvider.GetRequiredService<NodeCompatibleScryptPasswordHasher>());
         Assert.IsType<HmacSignedCookieService>(signedCookieService);

@@ -217,10 +217,81 @@ public sealed class MongoWriteRepositoryTests
         await Assert.ThrowsAsync<ArgumentNullException>(() => repository.WriteAsync(null!, CancellationToken.None));
     }
 
+    [Fact]
+    public async Task Mongo_weekend_repository_writes_only_the_legacy_highlights_lookup_fields()
+    {
+        var harness = CreateDatabase(new Dictionary<string, IReadOnlyList<BsonDocument>>
+        {
+            [MongoCollectionNames.Weekends] =
+            [
+                new BsonDocument
+                {
+                    ["meetingKey"] = "race-1",
+                    ["meetingName"] = "Race 1",
+                    ["roundNumber"] = 1,
+                },
+            ],
+        });
+        var repository = new MongoWeekendRepository(harness.Database, new MongoLegacyReadDocumentMapper());
+
+        await repository.WriteHighlightsLookupAsync(
+            "race-1",
+            new HighlightsLookupDocument(
+                "https://www.youtube.com/watch?v=skyf1-finished",
+                "2026-03-01T15:00:00.000Z",
+                "found",
+                "feed"),
+            CancellationToken.None);
+
+        Assert.NotNull(harness.RenderedUpdate);
+        Assert.Equal("https://www.youtube.com/watch?v=skyf1-finished", harness.RenderedUpdate!["$set"]["highlightsVideoUrl"].AsString);
+        Assert.Equal("2026-03-01T15:00:00.000Z", harness.RenderedUpdate["$set"]["highlightsLookupCheckedAt"].AsString);
+        Assert.Equal("found", harness.RenderedUpdate["$set"]["highlightsLookupStatus"].AsString);
+        Assert.Equal("feed", harness.RenderedUpdate["$set"]["highlightsLookupSource"].AsString);
+    }
+
+    [Fact]
+    public async Task Mongo_weekend_repository_write_rejects_invalid_arguments()
+    {
+        var harness = CreateDatabase(new Dictionary<string, IReadOnlyList<BsonDocument>>
+        {
+            [MongoCollectionNames.Weekends] = [],
+        });
+        var repository = new MongoWeekendRepository(harness.Database, new MongoLegacyReadDocumentMapper());
+
+        await Assert.ThrowsAsync<ArgumentException>(() => repository.WriteHighlightsLookupAsync("", new HighlightsLookupDocument("", "", "", ""), CancellationToken.None));
+        await Assert.ThrowsAsync<ArgumentNullException>(() => repository.WriteHighlightsLookupAsync("race-1", null!, CancellationToken.None));
+    }
+
+    [Fact]
+    public async Task Mongo_weekend_repository_converts_null_highlights_fields_to_empty_strings()
+    {
+        var harness = CreateDatabase(new Dictionary<string, IReadOnlyList<BsonDocument>>
+        {
+            [MongoCollectionNames.Weekends] =
+            [
+                new BsonDocument { ["meetingKey"] = "race-1", ["roundNumber"] = 1 },
+            ],
+        });
+        var repository = new MongoWeekendRepository(harness.Database, new MongoLegacyReadDocumentMapper());
+
+        await repository.WriteHighlightsLookupAsync(
+            "race-1",
+            new HighlightsLookupDocument(null!, null!, null!, null!),
+            CancellationToken.None);
+
+        Assert.NotNull(harness.RenderedUpdate);
+        Assert.Equal(string.Empty, harness.RenderedUpdate!["$set"]["highlightsVideoUrl"].AsString);
+        Assert.Equal(string.Empty, harness.RenderedUpdate["$set"]["highlightsLookupCheckedAt"].AsString);
+        Assert.Equal(string.Empty, harness.RenderedUpdate["$set"]["highlightsLookupStatus"].AsString);
+        Assert.Equal(string.Empty, harness.RenderedUpdate["$set"]["highlightsLookupSource"].AsString);
+    }
+
     private static MongoDatabaseHarness CreateDatabase(IReadOnlyDictionary<string, IReadOnlyList<BsonDocument>> documentsByCollection)
     {
         var requestedCollectionNames = new List<string>();
         BsonDocument? replacedDocument = null;
+        BsonDocument? renderedUpdate = null;
         IMongoDatabase? database = null;
         database = ProxyFactory<IMongoDatabase>.Create((method, args) =>
         {
@@ -232,7 +303,7 @@ public sealed class MongoWriteRepositoryTests
                     ? value
                     : [];
 
-                return CreateCollection(database!, collectionName, documents, document => replacedDocument = document);
+                return CreateCollection(database!, collectionName, documents, document => replacedDocument = document, update => renderedUpdate = update);
             }
 
             if (method.Name == "get_DatabaseNamespace")
@@ -243,7 +314,7 @@ public sealed class MongoWriteRepositoryTests
             throw new NotSupportedException($"Unexpected IMongoDatabase call: {method.Name}");
         });
 
-        return new MongoDatabaseHarness(database, requestedCollectionNames, () => replacedDocument);
+        return new MongoDatabaseHarness(database, requestedCollectionNames, () => replacedDocument, () => renderedUpdate);
     }
 
     private static MongoDatabaseHarness CreateThrowingDatabase()
@@ -292,14 +363,15 @@ public sealed class MongoWriteRepositoryTests
             throw new NotSupportedException($"Unexpected IMongoDatabase call: {method.Name}");
         });
 
-        return new MongoDatabaseHarness(database, [], () => null);
+        return new MongoDatabaseHarness(database, [], () => null, () => null);
     }
 
     private static IMongoCollection<BsonDocument> CreateCollection(
         IMongoDatabase database,
         string collectionName,
         IReadOnlyList<BsonDocument> documents,
-        Action<BsonDocument> captureReplace)
+        Action<BsonDocument> captureReplace,
+        Action<BsonDocument> captureUpdate)
     {
         return ProxyFactory<IMongoCollection<BsonDocument>>.Create((method, args) =>
         {
@@ -346,6 +418,18 @@ public sealed class MongoWriteRepositoryTests
             {
                 captureReplace((BsonDocument)args![0]!);
                 return Task.CompletedTask;
+            }
+
+            if (method.Name == nameof(IMongoCollection<BsonDocument>.UpdateOneAsync))
+            {
+                var updateDefinition = (UpdateDefinition<BsonDocument>)args![1]!;
+                captureUpdate(updateDefinition.Render(new RenderArgs<BsonDocument>(
+                    BsonDocumentSerializer.Instance,
+                    BsonSerializer.SerializerRegistry)).AsBsonDocument);
+
+                return CreateCompletedTask(
+                    method.ReturnType,
+                    new TestUpdateResult());
             }
 
             throw new NotSupportedException($"Unexpected IMongoCollection call: {method.Name}");
@@ -416,9 +500,12 @@ public sealed class MongoWriteRepositoryTests
     private sealed record MongoDatabaseHarness(
         IMongoDatabase Database,
         List<string> RequestedCollectionNames,
-        Func<BsonDocument?> ReplacedDocumentAccessor)
+        Func<BsonDocument?> ReplacedDocumentAccessor,
+        Func<BsonDocument?> RenderedUpdateAccessor)
     {
         public BsonDocument? ReplacedDocument => ReplacedDocumentAccessor();
+
+        public BsonDocument? RenderedUpdate => RenderedUpdateAccessor();
     }
 
     private sealed class StaticClock : FantaF1.Application.Abstractions.System.IClock
@@ -429,6 +516,19 @@ public sealed class MongoWriteRepositoryTests
         }
 
         public DateTimeOffset UtcNow { get; }
+    }
+
+    private sealed class TestUpdateResult : UpdateResult
+    {
+        public override bool IsAcknowledged => true;
+
+        public override bool IsModifiedCountAvailable => true;
+
+        public override long MatchedCount => 1;
+
+        public override long ModifiedCount => 1;
+
+        public override BsonValue? UpsertedId => null;
     }
 
     private sealed class SingleBatchAsyncCursor<T> : IAsyncCursor<T>

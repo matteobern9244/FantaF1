@@ -152,5 +152,10 @@ public sealed class DriverAndCalendarReadServiceTests
 
             return Task.FromResult(_documents);
         }
+
+        public Task WriteHighlightsLookupAsync(string meetingKey, HighlightsLookupDocument lookup, CancellationToken cancellationToken)
+        {
+            throw new NotSupportedException();
+        }
     }
 }

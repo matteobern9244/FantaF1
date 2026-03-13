@@ -236,6 +236,11 @@ public sealed class AppDataReadServiceTests
 
             return Task.FromResult(_documents);
         }
+
+        public Task WriteHighlightsLookupAsync(string meetingKey, HighlightsLookupDocument lookup, CancellationToken cancellationToken)
+        {
+            throw new NotSupportedException();
+        }
     }
 
     private sealed class StubClock : IClock

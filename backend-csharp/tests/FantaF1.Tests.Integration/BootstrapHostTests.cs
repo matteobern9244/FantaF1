@@ -76,7 +76,7 @@ public sealed class BootstrapHostTests : IClassFixture<WebApplicationFactory<Pro
             .Where(endpoint => endpoint.Action is not null)
             .ToArray();
 
-        Assert.Equal(11, controllerEndpoints.Length);
+        Assert.Equal(12, controllerEndpoints.Length);
         Assert.Contains(controllerEndpoints, endpoint => endpoint.Route.Length == 0);
         Assert.Equal(
             2,
@@ -84,6 +84,7 @@ public sealed class BootstrapHostTests : IClassFixture<WebApplicationFactory<Pro
         Assert.Contains(controllerEndpoints, endpoint => string.Equals(endpoint.Route, "api/predictions", StringComparison.Ordinal));
         Assert.Contains(controllerEndpoints, endpoint => string.Equals(endpoint.Route, "api/drivers", StringComparison.Ordinal));
         Assert.Contains(controllerEndpoints, endpoint => string.Equals(endpoint.Route, "api/calendar", StringComparison.Ordinal));
+        Assert.Contains(controllerEndpoints, endpoint => string.Equals(endpoint.Route, "api/results/{meetingKey}", StringComparison.Ordinal));
         Assert.Contains(controllerEndpoints, endpoint => string.Equals(endpoint.Route, "api/standings", StringComparison.Ordinal));
         Assert.Contains(controllerEndpoints, endpoint => string.Equals(endpoint.Route, "api/health", StringComparison.Ordinal));
         Assert.Contains(controllerEndpoints, endpoint => string.Equals(endpoint.Route, "api/session", StringComparison.Ordinal));

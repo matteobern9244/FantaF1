@@ -226,6 +226,53 @@ public sealed class ReadRouteEndpointTests
         Assert.Equal("Failed to read standings", payload["error"]?.ToString());
     }
 
+    [Fact]
+    public async Task Results_endpoint_returns_the_flat_node_compatible_payload()
+    {
+        await using var factory = CreateFactory(services =>
+        {
+            services.RemoveAll<IResultsService>();
+            services.AddSingleton<IResultsService>(new StubResultsService(
+                new OfficialResultsDocument(
+                    "nor",
+                    "ver",
+                    "lec",
+                    "pia",
+                    "finished",
+                    "https://www.youtube.com/watch?v=skyf1-finished")));
+        });
+        using var client = factory.CreateClient();
+
+        var payload = await client.GetFromJsonAsync<Dictionary<string, object>>("/api/results/race-1");
+
+        Assert.NotNull(payload);
+        Assert.Equal("nor", payload["first"]?.ToString());
+        Assert.Equal("ver", payload["second"]?.ToString());
+        Assert.Equal("lec", payload["third"]?.ToString());
+        Assert.Equal("pia", payload["pole"]?.ToString());
+        Assert.Equal("finished", payload["racePhase"]?.ToString());
+        Assert.Equal("https://www.youtube.com/watch?v=skyf1-finished", payload["highlightsVideoUrl"]?.ToString());
+    }
+
+    [Fact]
+    public async Task Results_endpoint_returns_a_node_compatible_500_with_details_when_the_service_throws()
+    {
+        await using var factory = CreateFactory(services =>
+        {
+            services.RemoveAll<IResultsService>();
+            services.AddSingleton<IResultsService>(new ThrowingResultsService());
+        });
+        using var client = factory.CreateClient();
+
+        var response = await client.GetAsync("/api/results/race-1");
+        var payload = await response.Content.ReadFromJsonAsync<Dictionary<string, object>>();
+
+        Assert.Equal(HttpStatusCode.InternalServerError, response.StatusCode);
+        Assert.NotNull(payload);
+        Assert.Equal("Failed to fetch results", payload["error"]?.ToString());
+        Assert.Equal("unexpected service failure", payload["details"]?.ToString());
+    }
+
     private static WebApplicationFactory<Program> CreateFactory(Action<IServiceCollection>? configureServices = null)
     {
         return new WebApplicationFactory<Program>()
@@ -321,6 +368,11 @@ public sealed class ReadRouteEndpointTests
 
             return Task.FromResult(_documents);
         }
+
+        public Task WriteHighlightsLookupAsync(string meetingKey, HighlightsLookupDocument lookup, CancellationToken cancellationToken)
+        {
+            throw new NotSupportedException();
+        }
     }
 
     private sealed class StubClock : IClock
@@ -375,6 +427,29 @@ public sealed class ReadRouteEndpointTests
     private sealed class ThrowingStandingsReadService : IStandingsReadService
     {
         public Task<StandingsDocument> ReadAsync(CancellationToken cancellationToken)
+        {
+            throw new InvalidOperationException("unexpected service failure");
+        }
+    }
+
+    private sealed class StubResultsService : IResultsService
+    {
+        private readonly OfficialResultsDocument _document;
+
+        public StubResultsService(OfficialResultsDocument document)
+        {
+            _document = document;
+        }
+
+        public Task<OfficialResultsDocument> ReadAsync(string meetingKey, CancellationToken cancellationToken)
+        {
+            return Task.FromResult(_document);
+        }
+    }
+
+    private sealed class ThrowingResultsService : IResultsService
+    {
+        public Task<OfficialResultsDocument> ReadAsync(string meetingKey, CancellationToken cancellationToken)
         {
             throw new InvalidOperationException("unexpected service failure");
         }
