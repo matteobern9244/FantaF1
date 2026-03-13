@@ -4,6 +4,7 @@ Cronologia sintetica delle release documentate del progetto Fanta Formula 1.
 
 ## Unreleased
 
+- **Gate Report Formale per l'Avvio di Subphase 8**: aggiunto [docs/backend-csharp-subphase-01-07-gate-report.md](/Users/matteobernardini/code/FantaF1/docs/backend-csharp-subphase-01-07-gate-report.md) con audit documentale e tecnico delle `Subphase 1`-`7`, matrice di chiusura, riepilogo delle validazioni eseguite e verdetto esplicito `GO Subphase 8`.
 - **Warning Nullable dei Test C# Azzerati**: i progetti `backend-csharp/tests` non emettono piu' warning nullable in `dotnet build backend-csharp/FantaF1.Backend.sln -c Release`; gli assert e gli helper di test esplicitano ora le invarianti di non-null senza suppression globali, senza modifiche ai contratti pubblici o al runtime produttivo.
 - **Coverage C# Ufficiale Preservata al 100% Dopo il Cleanup Nullable**: i fix sui test mantengono `npm run test:csharp-coverage` al `100%` su linee, branch e metodi per tutti i `64` file inclusi sotto `backend-csharp/src`, con parity e comportamento applicativo invariati.
 - **Subphase 7 Formalmente Blindata con Coverage C# Ufficiale al 100%**: la slice `GET /api/results/:meetingKey` resta `completed` nel ledger canonico e ora chiude anche il report ufficiale `npm run test:csharp-coverage` al `100%` su linee, branch e metodi per tutti i `64` file inclusi sotto `backend-csharp/src/`, senza modifiche al comportamento pubblico della route risultati.
