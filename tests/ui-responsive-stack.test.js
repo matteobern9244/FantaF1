@@ -7,10 +7,10 @@ describe('responsive UI local stack bootstrap', () => {
     const urlState = new Map([
       ['http://127.0.0.1:5173', { calls: 0, okAfter: 3 }],
       ['http://127.0.0.1:3001/api/health', { calls: 0, okAfter: 2 }],
-      ['http://127.0.0.1:5173/api/session', { calls: 0, okAfter: 4 }],
-      ['http://127.0.0.1:5173/api/data', { calls: 0, okAfter: 4 }],
-      ['http://127.0.0.1:5173/api/drivers', { calls: 0, okAfter: 4 }],
-      ['http://127.0.0.1:5173/api/calendar', { calls: 0, okAfter: 4 }],
+      ['http://127.0.0.1:3001/api/session', { calls: 0, okAfter: 4 }],
+      ['http://127.0.0.1:3001/api/data', { calls: 0, okAfter: 4 }],
+      ['http://127.0.0.1:3001/api/drivers', { calls: 0, okAfter: 4 }],
+      ['http://127.0.0.1:3001/api/calendar', { calls: 0, okAfter: 4 }],
     ]);
     const fetchImpl = vi.fn().mockImplementation(async (url) => {
       const state = urlState.get(url);

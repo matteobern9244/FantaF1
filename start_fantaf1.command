@@ -4,10 +4,9 @@ set -euo pipefail
 cd "$(dirname "$0")"
 
 export NODE_ENV=development
+export FANTAF1_LOCAL_RUNTIME="${FANTAF1_LOCAL_RUNTIME:-node-dev}"
 
 readonly APP_TITLE="Fanta Formula 1"
-readonly BACKEND_HEALTH_URL="http://127.0.0.1:3001/api/health"
-readonly FRONTEND_URL="http://127.0.0.1:5173"
 readonly STARTUP_TIMEOUT_SECONDS=45
 readonly SHUTDOWN_TIMEOUT_SECONDS=15
 
@@ -33,23 +32,6 @@ run_step() {
   echo
   echo "==> $title"
   "$@"
-}
-
-is_port_busy() {
-  local port="$1"
-  lsof -nP -iTCP:"$port" -sTCP:LISTEN >/dev/null 2>&1
-}
-
-ensure_port_free() {
-  local port="$1"
-  local label="$2"
-
-  if is_port_busy "$port"; then
-    local message="La porta $port e' gia in uso. Chiudi il processo esistente prima del controllo $label."
-    echo "$message" >&2
-    show_popup "$message"
-    exit 1
-  fi
 }
 
 wait_for_url() {
@@ -88,31 +70,11 @@ stop_process() {
   fi
 }
 
-wait_for_port_free() {
-  local port="$1"
-  local label="$2"
-  local deadline=$((SECONDS + SHUTDOWN_TIMEOUT_SECONDS))
-
-  while (( SECONDS < deadline )); do
-    if ! is_port_busy "$port"; then
-      return 0
-    fi
-
-    sleep 1
-  done
-
-  echo "La porta $port non si e' liberata dopo la chiusura di $label." >&2
-  return 1
-}
-
 cleanup_preflight() {
   stop_process "$frontend_pid"
   stop_process "$backend_pid"
   frontend_pid=""
   backend_pid=""
-
-  wait_for_port_free 5173 "frontend preflight" || true
-  wait_for_port_free 3001 "backend preflight" || true
 }
 
 on_error() {
@@ -140,9 +102,6 @@ trap on_error ERR INT TERM
 run_step "Eseguo lint" npm run lint
 run_step "Eseguo test" npm run test
 run_step "Eseguo build" npm run build
-
-ensure_port_free 3001 "backend preflight"
-ensure_port_free 5173 "frontend preflight"
 
 backend_log="$(mktemp -t fantaf1-preflight-backend.XXXXXX.log)"
 frontend_log="$(mktemp -t fantaf1-preflight-frontend.XXXXXX.log)"

@@ -1,8 +1,10 @@
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { resolveUiResponsiveTarget } from '../local-runtime-targets.mjs';
 
-const baseUrl = process.env.UI_RESPONSIVE_BASE_URL ?? 'http://127.0.0.1:5173';
-const backendHealthUrl = process.env.UI_RESPONSIVE_BACKEND_HEALTH_URL ?? 'http://127.0.0.1:3001/api/health';
+const runtimeTarget = resolveUiResponsiveTarget();
+const baseUrl = runtimeTarget.baseUrl;
+const backendHealthUrl = runtimeTarget.backendHealthUrl;
 const startupTimeoutMs = 45000;
 const pollIntervalMs = 750;
 const cliCommandTimeoutMs = 30000;
@@ -41,6 +43,7 @@ export {
   pollIntervalMs,
   projectRoot,
   responsiveSessionPrefix,
+  runtimeTarget,
   sessionName,
   startupTimeoutMs,
   uiShellPollIntervalMs,

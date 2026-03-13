@@ -4,16 +4,17 @@ import path from 'path';
 import { spawn, spawnSync } from 'child_process';
 import { fileURLToPath, pathToFileURL } from 'url';
 import { getChromeWindowLifecycleState } from './dev-launcher-lifecycle.mjs';
+import { resolveLauncherTarget, rewriteMongoDatabaseName } from './local-runtime-targets.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const projectRoot = path.resolve(__dirname, '..');
 
+const runtimeTarget = resolveLauncherTarget();
 const launcherConfig = {
-  backendHealthUrl: 'http://127.0.0.1:3001/api/health',
-  frontendUrl: 'http://127.0.0.1:5173',
-  backendPort: 3001,
-  frontendPort: 5173,
+  backendHealthUrl: runtimeTarget.backendHealthUrl,
+  frontendUrl: runtimeTarget.baseUrl,
+  busyPorts: runtimeTarget.busyPorts,
   pollIntervalMs: 1500,
   startupTimeoutMs: 45000,
 };
@@ -34,18 +35,33 @@ const launcherText = {
 function buildLauncherEnv({
   baseEnv = process.env,
   envFiles,
+  targetConfig = resolveLauncherTarget(baseEnv),
 } = {}) {
   const resolvedEnvFiles = envFiles ?? {
     base: loadEnvFile(path.join(projectRoot, '.env')),
     local: loadEnvFile(path.join(projectRoot, '.env.local')),
   };
 
-  return {
+  const resolvedEnv = {
     ...baseEnv,
     ...resolvedEnvFiles.base,
     ...resolvedEnvFiles.local,
-    NODE_ENV: 'development',
+    ...targetConfig.startupEnv,
+    FANTAF1_LOCAL_RUNTIME: targetConfig.name,
   };
+
+  if (
+    typeof resolvedEnv.MONGODB_URI === 'string'
+    && typeof targetConfig.startupEnv?.MONGODB_DB_NAME_OVERRIDE === 'string'
+    && typeof targetConfig.startupEnv?.MONGODB_URI !== 'string'
+  ) {
+    resolvedEnv.MONGODB_URI = rewriteMongoDatabaseName(
+      resolvedEnv.MONGODB_URI,
+      targetConfig.startupEnv.MONGODB_DB_NAME_OVERRIDE,
+    );
+  }
+
+  return resolvedEnv;
 }
 
 const env = buildLauncherEnv();
@@ -276,17 +292,15 @@ process.on('exit', () => {
 });
 
 async function main() {
-  if (await isPortBusy(launcherConfig.backendPort)) {
-    showPopup(launcherText.backendPortBusy);
-    process.exit(1);
+  for (const [index, port] of launcherConfig.busyPorts.entries()) {
+    if (await isPortBusy(port)) {
+      const template = index === 0 ? launcherText.backendPortBusy : launcherText.frontendPortBusy;
+      showPopup(template.replace(index === 0 ? '3001' : '5173', String(port)));
+      process.exit(1);
+    }
   }
 
-  if (await isPortBusy(launcherConfig.frontendPort)) {
-    showPopup(launcherText.frontendPortBusy);
-    process.exit(1);
-  }
-
-  backendProcess = startChild(process.execPath, ['server.js'], 'backend');
+  backendProcess = startChild(runtimeTarget.backendCommand, runtimeTarget.backendArgs, 'backend');
 
   const backendReady = await waitForUrl(
     launcherConfig.backendHealthUrl,
@@ -298,16 +312,28 @@ async function main() {
     return;
   }
 
-  frontendProcess = startChild('npm', ['run', 'dev:frontend'], 'frontend');
+  if (runtimeTarget.frontendMode === 'split') {
+    frontendProcess = startChild(runtimeTarget.frontendCommand, runtimeTarget.frontendArgs, 'frontend');
 
-  const frontendReady = await waitForUrl(
-    launcherConfig.frontendUrl,
-    launcherConfig.startupTimeoutMs,
-  );
-  if (!frontendReady) {
-    showPopup(launcherText.frontendStartFailed);
-    await shutdown(1);
-    return;
+    const frontendReady = await waitForUrl(
+      launcherConfig.frontendUrl,
+      launcherConfig.startupTimeoutMs,
+    );
+    if (!frontendReady) {
+      showPopup(launcherText.frontendStartFailed);
+      await shutdown(1);
+      return;
+    }
+  } else {
+    const frontendReady = await waitForUrl(
+      launcherConfig.frontendUrl,
+      launcherConfig.startupTimeoutMs,
+    );
+    if (!frontendReady) {
+      showPopup(launcherText.frontendStartFailed);
+      await shutdown(1);
+      return;
+    }
   }
 
   if (!openChromeApp(launcherConfig.frontendUrl)) {

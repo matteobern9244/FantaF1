@@ -2,9 +2,16 @@
 
 Invocazione canonica: `Subphase 9`
 
+## Stato
+
+- `completed`
+- Chiusura verificata con `npm run lint`, `npm run test`, `npm run build`, `npm run test:coverage`, `dotnet test backend-csharp/FantaF1.Backend.sln -c Release`, `npm run test:csharp-coverage`, `npm run test:save-local`, `SAVE_SMOKE_TARGET=csharp-dev npm run test:save-local`, `SAVE_SMOKE_TARGET=csharp-staging-local npm run test:save-local`, `UI_RESPONSIVE_TARGET=node-dev npm run test:ui-responsive`, `UI_RESPONSIVE_TARGET=csharp-dev npm run test:ui-responsive` e `UI_RESPONSIVE_TARGET=csharp-staging-local npm run test:ui-responsive`.
+- `start_fantaf1.command` resta il launcher canonico monitorato, mantiene `node-dev` come default e consente il runtime C# solo tramite opt-in esplicito `FANTAF1_LOCAL_RUNTIME`.
+- Gli shared verification scripts verificano ora davvero `node-dev`, `csharp-dev` e `csharp-staging-local`, con bootstrap esplicito della sessione admin per il target production-like locale e senza fallback impliciti a `fantaf1_dev`.
+
 ## Scopo della subphase
 
-- Aggiornare `start_fantaf1.command` per mantenerlo launcher canonico del runtime migrato.
+- Aggiornare `start_fantaf1.command` per mantenerlo launcher canonico locale monitorato durante il porting.
 - Parametrizzare `scripts/save-local-check.mjs` e `scripts/ui-responsive-check.mjs` per impedire qualunque fallback a `fantaf1_dev`.
 - Rendere riusabile la verifica condivisa contro Node baseline, backend C# locale e locale production-like.
 
@@ -19,6 +26,7 @@ Invocazione canonica: `Subphase 9`
 - Aggiornamento di `start_fantaf1.command`.
 - Parametrizzazione di `scripts/save-local-check.mjs`.
 - Parametrizzazione di `scripts/ui-responsive-check.mjs`.
+- Introduzione di un resolver condiviso dei target locali e del seed admin deterministico usato dagli smoke/script locali.
 - Esplicitazione di base URL, backend target, expected environment e expected database target.
 - Blocco di ogni fallback implicito verso `fantaf1_dev`.
 - Preservazione del baseline UI mergeato di `main`: navigation nell'hero, select native su mobile, `back-to-top` e standings pubbliche.
@@ -38,15 +46,20 @@ Invocazione canonica: `Subphase 9`
 ## File/layer toccati
 
 - `start_fantaf1.command`
+- `scripts/dev-launcher.mjs`
+- `scripts/local-runtime-targets.mjs`
+- `scripts/local-admin-credential.mjs`
 - `scripts/save-local-check.mjs`
 - `scripts/ui-responsive-check.mjs`
-- eventuali helper condivisi sotto `scripts/ui-responsive/`
+- helper condivisi sotto `scripts/ui-responsive/`
+- `tests/*` per launcher lifecycle, smoke save e responsive runner target-aware
 
 ## Contratti e invarianti da preservare
 
 - Nessun controllo mutante del porting puo' risolvere di default `fantaf1_dev`.
 - `start_fantaf1.command` deve restare valido, eseguibile e allineato al flusso reale di startup monitorato.
 - `start_fantaf1.command` non deve eseguire `npm run test:ui-responsive` nel preflight automatico.
+- `start_fantaf1.command` deve restare `node-dev` by default finche' il cutover non e' formalmente autorizzato.
 - Gli script condivisi devono rimanere single-sourced e riutilizzabili per Node baseline, C# locale e C# locale production-like.
 - Il repository deve restare releasable sul branch `porting-backend-c#`, senza commit/push non autorizzati e senza usare `fantaf1` o `fantaf1_dev`.
 
@@ -59,46 +72,52 @@ Invocazione canonica: `Subphase 9`
 ## Coverage 100% totale
 
 - Tutto il codice JavaScript introdotto o modificato negli script condivisi deve restare al 100%.
-- La baseline Node/React e l'eventuale scope C# gia' introdotto devono restare al 100%.
+- La baseline Node/React deve restare al 100%.
+- Lo scope ufficiale `backend-csharp/src/` deve restare al 100% per linee, branch e metodi.
 
 ## Piano di implementazione passo-passo
 
-1. Rendere `scripts/save-local-check.mjs` esplicito su base URL, backend target, expected environment e expected database target.
-2. Rendere `scripts/ui-responsive-check.mjs` esplicito sugli stessi target, senza fallback legacy.
-3. Aggiornare `start_fantaf1.command` per avviare il runtime migrato reale mantenendo il monitoraggio e i preflight esistenti.
-4. Verificare che il launcher non inglobi `npm run test:ui-responsive`.
-5. Verificare che gli stessi script possano colpire Node baseline, C# locale e C# locale production-like con parametri espliciti, preservando il nuovo baseline UI mergeato di `main`.
+1. Introdurre un resolver condiviso dei target locali per `node-dev`, `csharp-dev` e `csharp-staging-local`, con base URL, health URL, porte, environment atteso, database target atteso e policy auth esplicita.
+2. Rendere `scripts/save-local-check.mjs` esplicito su target, login admin e cookie reuse per `csharp-staging-local`, usando seed admin deterministico derivato a runtime.
+3. Rendere `scripts/ui-responsive-check.mjs` e gli helper `ui-responsive/` espliciti sugli stessi target, con bootstrap della sessione admin per il target production-like locale.
+4. Aggiornare `start_fantaf1.command` e `scripts/dev-launcher.mjs` per mantenere `node-dev` come default monitorato e supportare il runtime C# solo su opt-in esplicito.
+5. Verificare che gli stessi script colpiscano davvero Node baseline, C# locale e C# locale production-like senza fallback legacy, preservando il baseline UI mergeato di `main`.
 
 ## Test da aggiungere o aggiornare
 
-- Test unitari/integrazione sugli script per il parsing dei parametri obbligatori.
-- Test sul launcher per il flusso di startup monitorato e per l'assenza del responsive check nel preflight.
-- Riesecuzione `npm run test:save-local`.
-- Riesecuzione `npm run test:ui-responsive`.
-- Riesecuzione baseline Node/React e della suite C# gia' introdotta.
+- Test unitari sui resolver dei target locali e sul seed admin deterministico.
+- Test su `save-local-check` per login admin, cookie reuse e failure esplicite sui target C#.
+- Test sul responsive runner per bootstrap target-aware e sessione admin su `csharp-staging-local`.
+- Test sul launcher per il flusso di startup monitorato, il default `node-dev` e l'assenza del responsive check nel preflight.
+- Riesecuzione della baseline Node/React e della suite C# gia' introdotta.
 
 ## Verifiche browser e responsive
 
-- Desktop admin/public in sviluppo: obbligatorie tramite `npm run test:ui-responsive` contro il target C# locale esplicito.
-- Mobile admin/public in sviluppo: obbligatorie tramite lo stesso check responsive.
-- Produzione-like locale: obbligatoria la verifica responsive contro il target locale `Staging` su `fantaf1_porting`.
+- Desktop admin/public in sviluppo: obbligatorie tramite `UI_RESPONSIVE_TARGET=node-dev npm run test:ui-responsive` e `UI_RESPONSIVE_TARGET=csharp-dev npm run test:ui-responsive`.
+- Mobile admin/public in sviluppo: obbligatorie tramite gli stessi check responsive sui due target locali.
+- Produzione-like locale: obbligatoria la verifica responsive contro `UI_RESPONSIVE_TARGET=csharp-staging-local npm run test:ui-responsive` su `fantaf1_porting`.
 - Staging: non applicabile finche' il servizio Render non esiste; il gate esterno resta demandato a `Subphase 10`.
 
 ## Comandi di validazione da eseguire
 
-- `npm run test:save-local`
-- `npm run test:ui-responsive`
 - `npm run lint`
+- `npm run test`
 - `npm run build`
 - `npm run test:coverage`
 - `dotnet test backend-csharp/FantaF1.Backend.sln -c Release`
 - `npm run test:csharp-coverage`
+- `npm run test:save-local`
+- `SAVE_SMOKE_TARGET=csharp-dev npm run test:save-local`
+- `SAVE_SMOKE_TARGET=csharp-staging-local npm run test:save-local`
+- `UI_RESPONSIVE_TARGET=node-dev npm run test:ui-responsive`
+- `UI_RESPONSIVE_TARGET=csharp-dev npm run test:ui-responsive`
+- `UI_RESPONSIVE_TARGET=csharp-staging-local npm run test:ui-responsive`
 
 ## Criteri di completamento
 
-- Il launcher canonico punta al runtime migrato reale e resta monitorato.
-- Gli script condivisi non possono piu' ricadere su `fantaf1_dev`.
-- I browser gate locali sono eseguibili in sviluppo e in produzione-like locale.
+- Il launcher canonico resta monitorato, conserva `node-dev` come default e supporta il runtime C# solo con selezione esplicita.
+- Gli script condivisi non possono piu' ricadere su `fantaf1_dev` quando il target selezionato e' C#.
+- `node-dev`, `csharp-dev` e `csharp-staging-local` sono tutti verificabili tramite smoke save e browser gate riusabili.
 - Coverage 100% su tutti i file toccati.
 
 ## Blocchi / condizioni di stop

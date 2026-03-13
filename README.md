@@ -523,8 +523,12 @@ Se `MONGODB_URI` contiene gia' un database nel path, quel nome deve essere coere
 - Dipendenze installate con `npm install`.
 - MongoDB raggiungibile tramite `MONGODB_URI`.
 - Google Chrome installato in `/Applications/Google Chrome.app` se si usa il launcher integrato.
-- Database locale target atteso: `fantaf1_dev`.
-- La `MONGODB_URI` locale deve quindi puntare a `.../fantaf1_dev`.
+- Runtime locale canonico di default: `node-dev`.
+- Target locali supportati:
+  - `node-dev` -> backend Node `127.0.0.1:3001`, frontend Vite `127.0.0.1:5173`, database atteso `fantaf1_dev`
+  - `csharp-dev` -> host ASP.NET Core same-origin `127.0.0.1:3002`, database atteso `fantaf1_porting`
+  - `csharp-staging-local` -> host ASP.NET Core same-origin `127.0.0.1:3003`, environment `Staging` locale, database atteso `fantaf1_porting`
+- La `MONGODB_URI` locale deve essere presente e coerente con il target selezionato; gli script locali riscrivono il database target solo per i runtime C# verso `fantaf1_porting`.
 
 ### Modalita' sviluppo separate
 
@@ -541,17 +545,23 @@ Il backend verifica in startup che `MONGODB_URI` sia allineata con `fantaf1_dev`
 
 Lo script integrato:
 
-- forza esplicitamente `NODE_ENV=development` per mantenere allineati environment locale e target database `fantaf1_dev`;
+- forza esplicitamente `NODE_ENV=development`;
+- usa `FANTAF1_LOCAL_RUNTIME=node-dev` come default monitorato e consente i target C# solo tramite opt-in esplicito;
 - esegue `npm run lint`, `npm run test`, `npm run build` e `npm run test:save-local`;
-- esegue uno smoke reale di lettura/scrittura su `fantaf1_dev` prima dell'avvio finale;
-- verifica che le porte `3001` e `5173` siano libere;
-- avvia backend e frontend;
+- esegue uno smoke reale di lettura/scrittura sul target locale selezionato prima dell'avvio finale;
+- verifica le porte richieste dal target locale selezionato;
+- avvia backend e frontend nel caso `node-dev`, oppure l'host same-origin ASP.NET Core nei target C#;
 - attende gli health check locali;
 - apre Chrome in modalita' app sul frontend;
 - prova a massimizzare la finestra;
 - chiude i processi se uno dei child fallisce o, quando la finestra Chrome e' rilevabile, se la finestra viene chiusa.
 
 Il controllo browser `npm run test:ui-responsive` resta disponibile come verifica esplicita separata per task con impatto UI/responsive, ma non fa piu' parte del preflight automatico di `./start_fantaf1.command`.
+Esempi:
+
+- `./start_fantaf1.command` -> target canonico `node-dev`
+- `FANTAF1_LOCAL_RUNTIME=csharp-dev ./start_fantaf1.command`
+- `FANTAF1_LOCAL_RUNTIME=csharp-staging-local ./start_fantaf1.command`
 
 ## Deploy su Render
 
@@ -634,8 +644,8 @@ Per la UI e' disponibile anche `npm run test:ui-responsive`, che usa Playwright 
 Il controllo responsive verifica anche la presenza del menu corretto per breakpoint: nav desktop persistente nelle viewport larghe, trigger `Sezioni` e drawer laterale sinistro su mobile, coerenza delle voci admin/public e assenza di regressioni sulla CTA `INSTALLA APPLICAZIONE`, che deve restare visibile in viewport.
 Il comando esegue un preflight fail-fast sull'ambiente Playwright: se trova sessioni responsive residue (`ui-*`) o una CLI non reattiva, interrompe il run senza killare processi non creati da lui e riporta le istruzioni di bonifica manuale.
 Su errori di navigazione o shell UI bloccata raccoglie artefatti diagnostici in `output/playwright/ui-responsive/` (summary, stato pagina, tab-list, screenshot se disponibile, console e network log) per distinguere facilmente tra regressione UI, splash bloccata e sessione Playwright incoerente.
-Per il salvataggio locale e' disponibile `npm run test:save-local`, che legge `/api/data`, re-invia lo stesso payload su `POST /api/data`, verifica `environment=development`, `databaseTarget=fantaf1_dev` e controlla che lo stato resti invariato dopo il round-trip. Questo smoke test copre il canale di persistenza generica, non il salvataggio manuale dei pronostici su `POST /api/predictions`.
-Per la CI e' disponibile anche `npm run test:coverage`, mentre lo smoke di persistenza puo' essere eseguito sul database isolato di pipeline impostando `MONGODB_DB_NAME_OVERRIDE`, `SAVE_SMOKE_EXPECTED_ENVIRONMENT` e `SAVE_SMOKE_EXPECTED_DATABASE_TARGET` senza toccare `fantaf1_dev` o `fantaf1`.
+Per il salvataggio locale e' disponibile `npm run test:save-local`, che per default usa `node-dev`, legge `/api/data`, re-invia lo stesso payload su `POST /api/data`, verifica environment/database target attesi e controlla che lo stato resti invariato dopo il round-trip. Lo stesso smoke puo' essere rieseguito in modo esplicito su `csharp-dev` e `csharp-staging-local` con `SAVE_SMOKE_TARGET=...`, includendo login admin e riuso del cookie nel target production-like locale. Questo smoke test copre il canale di persistenza generica, non il salvataggio manuale dei pronostici su `POST /api/predictions`.
+Per la CI e' disponibile anche `npm run test:coverage`, mentre lo smoke di persistenza puo' essere eseguito sul database isolato di pipeline impostando `MONGODB_DB_NAME_OVERRIDE`, `SAVE_SMOKE_EXPECTED_ENVIRONMENT` e `SAVE_SMOKE_EXPECTED_DATABASE_TARGET` senza toccare `fantaf1_dev`, `fantaf1` o `fantaf1_porting`.
 Per il backend C# e' disponibile `npm run test:csharp-coverage`, comando ufficiale che esegue la raccolta coverlet sui test unit/integration/contract, filtra `obj/` e generated code, limita lo scope a `backend-csharp/src/` e scrive il riepilogo verificabile in `backend-csharp/TestResults/OfficialCoverage/Summary.txt` e `backend-csharp/TestResults/OfficialCoverage/summary.json`.
 L'ultimo riepilogo ufficiale verificato per il backend C# chiude a `100%` su linee, branch e metodi per tutti i `70` file inclusi nello scope `backend-csharp/src/`.
 Per una verifica browser production-like coerente con il guardrail sul database, il repository supporta anche l'avvio con `NODE_ENV=production MONGODB_DB_NAME_OVERRIDE=fantaf1_dev npm start`, mantenendo runtime `production` ma puntando in modo esplicito al database locale di sviluppo per smoke desktop/mobile della build servita da Express.

@@ -1,6 +1,7 @@
 import { spawn } from 'child_process';
-import { backendHealthUrl, baseUrl, pollIntervalMs, projectRoot, startupTimeoutMs } from './config.mjs';
+import { backendHealthUrl, baseUrl, pollIntervalMs, projectRoot, runtimeTarget, startupTimeoutMs } from './config.mjs';
 import { fail, loadRuntimeEnv } from './diagnostics.mjs';
+import { rewriteMongoDatabaseName } from '../local-runtime-targets.mjs';
 
 function sleep(durationMs) {
   return new Promise((resolve) => {
@@ -125,13 +126,14 @@ async function stopChild(child, { sleepImpl = sleep } = {}) {
 }
 
 async function ensureLocalAppStack({
-  frontendUrl = baseUrl,
-  backendUrl = backendHealthUrl,
-  appProbeUrls = [
-    `${baseUrl}/api/session`,
-    `${baseUrl}/api/data`,
-    `${baseUrl}/api/drivers`,
-    `${baseUrl}/api/calendar`,
+  targetConfig = runtimeTarget,
+  frontendUrl = targetConfig.baseUrl ?? baseUrl,
+  backendUrl = targetConfig.backendHealthUrl ?? backendHealthUrl,
+  appProbeUrls = targetConfig.appProbeUrls ?? [
+    `${frontendUrl}/api/session`,
+    `${frontendUrl}/api/data`,
+    `${frontendUrl}/api/drivers`,
+    `${frontendUrl}/api/calendar`,
   ],
   fetchImpl = fetch,
   spawnImpl = spawn,
@@ -141,14 +143,28 @@ async function ensureLocalAppStack({
   pollIntervalMs: pollIntervalOverride,
   cwd = projectRoot,
   env = loadRuntimeEnv(),
-  backendCommand = 'node',
-  backendArgs = ['server.js'],
-  frontendCommand = 'npm',
-  frontendArgs = ['run', 'dev:frontend'],
+  backendCommand = targetConfig.backendCommand ?? 'node',
+  backendArgs = targetConfig.backendArgs ?? ['server.js'],
+  frontendCommand = targetConfig.frontendCommand ?? 'npm',
+  frontendArgs = targetConfig.frontendArgs ?? ['run', 'dev:frontend'],
 } = {}) {
   const resolvedPollInterval = pollIntervalOverride ?? pollInterval;
   const frontendReachable = await probeUrl(frontendUrl, { fetchImpl });
   const backendReachable = await probeUrl(backendUrl, { fetchImpl });
+  const resolvedEnv = {
+    ...env,
+    ...(targetConfig.startupEnv ?? {}),
+  };
+  if (
+    typeof resolvedEnv.MONGODB_URI === 'string'
+    && typeof targetConfig.startupEnv?.MONGODB_DB_NAME_OVERRIDE === 'string'
+    && typeof targetConfig.startupEnv?.MONGODB_URI !== 'string'
+  ) {
+    resolvedEnv.MONGODB_URI = rewriteMongoDatabaseName(
+      resolvedEnv.MONGODB_URI,
+      targetConfig.startupEnv.MONGODB_DB_NAME_OVERRIDE,
+    );
+  }
 
   if (frontendReachable && backendReachable) {
     await waitForApiReadiness(appProbeUrls, {
@@ -174,7 +190,7 @@ async function ensureLocalAppStack({
 
   const backendChild = startChild(backendCommand, backendArgs, {
     cwd,
-    env,
+    env: resolvedEnv,
     spawnImpl,
   });
 
@@ -188,9 +204,34 @@ async function ensureLocalAppStack({
       sleepImpl,
     });
 
+    if (targetConfig.frontendMode === 'same-origin') {
+      await waitForUrl(frontendUrl, {
+        fetchImpl,
+        timeoutMs,
+        pollInterval: resolvedPollInterval,
+        label: frontendUrl,
+        failureMessage: `Frontend same-origin non raggiungibile su ${frontendUrl}.`,
+        sleepImpl,
+      });
+
+      await waitForApiReadiness(appProbeUrls, {
+        fetchImpl,
+        timeoutMs,
+        pollInterval: resolvedPollInterval,
+        sleepImpl,
+      });
+
+      return {
+        started: true,
+        stop: async () => {
+          await stopChild(backendChild, { sleepImpl });
+        },
+      };
+    }
+
     const frontendChild = startChild(frontendCommand, frontendArgs, {
       cwd,
-      env,
+      env: resolvedEnv,
       spawnImpl,
     });
 

@@ -32,6 +32,7 @@ describe('local save smoke runner', () => {
       .mockResolvedValueOnce(createJsonResponse(state));
 
     const result = await runSaveSmoke({
+      target: 'node-dev',
       baseUrl: 'http://127.0.0.1:3001',
       fetchImpl,
     });
@@ -78,6 +79,7 @@ describe('local save smoke runner', () => {
     });
 
     const result = await runSaveSmoke({
+      target: 'node-dev',
       baseUrl: 'http://127.0.0.1:3001',
       fetchImpl,
       ensureBackend,
@@ -99,6 +101,7 @@ describe('local save smoke runner', () => {
 
     await expect(
       runSaveSmoke({
+        target: 'node-dev',
         baseUrl: 'http://127.0.0.1:3001',
         fetchImpl,
       }),
@@ -135,6 +138,7 @@ describe('local save smoke runner', () => {
 
     await expect(
       runSaveSmoke({
+        target: 'node-dev',
         baseUrl: 'http://127.0.0.1:3001',
         fetchImpl,
       }),
@@ -177,6 +181,7 @@ describe('local save smoke runner', () => {
 
     await expect(
       runSaveSmoke({
+        target: 'node-dev',
         baseUrl: 'http://127.0.0.1:3001',
         fetchImpl,
       }),
@@ -211,6 +216,7 @@ describe('local save smoke runner', () => {
       .mockResolvedValueOnce(createJsonResponse(stabilizedState));
 
     const result = await runSaveSmoke({
+      target: 'node-dev',
       baseUrl: 'http://127.0.0.1:3001',
       fetchImpl,
     });
@@ -254,6 +260,7 @@ describe('local save smoke runner', () => {
       .mockResolvedValueOnce(createJsonResponse(state));
 
     const result = await runSaveSmoke({
+      target: 'node-dev',
       baseUrl: 'http://127.0.0.1:3001',
       expectedEnvironment: 'ci',
       expectedDatabaseTarget: 'fantaf1_ci',
@@ -262,5 +269,142 @@ describe('local save smoke runner', () => {
 
     expect(result.health.environment).toBe('ci');
     expect(result.health.databaseTarget).toBe('fantaf1_ci');
+  });
+
+  it('starts the integrated csharp runtime when the explicit target requires it', async () => {
+    const state = {
+      users: [{ name: 'Player 1', predictions: { first: '', second: '', third: '', pole: '' }, points: 0 }],
+      history: [],
+      gpName: 'Australian Grand Prix 2026',
+      raceResults: { first: '', second: '', third: '', pole: '' },
+      selectedMeetingKey: '2026-australia',
+    };
+    const fetchImpl = vi
+      .fn()
+      .mockRejectedValueOnce(new Error('fetch failed'))
+      .mockResolvedValueOnce(
+        createJsonResponse({
+          status: 'ok',
+          environment: 'development',
+          databaseTarget: 'fantaf1_porting',
+        }),
+      )
+      .mockResolvedValueOnce(createJsonResponse(state))
+      .mockResolvedValueOnce(createJsonResponse({ message: 'Dati salvati correttamente.' }))
+      .mockResolvedValueOnce(createJsonResponse(state));
+    const ensureBackend = vi.fn().mockResolvedValue({
+      started: true,
+      stop: vi.fn().mockResolvedValue(undefined),
+    });
+
+    const result = await runSaveSmoke({
+      target: 'csharp-dev',
+      fetchImpl,
+      ensureBackend,
+    });
+
+    expect(result.health.databaseTarget).toBe('fantaf1_porting');
+    expect(ensureBackend).toHaveBeenCalledWith(expect.objectContaining({
+      healthUrl: 'http://127.0.0.1:3002/api/health',
+      backendCommand: 'dotnet',
+      backendArgs: [
+        'run',
+        '--project',
+        'backend-csharp/src/FantaF1.Api/FantaF1.Api.csproj',
+        '-c',
+        'Release',
+        '--no-launch-profile',
+      ],
+      startupEnv: {
+        ASPNETCORE_ENVIRONMENT: 'Development',
+        ASPNETCORE_URLS: 'http://127.0.0.1:3002',
+        MONGODB_DB_NAME_OVERRIDE: 'fantaf1_porting',
+      },
+    }));
+  });
+
+  it('authenticates the staging target before posting the save payload', async () => {
+    const state = {
+      users: [{ name: 'Player 1', predictions: { first: '', second: '', third: '', pole: '' }, points: 0 }],
+      history: [],
+      gpName: 'Australian Grand Prix 2026',
+      raceResults: { first: '', second: '', third: '', pole: '' },
+      selectedMeetingKey: '2026-australia',
+    };
+    const fetchImpl = vi
+      .fn()
+      .mockResolvedValueOnce(
+        createJsonResponse({
+          status: 'ok',
+          environment: 'staging',
+          databaseTarget: 'fantaf1_porting',
+        }),
+      )
+      .mockResolvedValueOnce(createJsonResponse(state))
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        headers: {
+          get: (name) => (name === 'set-cookie' ? 'fantaf1_admin_session=staging-cookie; Path=/; HttpOnly' : null),
+        },
+        text: async () => JSON.stringify({ isAdmin: true, defaultViewMode: 'admin' }),
+      })
+      .mockResolvedValueOnce(createJsonResponse({ message: 'Dati salvati correttamente.' }))
+      .mockResolvedValueOnce(createJsonResponse(state));
+
+    const result = await runSaveSmoke({
+      target: 'csharp-staging-local',
+      fetchImpl,
+      ensureAdminCredential: vi.fn().mockResolvedValue(true),
+    });
+
+    expect(result.health.environment).toBe('staging');
+    expect(fetchImpl).toHaveBeenNthCalledWith(
+      4,
+      'http://127.0.0.1:3003/api/data',
+      expect.objectContaining({
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Cookie: 'fantaf1_admin_session=staging-cookie',
+        },
+      }),
+    );
+  });
+
+  it('fails explicitly when the staging admin login does not return a session cookie', async () => {
+    const state = {
+      users: [{ name: 'Player 1', predictions: { first: '', second: '', third: '', pole: '' }, points: 0 }],
+      history: [],
+      gpName: 'Australian Grand Prix 2026',
+      raceResults: { first: '', second: '', third: '', pole: '' },
+      selectedMeetingKey: '2026-australia',
+    };
+    const fetchImpl = vi
+      .fn()
+      .mockResolvedValueOnce(
+        createJsonResponse({
+          status: 'ok',
+          environment: 'staging',
+          databaseTarget: 'fantaf1_porting',
+        }),
+      )
+      .mockResolvedValueOnce(createJsonResponse(state))
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        headers: {
+          get: () => null,
+        },
+        text: async () => JSON.stringify({ isAdmin: true, defaultViewMode: 'admin' }),
+      });
+
+    await expect(
+      runSaveSmoke({
+        target: 'csharp-staging-local',
+        fetchImpl,
+        ensureAdminCredential: vi.fn().mockResolvedValue(true),
+      }),
+    ).rejects.toThrow('POST /api/admin/session non ha restituito un cookie di sessione admin valido.');
   });
 });
