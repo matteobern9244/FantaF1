@@ -26,7 +26,6 @@ public static class ApplicationServiceCollectionExtensions
         services.AddScoped<AdminSessionCookieInspector>();
         services.AddScoped<IAdminSessionService, AdminSessionService>();
         services.AddScoped<IAppDataReadService, AppDataReadService>();
-        services.AddScoped<IBackgroundSyncService, PlaceholderBackgroundSyncService>();
         services.AddScoped<ICalendarReadService, CalendarReadService>();
         services.AddScoped<IDriverReadService, DriverReadService>();
         services.AddScoped<IHealthReportService, HealthReportService>();
@@ -34,9 +33,6 @@ public static class ApplicationServiceCollectionExtensions
         services.AddScoped<ISaveRequestService, SaveRequestService>();
         services.AddScoped<IStandingsReadService, StandingsReadService>();
         services.AddScoped<IStandingsSyncService, StandingsSyncService>();
-
         return services;
     }
-
-    private sealed class PlaceholderBackgroundSyncService : IBackgroundSyncService;
 }

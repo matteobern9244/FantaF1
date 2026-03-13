@@ -139,6 +139,84 @@ public sealed class MongoLegacyWriteDocumentMapperTests
         Assert.Empty(result["weekendStateByMeetingKey"].AsBsonDocument);
     }
 
+    [Fact]
+    public void Map_driver_covers_complete_and_null_compatible_shapes()
+    {
+        var mapper = new MongoLegacyWriteDocumentMapper();
+
+        Assert.Throws<ArgumentNullException>(() => mapper.MapDriver(null!));
+
+        var complete = mapper.MapDriver(new DriverDocument("ver", "Max Verstappen", "Red Bull", "#0600EF", "avatar.webp", "redbullracing"));
+        var empty = mapper.MapDriver(new DriverDocument(null!, null!, null!, null!, null!, null!));
+
+        Assert.Equal("ver", complete["id"].AsString);
+        Assert.Equal("avatar.webp", complete["avatarUrl"].AsString);
+        Assert.Equal("redbullracing", complete["teamSlug"].AsString);
+        Assert.Equal(string.Empty, empty["id"].AsString);
+        Assert.Equal(string.Empty, empty["name"].AsString);
+        Assert.Equal(string.Empty, empty["team"].AsString);
+        Assert.Equal(string.Empty, empty["color"].AsString);
+        Assert.Equal(string.Empty, empty["avatarUrl"].AsString);
+        Assert.Equal(string.Empty, empty["teamSlug"].AsString);
+    }
+
+    [Fact]
+    public void Map_weekend_covers_complete_and_null_compatible_shapes()
+    {
+        var mapper = new MongoLegacyWriteDocumentMapper();
+
+        Assert.Throws<ArgumentNullException>(() => mapper.MapWeekend(null!));
+
+        var complete = mapper.MapWeekend(
+            new WeekendDocument(
+                "1280",
+                "China",
+                "FORMULA 1 CHINESE GRAND PRIX 2026",
+                2,
+                "20 - 22 MAR",
+                "https://www.formula1.com/en/racing/2026/china",
+                "hero.webp",
+                "track.webp",
+                true,
+                "2026-03-20",
+                "2026-03-22",
+                "2026-03-22T07:00:00Z",
+                [new WeekendSessionDocument("Race", "2026-03-22T07:00:00Z"), new WeekendSessionDocument(null!, null!)],
+                "https://youtube.com/watch?v=sky",
+                "2026-03-22T10:00:00.000Z",
+                "found",
+                "feed"));
+        var empty = mapper.MapWeekend(
+            new WeekendDocument(
+                null!,
+                null!,
+                null!,
+                null!,
+                null!,
+                null!,
+                null!,
+                null!,
+                false,
+                null!,
+                null!,
+                null!,
+                null!,
+                null!,
+                null!,
+                null!,
+                null!));
+
+        Assert.Equal("1280", complete["meetingKey"].AsString);
+        Assert.True(complete["isSprintWeekend"].AsBoolean);
+        Assert.Equal("Race", complete["sessions"][0]["name"].AsString);
+        Assert.Equal(string.Empty, complete["sessions"][1]["name"].AsString);
+        Assert.Equal(string.Empty, empty["meetingKey"].AsString);
+        Assert.Equal(0, empty["roundNumber"].AsInt32);
+        Assert.Equal(string.Empty, empty["raceStartTime"].AsString);
+        Assert.Empty(empty["sessions"].AsBsonArray);
+        Assert.Equal(string.Empty, empty["highlightsLookupSource"].AsString);
+    }
+
     private static AppDataDocument CreateDocument()
     {
         return new AppDataDocument(

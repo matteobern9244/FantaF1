@@ -816,6 +816,11 @@ public sealed class SaveRequestServiceTests
             return Task.FromResult(_weekends);
         }
 
+        public Task WriteAllAsync(IReadOnlyList<WeekendDocument> weekends, CancellationToken cancellationToken)
+        {
+            throw new NotSupportedException();
+        }
+
         public Task WriteHighlightsLookupAsync(string meetingKey, HighlightsLookupDocument lookup, CancellationToken cancellationToken)
         {
             throw new NotSupportedException();

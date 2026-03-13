@@ -28,6 +28,47 @@ public sealed class MongoLegacyWriteDocumentMapper
         return mappedDocument;
     }
 
+    public BsonDocument MapDriver(DriverDocument driver)
+    {
+        ArgumentNullException.ThrowIfNull(driver);
+
+        return new BsonDocument
+        {
+            ["id"] = driver.Id ?? string.Empty,
+            ["name"] = driver.Name ?? string.Empty,
+            ["team"] = driver.Team ?? string.Empty,
+            ["color"] = driver.Color ?? string.Empty,
+            ["avatarUrl"] = driver.AvatarUrl ?? string.Empty,
+            ["teamSlug"] = driver.TeamSlug ?? string.Empty,
+        };
+    }
+
+    public BsonDocument MapWeekend(WeekendDocument weekend)
+    {
+        ArgumentNullException.ThrowIfNull(weekend);
+
+        return new BsonDocument
+        {
+            ["meetingKey"] = weekend.MeetingKey ?? string.Empty,
+            ["meetingName"] = weekend.MeetingName ?? string.Empty,
+            ["grandPrixTitle"] = weekend.GrandPrixTitle ?? string.Empty,
+            ["roundNumber"] = weekend.RoundNumber ?? 0,
+            ["dateRangeLabel"] = weekend.DateRangeLabel ?? string.Empty,
+            ["detailUrl"] = weekend.DetailUrl ?? string.Empty,
+            ["heroImageUrl"] = weekend.HeroImageUrl ?? string.Empty,
+            ["trackOutlineUrl"] = weekend.TrackOutlineUrl ?? string.Empty,
+            ["isSprintWeekend"] = weekend.IsSprintWeekend,
+            ["startDate"] = weekend.StartDate ?? string.Empty,
+            ["endDate"] = weekend.EndDate ?? string.Empty,
+            ["raceStartTime"] = weekend.RaceStartTime ?? string.Empty,
+            ["sessions"] = new BsonArray((weekend.Sessions ?? []).Select(MapWeekendSession)),
+            ["highlightsVideoUrl"] = weekend.HighlightsVideoUrl ?? string.Empty,
+            ["highlightsLookupCheckedAt"] = weekend.HighlightsLookupCheckedAt ?? string.Empty,
+            ["highlightsLookupStatus"] = weekend.HighlightsLookupStatus ?? string.Empty,
+            ["highlightsLookupSource"] = weekend.HighlightsLookupSource ?? string.Empty,
+        };
+    }
+
     private static BsonDocument MapUser(AppDataUserDocument user)
     {
         return new BsonDocument
@@ -68,6 +109,15 @@ public sealed class MongoLegacyWriteDocumentMapper
             ["second"] = prediction?.Second ?? string.Empty,
             ["third"] = prediction?.Third ?? string.Empty,
             ["pole"] = prediction?.Pole ?? string.Empty,
+        };
+    }
+
+    private static BsonDocument MapWeekendSession(WeekendSessionDocument session)
+    {
+        return new BsonDocument
+        {
+            ["name"] = session.Name ?? string.Empty,
+            ["startTime"] = session.StartTime ?? string.Empty,
         };
     }
 

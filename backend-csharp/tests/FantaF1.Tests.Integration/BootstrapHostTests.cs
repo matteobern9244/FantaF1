@@ -23,18 +23,34 @@ public sealed class BootstrapHostTests : IClassFixture<WebApplicationFactory<Pro
     }
 
     [Fact]
-    public async Task Root_endpoint_returns_the_bootstrap_ready_message()
+    public async Task Bootstrap_ready_endpoint_returns_the_bootstrap_ready_message()
     {
         await using var factory = CreateFactory();
         using var client = factory.CreateClient();
 
-        var response = await client.GetAsync("/");
+        var response = await client.GetAsync("/bootstrap-ready");
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.Equal("text/plain", response.Content.Headers.ContentType?.ToString());
         Assert.Equal(
             PortingBootstrapController.ReadyMessage,
             await response.Content.ReadAsStringAsync());
+    }
+
+    [Fact]
+    public async Task Root_endpoint_serves_the_frontend_index_when_the_build_is_available()
+    {
+        await using var factory = CreateFactory(new Dictionary<string, string?>
+        {
+            ["Frontend:BuildPath"] = GetRepositoryPath("dist"),
+        });
+        using var client = factory.CreateClient();
+
+        var response = await client.GetAsync("/");
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Equal("text/html", response.Content.Headers.ContentType?.MediaType);
+        Assert.Contains("<div id=\"root\"></div>", await response.Content.ReadAsStringAsync(), StringComparison.Ordinal);
     }
 
     [Fact]
@@ -77,7 +93,7 @@ public sealed class BootstrapHostTests : IClassFixture<WebApplicationFactory<Pro
             .ToArray();
 
         Assert.Equal(12, controllerEndpoints.Length);
-        Assert.Contains(controllerEndpoints, endpoint => endpoint.Route.Length == 0);
+        Assert.Contains(controllerEndpoints, endpoint => string.Equals(endpoint.Route, "bootstrap-ready", StringComparison.Ordinal));
         Assert.Equal(
             2,
             controllerEndpoints.Count(endpoint => string.Equals(endpoint.Route, "api/data", StringComparison.Ordinal)));
@@ -127,17 +143,40 @@ public sealed class BootstrapHostTests : IClassFixture<WebApplicationFactory<Pro
         }
     }
 
-    private WebApplicationFactory<Program> CreateFactory()
+    private static string GetRepositoryPath(params string[] segments)
+    {
+        var directory = new DirectoryInfo(AppContext.BaseDirectory);
+
+        while (directory is not null && !File.Exists(Path.Combine(directory.FullName, "AGENTS.md")))
+        {
+            directory = directory.Parent;
+        }
+
+        return Path.Combine(directory!.FullName, Path.Combine(segments));
+    }
+
+    private WebApplicationFactory<Program> CreateFactory(IReadOnlyDictionary<string, string?>? overrides = null)
     {
         return _factory.WithWebHostBuilder(builder =>
         {
             builder.ConfigureAppConfiguration((_, configurationBuilder) =>
             {
-                configurationBuilder.AddInMemoryCollection(new Dictionary<string, string?>
+                var settings = new Dictionary<string, string?>
                 {
                     ["MONGODB_URI"] = "mongodb+srv://user:pass@cluster.mongodb.net/fantaf1_porting?retryWrites=true&w=majority",
                     ["ADMIN_SESSION_SECRET"] = "integration-admin-secret",
-                });
+                    ["Bootstrap:DisableHostedService"] = "true",
+                };
+
+                if (overrides is not null)
+                {
+                    foreach (var pair in overrides)
+                    {
+                        settings[pair.Key] = pair.Value;
+                    }
+                }
+
+                configurationBuilder.AddInMemoryCollection(settings);
             });
         });
     }

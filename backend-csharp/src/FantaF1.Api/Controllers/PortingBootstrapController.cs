@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Routing;
 namespace FantaF1.Api.Controllers;
 
 [ApiController]
-[Route("")]
+[Route("bootstrap-ready")]
 public sealed class PortingBootstrapController : ControllerBase
 {
     public const string ReadyMessage = "FantaF1 backend-csharp bootstrap ready";

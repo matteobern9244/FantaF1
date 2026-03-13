@@ -251,6 +251,11 @@ public sealed class AppDataReadServiceTests
             return Task.FromResult(_documents);
         }
 
+        public Task WriteAllAsync(IReadOnlyList<WeekendDocument> weekends, CancellationToken cancellationToken)
+        {
+            throw new NotSupportedException();
+        }
+
         public Task WriteHighlightsLookupAsync(string meetingKey, HighlightsLookupDocument lookup, CancellationToken cancellationToken)
         {
             throw new NotSupportedException();

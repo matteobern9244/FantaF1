@@ -130,6 +130,11 @@ public sealed class DriverAndCalendarReadServiceTests
 
             return Task.FromResult(_documents);
         }
+
+        public Task WriteAllAsync(IReadOnlyList<DriverDocument> drivers, CancellationToken cancellationToken)
+        {
+            throw new NotSupportedException();
+        }
     }
 
     private sealed class StubWeekendRepository : IWeekendRepository
@@ -151,6 +156,11 @@ public sealed class DriverAndCalendarReadServiceTests
             }
 
             return Task.FromResult(_documents);
+        }
+
+        public Task WriteAllAsync(IReadOnlyList<WeekendDocument> weekends, CancellationToken cancellationToken)
+        {
+            throw new NotSupportedException();
         }
 
         public Task WriteHighlightsLookupAsync(string meetingKey, HighlightsLookupDocument lookup, CancellationToken cancellationToken)

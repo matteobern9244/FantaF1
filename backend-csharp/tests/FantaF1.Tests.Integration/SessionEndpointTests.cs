@@ -175,6 +175,7 @@ public sealed class SessionEndpointTests
                     configurationBuilder.AddInMemoryCollection(new Dictionary<string, string?>
                     {
                         [AdminSessionContract.SessionSecretEnvironmentVariableName] = "integration-admin-secret",
+                        ["Bootstrap:DisableHostedService"] = "true",
                     });
 
                     if (configurationValues is not null)

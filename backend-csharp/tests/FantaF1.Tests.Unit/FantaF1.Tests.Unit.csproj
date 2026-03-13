@@ -22,6 +22,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\src\FantaF1.Api\FantaF1.Api.csproj" />
     <ProjectReference Include="..\..\src\FantaF1.Application\FantaF1.Application.csproj" />
     <ProjectReference Include="..\..\src\FantaF1.Domain\FantaF1.Domain.csproj" />
     <ProjectReference Include="..\..\src\FantaF1.Infrastructure\FantaF1.Infrastructure.csproj" />

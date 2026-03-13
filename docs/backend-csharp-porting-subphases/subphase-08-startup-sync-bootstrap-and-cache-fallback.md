@@ -2,6 +2,13 @@
 
 Invocazione canonica: `Subphase 8`
 
+## Stato
+
+- `completed`
+- Chiusura verificata con `dotnet build backend-csharp/FantaF1.Backend.sln -c Release`, `dotnet test backend-csharp/FantaF1.Backend.sln -c Release`, `npm run test:csharp-coverage`, `npm run lint`, `npm run test`, `npm run test:coverage`, `npm run build`, `npm run test:save-local` e `npm run test:ui-responsive`.
+- Coverage ufficiale C# aggiornata a `2928/2928` linee, `1649/1649` branch e `487/487` metodi sullo scope `backend-csharp/src/`.
+- Smoke locale same-origin verificato sul backend C# con `Development` e `Staging` contro `fantaf1_porting`: `GET /` serve `index.html` del build React e `GET /api/health` resta verde sullo stesso origin.
+
 ## Scopo della subphase
 
 - Portare in C# il bootstrap server completo, la connessione Mongo, il bootstrap credenziali admin, la sync drivers/calendar/standings con retry e cache fallback.
@@ -100,6 +107,7 @@ Invocazione canonica: `Subphase 8`
 - Il fallback a cache funziona e le route migrate restano parity-green.
 - React e API sono serviti same-origin dal backend C# locale.
 - Coverage 100% su tutti i file toccati.
+- Tutti i criteri sopra sono stati verificati in chiusura subphase.
 
 ## Blocchi / condizioni di stop
 

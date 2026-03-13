@@ -103,7 +103,9 @@ public sealed class SharedAbstractionsContractTests
         var readPersistedParticipantRosterAsync = typeof(IAppDataRepository).GetMethod(nameof(IAppDataRepository.ReadPersistedParticipantRosterAsync));
         var writeAsync = typeof(IAppDataRepository).GetMethod(nameof(IAppDataRepository.WriteAsync));
         var readDriversAsync = typeof(IDriverRepository).GetMethod(nameof(IDriverRepository.ReadAllAsync));
+        var writeDriversAsync = typeof(IDriverRepository).GetMethod(nameof(IDriverRepository.WriteAllAsync));
         var readCalendarAsync = typeof(IWeekendRepository).GetMethod(nameof(IWeekendRepository.ReadAllAsync));
+        var writeCalendarAsync = typeof(IWeekendRepository).GetMethod(nameof(IWeekendRepository.WriteAllAsync));
         var writeHighlightsLookupAsync = typeof(IWeekendRepository).GetMethod(nameof(IWeekendRepository.WriteHighlightsLookupAsync));
         var readAppDataAsync = typeof(IAppDataReadService).GetMethod(nameof(IAppDataReadService.ReadAsync));
         var readOrderedDriversAsync = typeof(IDriverReadService).GetMethod(nameof(IDriverReadService.ReadAllAsync));
@@ -121,8 +123,14 @@ public sealed class SharedAbstractionsContractTests
         Assert.NotNull(readDriversAsync);
         Assert.Equal(typeof(Task<IReadOnlyList<DriverDocument>>), readDriversAsync.ReturnType);
 
+        Assert.NotNull(writeDriversAsync);
+        Assert.Equal(typeof(Task), writeDriversAsync.ReturnType);
+
         Assert.NotNull(readCalendarAsync);
         Assert.Equal(typeof(Task<IReadOnlyList<WeekendDocument>>), readCalendarAsync.ReturnType);
+
+        Assert.NotNull(writeCalendarAsync);
+        Assert.Equal(typeof(Task), writeCalendarAsync.ReturnType);
 
         Assert.NotNull(writeHighlightsLookupAsync);
         Assert.Equal(typeof(Task), writeHighlightsLookupAsync.ReturnType);
@@ -142,10 +150,14 @@ public sealed class SharedAbstractionsContractTests
     {
         var readCurrentStandingsAsync = typeof(IStandingsRepository).GetMethod(nameof(IStandingsRepository.ReadCurrentAsync));
         var writeCurrentStandingsAsync = typeof(IStandingsRepository).GetMethod(nameof(IStandingsRepository.WriteCurrentAsync));
+        var runBackgroundSyncAsync = typeof(IBackgroundSyncService).GetMethod(nameof(IBackgroundSyncService.RunAsync));
         var readStandingsAsync = typeof(IStandingsReadService).GetMethod(nameof(IStandingsReadService.ReadAsync));
         var syncStandingsAsync = typeof(IStandingsSyncService).GetMethod(nameof(IStandingsSyncService.SyncAsync));
         var fetchDriverStandingsHtmlAsync = typeof(IStandingsSourceClient).GetMethod(nameof(IStandingsSourceClient.FetchDriverStandingsHtmlAsync));
         var fetchConstructorStandingsHtmlAsync = typeof(IStandingsSourceClient).GetMethod(nameof(IStandingsSourceClient.FetchConstructorStandingsHtmlAsync));
+
+        Assert.NotNull(runBackgroundSyncAsync);
+        Assert.Equal(typeof(Task), runBackgroundSyncAsync.ReturnType);
 
         Assert.NotNull(readCurrentStandingsAsync);
         Assert.Equal(typeof(Task<StandingsDocument>), readCurrentStandingsAsync.ReturnType);

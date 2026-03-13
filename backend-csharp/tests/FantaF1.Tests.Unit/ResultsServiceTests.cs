@@ -628,6 +628,13 @@ public sealed class ResultsServiceTests
             return Task.FromResult<IReadOnlyList<WeekendDocument>>(Documents.ToArray());
         }
 
+        public Task WriteAllAsync(IReadOnlyList<WeekendDocument> weekends, CancellationToken cancellationToken)
+        {
+            Documents.Clear();
+            Documents.AddRange(weekends);
+            return Task.CompletedTask;
+        }
+
         public Task WriteHighlightsLookupAsync(string meetingKey, HighlightsLookupDocument lookup, CancellationToken cancellationToken)
         {
             WrittenLookup = lookup;

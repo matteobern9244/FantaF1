@@ -41,7 +41,7 @@ public sealed class ArchitectureAndDependencyInjectionTests
     }
 
     [Fact]
-    public void Application_and_infrastructure_registrations_resolve_all_subphase_seven_contracts()
+    public void Application_and_infrastructure_registrations_resolve_all_subphase_eight_contracts()
     {
         var services = new ServiceCollection();
         var configuration = new ConfigurationBuilder()
@@ -126,6 +126,7 @@ public sealed class ArchitectureAndDependencyInjectionTests
 
         services.AddSingleton<IConfiguration>(configuration);
         services.AddSingleton<IHostEnvironment>(new TestHostEnvironment("Development"));
+        services.AddFantaF1Application();
         services.AddFantaF1Infrastructure();
 
         using var provider = services.BuildServiceProvider(new ServiceProviderOptions

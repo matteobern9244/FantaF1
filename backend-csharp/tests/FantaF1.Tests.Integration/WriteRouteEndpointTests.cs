@@ -169,6 +169,7 @@ public sealed class WriteRouteEndpointTests
                     {
                         ["MONGODB_URI"] = "mongodb+srv://user:pass@cluster.mongodb.net/fantaf1_porting?retryWrites=true&w=majority",
                         [AdminSessionContract.SessionSecretEnvironmentVariableName] = "integration-admin-secret",
+                        ["Bootstrap:DisableHostedService"] = "true",
                     });
 
                     if (configurationValues is not null)
@@ -267,6 +268,11 @@ public sealed class WriteRouteEndpointTests
         public Task<IReadOnlyList<WeekendDocument>> ReadAllAsync(CancellationToken cancellationToken)
         {
             return Task.FromResult(_documents);
+        }
+
+        public Task WriteAllAsync(IReadOnlyList<WeekendDocument> weekends, CancellationToken cancellationToken)
+        {
+            throw new NotSupportedException();
         }
 
         public Task WriteHighlightsLookupAsync(string meetingKey, HighlightsLookupDocument lookup, CancellationToken cancellationToken)

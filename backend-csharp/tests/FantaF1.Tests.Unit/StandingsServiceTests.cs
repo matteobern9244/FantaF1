@@ -258,6 +258,11 @@ public sealed class StandingsServiceTests
         {
             return Task.FromResult(_drivers);
         }
+
+        public Task WriteAllAsync(IReadOnlyList<DriverDocument> drivers, CancellationToken cancellationToken)
+        {
+            throw new NotSupportedException();
+        }
     }
 
     private sealed class StubStandingsSourceClient : IStandingsSourceClient

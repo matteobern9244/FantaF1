@@ -100,6 +100,11 @@ public sealed class HealthEndpointTests
                 builder.UseEnvironment(environmentName);
                 builder.ConfigureAppConfiguration((_, configurationBuilder) =>
                 {
+                    configurationBuilder.AddInMemoryCollection(new Dictionary<string, string?>
+                    {
+                        ["Bootstrap:DisableHostedService"] = "true",
+                    });
+
                     if (configurationValues is not null)
                     {
                         configurationBuilder.AddInMemoryCollection(configurationValues);

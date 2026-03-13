@@ -6,5 +6,7 @@ public interface IWeekendRepository
 {
     Task<IReadOnlyList<WeekendDocument>> ReadAllAsync(CancellationToken cancellationToken);
 
+    Task WriteAllAsync(IReadOnlyList<WeekendDocument> weekends, CancellationToken cancellationToken);
+
     Task WriteHighlightsLookupAsync(string meetingKey, HighlightsLookupDocument lookup, CancellationToken cancellationToken);
 }

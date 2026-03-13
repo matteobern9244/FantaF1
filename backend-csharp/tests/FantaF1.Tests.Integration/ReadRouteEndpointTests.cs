@@ -289,6 +289,7 @@ public sealed class ReadRouteEndpointTests
                     {
                         ["MONGODB_URI"] = "mongodb+srv://user:pass@cluster.mongodb.net/fantaf1_porting?retryWrites=true&w=majority",
                         ["ADMIN_SESSION_SECRET"] = "integration-admin-secret",
+                        ["Bootstrap:DisableHostedService"] = "true",
                     });
                 });
                 builder.ConfigureServices(services =>
@@ -350,6 +351,11 @@ public sealed class ReadRouteEndpointTests
 
             return Task.FromResult(_documents);
         }
+
+        public Task WriteAllAsync(IReadOnlyList<DriverDocument> drivers, CancellationToken cancellationToken)
+        {
+            throw new NotSupportedException();
+        }
     }
 
     private sealed class StubWeekendRepository : IWeekendRepository
@@ -371,6 +377,11 @@ public sealed class ReadRouteEndpointTests
             }
 
             return Task.FromResult(_documents);
+        }
+
+        public Task WriteAllAsync(IReadOnlyList<WeekendDocument> weekends, CancellationToken cancellationToken)
+        {
+            throw new NotSupportedException();
         }
 
         public Task WriteHighlightsLookupAsync(string meetingKey, HighlightsLookupDocument lookup, CancellationToken cancellationToken)
