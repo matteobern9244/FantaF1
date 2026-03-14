@@ -1,8 +1,0 @@
-{
-  "id": "cleanup_atlas_databases_20260314",
-  "title": "Analisi e Pulizia Database MongoDB Atlas",
-  "description": "Identificazione database obsoleti su Atlas per liberare spazio e mantenere pulito il cluster",
-  "status": "completed",
-  "created_at": "2026-03-14",
-  "updated_at": "2026-03-14"
-}

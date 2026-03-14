@@ -74,5 +74,5 @@ Questo file tiene traccia di tutte le track principali del progetto. Ogni track 
 
 ---
 
-- [ ] **Track: eliminare tutti i task effettuati e completi all'interno della folder conductor**
+- [x] **Track: eliminare tutti i task effettuati e completi all'interno della folder conductor**
   *Link: [./tracks/archive_completed_tasks_20260314/](./tracks/archive_completed_tasks_20260314/)*
