@@ -64,6 +64,10 @@ Cronologia sintetica delle release documentate del progetto Fanta Formula 1.
 
 ## v1.4.6
 
+- **Migrazione Finale a C# (Node.js Sunset)**: Completata la migrazione al backend C#, eliminando definitivamente il backend Node.js (express, mongoose, file server.js, app.js, cartella backend/).
+- **Docker & Render.com**: Il backend autoritativo è ora il servizio C# / .NET 10 ospitato su Docker per Render.com.
+- **Copertura Test**: Tutti i test passano con successo e la test coverage per il codice C# è confermata al 100%.
+
 - **Setup .NET 10 SDK (arm64)**: installato e configurato l'SDK ufficiale Microsoft .NET 10 nativo per Apple Silicon, risolvendo il blocco di sistema operativo (`killed`) e garantendo la piena compatibilità con i file di progetto `net10.0`.
 - **Integrazione CI/CD per C#**: aggiornato il workflow `.github/workflows/pr-ci.yml` con l'aggiunta dei job `build-csharp` e `test-csharp` basati su .NET 10, estendendo la validazione automatica anche al nuovo backend durante le Pull Request verso `main`.
 - **Isolamento Test C#**: modificato lo script `scripts/verify-csharp-coverage.mjs` per pulire le variabili d'ambiente locali (`MONGODB_URI`, `NODE_ENV`) prima dell'esecuzione dei test di integrazione, garantendo il corretto caricamento dei profili di test senza interferenze.
