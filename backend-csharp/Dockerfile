@@ -29,6 +29,10 @@ COPY backend-csharp/src/FantaF1.Api/FantaF1.Api.csproj ./backend-csharp/src/Fant
 COPY backend-csharp/src/FantaF1.Application/FantaF1.Application.csproj ./backend-csharp/src/FantaF1.Application/
 COPY backend-csharp/src/FantaF1.Domain/FantaF1.Domain.csproj ./backend-csharp/src/FantaF1.Domain/
 COPY backend-csharp/src/FantaF1.Infrastructure/FantaF1.Infrastructure.csproj ./backend-csharp/src/FantaF1.Infrastructure/
+# Test projects referenced in the solution
+COPY backend-csharp/tests/FantaF1.Tests.Unit/FantaF1.Tests.Unit.csproj ./backend-csharp/tests/FantaF1.Tests.Unit/
+COPY backend-csharp/tests/FantaF1.Tests.Integration/FantaF1.Tests.Integration.csproj ./backend-csharp/tests/FantaF1.Tests.Integration/
+COPY backend-csharp/tests/FantaF1.Tests.Contract/FantaF1.Tests.Contract.csproj ./backend-csharp/tests/FantaF1.Tests.Contract/
 
 # Restore dependencies
 RUN dotnet restore backend-csharp/FantaF1.Backend.sln
