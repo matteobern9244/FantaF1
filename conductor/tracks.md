@@ -21,3 +21,8 @@ Questo file tiene traccia di tutte le track principali del progetto. Ogni track 
 
 - [x] **Track: Setup Tooling MongoDB (mongodump, mongosh)**
   *Link: [./tracks/setup_mongodb_tooling_20260314/](./tracks/setup_mongodb_tooling_20260314/)*
+
+---
+
+- [ ] **Track: Backup Database Produzione (fantaf1)**
+  *Link: [./tracks/backup_production_db_20260314/](./tracks/backup_production_db_20260314/)*
