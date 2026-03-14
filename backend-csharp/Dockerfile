@@ -66,7 +66,6 @@ COPY config/ ./config/
 # Environment variables
 ENV ASPNETCORE_URLS=http://+:3001
 ENV Frontend__BuildPath=./dist
-ENV DOTNET_ENVIRONMENT=Production
 
 EXPOSE 3001
 
