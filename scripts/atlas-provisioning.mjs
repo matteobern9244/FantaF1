@@ -76,7 +76,7 @@ export async function main() {
   const uri = process.env.MONGODB_URI;
   try {
     await runProvisioning(uri);
-  } catch (error) {
+  } catch {
     console.error('Provisioning script failed');
     process.exit(1);
   }

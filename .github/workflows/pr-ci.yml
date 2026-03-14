@@ -164,3 +164,33 @@ jobs:
         if: always()
         run: |
           if [ -f backend.pid ]; then kill "$(cat backend.pid)" || true; fi
+
+  build-csharp:
+    name: build-csharp
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - run: dotnet build backend-csharp/FantaF1.Backend.sln -c Release
+
+  test-csharp:
+    name: test-csharp
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - run: npm ci
+      - run: npm run test:csharp-coverage

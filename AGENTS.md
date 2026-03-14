@@ -116,7 +116,8 @@ For every task, execute this sequence:
 7. Define and preserve the required 100% total coverage target for the task scope and repository/application.
 8. Implement the smallest safe change required.
 9. Run the relevant validations, including explicit coverage verification at 100%.
-10. Provide a final summary with touched files, tests, coverage verification, and executed commands.
+10. Ensure versioning coordination: every version increment must be applied consistently across `package.json`, `package-lock.json`, `CHANGELOG.md`, and `README.md`.
+11. Provide a final summary with touched files, tests, coverage verification, and executed commands.
 
 Do not skip steps.
 Do not jump directly into editing without understanding the current implementation.

@@ -10,4 +10,5 @@ Repository-level Gemini CLI instructions for FantaF1.
 6. Do not perform git operations unless explicitly authorized by the user.
 7. When a task touches scoring, live standings, projections, race locks, historical recalculation, or external results parsing, perform extra regression validation before completion.
 8. Keep changes minimal, targeted, and non-destructive.
-9. Final responses must be in Italian unless explicitly requested otherwise.
+9. Ogni incremento di versione deve essere coordinato tra `package.json`, `package-lock.json`, `CHANGELOG.md` e `README.md`.
+10. Final responses must be in Italian unless explicitly requested otherwise.

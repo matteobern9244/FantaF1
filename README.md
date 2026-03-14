@@ -22,6 +22,7 @@ La baseline live corrisponde alle capability gia' rilasciate e documentate in `C
 Il workspace corrente introduce l'adozione del framework Conductor per la gestione dello sviluppo spec-driven e la certificazione dello stato di salute del porting C#:
 
 - **Integrazione Conductor**: introdotta la directory `conductor/` come unica source of truth per specifiche di prodotto, linee guida, tech stack e workflow operativo.
+- **Supporto .NET 10 SDK (arm64/x64)**: il backend C# è ora configurato per puntare a **.NET 10** in locale, su Docker e in CI/CD, garantendo l'uso delle ultime capability del framework.
 - **Certificazione Workflow**: completata la validazione dell'integrità del repository con copertura test al 100%, launcher canonico verificato e controlli responsive passanti.
 - **Audit Anti-Regressione Porting C#**: certificata l'integrità del porting C# fino alla Fase 9, confermando parità API, sincronizzazione background e parametri di sicurezza degli strumenti di verifica.
 - **Ristrutturazione Navigazione (da v1.4.4)**: menu integrato nell'header, navigazione fluida mobile nativa, ottimizzazione performance con `IntersectionObserver` e fix mappa circuito storica.

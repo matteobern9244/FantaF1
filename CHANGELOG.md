@@ -54,6 +54,18 @@ Cronologia sintetica delle release documentate del progetto Fanta Formula 1.
 - **Governance del Porting Rafforzata Senza Impatto Runtime**: i nuovi documenti formalizzano branch isolation su `porting-backend-c#`, divieto di usare `fantaf1` e `fantaf1_dev`, staging `FantaF1_staging`, target `fantaf1_porting` e il vincolo che workflow futuri e legacy removal compaiano solo nella `Subphase 11`, senza introdurre alcun cambiamento a API pubbliche, payload, cookie o business logic.
 - **Subphase 1 Materializzata nel Piano Canonico**: la `Requirement ownership matrix` vive ora in [docs/backend-csharp-porting-plan.md](/Users/matteobernardini/code/FantaF1/docs/backend-csharp-porting-plan.md) come artefatto canonico della `Subphase 1`, mentre [subphase-01-foundation-and-safety-rails.md](/Users/matteobernardini/code/FantaF1/docs/backend-csharp-porting-subphases/subphase-01-foundation-and-safety-rails.md) rimanda esplicitamente a quella matrice per chiudere il congelamento dei safety rails senza creare una seconda source of truth.
 
+## v1.4.6
+
+- **Setup .NET 10 SDK (arm64)**: installato e configurato l'SDK ufficiale Microsoft .NET 10 nativo per Apple Silicon, risolvendo il blocco di sistema operativo (`killed`) e garantendo la piena compatibilità con i file di progetto `net10.0`.
+- **Integrazione CI/CD per C#**: aggiornato il workflow `.github/workflows/pr-ci.yml` con l'aggiunta dei job `build-csharp` e `test-csharp` basati su .NET 10, estendendo la validazione automatica anche al nuovo backend durante le Pull Request verso `main`.
+- **Isolamento Test C#**: modificato lo script `scripts/verify-csharp-coverage.mjs` per pulire le variabili d'ambiente locali (`MONGODB_URI`, `NODE_ENV`) prima dell'esecuzione dei test di integrazione, garantendo il corretto caricamento dei profili di test senza interferenze.
+- **Hotfix Linting**: corretta una dichiarazione inutilizzata in `scripts/atlas-provisioning.mjs`, mantenendo il repository conforme agli standard di qualità ESLint e alle policy di zero regressione.
+- **Validazione Full-Stack Certificata**: confermata la stabilità dell'intero ecosistema con build passanti per C# e React, e copertura test al 100% su entrambi gli stack (Node/V8 e C#/Coverlet).
+- **Integrazione Conductor**: introdotta la directory `conductor/` come unica source of truth per specifiche di prodotto, linee guida, tech stack e workflow operativo.
+- **Certificazione Workflow**: completata la validazione dell'integrità del repository con copertura test al 100%, launcher canonico verificato e controlli responsive passanti.
+- **Audit Anti-Regressione Porting C#**: certificata l'integrità del porting C# fino alla Fase 9, confermando parità API, sincronizzazione background e parametri di sicurezza degli strumenti di verifica.
+- **Ristrutturazione Navigazione (da v1.4.4)**: menu integrato nell'header, navigazione fluida mobile nativa, ottimizzazione performance con `IntersectionObserver` e fix mappa circuito storica.
+
 ## v1.4.4 (2026-03-13)
 
 - **Titolo Hero Sempre Bianco e Coerente su Windows**: il titolo principale dell'app nella hero non usa piu' il gradiente testuale con `background-clip`; ora renderizza sempre bianco pieno con lo stesso glow esistente, eliminando il caso Windows in cui il testo appariva grigio.

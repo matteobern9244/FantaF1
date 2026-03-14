@@ -26,10 +26,15 @@ const projects = [
 ];
 
 function runCommand(command, args) {
+  const env = { ...process.env };
+  delete env.MONGODB_URI;
+  delete env.MONGODB_DB_NAME_OVERRIDE;
+  delete env.NODE_ENV;
+
   const result = spawnSync(command, args, {
     cwd: repositoryRoot,
     stdio: 'inherit',
-    env: process.env,
+    env: env,
   });
 
   if (result.status !== 0) {
