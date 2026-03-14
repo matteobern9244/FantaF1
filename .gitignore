@@ -28,3 +28,6 @@ F1Result/data.json
 
 # Backups
 backups/
+
+.gemini/
+gha-creds-*.json
