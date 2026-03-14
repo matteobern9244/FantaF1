@@ -145,7 +145,8 @@ Do not trade correctness for micro-optimizations.
 - existing historical data must remain valid
 - API contract changes require explicit review
 - `CHANGELOG.md` is the canonical release history
-- every version, tag, or release must keep `CHANGELOG.md`, version files, and actual released state aligned
+- every version, tag, or release must keep `CHANGELOG.md`, `README.md`, `package.json`, `package-lock.json`, and actual released state strictly aligned
+- when increasing the application version, it is mandatory to coordinate the bump across all files (`package.json`, `CHANGELOG.md`, `README.md`, etc.), never updating only the changelog
 
 ---
 

@@ -1,5 +1,6 @@
-import { baseUrl, breakpoints as defaultBreakpoints } from './config.mjs';
+import { baseUrl, breakpoints as defaultBreakpoints, runtimeTarget as defaultRuntimeTarget } from './config.mjs';
 import { cleanupResponsiveCheck as defaultCleanupResponsiveCheck } from './cleanup.mjs';
+import { ensureLocalAdminCredential as defaultEnsureLocalAdminCredential } from '../local-admin-credential.mjs';
 import { ensureNpx as defaultEnsureNpx, hasDiagnosticsCollected, markDiagnosticsCollected, prepareOutputDirectory, stringifyDiagnostics } from './diagnostics.mjs';
 import { createPlaywrightCliAdapter as defaultCreatePlaywrightCliAdapter } from './playwright-cli.mjs';
 import {
@@ -19,9 +20,44 @@ import {
   canSwitchWeekend,
   validateState,
 } from './state-validation.mjs';
+import { fail } from './diagnostics.mjs';
+
+async function ensureAdminSession({
+  cli,
+  runtimeTarget,
+  targetUrl,
+}) {
+  if (!runtimeTarget?.adminAuth?.password) {
+    return;
+  }
+
+  const loginResult = await cli.evaluateJson(`async () => {
+    const response = await fetch('/api/admin/session', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'same-origin',
+      body: JSON.stringify({ password: ${JSON.stringify(runtimeTarget.adminAuth.password)} }),
+    });
+    const payload = await response.json().catch(() => null);
+    return {
+      ok: response.ok,
+      status: response.status,
+      payload,
+    };
+  }`);
+
+  if (!loginResult?.ok || !loginResult?.payload?.isAdmin) {
+    fail(
+      `Autenticazione admin fallita per il target ${runtimeTarget.name} (status: ${loginResult?.status ?? 'unknown'}).`,
+    );
+  }
+
+  cli.goto(targetUrl);
+}
 
 async function runResponsiveCheck({
   baseUrl: targetBaseUrl = baseUrl,
+  runtimeTarget = defaultRuntimeTarget,
   breakpoints = defaultBreakpoints,
   ensureNpx = defaultEnsureNpx,
   prepareOutputDirectory: prepareOutputDirectoryImpl = prepareOutputDirectory,
@@ -38,11 +74,15 @@ async function runResponsiveCheck({
   switchViewMode = defaultSwitchViewMode,
   switchWeekend = defaultSwitchWeekend,
   cleanupResponsiveCheck = defaultCleanupResponsiveCheck,
+  ensureLocalAdminCredential = defaultEnsureLocalAdminCredential,
+  ensureAdminSession: ensureAdminSessionImpl = ensureAdminSession,
   consoleImpl = console,
 } = {}) {
   ensureNpx();
   prepareOutputDirectoryImpl();
-  const localStack = await ensureLocalAppStack();
+  const localStack = await ensureLocalAppStack({
+    targetConfig: runtimeTarget,
+  });
   const cli = createPlaywrightCliAdapter();
   let playwrightSession = null;
   const allFailures = [];
@@ -53,6 +93,14 @@ async function runResponsiveCheck({
     cli.assertCleanEnvironment();
     playwrightSession = await cli.startSession({
       url: targetBaseUrl,
+    });
+    await ensureLocalAdminCredential({
+      targetConfig: runtimeTarget,
+    });
+    await ensureAdminSessionImpl({
+      cli,
+      runtimeTarget,
+      targetUrl: targetBaseUrl,
     });
 
     consoleImpl.log(`[ui-responsive] Avvio controlli su ${targetBaseUrl}`);

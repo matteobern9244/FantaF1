@@ -1,12 +1,12 @@
 # Fanta Formula 1
 
-Applicazione full-stack privata per gestire un Fanta Formula 1 con frontend React + TypeScript + Vite, backend Express e persistenza MongoDB.
+Applicazione full-stack privata per gestire un Fanta Formula 1 con frontend React + TypeScript + Vite, backend ASP.NET Core e persistenza MongoDB.
 
 L'applicazione e' pensata per un flusso amministrato: un admin seleziona il weekend, inserisce i pronostici dei tre partecipanti, registra o recupera i risultati reali e consolida i punti nello storico.
 
 ## Stato release e confronto con la produzione
 
-La versione attualmente in produzione e pubblicata e' `v1.4.4`. Il repository e' allineato alla stessa release `v1.4.4` in `package.json`, senza delta pendenti tra codice versionato e baseline live.
+La versione attualmente in produzione e pubblicata e' `v1.4.4`. Il repository e' aggiornato alla versione `v1.4.5` in `package.json`, includendo l'integrazione del framework Conductor e la certificazione del workflow.
 
 ### Baseline produzione `v1.4.4`
 
@@ -17,27 +17,33 @@ La baseline live corrisponde alle capability gia' rilasciate e documentate in `C
 - sessioni admin/public reali, analytics stagionali, CTA installazione PWA e recap highlights;
 - validazione release con `lint`, `test`, `test:coverage`, `build`, `test:ui-responsive` e `test:save-local`.
 
-### Delta del workspace corrente rispetto a `v1.4.4`
+### Delta del workspace corrente rispetto alla produzione
 
-Il workspace corrente e' allineato alla produzione `v1.4.4`; non risultano delta funzionali non rilasciati rispetto alla baseline live. Le capability rilevanti della release corrente sono:
+Il workspace corrente introduce l'adozione del framework Conductor per la gestione dello sviluppo spec-driven e la certificazione dello stato di salute del porting C#:
 
-- ristrutturazione completa della navigazione con spostamento del menu all'interno dell'header, sotto il titolo della stagione;
-- navigazione fluida su dispositivi mobili tramite barra a scorrimento orizzontale nativa e rimozione del Drawer (hamburger menu), risolvendo i bug di visibilità mobile;
-- menu mobile ottimizzato: rimossa la classe `.panel` per una trasparenza elegante e introdotto gradiente di mascheramento laterale per indicare lo scroll;
-- ottimizzazione performance: eliminato il jank durante lo scorrimento fluido su dispositivi mobili tramite l'uso di `IntersectionObserver` in luogo dei global event listeners sincroni e la disattivazione del `backdrop-filter` in mobile;
-- fix regressione dropdown mobile: ripristinato l'aspetto nativo delle select su smartphone per garantire il corretto posizionamento dei menu opzioni;
-- fix architetturale mappa circuito: il `Recap ultimo GP` visualizza ora la mappa specifica della gara conclusa recuperandola dal calendario, indipendentemente dalla selezione corrente;
-- affinamento delle classifiche reali pubbliche: `Classifica piloti` usa avatar Formula1 più nitidi con crop orientato al volto, mentre `Classifica scuderia` è stata riallineata con logo ufficiale, nome squadra colorato e rimozione del vecchio marker lineare;
-- ottimizzazione del layout standings pubbliche: il riquadro `Classifica scuderia` resta nella colonna destra su desktop ma non viene più allungato artificialmente, eliminando il grande spazio vuoto interno e mantenendo lo stacking invariato su tablet e mobile;
-- integrazione della CTA `INSTALLA APPLICAZIONE` come ultima voce della lista di navigazione unificata;
-- shortcut contestuale `Torna al menu` raffinata: la freccia flottante ancora ora lo scroll direttamente alla barra di navigazione nell'header;
-- ripristino della track map del circuito anche nella vista pubblica, sia nel recap hero del weekend selezionato sia nel pannello `Recap ultimo GP`;
-- hero iniziale riallineata con rimozione del blur dal contenitore del titolo e con sfondo dinamico della gara selezionata reso piu' luminoso;
-- test regressivi e controlli responsive aggiornati per coprire la nuova UX e la navigazione fluida;
-- baseline coverage verificata mantenuta al 100% su statements, functions, branches e lines;
-- validazione finale completa rieseguita con `test:ui-responsive`, `test:save-local` e `npm run build`.
+- **Integrazione Conductor**: introdotta la directory `conductor/` come unica source of truth per specifiche di prodotto, linee guida, tech stack e workflow operativo.
+- **Supporto .NET 10 SDK (arm64/x64)**: il backend C# è ora configurato per puntare a **.NET 10** in locale, su Docker e in CI/CD, garantendo l'uso delle ultime capability del framework.
+- **Automazione Formattazione C#**: introdotto l'uso di `dotnet format` integrato sia nel workflow locale (`npm run format:csharp`) sia nella pipeline CI/CD, assicurando che tutto il codice C# rispetti gli standard di stile definiti.
+- **Robustezza Launcher e Smoke Test**: il launcher `./start_fantaf1.command` include ora controlli preventivi sulla configurazione dell'ambiente (`.env`); lo smoke test di salvataggio rileva istantaneamente eventuali crash del backend durante il preflight, fornendo feedback immediato anziché attendere il timeout.
+- **Isolamento Ambiente di Test**: implementata una protezione rigorosa contro l'inquinamento delle variabili d'ambiente durante i test unitari; il caricamento di `dotenv` è disabilitato quando il runtime è gestito da Vitest, garantendo stabilità alla suite di validazione anche con configurazioni locali personalizzate.
+- **Certificazione Workflow**: completata la validazione dell'integrità del repository con copertura test al 100% (statements, branches, functions, lines) su tutti gli stack (Frontend, C#), garantendo la massima stabilità operativa.
+- **Pulizia Strutturale Atlas**: identificati ed eliminati i database obsoleti dal cluster MongoDB Atlas, ottimizzando l'ambiente cloud senza impatto su produzione, staging e sviluppo.
+- **Audit Anti-Regressione Porting C#**: certificata l'integrità del porting C# fino alla Fase 9, confermando parità API, sincronizzazione background e parametri di sicurezza degli strumenti di verifica.
+- **Ristrutturazione Navigazione (da v1.4.4)**: menu integrato nell'header, navigazione fluida mobile nativa, ottimizzazione performance con `IntersectionObserver` e fix mappa circuito storica.
 
-In sintesi: produzione e repository sono ora riallineati sulla stessa release `v1.4.4`.
+In sintesi: il repository ha completato la migrazione definitiva al backend C#, rimuovendo completamente il backend Node.js.
+
+## Framework Conductor
+
+Il progetto utilizza **Conductor** per orchestrare lo sviluppo basato su specifiche. La directory `conductor/` contiene:
+
+- `product.md`: definizione della visione e delle funzionalità core del prodotto.
+- `product-guidelines.md`: linee guida visive, UX e di branding.
+- `tech-stack.md`: documentazione dello stack tecnologico corrente (React e C#).
+- `workflow.md`: standard ingegneristici rigorosi, inclusi 100% TDD e protocolli di validazione.
+- `tracks.md`: registro delle unità di lavoro (track) completate o in corso.
+
+Tutti gli agenti operativi devono fare riferimento a `conductor/index.md` come punto di ingresso per le definizioni di progetto.
 
 ## Panoramica funzionale
 
@@ -278,6 +284,8 @@ Il repository segue standard ingegneristici rigorosi per garantire la sicurezza 
 - `PROJECT.md`: Verità specifica del progetto FantaF1 (vincoli di business, integrità dei dati, aree ad alto rischio).
 - `GEMINI.md`: Direttive operative specifiche per l'automazione e il ciclo di vita dell'applicazione nel repository.
 
+Ogni operazione di commit e push nel repository è vincolata all'aggiornamento preventivo di `README.md` (se necessario) e `CHANGELOG.md`, garantendo che la documentazione storica e tecnica sia sempre allineata alle modifiche effettuate.
+
 L'applicazione di questi standard garantisce un approccio "production-safe" e una validazione continua tramite un ciclo rigoroso di test e build.
 
 ### Frontend
@@ -292,17 +300,16 @@ L'applicazione di questi standard garantisce un approccio "production-safe" e un
 
 ### Backend
 
-- Server Express 5 con `cors`, `express.json()` e `dotenv`.
-- L'applicazione Express è definita in `app.js` per consentire test di integrazione, mentre `server.js` gestisce l'avvio e la connessione al database.
-- Il wiring runtime usa ora service object piccoli e testabili per i flussi piu' sensibili: `backend/race-results-service.js`, `backend/app-data-service.js`, `backend/app-route-service.js` e `backend/server-bootstrap-service.js`.
-- Espone API REST, serve gli asset statici di `dist` e usa un catch-all per il routing SPA.
-- Si connette prima al database, poi avvia il server HTTP e infine esegue in background la sincronizzazione di piloti e calendario.
-- In produzione il server ascolta su `0.0.0.0` e usa `PORT` se fornita dall'ambiente.
-- Le mutazioni admin sono protette da sessione cookie HTTP-only firmata con `ADMIN_SESSION_SECRET`; le route read-only restano pubbliche.
+- Server ASP.NET Core (.NET 10) in C#.
+- La solution si trova in `backend-csharp/FantaF1.Backend.sln` ed è strutturata nei layer `Api`, `Application`, `Domain`, `Infrastructure`.
+- Espone API REST, serve gli asset statici del frontend compilato in `dist` e gestisce il fallback alla SPA.
+- Si connette al database, poi avvia il server HTTP e gestisce la sincronizzazione in background di piloti, calendario e classifiche tramite background services.
+- In produzione il server ospita l'applicazione su Docker per Render.com.
+- Le mutazioni admin sono protette da sessione cookie HTTP-only firmata con `ADMIN_SESSION_SECRET` supportata via crypt compatibile; le route read-only restano pubbliche.
 
 ### Persistenza
 
-- MongoDB tramite `mongoose`.
+- MongoDB tramite `MongoDB.Driver`.
 - Il backend gestisce tre insiemi logici di dati:
   - stato globale del gioco;
   - cache roster piloti;
@@ -519,39 +526,61 @@ Se `MONGODB_URI` contiene gia' un database nel path, quel nome deve essere coere
 
 ### Prerequisiti
 
-- Node.js compatibile con il progetto.
+- Node.js (per il frontend Vite) e .NET 10 SDK (per il backend C#).
 - Dipendenze installate con `npm install`.
 - MongoDB raggiungibile tramite `MONGODB_URI`.
 - Google Chrome installato in `/Applications/Google Chrome.app` se si usa il launcher integrato.
-- Database locale target atteso: `fantaf1_dev`.
-- La `MONGODB_URI` locale deve quindi puntare a `.../fantaf1_dev`.
+- Runtime locale canonico di default: `csharp-dev`.
+- Target locali supportati:
+  - `csharp-dev` -> host ASP.NET Core same-origin, database atteso `fantaf1_dev`
+  - `csharp-staging-local` -> host ASP.NET Core same-origin, environment `Staging` locale, database atteso `fantaf1_staging`
+- La `MONGODB_URI` locale deve essere presente e coerente con il target selezionato; gli script locali riscrivono il database target solo per i runtime C# verso `fantaf1_porting`.
 
 ### Modalita' sviluppo separate
 
-- `npm run dev:backend`
+- `dotnet run --project backend-csharp/src/FantaF1.Api/FantaF1.Api.csproj`
 - `npm run dev:frontend`
 
-Il frontend Vite gira su `127.0.0.1:5173` e usa proxy `/api` verso `127.0.0.1:3001`.
-Il backend verifica in startup che `MONGODB_URI` sia allineata con `fantaf1_dev`.
+Il frontend Vite gira su `127.0.0.1:5173` e usa proxy `/api` verso il server ASP.NET Core.
+Il backend verifica in startup che `MONGODB_URI` sia allineata con l'environment corrente.
 
 ### Modalita' integrata consigliata
 
 - `npm run start:local`
 - `./start_fantaf1.command`
+- `./clean_google_chrome.command`
 
 Lo script integrato:
 
-- forza esplicitamente `NODE_ENV=development` per mantenere allineati environment locale e target database `fantaf1_dev`;
+- forza esplicitamente `NODE_ENV=development`;
+- usa l'host ASP.NET Core come default monitorato ed esclusivo per il backend;
 - esegue `npm run lint`, `npm run test`, `npm run build` e `npm run test:save-local`;
-- esegue uno smoke reale di lettura/scrittura su `fantaf1_dev` prima dell'avvio finale;
-- verifica che le porte `3001` e `5173` siano libere;
-- avvia backend e frontend;
+- esegue uno smoke reale di lettura/scrittura sul target locale selezionato prima dell'avvio finale;
+- verifica le porte richieste dal target locale selezionato;
+- avvia l'host same-origin ASP.NET Core;
 - attende gli health check locali;
 - apre Chrome in modalita' app sul frontend;
 - prova a massimizzare la finestra;
 - chiude i processi se uno dei child fallisce o, quando la finestra Chrome e' rilevabile, se la finestra viene chiusa.
 
 Il controllo browser `npm run test:ui-responsive` resta disponibile come verifica esplicita separata per task con impatto UI/responsive, ma non fa piu' parte del preflight automatico di `./start_fantaf1.command`.
+Esempi:
+
+- `./start_fantaf1.command` -> avvia l'ambiente con backend C#
+- `FANTAF1_LOCAL_RUNTIME=csharp-staging-local ./start_fantaf1.command`
+
+### Ripristino rapido di Google Chrome
+
+Se Google Chrome non si apre correttamente dopo esecuzioni Playwright o altri tool di automazione locali, il repository include:
+
+- `./clean_google_chrome.command`
+
+Lo script:
+
+- chiude solo i processi Chrome di automazione riconoscibili collegati a profili `playwright_chromiumdev_profile-*` o a `chrome-devtools-mcp`;
+- non modifica il launcher principale `./start_fantaf1.command`;
+- rilancia Google Chrome da `/Applications/Google Chrome.app`;
+- esegue un controllo breve per verificare che Chrome sia tornato attivo.
 
 ## Deploy su Render
 
@@ -559,7 +588,8 @@ Il controllo browser `npm run test:ui-responsive` resta disponibile come verific
 
 - Build command: `npm install && npm run build`
 - Il repository forza l'installazione delle `devDependencies` anche durante la build tramite `.npmrc`, per garantire su Render la presenza della toolchain TypeScript/Vite e dei type package React necessari alla compilazione frontend.
-- Start command: `npm start`
+- Build command (Docker): definito nel `Dockerfile` del backend-csharp
+- Environment: Docker per Render.com
 
 ### Variabili da configurare
 
@@ -572,8 +602,8 @@ Il controllo browser `npm run test:ui-responsive` resta disponibile come verific
 
 ### Comportamento in produzione
 
-- Express serve i file statici generati in `dist`.
-- In produzione il backend richiede che la configurazione risolva a `fantaf1`, leggendo il path di `MONGODB_URI` o, se assente, il fallback ambiente.
+- L'applicazione ASP.NET Core serve i file statici generati in `dist`.
+- In produzione il backend C# richiede che la configurazione risolva al database di produzione corretto.
 - Dopo la connessione al database il server parte subito e sincronizza piloti e calendario in background, evitando di bloccare lo startup su sorgenti lente.
 
 ## Qualita' tecnica
@@ -581,8 +611,7 @@ Il controllo browser `npm run test:ui-responsive` resta disponibile come verific
 ### Comandi disponibili
 
 - `npm run lint`
-- `npm run test`
-- `npm run test:coverage`
+- `npm run test:csharp-coverage`
 - `npm run test:save-local`
 - `npm run test:ui-responsive`
 - `npm run build`
@@ -591,27 +620,28 @@ Il controllo browser `npm run test:ui-responsive` resta disponibile come verific
 
 ### Lint
 
-- ESLint configurato per frontend TypeScript/React, backend Node e suite test.
+- ESLint configurato per frontend TypeScript/React e suite test.
 - Ignore principali: `dist`, `coverage`, `.playwright-cli`.
 
 ### Test
 
 - Runner: Vitest.
-- Coverage provider: V8.
+- Coverage provider: v8.
 - Baseline coverage verificata corrente sullo scope ufficiale del repository/applicazione:
-  - `5167 / 5167` statements
-  - `407 / 407` functions
-  - `2093 / 2093` branches
-  - `5167 / 5167` lines
+  - `5176 / 5176` statements
+  - `408 / 408` functions
+  - `2096 / 2096` branches
+  - `5176 / 5176` lines
+- Coverage ufficiale verificata corrente del backend C# sullo scope `backend-csharp/src/`:
+  - `2928 / 2928` lines
+  - `1649 / 1649` branches
+  - `487 / 487` methods
+  - `70` file inclusi nel riepilogo ufficiale
 - Scope coverage configurato:
-  - `app.js`
-  - `server.js`
-  - `backend/**/*.js`
+  - `backend-csharp/src/**/*.cs`
   - `src/**/*.ts`
   - `src/**/*.tsx`
 - Esclusioni coverage:
-  - `backend/config.js`
-  - `backend/models.js`
   - `src/types.ts`
   - `src/vite-env.d.ts`
 - Soglie attuali:
@@ -620,17 +650,18 @@ Il controllo browser `npm run test:ui-responsive` resta disponibile come verific
   - `branches: 100`
   - `statements: 100`
 
-La suite copre business logic, storage MongoDB, sanitizzazione, parsing di piloti e calendario, risultati, formattazione UI e regressioni sui flussi principali.
-Include test di integrazione API (tramite `supertest` su `app.js`) e test dei componenti UI (tramite `jsdom` e `React Testing Library`).
+La suite copre business logic, storage MongoDB, formattazione UI e regressioni sui flussi principali tramite `xUnit`/`NUnit` (C#) e Vitest/React Testing Library (Frontend).
 Include anche test unitari dedicati allo split deterministico del titolo hero e ai fallback responsive del titolo configurato.
 Include test dedicati alla live projection del weekend selezionato, agli stati UI `nessun risultato ufficiale` / `risultati parziali`, al parser risultati Formula1.com corrente e alla cache TTL di `GET /api/results/:meetingKey`.
 Per la UI e' disponibile anche `npm run test:ui-responsive`, che usa Playwright CLI via `npx` contro l'app locale avviata e verifica i breakpoint principali, il box "Prossimo weekend", il tooltip risultati, l'assenza di overflow orizzontali fuori dal carosello calendario e la coerenza tra vista admin e vista pubblica.
 Il controllo responsive verifica anche la presenza del menu corretto per breakpoint: nav desktop persistente nelle viewport larghe, trigger `Sezioni` e drawer laterale sinistro su mobile, coerenza delle voci admin/public e assenza di regressioni sulla CTA `INSTALLA APPLICAZIONE`, che deve restare visibile in viewport.
 Il comando esegue un preflight fail-fast sull'ambiente Playwright: se trova sessioni responsive residue (`ui-*`) o una CLI non reattiva, interrompe il run senza killare processi non creati da lui e riporta le istruzioni di bonifica manuale.
 Su errori di navigazione o shell UI bloccata raccoglie artefatti diagnostici in `output/playwright/ui-responsive/` (summary, stato pagina, tab-list, screenshot se disponibile, console e network log) per distinguere facilmente tra regressione UI, splash bloccata e sessione Playwright incoerente.
-Per il salvataggio locale e' disponibile `npm run test:save-local`, che legge `/api/data`, re-invia lo stesso payload su `POST /api/data`, verifica `environment=development`, `databaseTarget=fantaf1_dev` e controlla che lo stato resti invariato dopo il round-trip. Questo smoke test copre il canale di persistenza generica, non il salvataggio manuale dei pronostici su `POST /api/predictions`.
-Per la CI e' disponibile anche `npm run test:coverage`, mentre lo smoke di persistenza puo' essere eseguito sul database isolato di pipeline impostando `MONGODB_DB_NAME_OVERRIDE`, `SAVE_SMOKE_EXPECTED_ENVIRONMENT` e `SAVE_SMOKE_EXPECTED_DATABASE_TARGET` senza toccare `fantaf1_dev` o `fantaf1`.
-Per una verifica browser production-like coerente con il guardrail sul database, il repository supporta anche l'avvio con `NODE_ENV=production MONGODB_DB_NAME_OVERRIDE=fantaf1_dev npm start`, mantenendo runtime `production` ma puntando in modo esplicito al database locale di sviluppo per smoke desktop/mobile della build servita da Express.
+Per il salvataggio locale e' disponibile `npm run test:save-local`, che per default usa `csharp-dev`, legge `/api/data`, re-invia lo stesso payload su `POST /api/data`, verifica environment/database target attesi e controlla che lo stato resti invariato dopo il round-trip. Lo stesso smoke puo' essere rieseguito in modo esplicito su `csharp-staging-local` con `SAVE_SMOKE_TARGET=...`, includendo login admin e riuso del cookie nel target production-like locale. Questo smoke test copre il canale di persistenza generica, non il salvataggio manuale dei pronostici su `POST /api/predictions`.
+Lo smoke di persistenza puo' essere eseguito sul database isolato di pipeline, mentre lo smoke di persistenza puo' essere eseguito sul database isolato di pipeline impostando `MONGODB_DB_NAME_OVERRIDE`, `SAVE_SMOKE_EXPECTED_ENVIRONMENT` e `SAVE_SMOKE_EXPECTED_DATABASE_TARGET` senza toccare `fantaf1_dev`, `fantaf1` o `fantaf1_porting`.
+Per il backend C# e' disponibile `npm run test:csharp-coverage`, comando ufficiale che esegue la raccolta coverlet sui test unit/integration/contract, filtra `obj/` e generated code, limita lo scope a `backend-csharp/src/` e scrive il riepilogo verificabile in `backend-csharp/TestResults/OfficialCoverage/Summary.txt` e `backend-csharp/TestResults/OfficialCoverage/summary.json`.
+L'ultimo riepilogo ufficiale verificato per il backend C# chiude a `100%` su linee, branch e metodi per tutti i `70` file inclusi nello scope `backend-csharp/src/`.
+Per una verifica browser production-like coerente con il guardrail sul database, il repository supporta anche l'avvio con `ASPNETCORE_ENVIRONMENT=Production MONGODB_DB_NAME_OVERRIDE=fantaf1_dev dotnet run --project backend-csharp/src/FantaF1.Api/FantaF1.Api.csproj`, mantenendo runtime `production` ma puntando in modo esplicito al database locale di sviluppo per smoke desktop/mobile della build servita dal backend C#.
 Per ripulire documenti legacy che contengono ancora campi del `Weekend Boost` e' disponibile `npm run migrate:remove-weekend-boost`, script idempotente che riscrive gli `AppData` del database corrente in forma sanificata.
 
 ## CI/CD GitHub
@@ -667,12 +698,11 @@ Per ripulire documenti legacy che contengono ancora campi del `Weekend Boost` e'
 ## Struttura del repository
 
 - `src/`: frontend React, costanti, tipi e utility UI.
-- `backend/`: parsing esterno, validazione, storage e modelli Mongoose.
-- `app.js`: definizione dell'applicazione Express per il testing.
-- `server.js`: entry point per l'avvio del server.
+- `backend-csharp/`: backend ASP.NET Core in C# (API, Application, Domain, Infrastructure).
+- `docs/`: documentazione del progetto, incluso il porting C#.
 - `config/`: configurazione applicativa centralizzata.
-- `scripts/`: launcher locale e migrazioni operative one-shot.
-- `tests/`: test unitari e fixture HTML.
+- `scripts/`: launcher locale e script di automazione.
+- `tests/`: test frontend e controlli responsive.
 - `public/`: font e asset statici serviti dal frontend.
 
 ## Changelog

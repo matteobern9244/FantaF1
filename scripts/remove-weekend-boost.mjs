@@ -1,4 +1,8 @@
-import 'dotenv/config';
+// Load environment variables only outside test environment
+if (!process.env.VITEST) {
+  const { default: dotenv } = await import('dotenv');
+  dotenv.config();
+}
 import mongoose from 'mongoose';
 import { AppData, Weekend } from '../backend/models.js';
 import {

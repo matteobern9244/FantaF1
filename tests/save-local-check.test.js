@@ -24,7 +24,7 @@ describe('local save smoke runner', () => {
         createJsonResponse({
           status: 'ok',
           environment: 'development',
-          databaseTarget: 'fantaf1_dev',
+          databaseTarget: 'fantaf1_staging',
         }),
       )
       .mockResolvedValueOnce(createJsonResponse(state))
@@ -32,16 +32,17 @@ describe('local save smoke runner', () => {
       .mockResolvedValueOnce(createJsonResponse(state));
 
     const result = await runSaveSmoke({
-      baseUrl: 'http://127.0.0.1:3001',
+      target: 'csharp-dev',
+      baseUrl: 'http://127.0.0.1:3002',
       fetchImpl,
     });
 
-    expect(result.health.databaseTarget).toBe('fantaf1_dev');
+    expect(result.health.databaseTarget).toBe('fantaf1_staging');
     expect(result.saveResult.message).toBe('Dati salvati correttamente.');
     expect(fetchImpl).toHaveBeenCalledTimes(4);
     expect(fetchImpl).toHaveBeenNthCalledWith(
       3,
-      'http://127.0.0.1:3001/api/data',
+      'http://127.0.0.1:3002/api/data',
       expect.objectContaining({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -65,7 +66,7 @@ describe('local save smoke runner', () => {
         createJsonResponse({
           status: 'ok',
           environment: 'development',
-          databaseTarget: 'fantaf1_dev',
+          databaseTarget: 'fantaf1_staging',
         }),
       )
       .mockResolvedValueOnce(createJsonResponse(state))
@@ -78,12 +79,13 @@ describe('local save smoke runner', () => {
     });
 
     const result = await runSaveSmoke({
-      baseUrl: 'http://127.0.0.1:3001',
+      target: 'csharp-dev',
+      baseUrl: 'http://127.0.0.1:3002',
       fetchImpl,
       ensureBackend,
     });
 
-    expect(result.health.databaseTarget).toBe('fantaf1_dev');
+    expect(result.health.databaseTarget).toBe('fantaf1_staging');
     expect(ensureBackend).toHaveBeenCalledTimes(1);
     expect(stopBackend).toHaveBeenCalledTimes(1);
   });
@@ -99,7 +101,8 @@ describe('local save smoke runner', () => {
 
     await expect(
       runSaveSmoke({
-        baseUrl: 'http://127.0.0.1:3001',
+        target: 'csharp-dev',
+        baseUrl: 'http://127.0.0.1:3002',
         fetchImpl,
       }),
     ).rejects.toThrow('Smoke save consentito solo in development.');
@@ -119,7 +122,7 @@ describe('local save smoke runner', () => {
         createJsonResponse({
           status: 'ok',
           environment: 'development',
-          databaseTarget: 'fantaf1_dev',
+          databaseTarget: 'fantaf1_staging',
         }),
       )
       .mockResolvedValueOnce(createJsonResponse(state))
@@ -135,7 +138,8 @@ describe('local save smoke runner', () => {
 
     await expect(
       runSaveSmoke({
-        baseUrl: 'http://127.0.0.1:3001',
+        target: 'csharp-dev',
+        baseUrl: 'http://127.0.0.1:3002',
         fetchImpl,
       }),
     ).rejects.toThrow(
@@ -161,7 +165,7 @@ describe('local save smoke runner', () => {
         createJsonResponse({
           status: 'ok',
           environment: 'development',
-          databaseTarget: 'fantaf1_dev',
+          databaseTarget: 'fantaf1_staging',
         }),
       )
       .mockResolvedValueOnce(createJsonResponse(beforeState))
@@ -177,7 +181,8 @@ describe('local save smoke runner', () => {
 
     await expect(
       runSaveSmoke({
-        baseUrl: 'http://127.0.0.1:3001',
+        target: 'csharp-dev',
+        baseUrl: 'http://127.0.0.1:3002',
         fetchImpl,
       }),
     ).rejects.toThrow('Lo stato letto dopo il salvataggio non coincide con il payload inviato.');
@@ -201,7 +206,7 @@ describe('local save smoke runner', () => {
         createJsonResponse({
           status: 'ok',
           environment: 'development',
-          databaseTarget: 'fantaf1_dev',
+          databaseTarget: 'fantaf1_staging',
         }),
       )
       .mockResolvedValueOnce(createJsonResponse(beforeState))
@@ -211,7 +216,8 @@ describe('local save smoke runner', () => {
       .mockResolvedValueOnce(createJsonResponse(stabilizedState));
 
     const result = await runSaveSmoke({
-      baseUrl: 'http://127.0.0.1:3001',
+      target: 'csharp-dev',
+      baseUrl: 'http://127.0.0.1:3002',
       fetchImpl,
     });
 
@@ -219,7 +225,7 @@ describe('local save smoke runner', () => {
     expect(result.afterState).toEqual(stabilizedState);
     expect(fetchImpl).toHaveBeenNthCalledWith(
       5,
-      'http://127.0.0.1:3001/api/data',
+      'http://127.0.0.1:3002/api/data',
       expect.objectContaining({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -254,7 +260,8 @@ describe('local save smoke runner', () => {
       .mockResolvedValueOnce(createJsonResponse(state));
 
     const result = await runSaveSmoke({
-      baseUrl: 'http://127.0.0.1:3001',
+      target: 'csharp-dev',
+      baseUrl: 'http://127.0.0.1:3002',
       expectedEnvironment: 'ci',
       expectedDatabaseTarget: 'fantaf1_ci',
       fetchImpl,
@@ -262,5 +269,170 @@ describe('local save smoke runner', () => {
 
     expect(result.health.environment).toBe('ci');
     expect(result.health.databaseTarget).toBe('fantaf1_ci');
+  });
+
+  it('starts the integrated csharp runtime when the explicit target requires it', async () => {
+    const state = {
+      users: [{ name: 'Player 1', predictions: { first: '', second: '', third: '', pole: '' }, points: 0 }],
+      history: [],
+      gpName: 'Australian Grand Prix 2026',
+      raceResults: { first: '', second: '', third: '', pole: '' },
+      selectedMeetingKey: '2026-australia',
+    };
+    const fetchImpl = vi
+      .fn()
+      .mockRejectedValueOnce(new Error('fetch failed'))
+      .mockResolvedValueOnce(
+        createJsonResponse({
+          status: 'ok',
+          environment: 'development',
+          databaseTarget: 'fantaf1_staging',
+        }),
+      )
+      .mockResolvedValueOnce(createJsonResponse(state))
+      .mockResolvedValueOnce(createJsonResponse({ message: 'Dati salvati correttamente.' }))
+      .mockResolvedValueOnce(createJsonResponse(state));
+    const ensureBackend = vi.fn().mockResolvedValue({
+      started: true,
+      stop: vi.fn().mockResolvedValue(undefined),
+    });
+
+    const result = await runSaveSmoke({
+      target: 'csharp-dev',
+      fetchImpl,
+      ensureBackend,
+    });
+
+    expect(result.health.databaseTarget).toBe('fantaf1_staging');
+    expect(ensureBackend).toHaveBeenCalledWith(expect.objectContaining({
+      healthUrl: 'http://127.0.0.1:3002/api/health',
+      backendCommand: 'dotnet',
+      backendArgs: [
+        'run',
+        '--project',
+        'backend-csharp/src/FantaF1.Api/FantaF1.Api.csproj',
+        '-c',
+        'Release',
+        '--no-launch-profile',
+      ],
+      startupEnv: expect.objectContaining({
+        ASPNETCORE_ENVIRONMENT: 'Development',
+        ASPNETCORE_URLS: 'http://127.0.0.1:3002',
+        MONGODB_DB_NAME_OVERRIDE: 'fantaf1_staging',
+      }),
+    }));
+  });
+
+  it('authenticates the staging target before posting the save payload', async () => {
+    const state = {
+      users: [{ name: 'Player 1', predictions: { first: '', second: '', third: '', pole: '' }, points: 0 }],
+      history: [],
+      gpName: 'Australian Grand Prix 2026',
+      raceResults: { first: '', second: '', third: '', pole: '' },
+      selectedMeetingKey: '2026-australia',
+    };
+    const fetchImpl = vi
+      .fn()
+      .mockResolvedValueOnce(
+        createJsonResponse({
+          status: 'ok',
+          environment: 'staging',
+          databaseTarget: 'fantaf1_staging',
+        }),
+      )
+      .mockResolvedValueOnce(createJsonResponse(state))
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        headers: {
+          get: (name) => (name === 'set-cookie' ? 'fantaf1_admin_session=staging-cookie; Path=/; HttpOnly' : null),
+        },
+        text: async () => JSON.stringify({ isAdmin: true, defaultViewMode: 'admin' }),
+      })
+      .mockResolvedValueOnce(createJsonResponse({ message: 'Dati salvati correttamente.' }))
+      .mockResolvedValueOnce(createJsonResponse(state));
+
+    const result = await runSaveSmoke({
+      target: 'csharp-staging-local',
+      fetchImpl,
+      ensureAdminCredential: vi.fn().mockResolvedValue(true),
+    });
+
+    expect(result.health.environment).toBe('staging');
+    expect(fetchImpl).toHaveBeenNthCalledWith(
+      4,
+      'http://127.0.0.1:3003/api/data',
+      expect.objectContaining({
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Cookie: 'fantaf1_admin_session=staging-cookie',
+        },
+      }),
+    );
+  });
+
+  it('fails explicitly when the staging admin login does not return a session cookie', async () => {
+    const state = {
+      users: [{ name: 'Player 1', predictions: { first: '', second: '', third: '', pole: '' }, points: 0 }],
+      history: [],
+      gpName: 'Australian Grand Prix 2026',
+      raceResults: { first: '', second: '', third: '', pole: '' },
+      selectedMeetingKey: '2026-australia',
+    };
+    const fetchImpl = vi
+      .fn()
+      .mockResolvedValueOnce(
+        createJsonResponse({
+          status: 'ok',
+          environment: 'staging',
+          databaseTarget: 'fantaf1_staging',
+        }),
+      )
+      .mockResolvedValueOnce(createJsonResponse(state))
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        headers: {
+          get: () => null,
+        },
+        text: async () => JSON.stringify({ isAdmin: true, defaultViewMode: 'admin' }),
+      });
+
+    await expect(
+      runSaveSmoke({
+        target: 'csharp-staging-local',
+        fetchImpl,
+        ensureAdminCredential: vi.fn().mockResolvedValue(true),
+      }),
+    ).rejects.toThrow('POST /api/admin/session non ha restituito un cookie di sessione admin valido.');
+  });
+
+  it('fails quickly when the backend process exits unexpectedly during startup', async () => {
+    const fetchImpl = vi.fn().mockRejectedValue(new Error('fetch failed'));
+    
+    // Simulate the behavior of the real script
+    const ensureBackendMock = vi.fn().mockRejectedValue(new Error('Il processo backend e\' terminato inaspettatamente con codice 1.'));
+
+    await expect(
+      runSaveSmoke({
+        target: 'csharp-dev',
+        fetchImpl,
+        ensureBackend: ensureBackendMock,
+      }),
+    ).rejects.toThrow('Il processo backend e\' terminato inaspettatamente con codice 1.');
+  });
+
+  it('fails when MONGODB_URI is missing from environment during backend bootstrap', async () => {
+    const fetchImpl = vi.fn().mockRejectedValue(new Error('fetch failed'));
+    const ensureBackendMock = vi.fn().mockRejectedValue(new Error('Variabile d\'ambiente MONGODB_URI non definita. Verifica la configurazione del file .env.'));
+
+    await expect(
+      runSaveSmoke({
+        target: 'csharp-dev',
+        fetchImpl,
+        ensureBackend: ensureBackendMock,
+      }),
+    ).rejects.toThrow('Variabile d\'ambiente MONGODB_URI non definita. Verifica la configurazione del file .env.');
   });
 });

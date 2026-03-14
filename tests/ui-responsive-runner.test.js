@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { cleanupResponsiveCheck } from '../scripts/ui-responsive/cleanup.mjs';
 import { runResponsiveCheck } from '../scripts/ui-responsive/run-responsive-check.mjs';
+import { resolveUiResponsiveTarget } from '../scripts/local-runtime-targets.mjs';
 
 describe('responsive UI runner', () => {
   it('executes the responsive workflow in order and cleans up at the end', async () => {
@@ -46,10 +47,17 @@ describe('responsive UI runner', () => {
 
     const result = await runResponsiveCheck({
       baseUrl: 'http://127.0.0.1:5173',
+      runtimeTarget: resolveUiResponsiveTarget({
+        UI_RESPONSIVE_TARGET: 'csharp-dev',
+      }),
       breakpoints: [{ label: 'mobile', width: 390, height: 844 }],
       ensureNpx: vi.fn(),
       prepareOutputDirectory: vi.fn(),
       ensureLocalAppStack: vi.fn(async () => localStack),
+      ensureLocalAdminCredential: vi.fn(async () => false),
+      ensureAdminSession: vi.fn(async () => {
+        calls.push('ensure-admin');
+      }),
       waitForFrontend: vi.fn(async () => {
         calls.push('wait-frontend');
       }),
@@ -86,6 +94,7 @@ describe('responsive UI runner', () => {
       'wait-frontend',
       'assert-clean',
       'start-session',
+      'ensure-admin',
       'navigate',
       'resize:mobile',
       'navigate',
@@ -94,6 +103,85 @@ describe('responsive UI runner', () => {
       'playwright-stop',
       'stack-stop',
     ]);
+  });
+
+  it('passes the explicit local runtime target to the stack bootstrapper', async () => {
+    const ensureLocalAppStack = vi.fn(async () => ({
+      stop: vi.fn(async () => {}),
+    }));
+
+    await runResponsiveCheck({
+      baseUrl: 'http://127.0.0.1:3003',
+      runtimeTarget: resolveUiResponsiveTarget({
+        UI_RESPONSIVE_TARGET: 'csharp-staging-local',
+      }),
+      breakpoints: [],
+      ensureNpx: vi.fn(),
+      prepareOutputDirectory: vi.fn(),
+      ensureLocalAppStack,
+      waitForFrontend: vi.fn(async () => {}),
+      createPlaywrightCliAdapter: vi.fn(() => ({
+        assertCleanEnvironment: vi.fn(),
+        startSession: vi.fn(async () => ({
+          stop: vi.fn(async () => []),
+        })),
+        collectDiagnostics: vi.fn(),
+      })),
+      cleanupResponsiveCheck: vi.fn(async () => []),
+      ensureAdminSession: vi.fn(async () => {}),
+      consoleImpl: {
+        log: vi.fn(),
+        error: vi.fn(),
+      },
+    });
+
+    expect(ensureLocalAppStack).toHaveBeenCalledWith({
+      targetConfig: expect.objectContaining({
+        name: 'csharp-staging-local',
+        baseUrl: 'http://127.0.0.1:3003',
+        expectedDatabaseTarget: 'fantaf1_staging',
+      }),
+    });
+  });
+
+  it('authenticates the responsive session when the target requires admin access', async () => {
+    const ensureAdminSession = vi.fn(async () => {});
+
+    await runResponsiveCheck({
+      baseUrl: 'http://127.0.0.1:3003',
+      runtimeTarget: resolveUiResponsiveTarget({
+        UI_RESPONSIVE_TARGET: 'csharp-staging-local',
+        MONGODB_URI: 'mongodb+srv://user:pass@cluster.mongodb.net/fantaf1_dev?retryWrites=true&w=majority',
+      }),
+      breakpoints: [],
+      ensureNpx: vi.fn(),
+      prepareOutputDirectory: vi.fn(),
+      ensureLocalAppStack: vi.fn(async () => ({
+        stop: vi.fn(async () => {}),
+      })),
+      ensureLocalAdminCredential: vi.fn(async () => true),
+      waitForFrontend: vi.fn(async () => {}),
+      createPlaywrightCliAdapter: vi.fn(() => ({
+        assertCleanEnvironment: vi.fn(),
+        startSession: vi.fn(async () => ({
+          stop: vi.fn(async () => []),
+        })),
+        collectDiagnostics: vi.fn(),
+      })),
+      ensureAdminSession,
+      cleanupResponsiveCheck: vi.fn(async () => []),
+      consoleImpl: {
+        log: vi.fn(),
+        error: vi.fn(),
+      },
+    });
+
+    expect(ensureAdminSession).toHaveBeenCalledWith(expect.objectContaining({
+      runtimeTarget: expect.objectContaining({
+        name: 'csharp-staging-local',
+      }),
+      targetUrl: 'http://127.0.0.1:3003',
+    }));
   });
 });
 

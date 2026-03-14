@@ -1,17 +1,18 @@
+// Load environment variables only outside test environment
+if (!process.env.VITEST) {
+  const { default: dotenv } = await import('dotenv');
+  dotenv.config();
+}
 import fs from 'fs';
 import path from 'path';
 import { spawn } from 'child_process';
 import { fileURLToPath, pathToFileURL } from 'url';
-import { MONGO_DATABASE_NAME_OVERRIDE_ENV_VAR } from '../backend/database.js';
+import { ensureLocalAdminCredential } from './local-admin-credential.mjs';
+import { resolveSaveSmokeTarget, rewriteMongoDatabaseName } from './local-runtime-targets.mjs';
 
-const DEFAULT_BASE_URL = process.env.SAVE_SMOKE_BASE_URL ?? 'http://127.0.0.1:3001';
-const DEFAULT_EXPECTED_ENVIRONMENT = process.env.SAVE_SMOKE_EXPECTED_ENVIRONMENT ?? 'development';
-const DEFAULT_EXPECTED_DATABASE_TARGET =
-  process.env.SAVE_SMOKE_EXPECTED_DATABASE_TARGET ??
-  process.env[MONGO_DATABASE_NAME_OVERRIDE_ENV_VAR] ??
-  'fantaf1_dev';
-const HEALTH_PATH = '/api/health';
+const defaultTarget = resolveSaveSmokeTarget();
 const DATA_PATH = '/api/data';
+const ADMIN_SESSION_PATH = '/api/admin/session';
 const STARTUP_TIMEOUT_MS = 45000;
 const POLL_INTERVAL_MS = 600;
 
@@ -77,6 +78,54 @@ async function readJsonResponse(response, label) {
   return parsedBody;
 }
 
+function extractSessionCookie(response) {
+  if (!response?.headers) {
+    return null;
+  }
+
+  if (typeof response.headers.getSetCookie === 'function') {
+    const [cookie] = response.headers.getSetCookie();
+    return cookie ? cookie.split(';', 1)[0] : null;
+  }
+
+  if (typeof response.headers.get === 'function') {
+    const cookie = response.headers.get('set-cookie');
+    return cookie ? cookie.split(';', 1)[0] : null;
+  }
+
+  const rawCookie = response.headers['set-cookie'];
+  if (Array.isArray(rawCookie)) {
+    return rawCookie[0]?.split(';', 1)[0] ?? null;
+  }
+
+  return typeof rawCookie === 'string'
+    ? rawCookie.split(';', 1)[0]
+    : null;
+}
+
+async function loginAdminSession({
+  baseUrl,
+  password,
+  fetchImpl,
+}) {
+  const response = await fetchImpl(`${baseUrl}${ADMIN_SESSION_PATH}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ password }),
+  });
+  const payload = await readJsonResponse(response, 'POST /api/admin/session');
+  const sessionCookie = extractSessionCookie(response);
+
+  if (!sessionCookie) {
+    throw new Error('POST /api/admin/session non ha restituito un cookie di sessione admin valido.');
+  }
+
+  return {
+    payload,
+    sessionCookie,
+  };
+}
+
 function loadEnvFile(filePath) {
   if (!fs.existsSync(filePath)) {
     return {};
@@ -110,12 +159,16 @@ function sleep(durationMs) {
   });
 }
 
-async function waitForHealthyBackend({ baseUrl, fetchImpl, timeoutMs = STARTUP_TIMEOUT_MS }) {
+async function waitForHealthyBackend({ healthUrl, fetchImpl, timeoutMs = STARTUP_TIMEOUT_MS, onCheck }) {
   const startedAt = Date.now();
 
   while (Date.now() - startedAt < timeoutMs) {
+    if (typeof onCheck === 'function') {
+      onCheck();
+    }
+
     try {
-      const response = await fetchImpl(`${baseUrl}${HEALTH_PATH}`);
+      const response = await fetchImpl(healthUrl);
       if (response?.ok) {
         return;
       }
@@ -127,21 +180,47 @@ async function waitForHealthyBackend({ baseUrl, fetchImpl, timeoutMs = STARTUP_T
     await sleep(POLL_INTERVAL_MS);
   }
 
-  throw new Error(`Backend locale non raggiungibile su ${baseUrl} entro ${timeoutMs}ms.`);
+  throw new Error(`Backend locale non raggiungibile su ${healthUrl} entro ${timeoutMs}ms.`);
 }
 
-async function ensureLocalBackend({ baseUrl, fetchImpl }) {
+async function ensureLocalBackend({
+  healthUrl,
+  fetchImpl,
+  backendCommand = 'node',
+  backendArgs = ['server.js'],
+  startupEnv = {},
+} = {}) {
   const env = {
     ...process.env,
     ...loadEnvFile(path.join(projectRoot, '.env')),
     ...loadEnvFile(path.join(projectRoot, '.env.local')),
+    ...startupEnv,
   };
-  const child = spawn('node', ['server.js'], {
+
+  if (typeof env.MONGODB_URI !== 'string' || !env.MONGODB_URI.trim()) {
+    throw new Error(
+      "Variabile d'ambiente MONGODB_URI non definita. Verifica la configurazione del file .env partendo da .env.example o impostala nel terminale.",
+    );
+  }
+
+  if (
+    typeof env.MONGODB_URI === 'string'
+    && typeof startupEnv.MONGODB_DB_NAME_OVERRIDE === 'string'
+    && typeof startupEnv.MONGODB_URI !== 'string'
+  ) {
+    env.MONGODB_URI = rewriteMongoDatabaseName(env.MONGODB_URI, startupEnv.MONGODB_DB_NAME_OVERRIDE);
+  }
+  const child = spawn(backendCommand, backendArgs, {
     cwd: projectRoot,
     env,
     stdio: 'ignore',
   });
   let stopped = false;
+  let exitCode = null;
+
+  child.on('exit', (code) => {
+    exitCode = code;
+  });
 
   const stop = async () => {
     if (stopped || child.killed) {
@@ -157,7 +236,17 @@ async function ensureLocalBackend({ baseUrl, fetchImpl }) {
   };
 
   try {
-    await waitForHealthyBackend({ baseUrl, fetchImpl });
+    await waitForHealthyBackend({
+      healthUrl,
+      fetchImpl,
+      onCheck: () => {
+        if (exitCode !== null) {
+          throw new Error(
+            `Il processo backend e' terminato inaspettatamente con codice ${exitCode} durante l'avvio.`,
+          );
+        }
+      },
+    });
     return {
       started: true,
       stop,
@@ -169,24 +258,36 @@ async function ensureLocalBackend({ baseUrl, fetchImpl }) {
 }
 
 async function runSaveSmoke({
-  baseUrl = DEFAULT_BASE_URL,
-  expectedEnvironment = DEFAULT_EXPECTED_ENVIRONMENT,
-  expectedDatabaseTarget = DEFAULT_EXPECTED_DATABASE_TARGET,
+  target = defaultTarget.name,
+  baseUrl,
+  backendHealthUrl,
+  expectedEnvironment,
+  expectedDatabaseTarget,
   fetchImpl = fetch,
   ensureBackend = ensureLocalBackend,
+  ensureAdminCredential = ensureLocalAdminCredential,
 } = {}) {
   if (typeof fetchImpl !== 'function') {
     throw new Error('fetch non disponibile per lo smoke test di salvataggio.');
   }
 
-  const normalizedBaseUrl = baseUrl.replace(/\/+$/, '');
+  const resolvedTarget = resolveSaveSmokeTarget({
+    ...process.env,
+    ...(target && { SAVE_SMOKE_TARGET: target }),
+    ...(baseUrl && { SAVE_SMOKE_BASE_URL: baseUrl }),
+    ...(backendHealthUrl && { SAVE_SMOKE_BACKEND_HEALTH_URL: backendHealthUrl }),
+    ...(expectedEnvironment && { SAVE_SMOKE_EXPECTED_ENVIRONMENT: expectedEnvironment }),
+    ...(expectedDatabaseTarget && { SAVE_SMOKE_EXPECTED_DATABASE_TARGET: expectedDatabaseTarget }),
+  });
+  const normalizedBaseUrl = resolvedTarget.baseUrl.replace(/\/+$/, '');
+  const normalizedHealthUrl = resolvedTarget.backendHealthUrl.replace(/\/+$/, '');
   let backendHandle = null;
   let health;
 
   try {
     try {
       health = await readJsonResponse(
-        await fetchImpl(`${normalizedBaseUrl}${HEALTH_PATH}`),
+        await fetchImpl(normalizedHealthUrl),
         'GET /api/health',
       );
     } catch (error) {
@@ -195,36 +296,60 @@ async function runSaveSmoke({
       }
 
       backendHandle = await ensureBackend({
-        baseUrl: normalizedBaseUrl,
+        healthUrl: normalizedHealthUrl,
         fetchImpl,
+        backendCommand: resolvedTarget.backendCommand,
+        backendArgs: resolvedTarget.backendArgs,
+        startupEnv: resolvedTarget.startupEnv,
       });
       health = await readJsonResponse(
-        await fetchImpl(`${normalizedBaseUrl}${HEALTH_PATH}`),
+        await fetchImpl(normalizedHealthUrl),
         'GET /api/health',
       );
     }
 
-    if (health.environment !== expectedEnvironment) {
+    if (health.environment !== resolvedTarget.expectedEnvironment) {
       throw new Error(
-        `Smoke save consentito solo in ${expectedEnvironment}. Environment attuale: "${health.environment ?? 'unknown'}".`,
+        `Smoke save consentito solo in ${resolvedTarget.expectedEnvironment}. Environment attuale: "${health.environment ?? 'unknown'}".`,
       );
     }
 
-    if (health.databaseTarget !== expectedDatabaseTarget) {
+    if (health.databaseTarget !== resolvedTarget.expectedDatabaseTarget) {
       throw new Error(
-        `Smoke save richiede databaseTarget "${expectedDatabaseTarget}". Trovato "${health.databaseTarget ?? 'unknown'}".`,
+        `Smoke save richiede databaseTarget "${resolvedTarget.expectedDatabaseTarget}". Trovato "${health.databaseTarget ?? 'unknown'}".`,
       );
+    }
+
+    if (resolvedTarget.adminAuth?.password) {
+      await ensureAdminCredential({
+        targetConfig: resolvedTarget,
+      });
     }
 
     const beforeState = await readJsonResponse(
       await fetchImpl(`${normalizedBaseUrl}${DATA_PATH}`),
       'GET /api/data (before)',
     );
+    const requestHeaders = { 'Content-Type': 'application/json' };
+
+    if (resolvedTarget.adminAuth?.password) {
+      const adminSession = await loginAdminSession({
+        baseUrl: normalizedBaseUrl,
+        password: resolvedTarget.adminAuth.password,
+        fetchImpl,
+      });
+
+      if (!adminSession.payload?.isAdmin) {
+        throw new Error('POST /api/admin/session non ha attivato una sessione admin valida.');
+      }
+
+      requestHeaders.Cookie = adminSession.sessionCookie;
+    }
 
     const saveResult = await readJsonResponse(
       await fetchImpl(`${normalizedBaseUrl}${DATA_PATH}`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: requestHeaders,
         body: JSON.stringify(beforeState),
       }),
       'POST /api/data',
@@ -248,7 +373,7 @@ async function runSaveSmoke({
       const retrySaveResult = await readJsonResponse(
         await fetchImpl(`${normalizedBaseUrl}${DATA_PATH}`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: requestHeaders,
           body: JSON.stringify(canonicalBeforeState),
         }),
         'POST /api/data (retry)',

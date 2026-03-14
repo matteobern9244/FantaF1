@@ -1,31 +1,35 @@
 {
   "name": "fantaf1",
   "private": true,
-  "version": "1.4.4",
+  "version": "1.4.6",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "dev:frontend": "vite --host 127.0.0.1 --port 5173 --strictPort",
-    "dev:backend": "node server.js",
+    "dev:backend": "dotnet run --project backend-csharp/src/FantaF1.Api/FantaF1.Api.csproj -c Release --no-launch-profile",
+    "start": "npm run start:local",
     "start:local": "node scripts/dev-launcher.mjs",
-    "start": "node server.js",
     "build": "tsc && vite build",
     "lint": "eslint . --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
+    "test:csharp-coverage": "node scripts/verify-csharp-coverage.mjs",
     "test:save-local": "node scripts/save-local-check.mjs",
     "test:ui-responsive": "node scripts/ui-responsive-check.mjs",
+    "format:csharp": "dotnet format backend-csharp/FantaF1.Backend.sln",
+    "format:csharp:check": "dotnet format backend-csharp/FantaF1.Backend.sln --verify-no-changes",
     "migrate:remove-weekend-boost": "node scripts/remove-weekend-boost.mjs"
   },
   "dependencies": {
-    "cors": "^2.8.6",
     "dotenv": "^17.3.1",
-    "express": "^5.2.1",
+    "esbuild": "^0.27.4",
     "lucide-react": "^0.446.0",
-    "mongoose": "^9.2.3",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
+  },
+  "overrides": {
+    "esbuild": "^0.27.4"
   },
   "devDependencies": {
     "@testing-library/dom": "^10.4.1",
@@ -42,7 +46,6 @@
     "eslint-plugin-react-refresh": "^0.4.12",
     "globals": "^15.15.0",
     "jsdom": "^28.1.0",
-    "supertest": "^7.2.2",
     "typescript": "^5.6.2",
     "typescript-eslint": "^8.56.1",
     "vite": "^5.4.8",

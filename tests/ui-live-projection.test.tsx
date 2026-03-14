@@ -328,11 +328,21 @@ describe('Live projection UI', () => {
 
     render(<App />);
 
+    await waitFor(() => {
+      expect(screen.queryByTestId('pitstop-loader')).not.toBeInTheDocument();
+    });
+
+    const selectedRaceHeroCard = getSelectedRaceHeroCard();
+    expect(selectedRaceHeroCard).not.toBeNull();
     const highlightsButton = await screen.findByRole(
       'button',
       { name: /guarda highlights/i },
       { timeout: 5000 },
     );
+
+    expect(
+      within(selectedRaceHeroCard as HTMLElement).getByRole('button', { name: /guarda highlights/i }),
+    ).toBeEnabled();
     fireEvent.click(highlightsButton);
 
     expect(window.open).toHaveBeenCalledWith(

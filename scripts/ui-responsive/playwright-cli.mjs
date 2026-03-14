@@ -95,6 +95,16 @@ function buildCleanupInstructions(sessionIds) {
   ].join('\n');
 }
 
+function describeCommandError(error) {
+  if (error instanceof Error && typeof error.cause === 'string' && error.cause.trim()) {
+    return /^Comando Playwright fallito:/i.test(error.message)
+      ? error.cause.trim()
+      : error.message;
+  }
+
+  return formatErrorDetails(error);
+}
+
 function createPlaywrightCliAdapter({
   sessionId = sessionName,
   basePageUrl = baseUrl,
@@ -112,17 +122,40 @@ function createPlaywrightCliAdapter({
   fsImpl = fs,
   pathImpl = path,
 } = {}) {
-  function shouldRetryTimedOutCommand(args, { timeoutMs }) {
+  function shouldRetryTimedOutCommand(args, { timeoutMs, retryOnTimeout = false }) {
     const command = args[0] ?? '';
-    return timeoutMs < cliRetryTimeoutMs && ['list', 'tab-list'].includes(command);
+    return timeoutMs < cliRetryTimeoutMs
+      && (['list', 'tab-list'].includes(command) || (retryOnTimeout && command === 'close'));
   }
 
-  function run(args, {
-    allowFailure = false,
+  function createCommandError(args, {
+    timeoutMs = cliTimeoutMs,
+    output = '',
+    error,
+  } = {}) {
+    const details = output || error?.message;
+    const message = error?.code === 'ETIMEDOUT'
+      ? `Comando Playwright scaduto dopo ${timeoutMs}ms: ${args.join(' ')}`
+      : details || `Comando Playwright fallito: ${args.join(' ')}`;
+    const commandError = new Error(message);
+
+    if (details && details !== message) {
+      commandError.cause = details;
+    }
+
+    return commandError;
+  }
+
+  function isAlreadyClosedError(error) {
+    return /not open, please run open first/i.test(describeCommandError(error));
+  }
+
+  function executeCommand(args, {
     timeoutMs = cliTimeoutMs,
     sessionScoped = true,
+    retryOnTimeout = false,
   } = {}) {
-    const timeouts = shouldRetryTimedOutCommand(args, { timeoutMs })
+    const timeouts = shouldRetryTimedOutCommand(args, { timeoutMs, retryOnTimeout })
       ? [timeoutMs, cliRetryTimeoutMs]
       : [timeoutMs];
     let lastResult;
@@ -148,33 +181,84 @@ function createPlaywrightCliAdapter({
       break;
     }
 
-    if (lastResult?.error) {
-      if (lastResult.error.code === 'ETIMEDOUT') {
-        fail(`Comando Playwright scaduto dopo ${timeoutMs}ms: ${args.join(' ')}`, lastOutput || lastResult.error.message);
-      }
-
-      fail(`Comando Playwright fallito: ${args.join(' ')}`, lastOutput || lastResult.error.message);
-    }
-
-    if (!allowFailure && lastResult?.status !== 0) {
-      fail(`Comando Playwright fallito: ${args.join(' ')}`, lastOutput);
-    }
-
-    return lastOutput;
+    return {
+      status: lastResult?.status ?? 0,
+      output: lastOutput,
+      error: lastResult?.error,
+    };
   }
 
-  function safeRun(args, options) {
-    try {
-      return {
-        ok: true,
-        output: run(args, options),
-      };
-    } catch (error) {
+  function run(args, {
+    allowFailure = false,
+    timeoutMs = cliTimeoutMs,
+    sessionScoped = true,
+    retryOnTimeout = false,
+  } = {}) {
+    const result = executeCommand(args, {
+      timeoutMs,
+      sessionScoped,
+      retryOnTimeout,
+    });
+
+    if (result.error) {
+      throw createCommandError(args, {
+        timeoutMs,
+        output: result.output,
+        error: result.error,
+      });
+    }
+
+    if (!allowFailure && result.status !== 0) {
+      throw createCommandError(args, {
+        timeoutMs,
+        output: result.output,
+      });
+    }
+
+    return result.output;
+  }
+
+  function safeRun(args, {
+    timeoutMs = cliTimeoutMs,
+    sessionScoped = true,
+    retryOnTimeout = false,
+  } = {}) {
+    const result = executeCommand(args, {
+      timeoutMs,
+      sessionScoped,
+      retryOnTimeout,
+    });
+
+    if (result.error) {
       return {
         ok: false,
-        error,
+        error: createCommandError(args, {
+          timeoutMs,
+          output: result.output,
+          error: result.error,
+        }),
+        output: result.output,
+        status: result.status,
       };
     }
+
+    if (result.status !== 0) {
+      return {
+        ok: false,
+        error: createCommandError(args, {
+          timeoutMs,
+          output: result.output,
+        }),
+        output: result.output,
+        status: result.status,
+      };
+    }
+
+    return {
+      ok: true,
+      output: result.output,
+      status: result.status,
+    };
   }
 
   function evaluateJson(expression, options) {
@@ -303,30 +387,29 @@ function createPlaywrightCliAdapter({
         stop: async () => {
           const issues = [];
           const closeResult = safeRun(['close'], {
-            allowFailure: true,
             timeoutMs: cleanupTimeoutMs,
+            retryOnTimeout: true,
           });
-
-          if (!closeResult.ok && !/not open, please run open first/i.test(formatErrorDetails(closeResult.error))) {
-            issues.push(`Chiusura sessione Playwright fallita: ${formatErrorDetails(closeResult.error)}`);
-          }
 
           await stopChild(child, { sleepImpl });
 
           const listResult = safeRun(['list'], {
             sessionScoped: false,
-            allowFailure: true,
             timeoutMs: cleanupTimeoutMs,
           });
-
-          if (listResult.ok) {
-            const openSessions = parsePlaywrightSessions(listResult.output)
+          const sessionStillOpen = listResult.ok
+            && parsePlaywrightSessions(listResult.output)
               .filter((entry) => entry.status === 'open')
-              .map((entry) => entry.name);
+              .map((entry) => entry.name)
+              .includes(sessionId);
+          const sessionClosureVerified = listResult.ok && !sessionStillOpen;
 
-            if (openSessions.includes(sessionId)) {
-              issues.push(`Sessione Playwright orfana ancora aperta: ${sessionId}. ${buildCleanupInstructions([sessionId])}`);
-            }
+          if (!closeResult.ok && !isAlreadyClosedError(closeResult.error) && !sessionClosureVerified) {
+            issues.push(`Chiusura sessione Playwright fallita: ${describeCommandError(closeResult.error)}`);
+          }
+
+          if (sessionStillOpen) {
+            issues.push(`Sessione Playwright orfana ancora aperta: ${sessionId}. ${buildCleanupInstructions([sessionId])}`);
           }
 
           return issues;
@@ -471,6 +554,7 @@ export {
   buildCleanupInstructions,
   buildCliArgs,
   createPlaywrightCliAdapter,
+  describeCommandError,
   extractMarkdownLinkTarget,
   extractProcessOutput,
   extractResultBlock,

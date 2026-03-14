@@ -18,21 +18,22 @@ All three files are mandatory and complementary.
 - The application always manages exactly 3 participants and keeps live projections plus historical standings.
 - The repository contains production-facing business logic and persistent data constraints that must remain safe.
 - `PROJECT.md` remains the source of truth for business rules, critical flows, and domain invariants.
+- `docs/backend-csharp-porting-plan.md` is the canonical migration plan for the backend C# port.
 
 ### Main Technologies
 
 - Frontend: React 18 + TypeScript + Vite
-- Backend: Express 5 on Node.js
-- Persistence: MongoDB Atlas via Mongoose
-- Testing: Vitest, React Testing Library, Supertest
-- Supporting libraries: Lucide React, jsdom, dotenv, cors
+- Backend: ASP.NET Core 10 (C#)
+- Persistence: MongoDB Atlas via MongoDB .NET Driver
+- Testing: Vitest (Frontend), xUnit (Backend), React Testing Library
+- Supporting libraries: Lucide React, jsdom, MongoDB.Driver
 
 ### Architecture
 
 - `src/`: SPA frontend, UI shell, feature panels, and shared frontend utilities in `src/utils`.
-- `backend/`: REST API, validation, persistence access, and external Formula 1 synchronization logic.
-- `app.js` and `server.js`: Express composition, database bootstrap, and runtime startup.
-- `tests/`: unit, integration, API, and UI regression coverage across frontend and backend flows.
+- `backend-csharp/`: Official REST API (ASP.NET Core 10), Domain logic, Persistence (MongoDB), and Infrastructure.
+- `tests/`: unit, integration, and UI regression coverage across frontend and supporting scripts.
+- `docs/backend-csharp-porting-plan.md`: canonical backend migration plan, environment matrix, staging strategy, and cutover guardrails.
 
 ### Building and Running
 
@@ -44,15 +45,21 @@ All three files are mandatory and complementary.
 
 Optional helper commands already supported by the repository:
 
+- `npm run test:csharp-coverage`
 - `npm run test:save-local`
 - `npm run test:ui-responsive`
 - `npm run preview`
-- `npm run migrate:remove-weekend-boost`
 
 ### Development Conventions
 
+- **Separation Of Concerns:** Keep UI, application orchestration, domain rules, infrastructure, and migration glue clearly separated.
+- **Abstraction Naming:** Name adapters, translators, facades, and compatibility seams for the boundary they protect, not as generic `Helper` or `Utils` buckets.
+- **Configuration Discipline:** Put migration flags, environment-specific endpoints, file paths, routing toggles, and cutover settings in configuration or constants, not scattered literals.
+- **Credential Secrecy:** Passwords and equivalent credentials must never appear in clear text in versioned files, including production code, tests, fixtures, documentation, and examples. Store only one-way hashes, salts, non-versioned secret references, or runtime-generated test inputs derived from non-secret seeds.
+- **Localization:** New user-facing text must go through the existing centralized UI/config text system instead of ad-hoc literals.
+- **Documentation:** Keep architecture notes, migration progress, known parity gaps, cutover conditions, and verified coverage baselines updated in repository docs.
 - Prefer focused domain objects, explicit collaborators, and clear data flow over oversized orchestration blocks.
-- Keep runtime wiring and environment/bootstrap concerns in entry points and bootstrap modules such as `app.js`, `server.js`, and backend startup code.
+- Keep runtime wiring and environment/bootstrap concerns in entry points and bootstrap modules such as backend startup code.
 - Avoid hidden dependencies and service-locator style access patterns; pass dependencies explicitly or keep them within the owning module boundary.
 - Prefer object-oriented abstractions when they improve separation of responsibilities, state management, or external-source orchestration; keep classes small, explicit, and easy to test.
 - Use pure helper modules to support those objects when stateful behavior is not needed, but avoid collapsing non-trivial domain workflows back into oversized procedural modules.
@@ -68,12 +75,11 @@ Optional helper commands already supported by the repository:
 
 - `AGENTS.md`
 - `PROJECT.md`
+- `docs/backend-csharp-porting-plan.md`
 - `GEMINI.md`
 - `CLAUDE.md`
 - `package.json`
 - `README.md`
-- `app.js`
-- `server.js`
 
 ---
 
@@ -106,7 +112,8 @@ For every task, execute this sequence:
 7. Define and preserve the required 100% total coverage target for the task scope and repository/application.
 8. Implement the smallest safe change required.
 9. Run the relevant validations, including explicit coverage verification at 100%.
-10. Provide a final summary with touched files, tests, coverage verification, and executed commands.
+10. Ensure versioning coordination: every version increment must be applied consistently across `package.json`, `package-lock.json`, `CHANGELOG.md`, and `README.md`.
+11. Provide a final summary with touched files, tests, coverage verification, and executed commands.
 
 Do not skip steps.
 Do not jump directly into editing without understanding the current implementation.
@@ -117,29 +124,47 @@ Do not jump directly into editing without understanding the current implementati
 
 - Never invent requirements, commands, hidden business rules, or architecture.
 - Never assume missing behavior if the codebase does not support that assumption.
+- **Source Of Truth:** For every task, explicitly identify and follow the currently authoritative runtime path and document set. C# is authoritative.
+- Read the affected legacy and target implementations before proposing structural changes.
 - If business logic, expected behavior, or data flow is unclear, stop and ask for clarification.
+- If the repository contains current migration docs, treat them as part of the specification.
 - If the repository already defines the behavior, follow the repository files instead of guessing.
 
 ---
 
 ## 4. Change Scope Policy
 
+- **Behavior Preservation First:** During migration or porting, preserve externally observable behavior unless the task explicitly includes a product change. If behavior must change, document the delta, update tests, and call it out explicitly.
+- **Incremental Migration:** Prefer small, reversible migration steps. Avoid broad rewrites that mix structural migration, refactoring, behavior changes, and cleanup in one change set.
+- **Strangler Mindset:** Add new migration code behind stable seams, adapters, or interfaces so legacy and target implementations can coexist safely during rollout.
+- **Compatibility Layers Must Be Intentional:** Adapters, shims, translators, and facades are acceptable only when they reduce migration risk and remain focused, documented, and temporary unless there is a stable long-term reason to keep them.
+- **Avoid Legacy Leakage:** Do not spread legacy Node/Express/Mongoose concepts deeper into the target C# architecture than necessary; translate at boundaries and keep target-side abstractions clean.
 - Keep changes minimal and targeted.
+- Do not collapse migration, refactor, and feature work into one edit unless explicitly requested.
 - Do not refactor unrelated code.
 - Do not rename or move files unless necessary.
 - Do not introduce new frameworks, patterns, or dependencies without explicit need.
+- Prefer edits that improve the seam between old and new systems.
+- **Legacy Decommission Rule:** Do not remove legacy code until replacement behavior, migration validation, observability, and rollback expectations are verified.
+- **Delete Dead Paths Promptly:** Once a migration step is verified and cutover is complete, remove obsolete flags, adapters, and duplicate paths instead of carrying permanent transitional complexity.
 - Preserve naming conventions, folder structure, and coding style already used in the repository.
 
 ---
 
 ## 5. Code Quality Standards
 
+- **Business Logic Isolation:** Move business rules into focused domain services, value objects, or pure collaborators that remain independent from transport and framework concerns whenever that improves the migration seam.
+- **SOLID Principles:** Apply `SRP`, `OCP`, `LSP`, `ISP`, and `DIP` consistently, especially when extracting abstractions from the legacy backend into the target C# architecture.
+- **Dependency Injection by Default:** Runtime collaborators must be injected. Bootstrap code, composition roots, and narrowly scoped factories may create concrete implementations when justified.
+- **No Hidden Collaborator Graphs:** Controllers, services, handlers, repositories, parsers, and orchestrators must not instantiate runtime collaborators directly except for value types or framework-mandated primitives.
+- **Static Logic Policy:** Avoid placing production behavior in static classes. Static-only use is limited to constants, pure extensions, and framework-mandated entry points.
 - Prefer clarity over cleverness.
 - Keep functions focused and single-purpose.
 - Avoid deep nesting and hidden side effects.
 - Preserve API contracts unless explicitly asked to change them.
 - Validate external or unsafe input before use.
 - Never swallow errors silently.
+- **Error Handling:** Produce actionable errors with enough context to diagnose mapping failures, invalid input, unsupported migration states, or broken invariants.
 - Fail clearly when invariants are broken.
 - If code or tests appear brittle, inconsistent, or overengineered, surface that explicitly instead of silently working around it.
 
@@ -147,10 +172,12 @@ Do not jump directly into editing without understanding the current implementati
 
 ## 6. Determinism and Stability
 
+- **Cross-Platform Discipline:** Use platform-safe file, path, encoding, locale, and environment handling. Never hardcode platform separators, shell assumptions, or machine-local paths unless the repository already requires them.
 - Avoid time-dependent behavior unless explicitly guarded.
 - Avoid randomness unless explicitly required.
 - Tests must be deterministic and repeatable.
 - Tests must not rely on uncontrolled system clock values, ambient locale differences, machine-specific paths, or uncontrolled network availability unless the scenario is explicitly guarded behind a controlled seam.
+- **Time And Clock Access:** All production time access must go through injectable abstractions, especially in the C# port.
 - Avoid implicit global state mutations.
 - Avoid introducing behavior that depends on execution order unless already part of the design.
 
@@ -166,12 +193,19 @@ Any behavioral change, fix, or implementation must follow strict TDD:
 
 Rules:
 
+- **TDD By Default:** Start with a failing test when adding or fixing behavior unless the task is strictly exploratory or mechanical and no behavior is being changed.
+- **Deterministic Tests Only:** Keep tests independent from uncontrolled time, locale, machine-specific paths, network availability, or mutable external state unless those conditions are explicitly isolated as the scenario under test.
+- **Parity Tests:** For migrated behavior, add tests that assert the target implementation matches the legacy implementation for representative and edge-case inputs.
+- **Contract Tests:** For shared abstractions, adapters, and interfaces, define tests that every implementation or placeholder seam must satisfy.
+- **Mock Narrowly:** Mock only collaborators outside the true scope under test; prefer focused fakes or real seams over broad incidental integration.
+- **Migration Regression Coverage:** Every migration change must preserve or increase confidence in the migrated area through new or improved tests.
+- **Test Data Management:** Keep fixtures minimal, explicit, canonical, and readable.
 - A behavioral fix is not complete without tests.
 - A regression fix is not complete without a regression test.
 - New logic must be covered by automated tests.
 - Related edge cases must be considered and covered when relevant.
 - Never claim TDD was applied if tests were added only after coding without first reproducing the issue.
-- Use the repository's established Vitest/React Testing Library/Supertest patterns, and mock only collaborators outside the actual intent of the test.
+- Use the repository's established Vitest/React Testing Library patterns, and mock only collaborators outside the actual intent of the test.
 - This TDD rule is mandatory for every fix, modification, and new implementation in this repository without exception.
 - RED must also define the coverage work needed to preserve or restore 100% statements, functions, branches, and lines for the official repository/application scope.
 - GREEN is not complete if the implementation passes behavior tests but leaves coverage below 100%.
@@ -184,6 +218,7 @@ Rules:
 Before declaring completion, run the relevant validation pipeline supported by the repository.
 Where applicable this includes:
 
+- **Functional Parity First:** Reach functional parity first. Optimize architecture, performance, or style only after behavior is covered by tests unless the task is explicitly performance-driven.
 - lint
 - unit/integration tests
 - build
@@ -196,6 +231,7 @@ Where applicable this includes:
 - Build: `npm run build`
 - Local smoke startup when relevant: `npm run start:local`
 - Additional targeted checks when relevant:
+  - `npm run test:csharp-coverage` for the official backend-csharp application coverage summary on `backend-csharp/src/`
   - `npm run test:save-local`
   - `npm run test:ui-responsive` for responsive/UI-impacting changes
 
@@ -218,9 +254,10 @@ Where applicable this includes:
 
 ### Test stack and coverage profile
 
-- Main automated test stack: Vitest, React Testing Library, and Supertest.
-- Coverage provider: V8.
-- Current verified merged baseline for the configured official application-code scope is **100% statements (5167 / 5167)**, **100% functions (407 / 407)**, **100% branches (2093 / 2093)**, and **100% lines (5167 / 5167)**, aligned with the thresholds currently documented in `README.md`.
+- Main automated test stack: Vitest (Frontend), xUnit (Backend), and React Testing Library.
+- Coverage provider: V8 (Frontend), coverlet (Backend).
+- Current verified merged baseline for the configured official application-code scope is **100% statements (5176 / 5176)**, **100% functions (408 / 408)**, **100% branches (2096 / 2096)**, and **100% lines (5176 / 5176)**, aligned with the thresholds currently documented in `README.md`.
+- Official backend-csharp application coverage on `backend-csharp/src/` is **100% line coverage (2928 / 2928)**, **100% branch coverage (1649 / 1649)**, and **100% method coverage (487 / 487)** across **70 included files**, as reported by `npm run test:csharp-coverage`.
 - Whenever a task produces a new verified merged Release coverage result, update this baseline in `AGENTS.md` to the new numbers.
 - If a task produces a new verified merged coverage result for the tracked scope, update the baseline in `AGENTS.md` and never accept a regression below that verified baseline.
 
@@ -245,8 +282,14 @@ Never fabricate validation results.
 
 For every task:
 
+- **Data Safety:** Schema changes, data reshaping, or migration utilities must be reversible when feasible or protected by backup/export strategy and explicit validation.
+- **Contract Preservation:** Public APIs, file formats, CLI surfaces, collection names, session semantics, and integration contracts must remain stable unless the task explicitly includes a reviewed breaking change.
+- **Feature Flags For Cutover:** Use explicit routing seams or feature toggles for staged rollout when both legacy and target paths may be exercised.
+- **Observability During Migration:** Add or preserve logs, metrics, traces, or diagnostics when needed to compare legacy and target behavior during rollout.
+- **No Silent Fallbacks:** If the target path cannot handle a case, fail explicitly or route through a documented compatibility path; never hide broken migration behavior behind silent fallback logic.
 - identify the flows that may be affected
 - check adjacent logic, shared helpers, selectors, services, mappers, and API contracts
+- If a task risks breaking parity, state the risk explicitly and verify with targeted tests before finishing.
 - verify that unchanged user flows still behave as before
 - pay extra attention to high-risk areas declared in `PROJECT.md`
 
@@ -269,6 +312,7 @@ This includes:
 
 When the user explicitly authorizes commit-related operations:
 
+- PRIMA DI ESEGUIRE COMMIT E PUSH MODIFICARE SEMPRE FILE README.MD (SE NECESSARIO), CHANGELOG.MD CON TUTTE LE MODIFICHE/FIX/NUOVE IMPLEMENTAZIONI EFFETTUATE, IMPLEMENTATE E RICHIESTE.
 - update `README.md` if the real implemented changes require documentation updates
 - always update `CHANGELOG.md` before commit
 - preserve the existing documentation structure and history
