@@ -7,6 +7,8 @@ Questo documento definisce il workflow operativo per il progetto FantaF1, integr
 - **Strict TDD:** Ogni modifica comportamentale deve seguire il ciclo **RED -> GREEN -> REFACTOR**.
 - **100% Coverage:** La copertura dei test deve essere mantenuta al 100% (Statements, Functions, Branches, Lines) per tutto lo scope dell'applicazione.
 - **Production-Safe:** Ogni cambiamento deve essere deterministico, testato e sicuro per i dati di produzione.
+- **Compliance AGENTS.md:** Tutti i task devono includere e rispettare rigorosamente le specifiche di `AGENTS.md`, specialmente quelle tecniche e di programmazione.
+- **Politica di Chiarimento:** Se una logica di business, un requisito o un flusso di dati non è chiaro, l'agente deve fermarsi e chiedere SEMPRE chiarimenti all'utente prima di procedere.
 
 ## 2. Flusso di Lavoro per i Task
 Per ogni task, l'agente deve:

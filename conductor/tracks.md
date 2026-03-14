@@ -11,3 +11,8 @@ Questo file tiene traccia di tutte le track principali del progetto. Ogni track 
 
 - [x] **Track: Verifica Anti-Regressione Porting C# (Fase 1-9)**
   *Link: [./tracks/verify_csharp_porting_20260314/](./tracks/verify_csharp_porting_20260314/)*
+
+---
+
+- [ ] **Track: Docker Render Staging and Atlas Operationalization (Fase 10)**
+  *Link: [./tracks/porting_csharp_phase_10_20260314/](./tracks/porting_csharp_phase_10_20260314/)*
