@@ -23,7 +23,7 @@ Per ogni task, l'agente deve:
 ## 3. Comandi e Strumenti Canonici
 - **Avvio App:** Utilizzare sempre `./start_fantaf1.command` (non `npm run start:local`).
 - **Verifica UI:** Il comando `check viste` esegue `npm run test:ui-responsive` per validare i breakpoint desktop/mobile.
-- **Backend Porting:** Node.js è l'implementazione autoritativa fino al cutover ufficiale verso C#.
+- **Backend C#:** C# (.NET 10) è l'implementazione autoritativa e l'unica supportata.
 - **Smoke Test:** Utilizzare `npm run test:save-local` per verificare l'integrità della persistenza.
 
 ## 4. Gestione Git e Commit
