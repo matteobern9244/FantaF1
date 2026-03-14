@@ -9,4 +9,5 @@ Repository-level Claude CLI instructions for FantaF1.
 5. Do not perform git operations unless explicitly authorized by the user.
 6. When a task touches scoring, live standings, projections, race locks, historical recalculation, or external results parsing, perform extra regression validation before completion.
 7. Keep changes minimal, targeted, and non-destructive.
-8. Final responses must be in Italian unless explicitly requested otherwise.
+8. Ogni incremento di versione deve essere coordinato tra `package.json`, `package-lock.json`, `CHANGELOG.md` e `README.md`.
+9. Final responses must be in Italian unless explicitly requested otherwise.

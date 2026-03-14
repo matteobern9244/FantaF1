@@ -31,3 +31,8 @@ Questo file tiene traccia di tutte le track principali del progetto. Ogni track 
 
 - [x] **Track: Ripristino Dati Produzione su Staging**
   *Link: [./tracks/restore_prod_to_staging_20260314/](./tracks/restore_prod_to_staging_20260314/)*
+
+---
+
+- [x] **Track: Enforce Versioning Discipline**
+  *Link: [./tracks/enforce_versioning_rule_20260314/](./tracks/enforce_versioning_rule_20260314/)*
