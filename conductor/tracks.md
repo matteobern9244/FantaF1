@@ -16,3 +16,8 @@ Questo file tiene traccia di tutte le track principali del progetto. Ogni track 
 
 - [x] **Track: Docker Render Staging and Atlas Operationalization (Fase 10)**
   *Link: [./tracks/porting_csharp_phase_10_20260314/](./tracks/porting_csharp_phase_10_20260314/)*
+
+---
+
+- [ ] **Track: Setup Tooling MongoDB (mongodump, mongosh)**
+  *Link: [./tracks/setup_mongodb_tooling_20260314/](./tracks/setup_mongodb_tooling_20260314/)*
