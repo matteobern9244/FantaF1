@@ -64,11 +64,6 @@ Questo file tiene traccia di tutte le track principali del progetto. Ogni track 
 
 ---
 
-- [x] **Track: Analisi e Pulizia Database MongoDB Atlas**
-  *Link: [./tracks/cleanup_atlas_databases_20260314/](./tracks/cleanup_atlas_databases_20260314/)*
-
----
-
 - [x] **Track: Certificazione Copertura Test 100% (Frontend, Node, C#)**
   *Link: [./tracks/achieve_100_coverage_20260314/](./tracks/achieve_100_coverage_20260314/)*
 
