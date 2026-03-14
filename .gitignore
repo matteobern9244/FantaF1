@@ -7,7 +7,6 @@ output/
 **/obj/
 **/TestResults/
 **/coverage.cobertura.xml
-conductor/
 
 *.log
 npm-debug.log*

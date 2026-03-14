@@ -9,5 +9,5 @@ Questo file tiene traccia di tutte le track principali del progetto. Ogni track 
 
 ---
 
-- [ ] **Track: Verifica Anti-Regressione Porting C# (Fase 1-9)**
+- [x] **Track: Verifica Anti-Regressione Porting C# (Fase 1-9)**
   *Link: [./tracks/verify_csharp_porting_20260314/](./tracks/verify_csharp_porting_20260314/)*

@@ -6,7 +6,7 @@ L'applicazione e' pensata per un flusso amministrato: un admin seleziona il week
 
 ## Stato release e confronto con la produzione
 
-La versione attualmente in produzione e pubblicata e' `v1.4.4`. Il repository e' allineato alla stessa release `v1.4.4` in `package.json`, senza delta pendenti tra codice versionato e baseline live.
+La versione attualmente in produzione e pubblicata e' `v1.4.4`. Il repository e' aggiornato alla versione `v1.4.5` in `package.json`, includendo l'integrazione del framework Conductor e la certificazione del workflow.
 
 ### Baseline produzione `v1.4.4`
 
@@ -17,27 +17,28 @@ La baseline live corrisponde alle capability gia' rilasciate e documentate in `C
 - sessioni admin/public reali, analytics stagionali, CTA installazione PWA e recap highlights;
 - validazione release con `lint`, `test`, `test:coverage`, `build`, `test:ui-responsive` e `test:save-local`.
 
-### Delta del workspace corrente rispetto a `v1.4.4`
+### Delta del workspace corrente rispetto alla produzione
 
-Il workspace corrente e' allineato alla produzione `v1.4.4`; non risultano delta funzionali non rilasciati rispetto alla baseline live. Le capability rilevanti della release corrente sono:
+Il workspace corrente introduce l'adozione del framework Conductor per la gestione dello sviluppo spec-driven e la certificazione dello stato di salute del porting C#:
 
-- ristrutturazione completa della navigazione con spostamento del menu all'interno dell'header, sotto il titolo della stagione;
-- navigazione fluida su dispositivi mobili tramite barra a scorrimento orizzontale nativa e rimozione del Drawer (hamburger menu), risolvendo i bug di visibilità mobile;
-- menu mobile ottimizzato: rimossa la classe `.panel` per una trasparenza elegante e introdotto gradiente di mascheramento laterale per indicare lo scroll;
-- ottimizzazione performance: eliminato il jank durante lo scorrimento fluido su dispositivi mobili tramite l'uso di `IntersectionObserver` in luogo dei global event listeners sincroni e la disattivazione del `backdrop-filter` in mobile;
-- fix regressione dropdown mobile: ripristinato l'aspetto nativo delle select su smartphone per garantire il corretto posizionamento dei menu opzioni;
-- fix architetturale mappa circuito: il `Recap ultimo GP` visualizza ora la mappa specifica della gara conclusa recuperandola dal calendario, indipendentemente dalla selezione corrente;
-- affinamento delle classifiche reali pubbliche: `Classifica piloti` usa avatar Formula1 più nitidi con crop orientato al volto, mentre `Classifica scuderia` è stata riallineata con logo ufficiale, nome squadra colorato e rimozione del vecchio marker lineare;
-- ottimizzazione del layout standings pubbliche: il riquadro `Classifica scuderia` resta nella colonna destra su desktop ma non viene più allungato artificialmente, eliminando il grande spazio vuoto interno e mantenendo lo stacking invariato su tablet e mobile;
-- integrazione della CTA `INSTALLA APPLICAZIONE` come ultima voce della lista di navigazione unificata;
-- shortcut contestuale `Torna al menu` raffinata: la freccia flottante ancora ora lo scroll direttamente alla barra di navigazione nell'header;
-- ripristino della track map del circuito anche nella vista pubblica, sia nel recap hero del weekend selezionato sia nel pannello `Recap ultimo GP`;
-- hero iniziale riallineata con rimozione del blur dal contenitore del titolo e con sfondo dinamico della gara selezionata reso piu' luminoso;
-- test regressivi e controlli responsive aggiornati per coprire la nuova UX e la navigazione fluida;
-- baseline coverage verificata mantenuta al 100% su statements, functions, branches e lines;
-- validazione finale completa rieseguita con `test:ui-responsive`, `test:save-local` e `npm run build`.
+- **Integrazione Conductor**: introdotta la directory `conductor/` come unica source of truth per specifiche di prodotto, linee guida, tech stack e workflow operativo.
+- **Certificazione Workflow**: completata la validazione dell'integrità del repository con copertura test al 100%, launcher canonico verificato e controlli responsive passanti.
+- **Audit Anti-Regressione Porting C#**: certificata l'integrità del porting C# fino alla Fase 9, confermando parità API, sincronizzazione background e parametri di sicurezza degli strumenti di verifica.
+- **Ristrutturazione Navigazione (da v1.4.4)**: menu integrato nell'header, navigazione fluida mobile nativa, ottimizzazione performance con `IntersectionObserver` e fix mappa circuito storica.
 
-In sintesi: produzione e repository sono ora riallineati sulla stessa release `v1.4.4`.
+In sintesi: il repository è pronto per l'avvio della Fase 10 del porting C# (Docker & Staging).
+
+## Framework Conductor
+
+Il progetto utilizza **Conductor** per orchestrare lo sviluppo basato su specifiche. La directory `conductor/` contiene:
+
+- `product.md`: definizione della visione e delle funzionalità core del prodotto.
+- `product-guidelines.md`: linee guida visive, UX e di branding.
+- `tech-stack.md`: documentazione dello stack tecnologico corrente (Node/React e C#).
+- `workflow.md`: standard ingegneristici rigorosi, inclusi 100% TDD e protocolli di validazione.
+- `tracks.md`: registro delle unità di lavoro (track) completate o in corso.
+
+Tutti gli agenti operativi devono fare riferimento a `conductor/index.md` come punto di ingresso per le definizioni di progetto.
 
 ## Panoramica funzionale
 
