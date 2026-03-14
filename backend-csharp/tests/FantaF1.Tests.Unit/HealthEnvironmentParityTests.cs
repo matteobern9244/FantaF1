@@ -15,7 +15,7 @@ public sealed class HealthEnvironmentParityTests
     {
         var clock = new StubClock(new DateTimeOffset(2026, 03, 12, 09, 30, 00, TimeSpan.Zero));
         var resolver = new StubRuntimeEnvironmentProfileResolver(
-            new RuntimeEnvironmentProfile("staging", "fantaf1_porting"));
+            new RuntimeEnvironmentProfile("staging", "fantaf1_staging"));
         var service = new HealthReportService(clock, resolver);
 
         var report = service.GetCurrentReport();
@@ -24,14 +24,14 @@ public sealed class HealthEnvironmentParityTests
         Assert.Equal(2026, report.Year);
         Assert.Equal(1, report.DbState);
         Assert.Equal("staging", report.Environment);
-        Assert.Equal("fantaf1_porting", report.DatabaseTarget);
+        Assert.Equal("fantaf1_staging", report.DatabaseTarget);
     }
 
     [Fact]
     public void Health_report_service_rejects_a_null_clock()
     {
         var resolver = new StubRuntimeEnvironmentProfileResolver(
-            new RuntimeEnvironmentProfile("development", "fantaf1_porting"));
+            new RuntimeEnvironmentProfile("development", "fantaf1_staging"));
 
         Assert.Throws<ArgumentNullException>(() => new HealthReportService(null!, resolver));
     }
@@ -70,7 +70,7 @@ public sealed class HealthEnvironmentParityTests
         var profile = resolver.ResolveCurrentProfile();
 
         Assert.Equal("development", profile.Environment);
-        Assert.Equal("fantaf1_porting", profile.DatabaseTarget);
+        Assert.Equal("fantaf1_staging", profile.DatabaseTarget);
     }
 
     [Fact]
@@ -89,12 +89,12 @@ public sealed class HealthEnvironmentParityTests
     {
         var resolver = CreateResolver(
             "Staging",
-            mongoUri: "mongodb+srv://user:pass@cluster.mongodb.net/fantaf1_porting?retryWrites=true&w=majority");
+            mongoUri: "mongodb+srv://user:pass@cluster.mongodb.net/fantaf1_staging?retryWrites=true&w=majority");
 
         var profile = resolver.ResolveCurrentProfile();
 
         Assert.Equal("staging", profile.Environment);
-        Assert.Equal("fantaf1_porting", profile.DatabaseTarget);
+        Assert.Equal("fantaf1_staging", profile.DatabaseTarget);
     }
 
     [Fact]
@@ -118,7 +118,7 @@ public sealed class HealthEnvironmentParityTests
         var profile = resolver.ResolveCurrentProfile();
 
         Assert.Equal("development", profile.Environment);
-        Assert.Equal("fantaf1_porting", profile.DatabaseTarget);
+        Assert.Equal("fantaf1_staging", profile.DatabaseTarget);
     }
 
     [Fact]
@@ -131,7 +131,7 @@ public sealed class HealthEnvironmentParityTests
 
         var profile = resolver.ResolveCurrentProfile();
 
-        Assert.Equal("fantaf1_porting", profile.DatabaseTarget);
+        Assert.Equal("fantaf1_staging", profile.DatabaseTarget);
     }
 
     [Fact]
@@ -153,13 +153,13 @@ public sealed class HealthEnvironmentParityTests
     {
         var resolver = CreateResolver(
             "Staging",
-            mongoUri: "mongodb+srv://user:pass@cluster.mongodb.net/fantaf1_staging?retryWrites=true&w=majority",
-            mongoDatabaseNameOverride: "fantaf1_porting");
+            mongoUri: "mongodb+srv://user:pass@cluster.mongodb.net/fantaf1?retryWrites=true&w=majority",
+            mongoDatabaseNameOverride: "fantaf1_staging");
 
         var exception = Assert.Throws<InvalidOperationException>(() => resolver.ResolveCurrentProfile());
 
         Assert.Equal(
-            "MONGODB_URI targets \"fantaf1_staging\" but the resolved database target is \"fantaf1_porting\".",
+            "MONGODB_URI targets \"fantaf1\" but the resolved database target is \"fantaf1_staging\".",
             exception.Message);
     }
 

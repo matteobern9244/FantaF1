@@ -1,9 +1,8 @@
 import { createHash, scryptSync } from 'crypto';
 
-const DEFAULT_RUNTIME_TARGET = 'node-dev';
+const DEFAULT_RUNTIME_TARGET = 'csharp-dev';
 const DEFAULT_HOST = '127.0.0.1';
 const DEFAULT_PORTS = Object.freeze({
-  nodeBackend: 3001,
   nodeFrontend: 5173,
   csharpDevelopment: 3002,
   csharpStaging: 3003,
@@ -14,34 +13,16 @@ function buildUrl(port, path = '') {
 }
 
 const targetDefinitions = Object.freeze({
-  'node-dev': Object.freeze({
-    name: 'node-dev',
-    runtime: 'node',
-    frontendMode: 'split',
-    baseUrl: buildUrl(DEFAULT_PORTS.nodeFrontend),
-    backendBaseUrl: buildUrl(DEFAULT_PORTS.nodeBackend),
-    backendHealthUrl: buildUrl(DEFAULT_PORTS.nodeBackend, '/api/health'),
-    expectedEnvironment: 'development',
-    expectedDatabaseTarget: 'fantaf1_dev',
-    busyPorts: [DEFAULT_PORTS.nodeBackend, DEFAULT_PORTS.nodeFrontend],
-    backendCommand: 'node',
-    backendArgs: ['server.js'],
-    frontendCommand: 'npm',
-    frontendArgs: ['run', 'dev:frontend'],
-    startupEnv: Object.freeze({
-      NODE_ENV: 'development',
-    }),
-  }),
   'csharp-dev': Object.freeze({
     name: 'csharp-dev',
     runtime: 'csharp',
-    frontendMode: 'same-origin',
-    baseUrl: buildUrl(DEFAULT_PORTS.csharpDevelopment),
+    frontendMode: 'split',
+    baseUrl: buildUrl(DEFAULT_PORTS.nodeFrontend),
     backendBaseUrl: buildUrl(DEFAULT_PORTS.csharpDevelopment),
     backendHealthUrl: buildUrl(DEFAULT_PORTS.csharpDevelopment, '/api/health'),
     expectedEnvironment: 'development',
-    expectedDatabaseTarget: 'fantaf1_porting',
-    busyPorts: [DEFAULT_PORTS.csharpDevelopment],
+    expectedDatabaseTarget: 'fantaf1_staging',
+    busyPorts: [DEFAULT_PORTS.csharpDevelopment, DEFAULT_PORTS.nodeFrontend],
     backendCommand: 'dotnet',
     backendArgs: [
       'run',
@@ -51,6 +32,8 @@ const targetDefinitions = Object.freeze({
       'Release',
       '--no-launch-profile',
     ],
+    frontendCommand: 'npm',
+    frontendArgs: ['run', 'dev:frontend'],
     startupEnv: Object.freeze({
       ASPNETCORE_ENVIRONMENT: 'Development',
       ASPNETCORE_URLS: buildUrl(DEFAULT_PORTS.csharpDevelopment),
@@ -64,7 +47,7 @@ const targetDefinitions = Object.freeze({
     backendBaseUrl: buildUrl(DEFAULT_PORTS.csharpStaging),
     backendHealthUrl: buildUrl(DEFAULT_PORTS.csharpStaging, '/api/health'),
     expectedEnvironment: 'staging',
-    expectedDatabaseTarget: 'fantaf1_porting',
+    expectedDatabaseTarget: 'fantaf1_staging',
     busyPorts: [DEFAULT_PORTS.csharpStaging],
     backendCommand: 'dotnet',
     backendArgs: [

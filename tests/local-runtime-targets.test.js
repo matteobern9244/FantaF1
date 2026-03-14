@@ -12,30 +12,30 @@ import {
 } from '../scripts/local-runtime-targets.mjs';
 
 describe('local runtime targets', () => {
-  it('uses node-dev as the canonical default target', () => {
+  it('uses csharp-dev as the canonical default target', () => {
     const target = resolveLocalRuntimeTarget();
 
-    expect(DEFAULT_RUNTIME_TARGET).toBe('node-dev');
-    expect(target.name).toBe('node-dev');
+    expect(DEFAULT_RUNTIME_TARGET).toBe('csharp-dev');
+    expect(target.name).toBe('csharp-dev');
     expect(target.baseUrl).toBe('http://127.0.0.1:5173');
-    expect(target.backendHealthUrl).toBe('http://127.0.0.1:3001/api/health');
+    expect(target.backendHealthUrl).toBe('http://127.0.0.1:3002/api/health');
     expect(target.expectedEnvironment).toBe('development');
-    expect(target.expectedDatabaseTarget).toBe('fantaf1_dev');
-    expect(target.appProbeUrls).toEqual(buildProbeUrls('http://127.0.0.1:3001'));
+    expect(target.expectedDatabaseTarget).toBe('fantaf1_staging');
+    expect(target.appProbeUrls).toEqual(buildProbeUrls('http://127.0.0.1:3002'));
   });
 
-  it('resolves the integrated C# development target with same-origin startup', () => {
+  it('resolves the integrated C# development target with split startup', () => {
     const target = resolveLocalRuntimeTarget('csharp-dev');
 
     expect(target.runtime).toBe('csharp');
-    expect(target.frontendMode).toBe('same-origin');
-    expect(target.baseUrl).toBe('http://127.0.0.1:3002');
+    expect(target.frontendMode).toBe('split');
+    expect(target.baseUrl).toBe('http://127.0.0.1:5173');
     expect(target.backendCommand).toBe('dotnet');
     expect(target.startupEnv).toEqual({
       ASPNETCORE_ENVIRONMENT: 'Development',
       ASPNETCORE_URLS: 'http://127.0.0.1:3002',
     });
-    expect(target.expectedDatabaseTarget).toBe('fantaf1_porting');
+    expect(target.expectedDatabaseTarget).toBe('fantaf1_staging');
   });
 
   it('resolves the local staging target without falling back to fantaf1_dev', () => {
@@ -43,7 +43,7 @@ describe('local runtime targets', () => {
 
     expect(target.baseUrl).toBe('http://127.0.0.1:3003');
     expect(target.expectedEnvironment).toBe('staging');
-    expect(target.expectedDatabaseTarget).toBe('fantaf1_porting');
+    expect(target.expectedDatabaseTarget).toBe('fantaf1_staging');
     expect(target.adminAuth).toEqual({
       passwordSeedLabel: 'subphase-9-staging-local-admin-password',
       saltSeedLabel: 'subphase-9-staging-local-admin-salt',
@@ -86,15 +86,15 @@ describe('local runtime targets', () => {
     expect(target.baseUrl).toBe('http://127.0.0.1:4301');
   });
 
-  it('rewrites the csharp runtime mongo uri to the explicit porting database target', () => {
+  it('rewrites the csharp runtime mongo uri to the explicit staging database target', () => {
     const target = resolveSaveSmokeTarget({
       SAVE_SMOKE_TARGET: 'csharp-dev',
       MONGODB_URI: 'mongodb+srv://user:pass@cluster.mongodb.net/fantaf1_dev?retryWrites=true&w=majority',
     });
 
-    expect(target.startupEnv.MONGODB_DB_NAME_OVERRIDE).toBe('fantaf1_porting');
+    expect(target.startupEnv.MONGODB_DB_NAME_OVERRIDE).toBe('fantaf1_staging');
     expect(target.startupEnv.MONGODB_URI).toBe(
-      'mongodb+srv://user:pass@cluster.mongodb.net/fantaf1_porting?retryWrites=true&w=majority',
+      'mongodb+srv://user:pass@cluster.mongodb.net/fantaf1_staging?retryWrites=true&w=majority',
     );
   });
 
@@ -114,12 +114,12 @@ describe('local runtime targets', () => {
     expect(target.startupEnv.AdminCredentialSeed__PasswordHashHex).toHaveLength(128);
   });
 
-  it('uses the backend base url for the default node save smoke target', () => {
+  it('uses the backend base url for the default save smoke target', () => {
     const target = resolveSaveSmokeTarget({});
 
-    expect(target.name).toBe('node-dev');
-    expect(target.baseUrl).toBe('http://127.0.0.1:3001');
-    expect(target.backendHealthUrl).toBe('http://127.0.0.1:3001/api/health');
+    expect(target.name).toBe('csharp-dev');
+    expect(target.baseUrl).toBe('http://127.0.0.1:3002');
+    expect(target.backendHealthUrl).toBe('http://127.0.0.1:3002/api/health');
   });
 
   it('reuses the launcher target when save smoke target is not provided', () => {
@@ -128,7 +128,7 @@ describe('local runtime targets', () => {
     });
 
     expect(target.name).toBe('csharp-staging-local');
-    expect(target.expectedDatabaseTarget).toBe('fantaf1_porting');
+    expect(target.expectedDatabaseTarget).toBe('fantaf1_staging');
   });
 
   it('resolves ui responsive target from its dedicated env namespace', () => {
@@ -146,17 +146,17 @@ describe('local runtime targets', () => {
   it('uses the canonical launcher target default when no launcher env is set', () => {
     const target = resolveLauncherTarget({});
 
-    expect(target.name).toBe('node-dev');
-    expect(target.busyPorts).toEqual([3001, 5173]);
+    expect(target.name).toBe('csharp-dev');
+    expect(target.busyPorts).toEqual([3002, 5173]);
   });
 
   it('rewrites mongo database names without touching unrelated uri parts', () => {
     expect(
       rewriteMongoDatabaseName(
         'mongodb+srv://user:pass@cluster.mongodb.net/fantaf1_dev?retryWrites=true&w=majority',
-        'fantaf1_porting',
+        'fantaf1_staging',
       ),
-    ).toBe('mongodb+srv://user:pass@cluster.mongodb.net/fantaf1_porting?retryWrites=true&w=majority');
-    expect(rewriteMongoDatabaseName('', 'fantaf1_porting')).toBe('');
+    ).toBe('mongodb+srv://user:pass@cluster.mongodb.net/fantaf1_staging?retryWrites=true&w=majority');
+    expect(rewriteMongoDatabaseName('', 'fantaf1_staging')).toBe('');
   });
 });

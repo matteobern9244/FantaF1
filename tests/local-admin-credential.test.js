@@ -11,11 +11,11 @@ describe('local admin credential helper', () => {
       fsImpl: {
         existsSync: () => false,
       },
-      databaseTarget: 'fantaf1_porting',
+      databaseTarget: 'fantaf1_staging',
     });
 
     expect(mongoUri).toBe(
-      'mongodb+srv://user:pass@cluster.mongodb.net/fantaf1_porting?retryWrites=true&w=majority',
+      'mongodb+srv://user:pass@cluster.mongodb.net/fantaf1_staging?retryWrites=true&w=majority',
     );
   });
 
@@ -48,7 +48,7 @@ describe('local admin credential helper', () => {
 
     expect(changed).toBe(true);
     expect(createConnectionImpl).toHaveBeenCalledWith(
-      'mongodb+srv://user:pass@cluster.mongodb.net/fantaf1_porting?retryWrites=true&w=majority',
+      'mongodb+srv://user:pass@cluster.mongodb.net/fantaf1_staging?retryWrites=true&w=majority',
     );
     expect(updateOne).toHaveBeenCalledWith(
       { role: 'admin' },

@@ -4,7 +4,7 @@ set -euo pipefail
 cd "$(dirname "$0")"
 
 export NODE_ENV=development
-export FANTAF1_LOCAL_RUNTIME="${FANTAF1_LOCAL_RUNTIME:-node-dev}"
+export FANTAF1_LOCAL_RUNTIME="${FANTAF1_LOCAL_RUNTIME:-csharp-dev}"
 
 readonly APP_TITLE="Fanta Formula 1"
 readonly STARTUP_TIMEOUT_SECONDS=45

@@ -48,7 +48,7 @@ describe('responsive UI runner', () => {
     const result = await runResponsiveCheck({
       baseUrl: 'http://127.0.0.1:5173',
       runtimeTarget: resolveUiResponsiveTarget({
-        UI_RESPONSIVE_TARGET: 'node-dev',
+        UI_RESPONSIVE_TARGET: 'csharp-dev',
       }),
       breakpoints: [{ label: 'mobile', width: 390, height: 844 }],
       ensureNpx: vi.fn(),
@@ -139,7 +139,7 @@ describe('responsive UI runner', () => {
       targetConfig: expect.objectContaining({
         name: 'csharp-staging-local',
         baseUrl: 'http://127.0.0.1:3003',
-        expectedDatabaseTarget: 'fantaf1_porting',
+        expectedDatabaseTarget: 'fantaf1_staging',
       }),
     });
   });

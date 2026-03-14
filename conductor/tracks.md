@@ -74,5 +74,5 @@ Questo file tiene traccia di tutte le track principali del progetto. Ogni track 
 
 ---
 
-- [ ] **Track: Migrazione Finale a C# (Rimozione Node.js)**
+- [x] **Track: Migrazione Finale a C# (Rimozione Node.js)**
   *Link: [./tracks/csharp_backend_migration_20260314/](./tracks/csharp_backend_migration_20260314/)*

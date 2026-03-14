@@ -6,11 +6,11 @@ describe('responsive UI local stack bootstrap', () => {
   it('starts backend and frontend when the frontend is initially unreachable and stops them afterwards', async () => {
     const urlState = new Map([
       ['http://127.0.0.1:5173', { calls: 0, okAfter: 3 }],
-      ['http://127.0.0.1:3001/api/health', { calls: 0, okAfter: 2 }],
-      ['http://127.0.0.1:3001/api/session', { calls: 0, okAfter: 4 }],
-      ['http://127.0.0.1:3001/api/data', { calls: 0, okAfter: 4 }],
-      ['http://127.0.0.1:3001/api/drivers', { calls: 0, okAfter: 4 }],
-      ['http://127.0.0.1:3001/api/calendar', { calls: 0, okAfter: 4 }],
+      ['http://127.0.0.1:3002/api/health', { calls: 0, okAfter: 2 }],
+      ['http://127.0.0.1:3002/api/session', { calls: 0, okAfter: 4 }],
+      ['http://127.0.0.1:3002/api/data', { calls: 0, okAfter: 4 }],
+      ['http://127.0.0.1:3002/api/drivers', { calls: 0, okAfter: 4 }],
+      ['http://127.0.0.1:3002/api/calendar', { calls: 0, okAfter: 4 }],
     ]);
     const fetchImpl = vi.fn().mockImplementation(async (url) => {
       const state = urlState.get(url);
@@ -34,8 +34,15 @@ describe('responsive UI local stack bootstrap', () => {
 
     const stack = await ensureLocalAppStack({
       frontendUrl: 'http://127.0.0.1:5173',
-      backendCommand: 'node',
-      backendArgs: ['server.js'],
+      backendCommand: 'dotnet',
+      backendArgs: [
+        'run',
+        '--project',
+        'backend-csharp/src/FantaF1.Api/FantaF1.Api.csproj',
+        '-c',
+        'Release',
+        '--no-launch-profile',
+      ],
       frontendCommand: 'npm',
       frontendArgs: ['run', 'dev:frontend'],
       fetchImpl,
@@ -50,8 +57,15 @@ describe('responsive UI local stack bootstrap', () => {
     expect(stack.started).toBe(true);
     expect(spawnImpl).toHaveBeenNthCalledWith(
       1,
-      'node',
-      ['server.js'],
+      'dotnet',
+      [
+        'run',
+        '--project',
+        'backend-csharp/src/FantaF1.Api/FantaF1.Api.csproj',
+        '-c',
+        'Release',
+        '--no-launch-profile',
+      ],
       expect.objectContaining({ cwd: '/tmp/fantaf1', stdio: 'ignore' }),
     );
     expect(spawnImpl).toHaveBeenNthCalledWith(
@@ -73,7 +87,7 @@ describe('responsive UI local stack bootstrap', () => {
 
     const stack = await ensureLocalAppStack({
       frontendUrl: 'http://127.0.0.1:5173',
-      backendUrl: 'http://127.0.0.1:3001/api/health',
+      backendUrl: 'http://127.0.0.1:3002/api/health',
       fetchImpl,
       spawnImpl,
       sleepImpl: async () => {},
@@ -101,7 +115,7 @@ describe('responsive UI local stack bootstrap', () => {
     await expect(
       ensureLocalAppStack({
         frontendUrl: 'http://127.0.0.1:5173',
-        backendUrl: 'http://127.0.0.1:3001/api/health',
+        backendUrl: 'http://127.0.0.1:3002/api/health',
         fetchImpl,
         spawnImpl: vi.fn(),
         sleepImpl: async () => {},

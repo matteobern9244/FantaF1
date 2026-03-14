@@ -23,17 +23,16 @@ All three files are mandatory and complementary.
 ### Main Technologies
 
 - Frontend: React 18 + TypeScript + Vite
-- Backend: Express 5 on Node.js
-- Persistence: MongoDB Atlas via Mongoose
-- Testing: Vitest, React Testing Library, Supertest
-- Supporting libraries: Lucide React, jsdom, dotenv, cors
+- Backend: ASP.NET Core 10 (C#)
+- Persistence: MongoDB Atlas via MongoDB .NET Driver
+- Testing: Vitest (Frontend), xUnit (Backend), React Testing Library
+- Supporting libraries: Lucide React, jsdom, MongoDB.Driver
 
 ### Architecture
 
 - `src/`: SPA frontend, UI shell, feature panels, and shared frontend utilities in `src/utils`.
-- `backend/`: REST API, validation, persistence access, and external Formula 1 synchronization logic.
-- `app.js` and `server.js`: Express composition, database bootstrap, and runtime startup.
-- `tests/`: unit, integration, API, and UI regression coverage across frontend and backend flows.
+- `backend-csharp/`: Official REST API (ASP.NET Core 10), Domain logic, Persistence (MongoDB), and Infrastructure.
+- `tests/`: unit, integration, and UI regression coverage across frontend and supporting scripts.
 - `docs/backend-csharp-porting-plan.md`: canonical backend migration plan, environment matrix, staging strategy, and cutover guardrails.
 
 ### Building and Running
@@ -50,7 +49,6 @@ Optional helper commands already supported by the repository:
 - `npm run test:save-local`
 - `npm run test:ui-responsive`
 - `npm run preview`
-- `npm run migrate:remove-weekend-boost`
 
 ### Development Conventions
 
@@ -61,7 +59,7 @@ Optional helper commands already supported by the repository:
 - **Localization:** New user-facing text must go through the existing centralized UI/config text system instead of ad-hoc literals.
 - **Documentation:** Keep architecture notes, migration progress, known parity gaps, cutover conditions, and verified coverage baselines updated in repository docs.
 - Prefer focused domain objects, explicit collaborators, and clear data flow over oversized orchestration blocks.
-- Keep runtime wiring and environment/bootstrap concerns in entry points and bootstrap modules such as `app.js`, `server.js`, and backend startup code.
+- Keep runtime wiring and environment/bootstrap concerns in entry points and bootstrap modules such as backend startup code.
 - Avoid hidden dependencies and service-locator style access patterns; pass dependencies explicitly or keep them within the owning module boundary.
 - Prefer object-oriented abstractions when they improve separation of responsibilities, state management, or external-source orchestration; keep classes small, explicit, and easy to test.
 - Use pure helper modules to support those objects when stateful behavior is not needed, but avoid collapsing non-trivial domain workflows back into oversized procedural modules.
@@ -82,8 +80,6 @@ Optional helper commands already supported by the repository:
 - `CLAUDE.md`
 - `package.json`
 - `README.md`
-- `app.js`
-- `server.js`
 
 ---
 
@@ -128,7 +124,7 @@ Do not jump directly into editing without understanding the current implementati
 
 - Never invent requirements, commands, hidden business rules, or architecture.
 - Never assume missing behavior if the codebase does not support that assumption.
-- **Source Of Truth:** For every task, explicitly identify and follow the currently authoritative runtime path and document set. During the backend port, Node remains authoritative until a later verified cutover subphase says otherwise.
+- **Source Of Truth:** For every task, explicitly identify and follow the currently authoritative runtime path and document set. C# is authoritative.
 - Read the affected legacy and target implementations before proposing structural changes.
 - If business logic, expected behavior, or data flow is unclear, stop and ask for clarification.
 - If the repository contains current migration docs, treat them as part of the specification.
@@ -209,7 +205,7 @@ Rules:
 - New logic must be covered by automated tests.
 - Related edge cases must be considered and covered when relevant.
 - Never claim TDD was applied if tests were added only after coding without first reproducing the issue.
-- Use the repository's established Vitest/React Testing Library/Supertest patterns, and mock only collaborators outside the actual intent of the test.
+- Use the repository's established Vitest/React Testing Library patterns, and mock only collaborators outside the actual intent of the test.
 - This TDD rule is mandatory for every fix, modification, and new implementation in this repository without exception.
 - RED must also define the coverage work needed to preserve or restore 100% statements, functions, branches, and lines for the official repository/application scope.
 - GREEN is not complete if the implementation passes behavior tests but leaves coverage below 100%.
@@ -222,8 +218,7 @@ Rules:
 Before declaring completion, run the relevant validation pipeline supported by the repository.
 Where applicable this includes:
 
-- **Parity Before Optimization:** Reach functional parity first. Optimize architecture, performance, or style only after behavior is covered by tests unless the task is explicitly performance-driven.
-- **Dual-Run Verification:** When both Node and C# implementations exist, compare outputs with deterministic parity assertions, contract tests, golden cases, or equivalent evidence before declaring parity.
+- **Functional Parity First:** Reach functional parity first. Optimize architecture, performance, or style only after behavior is covered by tests unless the task is explicitly performance-driven.
 - lint
 - unit/integration tests
 - build
@@ -259,10 +254,10 @@ Where applicable this includes:
 
 ### Test stack and coverage profile
 
-- Main automated test stack: Vitest, React Testing Library, and Supertest.
-- Coverage provider: V8.
+- Main automated test stack: Vitest (Frontend), xUnit (Backend), and React Testing Library.
+- Coverage provider: V8 (Frontend), coverlet (Backend).
 - Current verified merged baseline for the configured official application-code scope is **100% statements (5176 / 5176)**, **100% functions (408 / 408)**, **100% branches (2096 / 2096)**, and **100% lines (5176 / 5176)**, aligned with the thresholds currently documented in `README.md`.
-- Current verified official backend-csharp application coverage on `backend-csharp/src/` is **100% line coverage (2928 / 2928)**, **100% branch coverage (1649 / 1649)**, and **100% method coverage (487 / 487)** across **70 included files**, as reported by `npm run test:csharp-coverage`.
+- Official backend-csharp application coverage on `backend-csharp/src/` is **100% line coverage (2928 / 2928)**, **100% branch coverage (1649 / 1649)**, and **100% method coverage (487 / 487)** across **70 included files**, as reported by `npm run test:csharp-coverage`.
 - Whenever a task produces a new verified merged Release coverage result, update this baseline in `AGENTS.md` to the new numbers.
 - If a task produces a new verified merged coverage result for the tracked scope, update the baseline in `AGENTS.md` and never accept a regression below that verified baseline.
 

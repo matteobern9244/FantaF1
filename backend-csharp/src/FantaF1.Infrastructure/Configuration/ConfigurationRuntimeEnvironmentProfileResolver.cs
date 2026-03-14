@@ -90,7 +90,6 @@ public sealed class ConfigurationRuntimeEnvironmentProfileResolver : IRuntimeEnv
             ? string.Equals(databaseTarget, RuntimeEnvironmentProfileContract.PortingDatabaseName, StringComparison.Ordinal)
             : string.Equals(environment, RuntimeEnvironmentProfileContract.StagingEnvironmentPayload, StringComparison.Ordinal)
                 ? string.Equals(databaseTarget, RuntimeEnvironmentProfileContract.StagingDatabaseName, StringComparison.Ordinal)
-                    || string.Equals(databaseTarget, RuntimeEnvironmentProfileContract.PortingDatabaseName, StringComparison.Ordinal)
                 : string.Equals(databaseTarget, RuntimeEnvironmentProfileContract.ProductionDatabaseName, StringComparison.Ordinal);
 
         if (!isAllowed)

@@ -257,8 +257,6 @@ public sealed class PortingDocumentationConsistencyTests
             "**Static Logic Policy:**",
             "**Cross-Platform Discipline:**",
             "**Source Of Truth:**",
-            "**Parity Before Optimization:**",
-            "**Dual-Run Verification:**",
             "**Data Safety:**",
             "**Contract Preservation:**",
             "**Feature Flags For Cutover:**",

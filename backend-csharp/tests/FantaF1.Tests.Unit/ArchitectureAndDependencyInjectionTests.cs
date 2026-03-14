@@ -47,7 +47,7 @@ public sealed class ArchitectureAndDependencyInjectionTests
         var configuration = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>
             {
-                ["MONGODB_URI"] = "mongodb+srv://user:pass@cluster.mongodb.net/fantaf1_porting?retryWrites=true&w=majority",
+                ["MONGODB_URI"] = "mongodb+srv://user:pass@cluster.mongodb.net/fantaf1_staging?retryWrites=true&w=majority",
             })
             .Build();
 
@@ -120,7 +120,7 @@ public sealed class ArchitectureAndDependencyInjectionTests
             {
                 [ContractAdminCredentialSeedOptions.PasswordHashHexConfigurationPath] = "ab".PadRight(128, 'c'),
                 [ContractAdminCredentialSeedOptions.PasswordSaltConfigurationPath] = "configured-salt",
-                ["MONGODB_URI"] = "mongodb+srv://user:pass@cluster.mongodb.net/fantaf1_porting?retryWrites=true&w=majority",
+                ["MONGODB_URI"] = "mongodb+srv://user:pass@cluster.mongodb.net/fantaf1_staging?retryWrites=true&w=majority",
             })
             .Build();
 

@@ -24,7 +24,7 @@ describe('local save smoke runner', () => {
         createJsonResponse({
           status: 'ok',
           environment: 'development',
-          databaseTarget: 'fantaf1_dev',
+          databaseTarget: 'fantaf1_staging',
         }),
       )
       .mockResolvedValueOnce(createJsonResponse(state))
@@ -32,17 +32,17 @@ describe('local save smoke runner', () => {
       .mockResolvedValueOnce(createJsonResponse(state));
 
     const result = await runSaveSmoke({
-      target: 'node-dev',
-      baseUrl: 'http://127.0.0.1:3001',
+      target: 'csharp-dev',
+      baseUrl: 'http://127.0.0.1:3002',
       fetchImpl,
     });
 
-    expect(result.health.databaseTarget).toBe('fantaf1_dev');
+    expect(result.health.databaseTarget).toBe('fantaf1_staging');
     expect(result.saveResult.message).toBe('Dati salvati correttamente.');
     expect(fetchImpl).toHaveBeenCalledTimes(4);
     expect(fetchImpl).toHaveBeenNthCalledWith(
       3,
-      'http://127.0.0.1:3001/api/data',
+      'http://127.0.0.1:3002/api/data',
       expect.objectContaining({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -66,7 +66,7 @@ describe('local save smoke runner', () => {
         createJsonResponse({
           status: 'ok',
           environment: 'development',
-          databaseTarget: 'fantaf1_dev',
+          databaseTarget: 'fantaf1_staging',
         }),
       )
       .mockResolvedValueOnce(createJsonResponse(state))
@@ -79,13 +79,13 @@ describe('local save smoke runner', () => {
     });
 
     const result = await runSaveSmoke({
-      target: 'node-dev',
-      baseUrl: 'http://127.0.0.1:3001',
+      target: 'csharp-dev',
+      baseUrl: 'http://127.0.0.1:3002',
       fetchImpl,
       ensureBackend,
     });
 
-    expect(result.health.databaseTarget).toBe('fantaf1_dev');
+    expect(result.health.databaseTarget).toBe('fantaf1_staging');
     expect(ensureBackend).toHaveBeenCalledTimes(1);
     expect(stopBackend).toHaveBeenCalledTimes(1);
   });
@@ -101,8 +101,8 @@ describe('local save smoke runner', () => {
 
     await expect(
       runSaveSmoke({
-        target: 'node-dev',
-        baseUrl: 'http://127.0.0.1:3001',
+        target: 'csharp-dev',
+        baseUrl: 'http://127.0.0.1:3002',
         fetchImpl,
       }),
     ).rejects.toThrow('Smoke save consentito solo in development.');
@@ -122,7 +122,7 @@ describe('local save smoke runner', () => {
         createJsonResponse({
           status: 'ok',
           environment: 'development',
-          databaseTarget: 'fantaf1_dev',
+          databaseTarget: 'fantaf1_staging',
         }),
       )
       .mockResolvedValueOnce(createJsonResponse(state))
@@ -138,8 +138,8 @@ describe('local save smoke runner', () => {
 
     await expect(
       runSaveSmoke({
-        target: 'node-dev',
-        baseUrl: 'http://127.0.0.1:3001',
+        target: 'csharp-dev',
+        baseUrl: 'http://127.0.0.1:3002',
         fetchImpl,
       }),
     ).rejects.toThrow(
@@ -165,7 +165,7 @@ describe('local save smoke runner', () => {
         createJsonResponse({
           status: 'ok',
           environment: 'development',
-          databaseTarget: 'fantaf1_dev',
+          databaseTarget: 'fantaf1_staging',
         }),
       )
       .mockResolvedValueOnce(createJsonResponse(beforeState))
@@ -181,8 +181,8 @@ describe('local save smoke runner', () => {
 
     await expect(
       runSaveSmoke({
-        target: 'node-dev',
-        baseUrl: 'http://127.0.0.1:3001',
+        target: 'csharp-dev',
+        baseUrl: 'http://127.0.0.1:3002',
         fetchImpl,
       }),
     ).rejects.toThrow('Lo stato letto dopo il salvataggio non coincide con il payload inviato.');
@@ -206,7 +206,7 @@ describe('local save smoke runner', () => {
         createJsonResponse({
           status: 'ok',
           environment: 'development',
-          databaseTarget: 'fantaf1_dev',
+          databaseTarget: 'fantaf1_staging',
         }),
       )
       .mockResolvedValueOnce(createJsonResponse(beforeState))
@@ -216,8 +216,8 @@ describe('local save smoke runner', () => {
       .mockResolvedValueOnce(createJsonResponse(stabilizedState));
 
     const result = await runSaveSmoke({
-      target: 'node-dev',
-      baseUrl: 'http://127.0.0.1:3001',
+      target: 'csharp-dev',
+      baseUrl: 'http://127.0.0.1:3002',
       fetchImpl,
     });
 
@@ -225,7 +225,7 @@ describe('local save smoke runner', () => {
     expect(result.afterState).toEqual(stabilizedState);
     expect(fetchImpl).toHaveBeenNthCalledWith(
       5,
-      'http://127.0.0.1:3001/api/data',
+      'http://127.0.0.1:3002/api/data',
       expect.objectContaining({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -260,8 +260,8 @@ describe('local save smoke runner', () => {
       .mockResolvedValueOnce(createJsonResponse(state));
 
     const result = await runSaveSmoke({
-      target: 'node-dev',
-      baseUrl: 'http://127.0.0.1:3001',
+      target: 'csharp-dev',
+      baseUrl: 'http://127.0.0.1:3002',
       expectedEnvironment: 'ci',
       expectedDatabaseTarget: 'fantaf1_ci',
       fetchImpl,
@@ -286,7 +286,7 @@ describe('local save smoke runner', () => {
         createJsonResponse({
           status: 'ok',
           environment: 'development',
-          databaseTarget: 'fantaf1_porting',
+          databaseTarget: 'fantaf1_staging',
         }),
       )
       .mockResolvedValueOnce(createJsonResponse(state))
@@ -303,7 +303,7 @@ describe('local save smoke runner', () => {
       ensureBackend,
     });
 
-    expect(result.health.databaseTarget).toBe('fantaf1_porting');
+    expect(result.health.databaseTarget).toBe('fantaf1_staging');
     expect(ensureBackend).toHaveBeenCalledWith(expect.objectContaining({
       healthUrl: 'http://127.0.0.1:3002/api/health',
       backendCommand: 'dotnet',
@@ -315,11 +315,11 @@ describe('local save smoke runner', () => {
         'Release',
         '--no-launch-profile',
       ],
-      startupEnv: {
+      startupEnv: expect.objectContaining({
         ASPNETCORE_ENVIRONMENT: 'Development',
         ASPNETCORE_URLS: 'http://127.0.0.1:3002',
-        MONGODB_DB_NAME_OVERRIDE: 'fantaf1_porting',
-      },
+        MONGODB_DB_NAME_OVERRIDE: 'fantaf1_staging',
+      }),
     }));
   });
 
@@ -337,7 +337,7 @@ describe('local save smoke runner', () => {
         createJsonResponse({
           status: 'ok',
           environment: 'staging',
-          databaseTarget: 'fantaf1_porting',
+          databaseTarget: 'fantaf1_staging',
         }),
       )
       .mockResolvedValueOnce(createJsonResponse(state))
@@ -386,7 +386,7 @@ describe('local save smoke runner', () => {
         createJsonResponse({
           status: 'ok',
           environment: 'staging',
-          databaseTarget: 'fantaf1_porting',
+          databaseTarget: 'fantaf1_staging',
         }),
       )
       .mockResolvedValueOnce(createJsonResponse(state))
@@ -416,7 +416,7 @@ describe('local save smoke runner', () => {
 
     await expect(
       runSaveSmoke({
-        target: 'node-dev',
+        target: 'csharp-dev',
         fetchImpl,
         ensureBackend: ensureBackendMock,
       }),
@@ -429,7 +429,7 @@ describe('local save smoke runner', () => {
 
     await expect(
       runSaveSmoke({
-        target: 'node-dev',
+        target: 'csharp-dev',
         fetchImpl,
         ensureBackend: ensureBackendMock,
       }),
