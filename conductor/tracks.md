@@ -29,5 +29,5 @@ Questo file tiene traccia di tutte le track principali del progetto. Ogni track 
 
 ---
 
-- [ ] **Track: Ripristino Dati Produzione su Staging**
+- [x] **Track: Ripristino Dati Produzione su Staging**
   *Link: [./tracks/restore_prod_to_staging_20260314/](./tracks/restore_prod_to_staging_20260314/)*
