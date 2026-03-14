@@ -24,5 +24,5 @@ Questo file tiene traccia di tutte le track principali del progetto. Ogni track 
 
 ---
 
-- [ ] **Track: Backup Database Produzione (fantaf1)**
+- [x] **Track: Backup Database Produzione (fantaf1)**
   *Link: [./tracks/backup_production_db_20260314/](./tracks/backup_production_db_20260314/)*

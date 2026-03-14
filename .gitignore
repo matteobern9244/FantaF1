@@ -25,3 +25,6 @@ pnpm-debug.log*
 *.tsbuildinfo
 
 F1Result/data.json
+
+# Backups
+backups/
