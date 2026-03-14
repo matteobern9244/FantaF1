@@ -11,3 +11,4 @@ Repository-level Claude CLI instructions for FantaF1.
 7. Keep changes minimal, targeted, and non-destructive.
 8. Ogni incremento di versione deve essere coordinato tra `package.json`, `package-lock.json`, `CHANGELOG.md` e `README.md`.
 9. Final responses must be in Italian unless explicitly requested otherwise.
+10. PRIMA DI ESEGUIRE COMMIT E PUSH MODIFICARE SEMPRE FILE README.MD (SE NECESSARIO), CHANGELOG.MD CON TUTTE LE MODIFICHE/FIX/NUOVE IMPLEMENTAZIONI EFFETTUATE, IMPLEMENTATE E RICHIESTE.

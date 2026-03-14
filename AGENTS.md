@@ -317,6 +317,7 @@ This includes:
 
 When the user explicitly authorizes commit-related operations:
 
+- PRIMA DI ESEGUIRE COMMIT E PUSH MODIFICARE SEMPRE FILE README.MD (SE NECESSARIO), CHANGELOG.MD CON TUTTE LE MODIFICHE/FIX/NUOVE IMPLEMENTAZIONI EFFETTUATE, IMPLEMENTATE E RICHIESTE.
 - update `README.md` if the real implemented changes require documentation updates
 - always update `CHANGELOG.md` before commit
 - preserve the existing documentation structure and history

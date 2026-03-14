@@ -12,3 +12,4 @@ Repository-level Gemini CLI instructions for FantaF1.
 8. Keep changes minimal, targeted, and non-destructive.
 9. Ogni incremento di versione deve essere coordinato tra `package.json`, `package-lock.json`, `CHANGELOG.md` e `README.md`.
 10. Final responses must be in Italian unless explicitly requested otherwise.
+11. PRIMA DI ESEGUIRE COMMIT E PUSH MODIFICARE SEMPRE FILE README.MD (SE NECESSARIO), CHANGELOG.MD CON TUTTE LE MODIFICHE/FIX/NUOVE IMPLEMENTAZIONI EFFETTUATE, IMPLEMENTATE E RICHIESTE.

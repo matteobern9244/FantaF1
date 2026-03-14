@@ -4,6 +4,7 @@ Cronologia sintetica delle release documentate del progetto Fanta Formula 1.
 
 ## Unreleased
 
+- **Vincolo Mandatorio di Aggiornamento Documentazione Pre-Commit**: introdotta una nuova regola rigorosa in `GEMINI.md`, `AGENTS.md` e `CLAUDE.md` che impone la modifica di `README.md` (se necessario) e `CHANGELOG.md` prima di ogni operazione di commit e push, garantendo che la documentazione rifletta sempre le modifiche, i fix e le nuove implementazioni effettuate.
 - **Integrazione Framework Conductor per lo Sviluppo Spec-Driven**: introdotta la directory `conductor/` con definizioni di prodotto, linee guida UX, stack tecnologico e workflow operativo; rimosso `conductor/` dal `.gitignore` per garantirne il tracciamento ufficiale nel repository.
 - **Certificazione Workflow e Salute Repository**: completata la prima track Conductor per validare il nuovo workflow; confermata la copertura test al `100%` per lo stack Node/React e l'integrità del launcher canonico e delle viste responsive.
 - **Audit Anti-Regressione del Porting C# (Fase 1-9)**: completata la track Conductor dedicata alla verifica delle fasi di migrazione esistenti; confermata la parità API (Contract tests 100%), la corretta sincronizzazione in background (Fase 8) e la parametrizzazione sicura degli strumenti di verifica (Fase 9).

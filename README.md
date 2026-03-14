@@ -280,6 +280,8 @@ Il repository segue standard ingegneristici rigorosi per garantire la sicurezza 
 - `PROJECT.md`: Verità specifica del progetto FantaF1 (vincoli di business, integrità dei dati, aree ad alto rischio).
 - `GEMINI.md`: Direttive operative specifiche per l'automazione e il ciclo di vita dell'applicazione nel repository.
 
+Ogni operazione di commit e push nel repository è vincolata all'aggiornamento preventivo di `README.md` (se necessario) e `CHANGELOG.md`, garantendo che la documentazione storica e tecnica sia sempre allineata alle modifiche effettuate.
+
 L'applicazione di questi standard garantisce un approccio "production-safe" e una validazione continua tramite un ciclo rigoroso di test e build.
 
 ### Frontend
