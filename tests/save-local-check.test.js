@@ -407,4 +407,32 @@ describe('local save smoke runner', () => {
       }),
     ).rejects.toThrow('POST /api/admin/session non ha restituito un cookie di sessione admin valido.');
   });
+
+  it('fails quickly when the backend process exits unexpectedly during startup', async () => {
+    const fetchImpl = vi.fn().mockRejectedValue(new Error('fetch failed'));
+    
+    // Simulate the behavior of the real script
+    const ensureBackendMock = vi.fn().mockRejectedValue(new Error('Il processo backend e\' terminato inaspettatamente con codice 1.'));
+
+    await expect(
+      runSaveSmoke({
+        target: 'node-dev',
+        fetchImpl,
+        ensureBackend: ensureBackendMock,
+      }),
+    ).rejects.toThrow('Il processo backend e\' terminato inaspettatamente con codice 1.');
+  });
+
+  it('fails when MONGODB_URI is missing from environment during backend bootstrap', async () => {
+    const fetchImpl = vi.fn().mockRejectedValue(new Error('fetch failed'));
+    const ensureBackendMock = vi.fn().mockRejectedValue(new Error('Variabile d\'ambiente MONGODB_URI non definita. Verifica la configurazione del file .env.'));
+
+    await expect(
+      runSaveSmoke({
+        target: 'node-dev',
+        fetchImpl,
+        ensureBackend: ensureBackendMock,
+      }),
+    ).rejects.toThrow('Variabile d\'ambiente MONGODB_URI non definita. Verifica la configurazione del file .env.');
+  });
 });

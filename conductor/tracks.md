@@ -51,3 +51,13 @@ Questo file tiene traccia di tutte le track principali del progetto. Ogni track 
 
 - [x] **Track: Verifica Build e Test dopo git clean -fdx**
   *Link: [./tracks/verify_after_clean_20260314/](./tracks/verify_after_clean_20260314/)*
+
+---
+
+- [x] **Track: Creazione e configurazione file .env locale**
+  *Link: [./tracks/create_env_config_20260314/](./tracks/create_env_config_20260314/)*
+
+---
+
+- [x] **Track: Integrazione dotnet format nel workflow C# e CI/CD**
+  *Link: [./tracks/integrate_dotnet_format_20260314/](./tracks/integrate_dotnet_format_20260314/)*

@@ -1,9 +1,15 @@
-import 'dotenv/config'; // Load env vars
 import cors from 'cors';
 import express from 'express';
 import mongoose from 'mongoose';
 import path from 'path';
 import { fileURLToPath } from 'url';
+
+// Load environment variables only outside test environment to avoid polluting test state
+if (!process.env.VITEST) {
+  const { default: dotenv } = await import('dotenv');
+  dotenv.config();
+}
+
 import { syncCalendarFromOfficialSource, sortCalendarByRound, fetchRaceResultsWithStatus } from './backend/calendar.js';
 import { appConfig, currentYear } from './backend/config.js';
 import {

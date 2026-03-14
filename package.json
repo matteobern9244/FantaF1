@@ -17,6 +17,8 @@
     "test:csharp-coverage": "node scripts/verify-csharp-coverage.mjs",
     "test:save-local": "node scripts/save-local-check.mjs",
     "test:ui-responsive": "node scripts/ui-responsive-check.mjs",
+    "format:csharp": "dotnet format backend-csharp/FantaF1.Backend.sln",
+    "format:csharp:check": "dotnet format backend-csharp/FantaF1.Backend.sln --verify-no-changes",
     "migrate:remove-weekend-boost": "node scripts/remove-weekend-boost.mjs"
   },
   "dependencies": {

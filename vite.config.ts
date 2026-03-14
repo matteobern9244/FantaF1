@@ -15,6 +15,12 @@ export default defineConfig({
   test: {
     setupFiles: ['./tests/setup.ts'],
     globals: true,
+    env: {
+      MONGODB_DB_NAME_OVERRIDE: '',
+      SAVE_SMOKE_EXPECTED_DATABASE_TARGET: '',
+      FANTAF1_EXPECTED_DATABASE_TARGET: '',
+      VITE_APP_LOCAL_NAME: ''
+    },
     coverage: {
       provider: 'v8',
       include: ['app.js', 'server.js', 'backend/**/*.js', 'src/**/*.ts', 'src/**/*.tsx', 'scripts/atlas-provisioning.mjs'],

@@ -99,6 +99,13 @@ on_error() {
 
 trap on_error ERR INT TERM
 
+if [[ ! -f ".env" ]]; then
+  echo "==> Attenzione: File .env non trovato."
+  echo "Assicurati di aver configurato l'ambiente partendo da .env.example."
+  echo "Puoi farlo eseguendo: cp .env.example .env"
+  echo
+fi
+
 run_step "Eseguo lint" npm run lint
 run_step "Eseguo test" npm run test
 run_step "Eseguo build" npm run build

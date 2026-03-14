@@ -1,3 +1,8 @@
+// Load environment variables only outside test environment
+if (!process.env.VITEST) {
+  const { default: dotenv } = await import('dotenv');
+  dotenv.config();
+}
 import fs from 'fs';
 import path from 'path';
 import { spawn } from 'child_process';
@@ -154,10 +159,14 @@ function sleep(durationMs) {
   });
 }
 
-async function waitForHealthyBackend({ healthUrl, fetchImpl, timeoutMs = STARTUP_TIMEOUT_MS }) {
+async function waitForHealthyBackend({ healthUrl, fetchImpl, timeoutMs = STARTUP_TIMEOUT_MS, onCheck }) {
   const startedAt = Date.now();
 
   while (Date.now() - startedAt < timeoutMs) {
+    if (typeof onCheck === 'function') {
+      onCheck();
+    }
+
     try {
       const response = await fetchImpl(healthUrl);
       if (response?.ok) {
@@ -187,6 +196,13 @@ async function ensureLocalBackend({
     ...loadEnvFile(path.join(projectRoot, '.env.local')),
     ...startupEnv,
   };
+
+  if (typeof env.MONGODB_URI !== 'string' || !env.MONGODB_URI.trim()) {
+    throw new Error(
+      "Variabile d'ambiente MONGODB_URI non definita. Verifica la configurazione del file .env partendo da .env.example o impostala nel terminale.",
+    );
+  }
+
   if (
     typeof env.MONGODB_URI === 'string'
     && typeof startupEnv.MONGODB_DB_NAME_OVERRIDE === 'string'
@@ -200,6 +216,11 @@ async function ensureLocalBackend({
     stdio: 'ignore',
   });
   let stopped = false;
+  let exitCode = null;
+
+  child.on('exit', (code) => {
+    exitCode = code;
+  });
 
   const stop = async () => {
     if (stopped || child.killed) {
@@ -215,7 +236,17 @@ async function ensureLocalBackend({
   };
 
   try {
-    await waitForHealthyBackend({ healthUrl, fetchImpl });
+    await waitForHealthyBackend({
+      healthUrl,
+      fetchImpl,
+      onCheck: () => {
+        if (exitCode !== null) {
+          throw new Error(
+            `Il processo backend e' terminato inaspettatamente con codice ${exitCode} durante l'avvio.`,
+          );
+        }
+      },
+    });
     return {
       started: true,
       stop,
@@ -241,11 +272,12 @@ async function runSaveSmoke({
   }
 
   const resolvedTarget = resolveSaveSmokeTarget({
-    SAVE_SMOKE_TARGET: target,
-    SAVE_SMOKE_BASE_URL: baseUrl,
-    SAVE_SMOKE_BACKEND_HEALTH_URL: backendHealthUrl,
-    SAVE_SMOKE_EXPECTED_ENVIRONMENT: expectedEnvironment,
-    SAVE_SMOKE_EXPECTED_DATABASE_TARGET: expectedDatabaseTarget,
+    ...process.env,
+    ...(target && { SAVE_SMOKE_TARGET: target }),
+    ...(baseUrl && { SAVE_SMOKE_BASE_URL: baseUrl }),
+    ...(backendHealthUrl && { SAVE_SMOKE_BACKEND_HEALTH_URL: backendHealthUrl }),
+    ...(expectedEnvironment && { SAVE_SMOKE_EXPECTED_ENVIRONMENT: expectedEnvironment }),
+    ...(expectedDatabaseTarget && { SAVE_SMOKE_EXPECTED_DATABASE_TARGET: expectedDatabaseTarget }),
   });
   const normalizedBaseUrl = resolvedTarget.baseUrl.replace(/\/+$/, '');
   const normalizedHealthUrl = resolvedTarget.backendHealthUrl.replace(/\/+$/, '');

@@ -1,0 +1,8 @@
+{
+  "id": "create_env_config_20260314",
+  "title": "Creazione e configurazione file .env locale",
+  "description": "Ripristino del file .env partendo da .env.example con valori predefiniti per l'ambiente di sviluppo locale.",
+  "status": "in_progress",
+  "created_at": "2026-03-14T12:00:00Z",
+  "updated_at": "2026-03-14T12:00:00Z"
+}
