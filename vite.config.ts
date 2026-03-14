@@ -17,7 +17,7 @@ export default defineConfig({
     globals: true,
     coverage: {
       provider: 'v8',
-      include: ['app.js', 'server.js', 'backend/**/*.js', 'src/**/*.ts', 'src/**/*.tsx'],
+      include: ['app.js', 'server.js', 'backend/**/*.js', 'src/**/*.ts', 'src/**/*.tsx', 'scripts/atlas-provisioning.mjs'],
       exclude: ['backend/config.js', 'backend/models.js', 'src/types.ts', 'src/vite-env.d.ts'],
       thresholds: {
         lines: 100,
