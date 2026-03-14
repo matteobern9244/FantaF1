@@ -64,7 +64,7 @@ Questo file tiene traccia di tutte le track principali del progetto. Ogni track 
 
 ---
 
-- [ ] **Track: Analisi e Pulizia Database MongoDB Atlas**
+- [x] **Track: Analisi e Pulizia Database MongoDB Atlas**
   *Link: [./tracks/cleanup_atlas_databases_20260314/](./tracks/cleanup_atlas_databases_20260314/)*
 
 ---
