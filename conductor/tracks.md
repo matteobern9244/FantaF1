@@ -36,3 +36,13 @@ Questo file tiene traccia di tutte le track principali del progetto. Ogni track 
 
 - [x] **Track: Enforce Versioning Discipline**
   *Link: [./tracks/enforce_versioning_rule_20260314/](./tracks/enforce_versioning_rule_20260314/)*
+
+---
+
+- [x] **Track: Verifica e Setup .NET 10 (Locale, Docker, CI/CD)**
+  *Link: [./tracks/setup_dotnet10_20260314/](./tracks/setup_dotnet10_20260314/)*
+
+---
+
+- [x] **Track: Validazione Immagine Docker (.NET 10)**
+  *Link: [./tracks/verify_docker_dotnet10_20260314/](./tracks/verify_docker_dotnet10_20260314/)*
