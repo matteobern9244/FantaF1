@@ -26,3 +26,8 @@ Questo file tiene traccia di tutte le track principali del progetto. Ogni track 
 
 - [x] **Track: Backup Database Produzione (fantaf1)**
   *Link: [./tracks/backup_production_db_20260314/](./tracks/backup_production_db_20260314/)*
+
+---
+
+- [ ] **Track: Ripristino Dati Produzione su Staging**
+  *Link: [./tracks/restore_prod_to_staging_20260314/](./tracks/restore_prod_to_staging_20260314/)*
