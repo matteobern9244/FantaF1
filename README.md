@@ -26,7 +26,8 @@ Il workspace corrente introduce l'adozione del framework Conductor per la gestio
 - **Automazione Formattazione C#**: introdotto l'uso di `dotnet format` integrato sia nel workflow locale (`npm run format:csharp`) sia nella pipeline CI/CD, assicurando che tutto il codice C# rispetti gli standard di stile definiti.
 - **Robustezza Launcher e Smoke Test**: il launcher `./start_fantaf1.command` include ora controlli preventivi sulla configurazione dell'ambiente (`.env`); lo smoke test di salvataggio rileva istantaneamente eventuali crash del backend durante il preflight, fornendo feedback immediato anziché attendere il timeout.
 - **Isolamento Ambiente di Test**: implementata una protezione rigorosa contro l'inquinamento delle variabili d'ambiente durante i test unitari; il caricamento di `dotenv` è disabilitato quando il runtime è gestito da Vitest, garantendo stabilità alla suite di validazione anche con configurazioni locali personalizzate.
-- **Certificazione Workflow**: completata la validazione dell'integrità del repository con copertura test al 100%, launcher canonico verificato e controlli responsive passanti.
+- **Certificazione Workflow**: completata la validazione dell'integrità del repository con copertura test al 100% (statements, branches, functions, lines) su tutti gli stack (Node, Frontend, C#), garantendo la massima stabilità operativa.
+- **Pulizia Strutturale Atlas**: identificati ed eliminati i database obsoleti dal cluster MongoDB Atlas, ottimizzando l'ambiente cloud senza impatto su produzione, staging e sviluppo.
 - **Audit Anti-Regressione Porting C#**: certificata l'integrità del porting C# fino alla Fase 9, confermando parità API, sincronizzazione background e parametri di sicurezza degli strumenti di verifica.
 - **Ristrutturazione Navigazione (da v1.4.4)**: menu integrato nell'header, navigazione fluida mobile nativa, ottimizzazione performance con `IntersectionObserver` e fix mappa circuito storica.
 
@@ -629,12 +630,12 @@ Lo script:
 ### Test
 
 - Runner: Vitest.
-- Coverage provider: V8.
+- Coverage provider: v8.
 - Baseline coverage verificata corrente sullo scope ufficiale del repository/applicazione:
-  - `5167 / 5167` statements
-  - `407 / 407` functions
-  - `2093 / 2093` branches
-  - `5167 / 5167` lines
+  - `5176 / 5176` statements
+  - `408 / 408` functions
+  - `2096 / 2096` branches
+  - `5176 / 5176` lines
 - Coverage ufficiale verificata corrente del backend C# sullo scope `backend-csharp/src/`:
   - `2928 / 2928` lines
   - `1649 / 1649` branches

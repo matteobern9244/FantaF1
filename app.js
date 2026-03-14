@@ -4,11 +4,10 @@ import mongoose from 'mongoose';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
-// Load environment variables only outside test environment to avoid polluting test state
-if (!process.env.VITEST) {
-  const { default: dotenv } = await import('dotenv');
-  dotenv.config();
-}
+import { loadEnv } from './backend/config-loader.js';
+
+// Initialize environment
+await loadEnv();
 
 import { syncCalendarFromOfficialSource, sortCalendarByRound, fetchRaceResultsWithStatus } from './backend/calendar.js';
 import { appConfig, currentYear } from './backend/config.js';

@@ -1,10 +1,9 @@
 import mongoose from 'mongoose';
 
-// Load environment variables only outside test environment
-if (!process.env.VITEST) {
-  const { default: dotenv } = await import('dotenv');
-  dotenv.config();
-}
+import { loadEnv } from './backend/config-loader.js';
+
+// Initialize environment
+await loadEnv();
 
 import app from './app.js';
 import { syncCalendarFromOfficialSource } from './backend/calendar.js';
