@@ -1,8 +1,15 @@
 {
-  "track_id": "restaylyng_menu_mobile_20260316",
-  "type": "other",
+  "id": "restaylyng_menu_mobile_20260316",
+  "slug": "restaylyng-menu-mobile",
+  "title": "Mobile Menu Restyling",
   "status": "new",
-  "created_at": "2026-03-16T15:00:00Z",
-  "updated_at": "2026-03-16T15:00:00Z",
-  "description": "aumenta l'altezza delle voci del menu' in vista mobile il testo deve essere centrato all'interno delle voci e lo strech del testo DEVE SPARIRE"
+  "phase": "new",
+  "createdAt": "2026-03-16T15:00:00Z",
+  "updatedAt": "2026-03-16T15:00:00Z",
+  "archivedAt": null,
+  "path": "conductor/tracks/restaylyng-menu-mobile",
+  "relatedTrackIds": [],
+  "activeTask": "No active task",
+  "description": "aumenta l'altezza delle voci del menu' in vista mobile il testo deve essere centrato all'interno delle voci e lo strech del testo DEVE SPARIRE",
+  "type": "other"
 }

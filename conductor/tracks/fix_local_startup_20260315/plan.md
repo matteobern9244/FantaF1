@@ -35,17 +35,17 @@ Ensure the entire application meets the 100% coverage threshold.
 ## Phase 4: Validation & UI Consistency
 Final verification of the application health.
 - [x] Task: Run `./start_fantaf1.command` and verify that both Backend and Frontend are operational.
-- [ ] Task: Run `check viste` (`npm run test:ui-responsive`) to verify Desktop and Mobile views. **(CURRENTLY BLOCKED: needs selector alignment with new UI strings)**
+- [x] Task: Run `check viste` (`npm run test:ui-responsive`) to verify Desktop and Mobile views.
 - [x] Task: Run `npm run lint` and `npm run build` to ensure project health.
-- [ ] Task: Conductor - User Manual Verification 'Validation & UI Consistency' (Protocol in workflow.md).
+- [x] Task: Conductor - User Manual Verification 'Validation & UI Consistency' (Protocol in workflow.md).
 
 ## Phase 5: Documentation & Commit Preparation
-- [ ] Task: Update `CHANGELOG.md` and `README.md` with the fixes.
-- [ ] Task: Final verification of versioning consistency.
-- [ ] Task: Conductor - User Manual Verification 'Documentation & Commit Preparation' (Protocol in workflow.md).
+- [x] Task: Update `CHANGELOG.md` and `README.md` with the fixes.
+- [x] Task: Final verification of versioning consistency.
+- [x] Task: Conductor - User Manual Verification 'Documentation & Commit Preparation' (Protocol in workflow.md).
 
 ## Acceptance Criteria
-- [ ] `./start_fantaf1.command` completes without errors and the app is reachable.
-- [ ] Frontend and Backend tests report 100% coverage.
-- [ ] No regressions in UI (Desktop/Mobile) via responsive checks.
-- [ ] All changes are documented in `CHANGELOG.md`.
+- [x] `./start_fantaf1.command` completes without errors and the app is reachable.
+- [x] Frontend and Backend tests report 100% coverage.
+- [x] No regressions in UI (Desktop/Mobile) via responsive checks.
+- [x] All changes are documented in `CHANGELOG.md`.
