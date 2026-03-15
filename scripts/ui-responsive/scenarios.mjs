@@ -146,10 +146,29 @@ function switchViewMode(targetView, {
   evaluateJsonImpl,
   sleepSyncImpl = sleepSync,
 } = {}) {
-  const result = evaluateJsonImpl(`() => {
-    const buttons = [...document.querySelectorAll('.view-mode-toggle button')];
+  const findAndClickResult = () => evaluateJsonImpl(`() => {
+    const normalizeText = (value) => String(value || '').replace(/\\s+/g, ' ').trim();
     const matcher = ${JSON.stringify(targetView)} === 'public' ? /pubblica/i : /admin/i;
-    const targetButton = buttons.find((button) => matcher.test(button.textContent || ''));
+    const isVisible = (element) => {
+      if (!element) {
+        return false;
+      }
+
+      const styles = getComputedStyle(element);
+      const rect = element.getBoundingClientRect();
+      return styles.display !== 'none' && styles.visibility !== 'hidden' && rect.width > 0 && rect.height > 0;
+    };
+    const findToggle = () => {
+      const candidates = [
+        ...document.querySelectorAll('.view-mode-toggle button'),
+        ...document.querySelectorAll('.sidebar-footer .sidebar-item[aria-pressed]'),
+        ...document.querySelectorAll('.mobile-nav-section.footer-section .mobile-nav-item[aria-pressed]'),
+      ];
+
+      return candidates.find((button) => isVisible(button) && matcher.test(normalizeText(button.textContent)));
+    };
+
+    const targetButton = findToggle();
 
     if (!targetButton) {
       return { clicked: false };
@@ -159,18 +178,45 @@ function switchViewMode(targetView, {
     return { clicked: true };
   }`);
 
+  let result = findAndClickResult();
+
+  if (!result.clicked) {
+    const openMenuResult = evaluateJsonImpl(`() => {
+      const mobileTrigger = document.querySelector('.mobile-menu-trigger');
+      if (!mobileTrigger) {
+        return { opened: false };
+      }
+
+      const styles = getComputedStyle(mobileTrigger);
+      const rect = mobileTrigger.getBoundingClientRect();
+      const visible = styles.display !== 'none' && styles.visibility !== 'hidden' && rect.width > 0 && rect.height > 0;
+      if (!visible) {
+        return { opened: false };
+      }
+
+      mobileTrigger.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+      return { opened: true };
+    }`);
+
+    if (openMenuResult.opened) {
+      sleepSyncImpl(150);
+      result = findAndClickResult();
+    }
+  }
+
   if (!result.clicked) {
     fail(`Impossibile cambiare vista verso ${targetView}.`);
   }
 
   waitForEvaluatedCondition(
     `() => {
-      const activeButton = [...document.querySelectorAll('.view-mode-toggle button')]
-        .find((button) => button.getAttribute('aria-pressed') === 'true');
-      const label = String(activeButton?.textContent || '');
-      return ${JSON.stringify(targetView)} === 'public'
-        ? /pubblica/i.test(label)
-        : /admin/i.test(label);
+      const toggleButton = [
+        ...document.querySelectorAll('.view-mode-toggle button[aria-pressed]'),
+        ...document.querySelectorAll('.sidebar-footer .sidebar-item[aria-pressed]'),
+        ...document.querySelectorAll('.mobile-nav-section.footer-section .mobile-nav-item[aria-pressed]'),
+      ][0];
+      const isAdmin = toggleButton?.getAttribute('aria-pressed') === 'true';
+      return ${JSON.stringify(targetView)} === 'public' ? !isAdmin : isAdmin;
     }`,
     {
       evaluateJsonImpl,

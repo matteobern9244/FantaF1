@@ -254,7 +254,7 @@ function App() {
   const [toast, setToast] = useState<ToastState | null>(null);
   const [installPromptEvent, setInstallPromptEvent] = useState<DeferredInstallPromptEvent | null>(null);
   const [isAppInstalled, setIsAppInstalled] = useState(() => isStandaloneInstallContext());
-  const [isMobileViewport, setIsMobileViewport] = useState(() => window.matchMedia('(max-width: 767px)').matches);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
   const [showInstallInstructions, setShowInstallInstructions] = useState(false);
   const [showAdminLogin, setShowAdminLogin] = useState(false);
@@ -390,6 +390,22 @@ function App() {
     setActiveSectionId(sectionId);
   }
 
+  function handleOpenMobileNav() {
+    setIsMobileNavOpen(true);
+  }
+
+  function handleCloseMobileNav() {
+    setIsMobileNavOpen(false);
+  }
+
+  function handleOpenAdminLogin() {
+    setShowAdminLogin(true);
+  }
+
+  function handleToggleViewMode() {
+    setViewMode((currentViewMode) => (currentViewMode === 'public' ? 'admin' : 'public'));
+  }
+
   useEffect(() => {
     if (!selectedInsightsUser && users[0]?.name) {
       setSelectedInsightsUser(users[0].name);
@@ -397,25 +413,17 @@ function App() {
   }, [selectedInsightsUser, users]);
 
   useEffect(() => {
-    const mobileViewportQuery = window.matchMedia('(max-width: 767px)');
     const standaloneModeQuery = window.matchMedia('(display-mode: standalone)');
-
-    function handleMobileViewportChange(event: MediaQueryListEvent) {
-      setIsMobileViewport(event.matches);
-    }
 
     function handleStandaloneChange(event: MediaQueryListEvent) {
       setIsAppInstalled(event.matches || (navigator as NavigatorWithStandalone).standalone === true);
     }
 
-    setIsMobileViewport(mobileViewportQuery.matches);
     setIsAppInstalled(standaloneModeQuery.matches || (navigator as NavigatorWithStandalone).standalone === true);
 
-    mobileViewportQuery.addEventListener('change', handleMobileViewportChange);
     standaloneModeQuery.addEventListener('change', handleStandaloneChange);
 
     return () => {
-      mobileViewportQuery.removeEventListener('change', handleMobileViewportChange);
       standaloneModeQuery.removeEventListener('change', handleStandaloneChange);
     };
   }, []);
@@ -451,12 +459,19 @@ function App() {
   }, []);
 
   useEffect(() => {
-    // viewMode effect placeholder
-  }, [viewMode]);
+    const previousOverflow = document.body.style.overflow;
+    const previousTouchAction = document.body.style.touchAction;
 
-  useEffect(() => {
-    // isMobileViewport effect placeholder
-  }, [isMobileViewport]);
+    if (isMobileNavOpen) {
+      document.body.style.overflow = 'hidden';
+      document.body.style.touchAction = 'none';
+    }
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.body.style.touchAction = previousTouchAction;
+    };
+  }, [isMobileNavOpen]);
 
   useEffect(() => {
     let isCancelled = false;
@@ -1376,16 +1391,17 @@ function App() {
 
   /* v8 ignore next -- layout is exercised end-to-end via RTL and browser smoke tests */
   return (
-    <div className="app-shell">
+    <div className={`app-shell ${isSidebarCollapsed ? 'app-shell-sidebar-collapsed' : ''}`.trim()}>
       <Sidebar
         items={sectionNavigationItems}
         activeId={activeSectionId}
         onItemClick={navigateToSection}
         isAdmin={sessionState.isAdmin}
         viewMode={viewMode}
-        onViewModeToggle={() => setViewMode(viewMode === 'public' ? 'admin' : 'public')}
+        onViewModeToggle={handleToggleViewMode}
         onLogout={handleAdminLogout}
-        onLogin={() => setShowAdminLogin(true)}
+        onLogin={handleOpenAdminLogin}
+        onCollapseChange={setIsSidebarCollapsed}
         onInstall={handleInstallApp}
         showInstall={true}
       />
@@ -1397,10 +1413,10 @@ function App() {
           onItemClick={navigateToSection}
           isAdmin={sessionState.isAdmin}
           viewMode={viewMode}
-          onViewModeToggle={() => setViewMode(viewMode === 'public' ? 'admin' : 'public')}
+          onViewModeToggle={handleToggleViewMode}
           onLogout={handleAdminLogout}
-          onLogin={() => setShowAdminLogin(true)}
-          onClose={() => setIsMobileNavOpen(false)}
+          onLogin={handleOpenAdminLogin}
+          onClose={handleCloseMobileNav}
           onInstall={handleInstallApp}
           showInstall={true}
         />
@@ -1408,8 +1424,9 @@ function App() {
 
       <button
         className="mobile-menu-trigger"
-        onClick={() => setIsMobileNavOpen(true)}
-        aria-label="Open menu"
+        onClick={handleOpenMobileNav}
+        aria-label={appText.shell.navigation.openButton}
+        type="button"
       >
         <ListChecks size={24} />
       </button>

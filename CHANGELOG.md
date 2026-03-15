@@ -2,13 +2,23 @@
 
 Cronologia sintetica delle release documentate del progetto Fanta Formula 1.
 
-## [In Progress]
+## [Unreleased]
 - **Rielaborazione Menu UI Adattivo (F1 Racing Theme)**: introdotta una nuova architettura di navigazione con sidebar fissa a sinistra per desktop (collassabile) e menu overlay a tutto schermo per mobile, garantendo un'esperienza immersiva e moderna.
 - **Visual Design Immersivo**: implementato il nuovo branding "F1 Racing Theme" con background scuri, pattern carbon-fiber, accenti rosso F1 hi-contrast e un nuovo componente `MenuLogo` stilizzato con ombre e inclinazioni racing.
 - **Consolidamento Controlli Utente e Admin**: i pulsanti "Modalità Admin", "Vista Pubblica", "Logout" e "Installa Applicazione" sono stati rimossi dall'header principale e integrati organicamente nel footer del menu di navigazione, pulendo drasticamente la visuale della hero.
 - **Rimozione Componenti Ridondanti**: eliminato il pulsante floating "Torna al menu" e la relativa logica di scroll, resi obsoleti dalla nuova navigazione fissa sempre accessibile.
 - **Zero Regressioni e Troncamento Testi**: risolti i problemi di troncamento dei testi nelle voci di menu tramite layout flessibile; garantita la piena cliccabilità e funzionalità di ogni voce di navigazione su tutti i breakpoint.
 - **TDD e Validazione Totale**: aggiunti 18 nuovi unit test per i componenti `Sidebar` e `MobileOverlay`; aggiornata l'intera suite di roadmap test (13 test) e la diagnostica `ui-responsive` per riflettere i nuovi selettori DOM, mantenendo la copertura al 100% su tutto il perimetro modificato.
+- **Hardening Menu UI Senza Flicker**: il layout desktop collassato usa ora uno stato reale della shell invece del vecchio selettore sibling non valido; le transizioni del menu sono state ristrette alle sole proprietà animate per ridurre micro-jank e flicker visivo.
+- **Overlay Mobile Più Solido e Accessibile**: il trigger mobile usa ora la label centralizzata del sistema testo UI e l'apertura dell'overlay blocca esplicitamente lo scroll della pagina, evitando salti del contenuto sottostante durante la navigazione.
+- **Wiring Reale dei Pulsanti del Menu Blindato**: estesi i test runtime per coprire apertura/chiusura overlay, cambio vista admin/public, collapse della sidebar desktop e i controlli footer del menu nella shell reale dell'applicazione.
+- **Track Conductor del Menu Formalmente Chiusa**: la track `ui_menu_rework_20260315` documenta ora in modo coerente feature consegnata, hardening post-merge, verifica eseguita e archiviazione completa.
+- **Governance Branch Rinominata da `develop` a `staging`**: la documentazione canonica del repository e il trigger operativo `deploya` trattano ora `staging` come branch di certificazione corrente e come sorgente della Pull Request verso `main`, eliminando il contratto operativo precedente basato su `develop`.
+- **Runbook di Riallineamento Esterno per il Rename Branch**: il repository documenta ora esplicitamente che il rename richiede anche l'aggiornamento del branch sorgente di Render staging e delle eventuali branch protection o automazioni GitHub esterne ancora puntate a `develop`.
+- **Archiviazione Completa del Workspace Conductor**: tutti i track live sono stati promossi amministrativamente a `done`, archiviati sotto `conductor/archive/` e rimossi dalla navigazione attiva; `conductor/tracks` non contiene piu' track residui e gli indici `conductor/index.md` e `conductor/tracks.md` sono stati rigenerati in coerenza con lo stato finale.
+- **Hardening della Skill Conductor sul Flusso Archive**: la skill installata normalizza ora il pre-archive dei track, aggiorna in modo minimo `review.md` e `verify.md` durante la chiusura amministrativa e supporta l'archiviazione coerente dei track legacy/non-`done` nel repository reale.
+- **Archiviazione dei Root Plans Legacy di Conductor**: i documenti di piano rimasti nel root di `conductor/` (`fix-mappa`, `fix-scroll-jank`, `feature-standings`, `enforce-commit-docs-rule`, `subphase-11-plan`) sono stati spostati in `conductor/archive/_root-plans/`, lasciando nel root solo i file operativi ancora vivi del workspace.
+- **Test di Compatibilita' Conductor Estesi**: [tests/conductor-skill-compatibility.test.js](/Users/matteobernardini/code/FantaF1/tests/conductor-skill-compatibility.test.js) copre ora anche l'archiviazione massiva dei track attivi e la verifica che i root plans legacy non restino piu' nel root di `conductor/`.
 
 ## [1.5.2] - 2026-03-15
 - **Fix Operativo del Trigger `deploya`**: [AGENTS.md](/Users/matteobernardini/code/FantaF1/AGENTS.md) distingue ora in modo piu' preciso il preflight del trigger persistente e il caso di cutover intenzionale `develop -> main`, evitando falsi stop quando `main` e' ancora sul vecchio stack per scelta di governance pre-merge.

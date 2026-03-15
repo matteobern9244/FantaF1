@@ -1,0 +1,17 @@
+{
+  "id": "achieve_100_coverage_20260314",
+  "slug": "certificazione-copertura-test-100-frontend-node-c",
+  "title": "Certificazione Copertura Test 100% (Frontend, Node, C#)",
+  "status": "archived",
+  "phase": "archived",
+  "createdAt": "2026-03-14",
+  "updatedAt": "2026-03-15T18:20:50Z",
+  "archivedAt": "2026-03-15T18:20:50Z",
+  "path": "conductor/archive/achieve_100_coverage_20260314",
+  "relatedTrackIds": [],
+  "activeTask": "Archived",
+  "description": "Raggiungere la copertura totale dei test per tutte le componenti e aggiornare la documentazione di riferimento",
+  "created_at": "2026-03-14",
+  "updated_at": "2026-03-14",
+  "directory": "achieve_100_coverage_20260314"
+}

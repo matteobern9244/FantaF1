@@ -31,6 +31,7 @@ interface SidebarProps {
   onViewModeToggle: () => void;
   onLogout: () => void;
   onLogin: () => void;
+  onCollapseChange?: (isCollapsed: boolean) => void;
   onInstall?: () => void;
   showInstall?: boolean;
 }
@@ -57,10 +58,17 @@ const Sidebar: React.FC<SidebarProps> = ({
   onViewModeToggle,
   onLogout,
   onLogin,
+  onCollapseChange,
   onInstall,
   showInstall = false,
 }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
+
+  function handleToggleCollapse() {
+    const nextCollapsedState = !isCollapsed;
+    setIsCollapsed(nextCollapsedState);
+    onCollapseChange?.(nextCollapsedState);
+  }
 
   return (
     <aside className={`app-sidebar ${isCollapsed ? 'collapsed' : ''}`}>
@@ -68,8 +76,9 @@ const Sidebar: React.FC<SidebarProps> = ({
         {!isCollapsed && <MenuLogo />}
         <button
           className="sidebar-toggle"
-          onClick={() => setIsCollapsed(!isCollapsed)}
+          onClick={handleToggleCollapse}
           aria-label={isCollapsed ? appText.shell.navigation.items.expandSidebar : appText.shell.navigation.items.collapseSidebar}
+          type="button"
         >
           {isCollapsed ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
         </button>
@@ -84,6 +93,7 @@ const Sidebar: React.FC<SidebarProps> = ({
               className={`sidebar-item ${activeId === item.id ? 'active' : ''}`}
               onClick={() => onItemClick(item.id)}
               title={isCollapsed ? item.label : ''}
+              type="button"
             >
               <Icon size={20} />
               {!isCollapsed && <span className="sidebar-label">{item.label}</span>}
@@ -98,6 +108,7 @@ const Sidebar: React.FC<SidebarProps> = ({
             className="sidebar-item install-item"
             onClick={onInstall}
             title={isCollapsed ? appText.shell.navigation.items.installApp : ''}
+            type="button"
           >
             <Download size={20} />
             {!isCollapsed && (
@@ -113,6 +124,7 @@ const Sidebar: React.FC<SidebarProps> = ({
           onClick={isAdmin ? onViewModeToggle : onLogin}
           aria-pressed={viewMode === 'admin'}
           title={isCollapsed ? (isAdmin ? (viewMode === 'admin' ? appText.shell.navigation.items.publicView : appText.shell.navigation.items.adminView) : appText.shell.navigation.items.adminLogin) : ''}
+          type="button"
         >
           {isAdmin && viewMode === 'admin' ? <Smartphone size={20} /> : <LockKeyhole size={20} />}
           {!isCollapsed && (
@@ -127,6 +139,7 @@ const Sidebar: React.FC<SidebarProps> = ({
             className="sidebar-item logout-item"
             onClick={onLogout}
             title={isCollapsed ? appText.shell.navigation.items.logout : ''}
+            type="button"
           >
             <LogOut size={20} />
             {!isCollapsed && <span className="sidebar-label">{appText.shell.navigation.items.logout}</span>}

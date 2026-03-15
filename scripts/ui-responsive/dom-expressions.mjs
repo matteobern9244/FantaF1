@@ -189,16 +189,15 @@ const inspectStateExpression = `() => {
     },
     viewMode: {
       current: (() => {
-        const activeButton = [...document.querySelectorAll('.view-mode-toggle button')]
-          .find((button) => button.getAttribute('aria-pressed') === 'true');
-        const activeLabel = normalizeText(activeButton?.textContent);
-        if (/pubblica/i.test(activeLabel)) {
-          return 'public';
+        const toggleButton = [
+          ...document.querySelectorAll('.view-mode-toggle button[aria-pressed]'),
+          ...document.querySelectorAll('.sidebar-footer .sidebar-item[aria-pressed]'),
+          ...document.querySelectorAll('.mobile-nav-section.footer-section .mobile-nav-item[aria-pressed]'),
+        ][0];
+        if (!toggleButton) {
+          return '';
         }
-        if (/admin/i.test(activeLabel)) {
-          return 'admin';
-        }
-        return '';
+        return toggleButton.getAttribute('aria-pressed') === 'true' ? 'admin' : 'public';
       })(),
       readonlyBannerPresent: Boolean(document.querySelector('.public-readonly-panel .locked-banner')),
       adminLoginPresent: Boolean(document.querySelector('.auth-overlay')),

@@ -69,6 +69,7 @@ const MobileOverlay: React.FC<MobileOverlayProps> = ({
           className="mobile-nav-close"
           onClick={onClose}
           aria-label={appText.shell.navigation.closeButton}
+          type="button"
         >
           <X size={24} />
         </button>
@@ -86,6 +87,7 @@ const MobileOverlay: React.FC<MobileOverlayProps> = ({
                   onItemClick(item.id);
                   onClose();
                 }}
+                type="button"
               >
                 <Icon size={20} />
                 <span className="mobile-nav-label">{item.label}</span>
@@ -104,6 +106,7 @@ const MobileOverlay: React.FC<MobileOverlayProps> = ({
                 onInstall();
                 onClose();
               }}
+              type="button"
             >
               <Download size={20} />
               <span className="mobile-nav-label">
@@ -123,6 +126,7 @@ const MobileOverlay: React.FC<MobileOverlayProps> = ({
               onClose();
             }}
             aria-pressed={viewMode === 'admin'}
+            type="button"
           >
             {isAdmin && viewMode === 'admin' ? <Smartphone size={20} /> : <LockKeyhole size={20} />}
             <span className="mobile-nav-label">
@@ -137,6 +141,7 @@ const MobileOverlay: React.FC<MobileOverlayProps> = ({
                 onLogout();
                 onClose();
               }}
+              type="button"
             >
               <LogOut size={20} />
               <span className="mobile-nav-label">{appText.shell.navigation.items.logout}</span>

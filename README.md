@@ -6,10 +6,16 @@ Applicazione full-stack privata per gestire un Fanta Formula 1 con frontend Reac
 
 - Il backend autorevole del repository e' C# sotto [backend-csharp/](/Users/matteobernardini/code/FantaF1/backend-csharp).
 - Il runtime locale, Docker, staging Render e CI/CD sono allineati al backend C#.
-- Il branch `develop` e' il branch di certificazione corrente.
-- La release candidata corrente del branch `develop` e' `1.5.2`.
+- Il branch `staging` e' il branch di certificazione corrente.
+- La release candidata corrente del branch `staging` e' `1.5.2`.
 - `main` resta il target di rilascio protetto e va aggiornato solo dopo cutover esplicito.
 - La documentazione operativa canonica del repository vive in questo file; la cronologia di rilascio vive in [CHANGELOG.md](/Users/matteobernardini/code/FantaF1/CHANGELOG.md).
+
+## Stato workspace Conductor
+
+- Il workspace live di Conductor non contiene piu' track attivi sotto [conductor/tracks](/Users/matteobernardini/code/FantaF1/conductor/tracks); tutti i track storici sono stati archiviati sotto [conductor/archive](/Users/matteobernardini/code/FantaF1/conductor/archive).
+- I documenti di piano legacy rimasti in precedenza nel root di `conductor/` sono stati spostati in [conductor/archive/_root-plans](/Users/matteobernardini/code/FantaF1/conductor/archive/_root-plans) e non fanno parte della navigazione live della skill.
+- Il report operativo sul fix di compatibilita' della skill installata vive in [conductor/conductor-skill-operational-feedback.md](/Users/matteobernardini/code/FantaF1/conductor/conductor-skill-operational-feedback.md).
 
 ## Superfici runtime
 
@@ -17,6 +23,12 @@ Applicazione full-stack privata per gestire un Fanta Formula 1 con frontend Reac
 - Produzione live: [fantaf1-47vy.onrender.com](https://fantaf1-47vy.onrender.com)
 
 Lo staging deve rimanere allineato alla produzione a livello di funzionalita'. Differenze di branding, testo o layout sono tollerabili solo se non introducono divergenze funzionali.
+
+## Governance Branch
+
+- `staging` e' il branch candidato di certificazione e il branch sorgente atteso per l'ambiente Render di staging.
+- `main` resta il branch protetto di release e il target finale del flusso di deploy.
+- Il rename operativo da `develop` a `staging` richiede anche il riallineamento fuori repo della configurazione Render, delle branch protection e di eventuali automazioni GitHub/Render che puntavano al vecchio nome branch.
 
 ## Panoramica funzionale
 
@@ -94,6 +106,7 @@ Il lock e' server-side:
 
 - shell responsive desktop/mobile (F1 Racing Theme)
 - sidebar adattiva desktop (collassabile) e menu mobile overlay a tutto schermo
+- hardening della navigation shell: collapse desktop agganciato allo stato reale della shell, trigger mobile localizzato e scroll lock del body mentre l'overlay e' aperto
 - branding MenuLogo integrato con accenti hi-contrast
 - hero full-width pulita (controlli admin/public spostati nel menu)
 - stato admin/public coerente in tutte le superfici

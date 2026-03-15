@@ -1,0 +1,19 @@
+{
+  "id": "verify_csharp_porting_20260314",
+  "slug": "verifica-anti-regressione-porting-c-fase-1-9",
+  "title": "Verifica Anti-Regressione Porting C# (Fase 1-9)",
+  "status": "archived",
+  "phase": "archived",
+  "createdAt": "2026-03-14T10:45:00Z",
+  "updatedAt": "2026-03-15T18:20:50Z",
+  "archivedAt": "2026-03-15T18:20:50Z",
+  "path": "conductor/archive/verify_csharp_porting_20260314",
+  "relatedTrackIds": [],
+  "activeTask": "Archived",
+  "description": "Verifica Anti-Regressione Porting C# (Fase 1-9)",
+  "type": "feature",
+  "track_id": "verify_csharp_porting_20260314",
+  "created_at": "2026-03-14T10:45:00Z",
+  "updated_at": "2026-03-14T10:45:00Z",
+  "directory": "verify_csharp_porting_20260314"
+}

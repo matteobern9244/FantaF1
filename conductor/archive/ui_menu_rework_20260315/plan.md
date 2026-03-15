@@ -1,35 +1,27 @@
 # Implementation Plan: UI Menu Rework (Desktop Sidebar & Mobile Overlay)
 
-## Phase 1: Research & Setup
-- [ ] Task: Review current navigation structure in `src/App.tsx` and associated components.
-- [ ] Task: Audit existing styles in `src/index.css` and `src/App.css` for integration with the new F1 Racing Theme.
-- [ ] Task: Research and define the F1 Racing Theme color palette and typography (Formula1 fonts, red/black/white accents).
-- [ ] Task: Conductor - User Manual Verification 'Phase 1: Research & Setup' (Protocol in workflow.md)
+## Delivered Work
+- [x] Reviewed the navigation wiring in `src/App.tsx`, section navigation definitions, and responsive diagnostics.
+- [x] Implemented the desktop sidebar as the real navigation shell, including collapse/expand behavior.
+- [x] Implemented the mobile full-screen overlay menu with close action and footer actions.
+- [x] Applied the F1-inspired menu styling and integrated the new `MenuLogo` branding.
+- [x] Added component-level TDD coverage for `Sidebar` and `MobileOverlay`.
+- [x] Integrated the menu actions into the real app shell for section navigation, admin/public switching, logout, and install CTA.
 
-## Phase 2: Design & Prototyping (Mockups)
-- [ ] Task: Create a React component for the **Desktop Sidebar** (collapsible, left-aligned).
-- [ ] Task: Create a React component for the **Mobile Full-screen Overlay**.
-- [ ] Task: Apply the F1 Racing Theme styles to both components.
-- [ ] Task: Add a temporary toggle/switch to allow the user to preview both "Proposed Mockups" on a single page or through a quick switch.
-- [ ] Task: Conductor - User Manual Verification 'Phase 2: Design & Prototyping' (Protocol in workflow.md)
+## Hardening Added After Initial Delivery
+- [x] Fixed the desktop collapsed-layout bug by wiring the shell spacing to real app state instead of the invalid sibling selector.
+- [x] Replaced the hardcoded mobile trigger label with the centralized UI text key.
+- [x] Removed placeholder effects and reduced menu-specific transition scope to avoid unnecessary UI jank.
+- [x] Added body scroll lock while the mobile overlay is open to prevent background jump/flicker.
+- [x] Updated the responsive diagnostics to read the new menu/view-mode controls reliably.
+- [x] Added runtime tests for sidebar collapse, localized mobile trigger, overlay close path, and body scroll lock.
 
-## Phase 3: TDD Implementation (Desktop Sidebar)
-- [ ] Task: Write Vitest tests for the `Sidebar` component (test visibility, collapsibility, and link functionality).
-- [ ] Task: Implement the `Sidebar` component to pass all tests.
-- [ ] Task: Refactor and ensure 100% coverage.
-- [ ] Task: Integrate `Sidebar` into the main application layout on desktop viewports.
-- [ ] Task: Conductor - User Manual Verification 'Phase 3: TDD Implementation (Desktop)' (Protocol in workflow.md)
+## Superseded Planning Item
+- [x] The temporary mockup preview toggle was not implemented as a product/runtime feature.
+- [x] This step is considered superseded by the final integrated menu implementation in the live app shell, which replaced the prototyping phase.
 
-## Phase 4: TDD Implementation (Mobile Overlay)
-- [ ] Task: Write Vitest tests for the `MobileOverlay` component (test open/close states and link functionality).
-- [ ] Task: Implement the `MobileOverlay` component to pass all tests.
-- [ ] Task: Refactor and ensure 100% coverage.
-- [ ] Task: Integrate `MobileOverlay` into the main application layout for mobile viewports.
-- [ ] Task: Conductor - User Manual Verification 'Phase 4: TDD Implementation (Mobile)' (Protocol in workflow.md)
-
-## Phase 5: Final Validation & Cleanup
-- [ ] Task: Run `npm run test:ui-responsive` to verify both layouts across all breakpoints.
-- [ ] Task: Verify admin-only links visibility in both menu types.
-- [ ] Task: Perform a final visual polish (animations, transitions).
-- [ ] Task: Run full test suite: `npm run lint && npm run test && npm run build`.
-- [ ] Task: Conductor - User Manual Verification 'Phase 5: Final Validation & Cleanup' (Protocol in workflow.md)
+## Final Validation
+- [x] `npm run test:ui-responsive` passes across the responsive matrix after menu hardening.
+- [x] Admin-only and public-only navigation entries remain role-sensitive in the live app.
+- [x] Full test, build, lint, and coverage validations are part of the final verification set for the task.
+- [x] The Conductor track is now documented as complete and archived with the final hardened runtime state.

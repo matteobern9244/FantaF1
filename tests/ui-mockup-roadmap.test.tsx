@@ -789,4 +789,54 @@ describe('Mockup roadmap UI features', () => {
     const installButton = screen.getByRole('button', { name: appText.shell.navigation.items.installApp || /installa/i });
     expect(installButton).toBeInTheDocument();
   });
+
+  it('collapses the desktop sidebar and updates the app shell layout class', async () => {
+    setupFetch();
+    const { container } = render(<App />);
+
+    await waitFor(() => {
+      expect(screen.queryByTestId('pitstop-loader')).not.toBeInTheDocument();
+    });
+
+    const appShell = container.querySelector('.app-shell');
+    const sidebar = container.querySelector('.app-sidebar');
+    expect(appShell).not.toBeNull();
+    expect(sidebar).not.toBeNull();
+    expect(appShell).not.toHaveClass('app-shell-sidebar-collapsed');
+
+    fireEvent.click(within(sidebar as HTMLElement).getByLabelText(appText.shell.navigation.items.collapseSidebar));
+    expect(appShell).toHaveClass('app-shell-sidebar-collapsed');
+
+    fireEvent.click(within(sidebar as HTMLElement).getByLabelText(appText.shell.navigation.items.expandSidebar));
+    expect(appShell).not.toHaveClass('app-shell-sidebar-collapsed');
+  });
+
+  it('opens the mobile menu with the localized trigger, locks scroll, and closes after switching view', async () => {
+    setupFetch();
+    mockMediaMatches({ '(max-width: 767px)': true });
+
+    render(<App />);
+
+    await waitFor(() => {
+      expect(screen.queryByTestId('pitstop-loader')).not.toBeInTheDocument();
+    });
+
+    const mobileTrigger = screen.getByRole('button', { name: appText.shell.navigation.openButton });
+    fireEvent.click(mobileTrigger);
+
+    const overlay = document.querySelector('.mobile-nav-overlay');
+    expect(overlay).not.toBeNull();
+    expect(document.body.style.overflow).toBe('hidden');
+    expect(document.body.style.touchAction).toBe('none');
+
+    fireEvent.click(within(overlay as HTMLElement).getByRole('button', { name: appText.shell.navigation.items.publicView }));
+
+    await waitFor(() => {
+      expect(document.querySelector('.mobile-nav-overlay')).toBeNull();
+    });
+
+    expect(document.body.style.overflow).toBe('');
+    expect(document.body.style.touchAction).toBe('');
+    expect(screen.getByRole('heading', { name: appText.panels.publicGuide.title })).toBeInTheDocument();
+  });
 });

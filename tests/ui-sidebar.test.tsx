@@ -120,4 +120,15 @@ describe('Sidebar Component', () => {
     fireEvent.click(screen.getByLabelText(appText.shell.navigation.items.collapseSidebar));
     expect(screen.getByTitle(appText.shell.navigation.items.publicView)).toBeInTheDocument();
   });
+
+  it('notifies the parent when collapsed state changes', () => {
+    const onCollapseChange = vi.fn();
+    render(<Sidebar {...defaultProps} onCollapseChange={onCollapseChange} />);
+
+    fireEvent.click(screen.getByLabelText(appText.shell.navigation.items.collapseSidebar));
+    fireEvent.click(screen.getByLabelText(appText.shell.navigation.items.expandSidebar));
+
+    expect(onCollapseChange).toHaveBeenNthCalledWith(1, true);
+    expect(onCollapseChange).toHaveBeenNthCalledWith(2, false);
+  });
 });
