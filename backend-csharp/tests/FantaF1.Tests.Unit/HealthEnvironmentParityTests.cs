@@ -74,6 +74,32 @@ public sealed class HealthEnvironmentParityTests
     }
 
     [Fact]
+    public void Resolver_allows_the_isolated_local_development_database_when_the_override_declares_it()
+    {
+        var resolver = CreateResolver(
+            "Development",
+            mongoDatabaseNameOverride: "fantaf1_local_dev");
+
+        var profile = resolver.ResolveCurrentProfile();
+
+        Assert.Equal("development", profile.Environment);
+        Assert.Equal("fantaf1_local_dev", profile.DatabaseTarget);
+    }
+
+    [Fact]
+    public void Resolver_allows_the_ci_database_when_the_override_declares_it()
+    {
+        var resolver = CreateResolver(
+            "Development",
+            mongoDatabaseNameOverride: "fantaf1_ci");
+
+        var profile = resolver.ResolveCurrentProfile();
+
+        Assert.Equal("development", profile.Environment);
+        Assert.Equal("fantaf1_ci", profile.DatabaseTarget);
+    }
+
+    [Fact]
     public void Resolver_maps_staging_to_the_staging_database_by_default()
     {
         var resolver = CreateResolver("Staging");
@@ -95,6 +121,19 @@ public sealed class HealthEnvironmentParityTests
 
         Assert.Equal("staging", profile.Environment);
         Assert.Equal("fantaf1_staging", profile.DatabaseTarget);
+    }
+
+    [Fact]
+    public void Resolver_allows_the_isolated_local_staging_database_when_the_override_declares_it()
+    {
+        var resolver = CreateResolver(
+            "Staging",
+            mongoDatabaseNameOverride: "fantaf1_local_staging");
+
+        var profile = resolver.ResolveCurrentProfile();
+
+        Assert.Equal("staging", profile.Environment);
+        Assert.Equal("fantaf1_local_staging", profile.DatabaseTarget);
     }
 
     [Fact]

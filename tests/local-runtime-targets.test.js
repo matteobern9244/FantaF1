@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import {
+  DEFAULT_LOCAL_DATABASES,
   DEFAULT_RUNTIME_TARGET,
+  assertSafeLocalDatabaseTarget,
+  assertSafeLocalMongoUri,
   buildProbeUrls,
   createDeterministicAdminPassword,
   createDeterministicAdminSalt,
@@ -20,7 +23,7 @@ describe('local runtime targets', () => {
     expect(target.baseUrl).toBe('http://127.0.0.1:5173');
     expect(target.backendHealthUrl).toBe('http://127.0.0.1:3002/api/health');
     expect(target.expectedEnvironment).toBe('development');
-    expect(target.expectedDatabaseTarget).toBe('fantaf1_staging');
+    expect(target.expectedDatabaseTarget).toBe(DEFAULT_LOCAL_DATABASES.csharpDevelopment);
     expect(target.appProbeUrls).toEqual(buildProbeUrls('http://127.0.0.1:3002'));
   });
 
@@ -35,7 +38,7 @@ describe('local runtime targets', () => {
       ASPNETCORE_ENVIRONMENT: 'Development',
       ASPNETCORE_URLS: 'http://127.0.0.1:3002',
     });
-    expect(target.expectedDatabaseTarget).toBe('fantaf1_staging');
+    expect(target.expectedDatabaseTarget).toBe(DEFAULT_LOCAL_DATABASES.csharpDevelopment);
   });
 
   it('resolves the local staging target without falling back to fantaf1_dev', () => {
@@ -43,7 +46,7 @@ describe('local runtime targets', () => {
 
     expect(target.baseUrl).toBe('http://127.0.0.1:3003');
     expect(target.expectedEnvironment).toBe('staging');
-    expect(target.expectedDatabaseTarget).toBe('fantaf1_staging');
+    expect(target.expectedDatabaseTarget).toBe(DEFAULT_LOCAL_DATABASES.csharpStaging);
     expect(target.adminAuth).toEqual({
       passwordSeedLabel: 'subphase-9-staging-local-admin-password',
       saltSeedLabel: 'subphase-9-staging-local-admin-salt',
@@ -92,9 +95,9 @@ describe('local runtime targets', () => {
       MONGODB_URI: 'mongodb+srv://user:pass@cluster.mongodb.net/fantaf1_dev?retryWrites=true&w=majority',
     });
 
-    expect(target.startupEnv.MONGODB_DB_NAME_OVERRIDE).toBe('fantaf1_staging');
+    expect(target.startupEnv.MONGODB_DB_NAME_OVERRIDE).toBe(DEFAULT_LOCAL_DATABASES.csharpDevelopment);
     expect(target.startupEnv.MONGODB_URI).toBe(
-      'mongodb+srv://user:pass@cluster.mongodb.net/fantaf1_staging?retryWrites=true&w=majority',
+      'mongodb+srv://user:pass@cluster.mongodb.net/fantaf1_local_dev?retryWrites=true&w=majority',
     );
   });
 
@@ -128,7 +131,7 @@ describe('local runtime targets', () => {
     });
 
     expect(target.name).toBe('csharp-staging-local');
-    expect(target.expectedDatabaseTarget).toBe('fantaf1_staging');
+    expect(target.expectedDatabaseTarget).toBe(DEFAULT_LOCAL_DATABASES.csharpStaging);
   });
 
   it('resolves ui responsive target from its dedicated env namespace', () => {
@@ -158,5 +161,34 @@ describe('local runtime targets', () => {
       ),
     ).toBe('mongodb+srv://user:pass@cluster.mongodb.net/fantaf1_staging?retryWrites=true&w=majority');
     expect(rewriteMongoDatabaseName('', 'fantaf1_staging')).toBe('');
+  });
+
+  it('rejects shared staging as a local mutable database target', () => {
+    expect(() => assertSafeLocalDatabaseTarget('fantaf1_staging', 'test target')).toThrow(
+      'test target non puo\' puntare al database condiviso "fantaf1_staging". Usa un database locale isolato.',
+    );
+    expect(() => assertSafeLocalMongoUri(
+      'mongodb+srv://user:pass@cluster.mongodb.net/fantaf1?retryWrites=true&w=majority',
+      'test uri',
+    )).toThrow(
+      'test uri non puo\' puntare al database condiviso "fantaf1". Usa un database locale isolato.',
+    );
+  });
+
+  it('ignores shared database overrides coming from ambient local env and keeps the canonical isolated target', () => {
+    const saveTarget = resolveSaveSmokeTarget({
+      SAVE_SMOKE_TARGET: 'csharp-dev',
+      SAVE_SMOKE_EXPECTED_DATABASE_TARGET: 'fantaf1_staging',
+      MONGODB_URI: 'mongodb+srv://user:pass@cluster.mongodb.net/fantaf1_dev?retryWrites=true&w=majority',
+    });
+    const launcherTarget = resolveLauncherTarget({
+      FANTAF1_LOCAL_RUNTIME: 'csharp-dev',
+      FANTAF1_EXPECTED_DATABASE_TARGET: 'fantaf1_staging',
+      MONGODB_URI: 'mongodb+srv://user:pass@cluster.mongodb.net/fantaf1_dev?retryWrites=true&w=majority',
+    });
+
+    expect(saveTarget.expectedDatabaseTarget).toBe(DEFAULT_LOCAL_DATABASES.csharpDevelopment);
+    expect(saveTarget.startupEnv.MONGODB_DB_NAME_OVERRIDE).toBe(DEFAULT_LOCAL_DATABASES.csharpDevelopment);
+    expect(launcherTarget.expectedDatabaseTarget).toBe(DEFAULT_LOCAL_DATABASES.csharpDevelopment);
   });
 });

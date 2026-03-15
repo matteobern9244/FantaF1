@@ -42,6 +42,24 @@ public sealed class HealthEndpointTests
     }
 
     [Fact]
+    public async Task Development_health_endpoint_supports_the_isolated_local_development_database_when_the_override_declares_it()
+    {
+        await using var factory = CreateFactory(
+            environmentName: "Development",
+            configurationValues: new Dictionary<string, string?>
+            {
+                ["MONGODB_DB_NAME_OVERRIDE"] = "fantaf1_local_dev",
+            });
+        using var client = factory.CreateClient();
+
+        var payload = await client.GetFromJsonAsync<Dictionary<string, object>>("/api/health");
+
+        Assert.NotNull(payload);
+        Assert.Equal("development", payload["environment"]?.ToString());
+        Assert.Equal("fantaf1_local_dev", payload["databaseTarget"]?.ToString());
+    }
+
+    [Fact]
     public async Task Staging_health_endpoint_defaults_to_the_staging_database()
     {
         await using var factory = CreateFactory(environmentName: "Staging");
@@ -61,7 +79,7 @@ public sealed class HealthEndpointTests
             environmentName: "Staging",
             configurationValues: new Dictionary<string, string?>
             {
-                ["MONGODB_DB_NAME_OVERRIDE"] = "fantaf1_staging",
+                ["MONGODB_DB_NAME_OVERRIDE"] = "fantaf1_local_staging",
             });
         using var client = factory.CreateClient();
 
@@ -69,7 +87,7 @@ public sealed class HealthEndpointTests
 
         Assert.NotNull(payload);
         Assert.Equal("staging", payload["environment"]?.ToString());
-        Assert.Equal("fantaf1_staging", payload["databaseTarget"]?.ToString());
+        Assert.Equal("fantaf1_local_staging", payload["databaseTarget"]?.ToString());
     }
 
     [Fact]

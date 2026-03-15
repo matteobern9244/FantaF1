@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { cleanupResponsiveCheck } from '../scripts/ui-responsive/cleanup.mjs';
 import { runResponsiveCheck } from '../scripts/ui-responsive/run-responsive-check.mjs';
-import { resolveUiResponsiveTarget } from '../scripts/local-runtime-targets.mjs';
+import { DEFAULT_LOCAL_DATABASES, resolveUiResponsiveTarget } from '../scripts/local-runtime-targets.mjs';
 
 describe('responsive UI runner', () => {
   it('executes the responsive workflow in order and cleans up at the end', async () => {
@@ -139,7 +139,7 @@ describe('responsive UI runner', () => {
       targetConfig: expect.objectContaining({
         name: 'csharp-staging-local',
         baseUrl: 'http://127.0.0.1:3003',
-        expectedDatabaseTarget: 'fantaf1_staging',
+        expectedDatabaseTarget: DEFAULT_LOCAL_DATABASES.csharpStaging,
       }),
     });
   });

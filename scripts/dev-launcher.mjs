@@ -4,7 +4,7 @@ import path from 'path';
 import { spawn, spawnSync } from 'child_process';
 import { fileURLToPath, pathToFileURL } from 'url';
 import { getChromeWindowLifecycleState } from './dev-launcher-lifecycle.mjs';
-import { resolveLauncherTarget, rewriteMongoDatabaseName } from './local-runtime-targets.mjs';
+import { assertSafeLocalMongoUri, resolveLauncherTarget, rewriteMongoDatabaseName } from './local-runtime-targets.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -60,6 +60,7 @@ function buildLauncherEnv({
       targetConfig.startupEnv.MONGODB_DB_NAME_OVERRIDE,
     );
   }
+  assertSafeLocalMongoUri(resolvedEnv.MONGODB_URI, 'Il launcher locale');
 
   return resolvedEnv;
 }

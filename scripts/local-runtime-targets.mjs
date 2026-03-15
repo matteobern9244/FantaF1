@@ -7,6 +7,11 @@ const DEFAULT_PORTS = Object.freeze({
   csharpDevelopment: 3002,
   csharpStaging: 3003,
 });
+const DEFAULT_LOCAL_DATABASES = Object.freeze({
+  csharpDevelopment: 'fantaf1_local_dev',
+  csharpStaging: 'fantaf1_local_staging',
+});
+const SHARED_DATABASE_TARGETS = new Set(['fantaf1', 'fantaf1_staging']);
 
 function buildUrl(port, path = '') {
   return `http://${DEFAULT_HOST}:${port}${path}`;
@@ -21,7 +26,7 @@ const targetDefinitions = Object.freeze({
     backendBaseUrl: buildUrl(DEFAULT_PORTS.csharpDevelopment),
     backendHealthUrl: buildUrl(DEFAULT_PORTS.csharpDevelopment, '/api/health'),
     expectedEnvironment: 'development',
-    expectedDatabaseTarget: 'fantaf1_staging',
+    expectedDatabaseTarget: DEFAULT_LOCAL_DATABASES.csharpDevelopment,
     busyPorts: [DEFAULT_PORTS.csharpDevelopment, DEFAULT_PORTS.nodeFrontend],
     backendCommand: 'dotnet',
     backendArgs: [
@@ -47,7 +52,7 @@ const targetDefinitions = Object.freeze({
     backendBaseUrl: buildUrl(DEFAULT_PORTS.csharpStaging),
     backendHealthUrl: buildUrl(DEFAULT_PORTS.csharpStaging, '/api/health'),
     expectedEnvironment: 'staging',
-    expectedDatabaseTarget: 'fantaf1_staging',
+    expectedDatabaseTarget: DEFAULT_LOCAL_DATABASES.csharpStaging,
     busyPorts: [DEFAULT_PORTS.csharpStaging],
     backendCommand: 'dotnet',
     backendArgs: [
@@ -106,6 +111,41 @@ function rewriteMongoDatabaseName(mongoUri, databaseName) {
   return `${prefix}${normalizedDatabaseName}${query}`;
 }
 
+function extractMongoDatabaseName(mongoUri) {
+  const normalizedUri = String(mongoUri ?? '').trim();
+  if (!normalizedUri) {
+    return '';
+  }
+
+  const uriMatch = normalizedUri.match(/^(mongodb(?:\+srv)?:\/\/[^/]+\/)([^?]*)(\?.*)?$/i);
+  if (!uriMatch) {
+    return '';
+  }
+
+  return String(uriMatch[2] ?? '').trim();
+}
+
+function isSharedDatabaseTarget(databaseName) {
+  return SHARED_DATABASE_TARGETS.has(String(databaseName ?? '').trim().toLowerCase());
+}
+
+function assertSafeLocalDatabaseTarget(databaseName, context = 'target runtime locale') {
+  if (isSharedDatabaseTarget(databaseName)) {
+    throw new Error(
+      `${context} non puo' puntare al database condiviso "${databaseName}". Usa un database locale isolato.`,
+    );
+  }
+}
+
+function assertSafeLocalMongoUri(mongoUri, context = 'URI Mongo locale') {
+  const databaseName = extractMongoDatabaseName(mongoUri);
+  if (!databaseName) {
+    return;
+  }
+
+  assertSafeLocalDatabaseTarget(databaseName, context);
+}
+
 function createDeterministicAdminPassword(seedLabel) {
   return createHash('sha256').update(String(seedLabel ?? '')).digest('hex');
 }
@@ -119,6 +159,11 @@ function applyRuntimeEnvironment(target, env = process.env) {
     return target;
   }
 
+  assertSafeLocalDatabaseTarget(
+    target.expectedDatabaseTarget,
+    `Il runtime locale ${target.name}`,
+  );
+
   const startupEnv = {
     ...target.startupEnv,
     MONGODB_DB_NAME_OVERRIDE: target.expectedDatabaseTarget,
@@ -127,6 +172,10 @@ function applyRuntimeEnvironment(target, env = process.env) {
 
   if (typeof env.MONGODB_URI === 'string' && env.MONGODB_URI.trim()) {
     startupEnv.MONGODB_URI = rewriteMongoDatabaseName(env.MONGODB_URI, target.expectedDatabaseTarget);
+    assertSafeLocalMongoUri(
+      startupEnv.MONGODB_URI,
+      `Il runtime locale ${target.name}`,
+    );
   }
 
   if (target.adminAuth) {
@@ -172,6 +221,17 @@ function applyOverrides(target, {
   };
 }
 
+function resolveSafeExpectedDatabaseTargetOverride(overrideValue, fallbackValue) {
+  const normalizedOverrideValue = String(overrideValue ?? '').trim();
+  if (!normalizedOverrideValue) {
+    return fallbackValue;
+  }
+
+  return isSharedDatabaseTarget(normalizedOverrideValue)
+    ? fallbackValue
+    : normalizedOverrideValue;
+}
+
 function resolveLocalRuntimeTarget(targetName = DEFAULT_RUNTIME_TARGET, overrides) {
   const normalizedName = normalizeName(targetName) || DEFAULT_RUNTIME_TARGET;
   const target = targetDefinitions[normalizedName];
@@ -189,7 +249,10 @@ function resolveSaveSmokeTarget(env = process.env) {
     baseUrl: env.SAVE_SMOKE_BASE_URL,
     backendHealthUrl: env.SAVE_SMOKE_BACKEND_HEALTH_URL,
     expectedEnvironment: env.SAVE_SMOKE_EXPECTED_ENVIRONMENT,
-    expectedDatabaseTarget: env.SAVE_SMOKE_EXPECTED_DATABASE_TARGET,
+    expectedDatabaseTarget: resolveSafeExpectedDatabaseTargetOverride(
+      env.SAVE_SMOKE_EXPECTED_DATABASE_TARGET,
+      resolveLocalRuntimeTarget(env.SAVE_SMOKE_TARGET ?? env.FANTAF1_LOCAL_RUNTIME).expectedDatabaseTarget,
+    ),
   }), env);
 
   return {
@@ -204,7 +267,10 @@ function resolveUiResponsiveTarget(env = process.env) {
     baseUrl: env.UI_RESPONSIVE_BASE_URL,
     backendHealthUrl: env.UI_RESPONSIVE_BACKEND_HEALTH_URL,
     expectedEnvironment: env.UI_RESPONSIVE_EXPECTED_ENVIRONMENT,
-    expectedDatabaseTarget: env.UI_RESPONSIVE_EXPECTED_DATABASE_TARGET,
+    expectedDatabaseTarget: resolveSafeExpectedDatabaseTargetOverride(
+      env.UI_RESPONSIVE_EXPECTED_DATABASE_TARGET,
+      resolveLocalRuntimeTarget(env.UI_RESPONSIVE_TARGET ?? env.FANTAF1_LOCAL_RUNTIME).expectedDatabaseTarget,
+    ),
   }), env);
 }
 
@@ -213,15 +279,23 @@ function resolveLauncherTarget(env = process.env) {
     baseUrl: env.FANTAF1_FRONTEND_URL,
     backendHealthUrl: env.FANTAF1_BACKEND_HEALTH_URL,
     expectedEnvironment: env.FANTAF1_EXPECTED_ENVIRONMENT,
-    expectedDatabaseTarget: env.FANTAF1_EXPECTED_DATABASE_TARGET,
+    expectedDatabaseTarget: resolveSafeExpectedDatabaseTargetOverride(
+      env.FANTAF1_EXPECTED_DATABASE_TARGET,
+      resolveLocalRuntimeTarget(env.FANTAF1_LOCAL_RUNTIME).expectedDatabaseTarget,
+    ),
   }), env);
 }
 
 export {
   DEFAULT_RUNTIME_TARGET,
+  DEFAULT_LOCAL_DATABASES,
   buildProbeUrls,
   createDeterministicAdminPassword,
   createDeterministicAdminSalt,
+  assertSafeLocalDatabaseTarget,
+  assertSafeLocalMongoUri,
+  extractMongoDatabaseName,
+  isSharedDatabaseTarget,
   rewriteMongoDatabaseName,
   resolveLauncherTarget,
   resolveLocalRuntimeTarget,

@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { runSaveSmoke, stableSerialize } from '../scripts/save-local-check.mjs';
+import { DEFAULT_LOCAL_DATABASES } from '../scripts/local-runtime-targets.mjs';
 
 function createJsonResponse(body, status = 200) {
   return {
@@ -24,7 +25,7 @@ describe('local save smoke runner', () => {
         createJsonResponse({
           status: 'ok',
           environment: 'development',
-          databaseTarget: 'fantaf1_staging',
+          databaseTarget: DEFAULT_LOCAL_DATABASES.csharpDevelopment,
         }),
       )
       .mockResolvedValueOnce(createJsonResponse(state))
@@ -37,7 +38,7 @@ describe('local save smoke runner', () => {
       fetchImpl,
     });
 
-    expect(result.health.databaseTarget).toBe('fantaf1_staging');
+    expect(result.health.databaseTarget).toBe(DEFAULT_LOCAL_DATABASES.csharpDevelopment);
     expect(result.saveResult.message).toBe('Dati salvati correttamente.');
     expect(fetchImpl).toHaveBeenCalledTimes(4);
     expect(fetchImpl).toHaveBeenNthCalledWith(
@@ -66,7 +67,7 @@ describe('local save smoke runner', () => {
         createJsonResponse({
           status: 'ok',
           environment: 'development',
-          databaseTarget: 'fantaf1_staging',
+          databaseTarget: DEFAULT_LOCAL_DATABASES.csharpDevelopment,
         }),
       )
       .mockResolvedValueOnce(createJsonResponse(state))
@@ -85,7 +86,7 @@ describe('local save smoke runner', () => {
       ensureBackend,
     });
 
-    expect(result.health.databaseTarget).toBe('fantaf1_staging');
+    expect(result.health.databaseTarget).toBe(DEFAULT_LOCAL_DATABASES.csharpDevelopment);
     expect(ensureBackend).toHaveBeenCalledTimes(1);
     expect(stopBackend).toHaveBeenCalledTimes(1);
   });
@@ -122,7 +123,7 @@ describe('local save smoke runner', () => {
         createJsonResponse({
           status: 'ok',
           environment: 'development',
-          databaseTarget: 'fantaf1_staging',
+          databaseTarget: DEFAULT_LOCAL_DATABASES.csharpDevelopment,
         }),
       )
       .mockResolvedValueOnce(createJsonResponse(state))
@@ -165,7 +166,7 @@ describe('local save smoke runner', () => {
         createJsonResponse({
           status: 'ok',
           environment: 'development',
-          databaseTarget: 'fantaf1_staging',
+          databaseTarget: DEFAULT_LOCAL_DATABASES.csharpDevelopment,
         }),
       )
       .mockResolvedValueOnce(createJsonResponse(beforeState))
@@ -206,7 +207,7 @@ describe('local save smoke runner', () => {
         createJsonResponse({
           status: 'ok',
           environment: 'development',
-          databaseTarget: 'fantaf1_staging',
+          databaseTarget: DEFAULT_LOCAL_DATABASES.csharpDevelopment,
         }),
       )
       .mockResolvedValueOnce(createJsonResponse(beforeState))
@@ -286,7 +287,7 @@ describe('local save smoke runner', () => {
         createJsonResponse({
           status: 'ok',
           environment: 'development',
-          databaseTarget: 'fantaf1_staging',
+          databaseTarget: DEFAULT_LOCAL_DATABASES.csharpDevelopment,
         }),
       )
       .mockResolvedValueOnce(createJsonResponse(state))
@@ -303,7 +304,7 @@ describe('local save smoke runner', () => {
       ensureBackend,
     });
 
-    expect(result.health.databaseTarget).toBe('fantaf1_staging');
+    expect(result.health.databaseTarget).toBe(DEFAULT_LOCAL_DATABASES.csharpDevelopment);
     expect(ensureBackend).toHaveBeenCalledWith(expect.objectContaining({
       healthUrl: 'http://127.0.0.1:3002/api/health',
       backendCommand: 'dotnet',
@@ -318,7 +319,7 @@ describe('local save smoke runner', () => {
       startupEnv: expect.objectContaining({
         ASPNETCORE_ENVIRONMENT: 'Development',
         ASPNETCORE_URLS: 'http://127.0.0.1:3002',
-        MONGODB_DB_NAME_OVERRIDE: 'fantaf1_staging',
+        MONGODB_DB_NAME_OVERRIDE: DEFAULT_LOCAL_DATABASES.csharpDevelopment,
       }),
     }));
   });
@@ -337,7 +338,7 @@ describe('local save smoke runner', () => {
         createJsonResponse({
           status: 'ok',
           environment: 'staging',
-          databaseTarget: 'fantaf1_staging',
+          databaseTarget: DEFAULT_LOCAL_DATABASES.csharpStaging,
         }),
       )
       .mockResolvedValueOnce(createJsonResponse(state))
@@ -386,7 +387,7 @@ describe('local save smoke runner', () => {
         createJsonResponse({
           status: 'ok',
           environment: 'staging',
-          databaseTarget: 'fantaf1_staging',
+          databaseTarget: DEFAULT_LOCAL_DATABASES.csharpStaging,
         }),
       )
       .mockResolvedValueOnce(createJsonResponse(state))
@@ -410,8 +411,6 @@ describe('local save smoke runner', () => {
 
   it('fails quickly when the backend process exits unexpectedly during startup', async () => {
     const fetchImpl = vi.fn().mockRejectedValue(new Error('fetch failed'));
-    
-    // Simulate the behavior of the real script
     const ensureBackendMock = vi.fn().mockRejectedValue(new Error('Il processo backend e\' terminato inaspettatamente con codice 1.'));
 
     await expect(
@@ -421,6 +420,41 @@ describe('local save smoke runner', () => {
         ensureBackend: ensureBackendMock,
       }),
     ).rejects.toThrow('Il processo backend e\' terminato inaspettatamente con codice 1.');
+  });
+
+  it('ignores shared local smoke overrides and keeps the canonical isolated database target', async () => {
+    const fetchImpl = vi
+      .fn()
+      .mockResolvedValueOnce(
+        createJsonResponse({
+          status: 'ok',
+          environment: 'development',
+          databaseTarget: DEFAULT_LOCAL_DATABASES.csharpDevelopment,
+        }),
+      )
+      .mockResolvedValueOnce(createJsonResponse({
+        users: [],
+        history: [],
+        gpName: '',
+        raceResults: { first: '', second: '', third: '', pole: '' },
+        selectedMeetingKey: '',
+      }))
+      .mockResolvedValueOnce(createJsonResponse({ message: 'Dati salvati correttamente.' }))
+      .mockResolvedValueOnce(createJsonResponse({
+        users: [],
+        history: [],
+        gpName: '',
+        raceResults: { first: '', second: '', third: '', pole: '' },
+        selectedMeetingKey: '',
+      }));
+
+    const result = await runSaveSmoke({
+      target: 'csharp-dev',
+      expectedDatabaseTarget: 'fantaf1_staging',
+      fetchImpl,
+    });
+
+    expect(result.health.databaseTarget).toBe(DEFAULT_LOCAL_DATABASES.csharpDevelopment);
   });
 
   it('fails when MONGODB_URI is missing from environment during backend bootstrap', async () => {

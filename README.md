@@ -1,364 +1,161 @@
 # Fanta Formula 1
 
-Applicazione full-stack privata per gestire un Fanta Formula 1 con frontend React + TypeScript + Vite, backend ASP.NET Core e persistenza MongoDB.
+Applicazione full-stack privata per gestire un Fanta Formula 1 con frontend React + TypeScript + Vite, backend ASP.NET Core (.NET 10) e persistenza MongoDB Atlas.
 
-L'applicazione e' pensata per un flusso amministrato: un admin seleziona il weekend, inserisce i pronostici dei tre partecipanti, registra o recupera i risultati reali e consolida i punti nello storico.
+## Stato corrente
 
-## Stato release e confronto con la produzione
+- Il backend autorevole del repository e' C# sotto [backend-csharp/](/Users/matteobernardini/code/FantaF1/backend-csharp).
+- Il runtime locale, Docker, staging Render e CI/CD sono allineati al backend C#.
+- Il branch `develop` e' il branch di certificazione corrente.
+- `main` resta il target di rilascio protetto e va aggiornato solo dopo cutover esplicito.
+- La documentazione operativa canonica del repository vive in questo file; la cronologia di rilascio vive in [CHANGELOG.md](/Users/matteobernardini/code/FantaF1/CHANGELOG.md).
 
-La versione attualmente in produzione e pubblicata e' `v1.4.4`. Il repository e' aggiornato alla versione `v1.5.0` in `package.json`, includendo l'integrazione del framework Conductor, la certificazione del workflow e il fix del build Docker.
+## Superfici runtime
 
-### Baseline produzione `v1.4.4`
+- Staging Render: [fantaf1-staging.onrender.com](https://fantaf1-staging.onrender.com/)
+- Produzione live: [fantaf1-47vy.onrender.com](https://fantaf1-47vy.onrender.com)
 
-La baseline live corrisponde alle capability gia' rilasciate e documentate in `CHANGELOG.md` sotto `v1.4.4`:
-
-- navigation shell responsive con menu desktop/mobile, deep link di sezione e shortcut contestuale per tornare rapidamente in cima;
-- refactor OO di calendario, persistenza, scoring, analytics e bootstrap runtime;
-- sessioni admin/public reali, analytics stagionali, CTA installazione PWA e recap highlights;
-- validazione release con `lint`, `test`, `test:coverage`, `build`, `test:ui-responsive` e `test:save-local`.
-
-### Delta del workspace corrente rispetto alla produzione
-
-Il workspace corrente introduce l'adozione del framework Conductor per la gestione dello sviluppo spec-driven e la certificazione dello stato di salute del porting C#:
-
-- **Integrazione Conductor**: introdotta la directory `conductor/` come unica source of truth per specifiche di prodotto, linee guida, tech stack e workflow operativo.
-- **Supporto .NET 10 SDK (arm64/x64)**: il backend C# è ora configurato per puntare a **.NET 10** in locale, su Docker e in CI/CD, garantendo l'uso delle ultime capability del framework.
-- **Automazione Formattazione C#**: introdotto l'uso di `dotnet format` integrato sia nel workflow locale (`npm run format:csharp`) sia nella pipeline CI/CD, assicurando che tutto il codice C# rispetti gli standard di stile definiti.
-- **Robustezza Launcher e Smoke Test**: il launcher `./start_fantaf1.command` include ora controlli preventivi sulla configurazione dell'ambiente (`.env`); lo smoke test di salvataggio rileva istantaneamente eventuali crash del backend durante il preflight, fornendo feedback immediato anziché attendere il timeout.
-- **Isolamento Ambiente di Test**: implementata una protezione rigorosa contro l'inquinamento delle variabili d'ambiente durante i test unitari; il caricamento di `dotenv` è disabilitato quando il runtime è gestito da Vitest, garantendo stabilità alla suite di validazione anche con configurazioni locali personalizzate.
-- **Certificazione Workflow**: completata la validazione dell'integrità del repository con copertura test al 100% (statements, branches, functions, lines) su tutti gli stack (Frontend, C#), garantendo la massima stabilità operativa.
-- **Pulizia Strutturale Atlas**: identificati ed eliminati i database obsoleti dal cluster MongoDB Atlas, ottimizzando l'ambiente cloud senza impatto su produzione, staging e sviluppo.
-- **Audit Anti-Regressione Porting C#**: certificata l'integrità del porting C# fino alla Fase 9, confermando parità API, sincronizzazione background e parametri di sicurezza degli strumenti di verifica.
-- **Ristrutturazione Navigazione (da v1.4.4)**: menu integrato nell'header, navigazione fluida mobile nativa, ottimizzazione performance con `IntersectionObserver` e fix mappa circuito storica.
-
-In sintesi: il repository ha completato la migrazione definitiva al backend C#, rimuovendo completamente il backend Node.js.
-
-## Framework Conductor
-
-Il progetto utilizza **Conductor** per orchestrare lo sviluppo basato su specifiche. La directory `conductor/` contiene:
-
-- `product.md`: definizione della visione e delle funzionalità core del prodotto.
-- `product-guidelines.md`: linee guida visive, UX e di branding.
-- `tech-stack.md`: documentazione dello stack tecnologico corrente (React e C#).
-- `workflow.md`: standard ingegneristici rigorosi, inclusi 100% TDD e protocolli di validazione.
-- `tracks.md`: registro delle unità di lavoro (track) completate o in corso.
-
-Tutti gli agenti operativi devono fare riferimento a `conductor/index.md` come punto di ingresso per le definizioni di progetto.
+Lo staging deve rimanere allineato alla produzione a livello di funzionalita'. Differenze di branding, testo o layout sono tollerabili solo se non introducono divergenze funzionali.
 
 ## Panoramica funzionale
 
-- Lo stato di gioco mantiene sempre esattamente 3 partecipanti.
-- I nomi dei partecipanti sono data-driven: backend e UI usano il roster gia' persistito nel database, senza nomi hardcoded a runtime.
-- I pronostici prevedono 4 campi per ogni utente: primo, secondo, terzo e pole oppure vincitore Sprint.
-- Il salvataggio manuale dei pronostici richiede almeno un campo compilato. Lo stato "tutti vuoti" non e' valido per `Salva dati inseriti`, mentre uno stato completamente compilato e' consentito.
-- Il backend blocca le modifiche ai pronostici dopo l'inizio ufficiale della gara del weekend selezionato.
-- La conferma dei risultati e l'assegnazione punti sono possibili solo quando la gara e' considerata conclusa e tutti i risultati reali sono presenti.
-- Lo storico gare puo' essere modificato o eliminato; in entrambi i casi la classifica totale viene ricalcolata.
+- L'applicazione gestisce sempre esattamente `3` partecipanti.
+- I nomi dei partecipanti sono data-driven e vengono letti dallo stato persistito, non sono un vincolo hardcoded.
+- L'admin seleziona il weekend, inserisce i pronostici, registra o recupera i risultati reali e conferma i punti nello storico.
+- La vista `public` e' consultiva; le mutazioni richiedono una sessione admin valida.
+- La classifica live combina punti storici e proiezione del weekend selezionato.
+- Lo storico supporta modifica, cancellazione e ricalcolo completo dei punteggi.
 
-## Regole di gioco e flusso operativo
+## Regole di business
 
 ### Pronostici
 
-Per ogni weekend selezionato l'admin gestisce 4 pronostici per ciascun partecipante:
+Per ogni weekend l'admin gestisce quattro campi per ciascun partecipante:
 
-- vincitore della gara;
-- secondo classificato;
-- terzo classificato;
-- pole position oppure vincitore Sprint nei weekend Sprint.
+- primo classificato
+- secondo classificato
+- terzo classificato
+- pole position oppure vincitore Sprint nei weekend Sprint
 
-Il flusso previsto e' questo:
+### Salvataggio
 
-1. si seleziona il weekend dal calendario;
-2. si compilano i pronostici dei tre utenti;
-3. si salva lo stato corrente con `Salva dati inseriti`;
-4. a gara conclusa si inseriscono o si recuperano i risultati reali;
-5. si confermano i risultati per consolidare i punti nello storico.
-
-### Validazione salvataggio pronostici
-
-Il salvataggio manuale dei pronostici accetta qualsiasi stato che contenga almeno un pronostico compilato. Il payload e' valido solo se:
-
-- Esiste almeno un campo compilato (per evitare salvataggi vuoti inutili).
-
-Questo comportamento vale sia lato frontend sia lato backend tramite l'endpoint dedicato `POST /api/predictions`. Lo stato "tutti vuoti" viene quindi rifiutato per il salvataggio diretto dei pronostici correnti, mentre lo stato completamente compilato resta valido.
-I flussi di persistenza interni dell'applicazione (`reset`, conferma risultati, ricalcolo storico) continuano invece a usare `POST /api/data`, che accetta anche uno stato corrente con pronostici vuoti quando generato intenzionalmente dall'app.
+- `POST /api/predictions` accetta solo payload con almeno un campo pronostico compilato.
+- `POST /api/data` e' usato dai flussi applicativi completi e puo' salvare anche uno stato corrente vuoto quando e' generato da reset, conferma risultati o ricalcolo.
+- Il backend rifiuta i payload con numero partecipanti diverso da `3`.
 
 ### Race lock
 
-Il blocco gara e' applicato server-side.
+Il lock e' server-side:
 
-- Se il weekend ha `raceStartTime`, quello e' l'orario usato per il lock.
-- Se `raceStartTime` manca, viene usato il fallback `endDate + 14:00:00Z`.
-- Dopo il lock, il backend rifiuta la richiesta solo se i pronostici correnti sono stati modificati rispetto a quelli gia' persistiti.
+- usa `raceStartTime` quando disponibile
+- usa il fallback `endDate + 14:00:00Z` quando `raceStartTime` manca
+- dopo il lock rifiuta le modifiche che alterano i pronostici gia' persistiti
 
-Di conseguenza:
+### Risultati e punteggi
 
-- non e' possibile alterare i pronostici dopo l'inizio ufficiale della gara;
-- e' ancora possibile salvare stato non regressivo che non modifica i pronostici bloccati.
-
-### Risultati reali e assegnazione punti
-
-Per il weekend selezionato l'applicazione distingue due concetti separati:
-
-- `race lock`: i pronostici si bloccano all'orario ufficiale di partenza della gara;
-- `racePhase`: stato user-facing del weekend (`open`, `live`, `finished`) derivato dal backend.
-
-Quando il weekend selezionato ha risultati reali correnti incompleti:
-
-- il frontend prova subito a recuperarli automaticamente tramite `GET /api/results/:meetingKey`;
-- durante un weekend attivo continua a fare polling periodico finche' i risultati ufficiali restano incompleti;
-- il recupero automatico non parte durante una modifica dello storico;
-- i risultati ufficiali recuperati riempiono solo i campi ancora vuoti e non sovrascrivono valori manuali o gia' presenti;
-- se Formula1.com non ha ancora pubblicato risultati ufficiali, l'app mantiene i campi vuoti e mostra un messaggio esplicativo sia nella classifica live sia nei pronostici;
-- se Formula1.com ha pubblicato solo una parte dei risultati ufficiali, la proiezione resta parziale e l'interfaccia lo segnala;
-- se il fetch non produce dati validi, l'admin puo' comunque inserire i risultati manualmente.
-
-Il pulsante di conferma risultati resta disabilitato finche' non sono vere entrambe le condizioni:
-
-- backend in stato `racePhase=finished` per il weekend selezionato;
-- risultati reali completi in tutti i 4 campi.
-
-Alla conferma:
-
-- viene creato un record storico per il weekend;
-- per ogni utente vengono calcolati i punti guadagnati in base ai match esatti sui 4 campi;
-- i punti vengono sommati al totale utente;
-- i pronostici correnti e i risultati correnti vengono azzerati;
-- se non si e' in modalita' modifica, il weekend selezionato avanza al prossimo weekend disponibile.
-
-### Punteggio e classifica live
-
-La scoring logic attuale e' configurata cosi':
-
-- 5 punti per il primo posto corretto;
-- 3 punti per il secondo posto corretto;
-- 2 punti per il terzo posto corretto;
-- 1 punto per pole position o Sprint corretti.
-
-Non esistono mezzi punti o bonus impliciti: i punti vengono assegnati solo per corrispondenza esatta del singolo campo.
-
-La classifica live mostrata nell'hero non rappresenta solo i punti storici. Per ogni utente visualizza:
-
-- punti storici gia' consolidati;
-- piu' la proiezione ottenuta confrontando i pronostici correnti con i risultati reali correnti.
-
-Il tab `Pronostici dei giocatori` mostra la stessa proiezione del solo weekend selezionato.
-Quando i risultati ufficiali non esistono ancora, l'interfaccia non interpreta lo `0` come "nessun match": espone invece uno stato esplicito `nessun risultato ufficiale disponibile`.
-Quando i risultati ufficiali sono solo parziali, sia il tab pronostici sia la classifica live mostrano una proiezione parziale coerente con i soli campi gia' pubblicati.
-
-## Business logic applicativa
-
-### Selezione weekend e stato iniziale
-
-Lo stato applicativo usa `selectedMeetingKey` come riferimento principale del weekend attivo.
-
-Quando l'app carica o sanitizza lo stato:
-
-- se `selectedMeetingKey` corrisponde a un weekend esistente, viene usato quel weekend;
-- altrimenti il sistema prova a risolvere il GP tramite il nome;
-- se anche questo fallisce, viene selezionato il prossimo weekend disponibile in calendario;
-- se il calendario e' vuoto, lo stato resta senza weekend selezionato.
-
-Questo comportamento vale sia lato frontend sia lato backend quando viene ricostruito lo stato persistito.
-
-I pronostici correnti e i risultati correnti sono persistiti per weekend tramite `weekendStateByMeetingKey`.
-Quando si cambia weekend, la UI rilegge immediatamente i dati del weekend selezionato:
-
-- se esiste un draft salvato per quel weekend, mostra quel draft;
-- se non esiste alcun draft, i campi tornano vuoti e la select mostra `Seleziona un pilota`.
-
-### Reset pronostici
-
-L'azione `Reset pronostici correnti`:
-
-- azzera i 4 campi pronostico per tutti gli utenti;
-- azzera i risultati reali correnti del weekend;
-- persiste immediatamente il nuovo stato nel database.
-
-Non e' una semplice pulizia locale della UI: e' un salvataggio effettivo dello stato corrente.
-
-### Modifica e cancellazione storico
-
-Lo storico non e' solo consultabile.
-
-#### Cancellazione
-
-Quando una gara storica viene eliminata:
-
-- il record viene rimosso dallo storico;
-- il totale punti utenti viene ricostruito partendo dallo storico residuo;
-- i nomi utente correnti vengono preservati.
-
-#### Modifica
-
-Quando una gara storica viene messa in modifica:
-
-- il record viene temporaneamente rimosso dallo storico;
-- la classifica viene ricalcolata senza quella gara;
-- i pronostici originali di quella gara vengono ricaricati nei campi utente;
-- i risultati reali originali vengono ricaricati nella sezione risultati;
-- il weekend relativo viene risolto di nuovo dal calendario tramite `meetingKey` o nome GP;
-- al salvataggio, il record aggiornato viene reinserito nello storico nella posizione originaria.
-
-Se la modifica viene annullata:
-
-- il record originale viene ripristinato nello storico;
-- i punti vengono ricostruiti;
-- i campi correnti vengono riportati a uno stato coerente con il weekend ripristinato.
-
-### Sanitizzazione e persistenza stato
-
-Il backend non persiste mai il payload grezzo del frontend.
-
-Prima di salvare:
-
-- normalizza i pronostici mancanti o malformati;
-- normalizza i punti utente a valori numerici validi;
-- tronca o ricostruisce gli utenti per mantenere sempre 3 partecipanti;
-- sanitizza lo storico gara per gara;
-- riallinea `gpName` e `selectedMeetingKey` al calendario disponibile.
-
-Se il database non contiene ancora stato applicativo, il backend costruisce uno stato di default usando il prossimo weekend disponibile.
+- I risultati ufficiali vengono recuperati tramite `GET /api/results/:meetingKey`.
+- Il backend espone `racePhase` (`open`, `live`, `finished`) separato dal race lock.
+- La conferma risultati e' consentita solo quando il weekend e' `finished` e i risultati reali sono completi.
+- Punteggi configurati:
+  - `5` punti primo corretto
+  - `3` punti secondo corretto
+  - `2` punti terzo corretto
+  - `1` punto pole o Sprint corretto
 
 ## Funzionalita' implementate
 
-### Interfaccia
+### Admin
 
-- Hero full-width con branding, titolo visibile configurabile, anno corrente dinamico e card riepilogative.
-- Il contenitore del titolo hero non usa blur di backdrop; il focus visivo resta affidato a glow, contrasto e gerarchia tipografica gia' presenti.
-- Il titolo principale della hero renderizza sempre bianco pieno su macOS, Windows e browser mobile/desktop, senza gradiente testuale, per evitare differenze di resa cross-platform.
-- Se `VITE_APP_LOCAL_NAME` estende il titolo base `Fanta Formula 1`, la hero separa il titolo in due righe fisse: titolo base in prima riga e suffisso in seconda.
-- Il titolo hero usa un fit basato sulla larghezza reale del contenitore: sui desktop wide mantiene il massimo visivo corrente, mentre su viewport piu' strette riduce il `font-size` solo quanto necessario per restare interamente visibile senza clipping.
-- Lo sfondo hero del weekend selezionato continua a cambiare dinamicamente in base alla gara attiva e applica una luminosita' aumentata sul solo layer immagine per mantenere leggibilita' invariata sui contenuti in primo piano.
-- Card "Prossimo weekend" con badge Sprint/Standard, programma sessioni e orari formattati in italiano.
-- Classifica live calcolata come punti storici piu' proiezione del weekend selezionato, con stato esplicito per risultati ufficiali assenti o parziali.
-- Modalita' `public` e `admin` separate, con login admin via sessione, link condivisibile della vista corrente e pannelli operativi esposti solo quando la sessione e' valida.
-- Navigazione di sezione coerente con il visual language esistente e sempre disponibile durante lo scroll: su desktop il menu resta fisso sotto l'header, mentre su mobile compare un trigger discreto `Sezioni` che apre un drawer laterale sinistro con le sole sezioni disponibili per la vista corrente.
-- Calendario stagionale con selettore e strip orizzontale dei weekend.
-- Griglia pronostici per i 3 partecipanti con selezione piloti ordinati per cognome e visualizzati come `Cognome Nome`.
-- Hero results card del weekend selezionato con nomi pilota visualizzati come `Nome Cognome`; dropdown e liste di selezione restano invece in formato `Cognome Nome`.
-- Hero results card del weekend selezionato con CTA Highlights YouTube di Sky Sport Italia F1 per i weekend conclusi: se il video e' disponibile il pulsante apre il contenuto all'esterno della SPA, altrimenti resta visibile ma disabilitato con messaggio di indisponibilita'.
-- Sezione risultati del weekend con track map, recupero automatico read-only dei risultati ufficiali, merge solo dei campi mancanti e pulsante conferma con tooltip di stato.
-- Vista pubblica con track map coerente col weekend selezionato sia nel recap hero del weekend sia nel pannello `Recap ultimo GP`, mantenendo la stessa mappa anche nella sezione admin `Risultati del weekend`.
-- Storico gare modificabile con ricalcolo dei punteggi, filtri per giocatore/GP e drill-down dei pronostici dettagliati; il podio reale mostra foto pilota, nome reale in formato naturale, data della gara su riga separata sotto il titolo e lo stesso effetto hover grafico delle altre card interattive dell'app.
-- Le classifiche reali pubbliche mostrano ora avatar piloti Formula1 promossi a una variante hi-res con focus sul volto e, per le scuderie, logo ufficiale accanto al nome colorato con il colore team già presente nei dati.
-- Dashboard KPI per utente, analytics deep-dive, pannello `Analisi stagione`, riepilogo `Weekend pulse`, guida pubblica, storico mobile piu' compatto, status strip, toast operativi e CTA installazione PWA.
-- Loader iniziale con splash logo `FantaF1`, set icone browser/PWA dedicato (`favicon`, `apple-touch-icon`, `192x192`, `512x512`, `maskable`) e layout responsive desktop/mobile.
+- login admin con cookie HTTP-only firmato
+- logout e session bootstrap via `GET /api/session`
+- inserimento e modifica pronostici dei tre partecipanti
+- reset persistente dei pronostici correnti
+- fetch read-only dei risultati ufficiali
+- merge dei risultati ufficiali solo sui campi mancanti
+- inserimento manuale o completamento dei risultati
+- conferma risultati e consolidamento nello storico
+- modifica ed eliminazione delle gare storiche
+- ricalcolo dei totali dopo edit/delete storico
+- cambio weekend con persistenza per `selectedMeetingKey`
 
-### Installazione PWA
+### Public
 
-La shell frontend espone sempre il pulsante `INSTALLA APPLICAZIONE` nei browser desktop e mobile, mantenendolo visibile anche durante lo scroll insieme alla navigation shell.
+- classifica live
+- standings piloti e costruttori
+- weekend pulse
+- analisi stagione
+- archivio storico con filtri
+- track map e recap weekend
+- URL condivisibile della vista corrente
+- CTA installazione PWA
 
-- Su browser che espongono `beforeinstallprompt` il pulsante apre il prompt di installazione nativo della PWA.
-- Su `iPhone` e `iPad` con `Safari`, dove il prompt nativo non e' disponibile, il pulsante apre un dialog guidato con i passaggi `Condividi -> Aggiungi a Home`.
-- Se l'app e' gia' installata o sta girando in `display-mode: standalone`, la CTA resta visibile ma mostra un feedback esplicito che conferma lo stato gia' installato.
-- Browser senza prompt nativo e senza flusso supportato mantengono la CTA visibile e mostrano un messaggio informativo, evitando percorsi morti lato utente.
+### UI
 
-### URL condivisibile della vista
-
-La shell frontend mantiene sincronizzato nell'URL lo stato consultivo della vista corrente, cosi' da poter condividere direttamente il contesto aperto.
-
-- `meeting` seleziona il weekend attivo.
-- `view=public` forza solo la vista pubblica; una query `view=admin` non concede accesso operativo se la sessione non e' admin.
-- `historyUser` e `historySearch` ripristinano i filtri dello storico.
-- L'eventuale `hash` viene preservato e usato per lo scroll iniziale alla sezione richiesta; la navigazione di sezione aggiorna l'URL via `history.replaceState` senza perdere `meeting`, `view` e filtri storico gia' presenti.
-
-Quando l'utente cambia weekend, vista o filtri storico, il frontend aggiorna l'URL via `history.replaceState` senza ricaricare la pagina.
-
-### Logica di gioco
-
-- Configurazione punteggi centralizzata: 5 punti primo, 3 punti secondo, 2 punti terzo, 1 punto pole/Sprint.
-- Race lock server-side basato su `raceStartTime`, con fallback a `endDate + 14:00:00Z` se l'orario non e' disponibile.
-- Stato gara user-facing centralizzato lato backend: `open` prima della partenza, `live` dopo la partenza senza classificazione ufficiale completa, `finished` quando Formula1.com pubblica la classifica gara ufficiale completa.
-- Reset dei pronostici correnti con salvataggio persistente immediato.
-- Conservazione dei nomi utente gia' persistiti durante modifica o cancellazione di gare storiche.
-- Il roster ufficiale non arriva piu' dal config nominale: il backend usa il roster gia' persistito nell'ultimo stato valido del database e lo riapplica in validazione e salvataggio.
+- shell responsive desktop/mobile
+- navigazione sticky desktop e drawer mobile `Sezioni`
+- hero full-width
+- stato admin/public coerente in tutte le superfici
+- track map coerente tra hero, recap e pannello risultati
 
 ## Architettura
 
-### Documentazione e Standard Operativi
-
-Il repository segue standard ingegneristici rigorosi per garantire la sicurezza dei dati di produzione e la manutenibilità a lungo termine. Questi standard sono formalizzati in tre file mandatori che ogni agente (AI o umano) deve seguire:
-
-- `AGENTS.md`: Contratto ingegneristico generale (TDD, workflow, sicurezza, qualità del codice).
-- `PROJECT.md`: Verità specifica del progetto FantaF1 (vincoli di business, integrità dei dati, aree ad alto rischio).
-- `GEMINI.md`: Direttive operative specifiche per l'automazione e il ciclo di vita dell'applicazione nel repository.
-
-Ogni operazione di commit e push nel repository è vincolata all'aggiornamento preventivo di `README.md` (se necessario) e `CHANGELOG.md`, garantendo che la documentazione storica e tecnica sia sempre allineata alle modifiche effettuate.
-
-L'applicazione di questi standard garantisce un approccio "production-safe" e una validazione continua tramite un ciclo rigoroso di test e build.
-
 ### Frontend
 
-- SPA React 18 + TypeScript + Vite.
-- Il frontend usa API relative (`/api/...`) per compatibilita' locale e produzione.
-- `src/App.tsx` resta il container UI principale, ma parte della logica non visuale e' stata estratta in facade e assembler dedicati come `src/utils/resultsApi.ts`, `src/utils/weekendStateService.ts`, `src/utils/gameService.ts` e `src/utils/analyticsService.ts`.
-- Il titolo visualizzato nell'hero usa `VITE_APP_LOCAL_NAME` se valorizzata, altrimenti il titolo base definito nel config applicativo.
-- Quando l'override hero inizia con il titolo base e aggiunge un suffisso, il frontend lo rende in due righe stabili per preservare leggibilita' e coerenza visiva.
-- Il titolo hero usa un fit `container-based`: il `font-size` resta al massimo corrente quando la prima riga entra nel pannello e si riduce solo quando la larghezza utile non basta, indipendentemente dal breakpoint.
-- Il titolo della scheda browser e' invece impostato in `index.html` come `FantaF1 <anno corrente>`.
+- React 18 + TypeScript + Vite
+- SPA servita anche same-origin dal backend C#
+- API relative `/api/...`
+- logica condivisa centralizzata in moduli come:
+  - [src/utils/gameService.ts](/Users/matteobernardini/code/FantaF1/src/utils/gameService.ts)
+  - [src/utils/analyticsService.ts](/Users/matteobernardini/code/FantaF1/src/utils/analyticsService.ts)
+  - [src/utils/weekendStateService.ts](/Users/matteobernardini/code/FantaF1/src/utils/weekendStateService.ts)
+  - [src/utils/resultsApi.ts](/Users/matteobernardini/code/FantaF1/src/utils/resultsApi.ts)
 
 ### Backend
 
-- Server ASP.NET Core (.NET 10) in C#.
-- La solution si trova in `backend-csharp/FantaF1.Backend.sln` ed è strutturata nei layer `Api`, `Application`, `Domain`, `Infrastructure`.
-- Espone API REST, serve gli asset statici del frontend compilato in `dist` e gestisce il fallback alla SPA.
-- Si connette al database, poi avvia il server HTTP e gestisce la sincronizzazione in background di piloti, calendario e classifiche tramite background services.
-- In produzione il server ospita l'applicazione su Docker per Render.com.
-- Le mutazioni admin sono protette da sessione cookie HTTP-only firmata con `ADMIN_SESSION_SECRET` supportata via crypt compatibile; le route read-only restano pubbliche.
+- ASP.NET Core 10
+- solution: [backend-csharp/FantaF1.Backend.sln](/Users/matteobernardini/code/FantaF1/backend-csharp/FantaF1.Backend.sln)
+- layer:
+  - `Api`
+  - `Application`
+  - `Domain`
+  - `Infrastructure`
+- startup non bloccante su sync esterni
+- static serving same-origin del build frontend in `dist`
 
 ### Persistenza
 
-- MongoDB tramite `MongoDB.Driver`.
-- Il backend gestisce questi insiemi persistiti:
-  - stato globale del gioco (`appdatas`);
-  - cache roster piloti (`drivers`);
-  - cache calendario weekend (`weekends`);
-  - cache classifiche piloti/costruttori (`standingscaches`);
-  - credenziali admin hashate e metadata di autenticazione (`admincredentials`).
-- Il frontend non usa `localStorage` per i dati core del gioco.
+MongoDB Atlas con collection:
 
-## Sorgenti esterne e sincronizzazione
+- stato globale del gioco (`appdatas`)
+- `drivers`: cache roster piloti
+- `weekends`: cache calendario weekend
+- cache standings piloti/costruttori (`standingscaches`)
+- credenziali admin hashate e metadata auth (`admincredentials`)
 
-### Roster piloti
+Il backend sanitizza sempre lo stato prima di persisterlo.
 
-- Fonte primaria: StatsF1.
-- Arricchimento media e fallback secondario: Formula1.com.
-- Se il sync fallisce, il backend usa la cache MongoDB dei piloti.
-- Se la cache e' vuota ma la pagina piloti di Formula1.com e' disponibile, il backend costruisce un roster di fallback e lo salva.
+## Sorgenti esterne
 
-### Calendario
+- roster piloti: StatsF1 con fallback/arricchimento Formula1.com
+- calendario: Formula1.com
+- standings: Formula1.com
+- risultati weekend: Formula1.com
 
-- Fonte primaria: pagine stagione e dettaglio gara di Formula1.com.
-- Il backend prova fino a 3 tentativi prima di degradare alla cache.
-- Il parsing del dettaglio gara arricchisce ogni weekend con:
-  - `meetingKey`;
-  - `grandPrixTitle`;
-  - immagine hero;
-  - track outline;
-  - badge Sprint;
-  - `raceStartTime`;
-  - lista sessioni con orari ISO.
-- Se il dettaglio di un singolo weekend fallisce, il backend mantiene comunque i dati base del calendario.
+Se un sync fallisce, il backend prova a usare la cache MongoDB gia' disponibile per quel dominio.
 
-### Classifiche reali
+## API principali
 
-- Fonte primaria: Formula1.com.
-- Il backend sincronizza classifiche piloti e costruttori in background e le persiste in MongoDB.
-- Se la cache classifiche e' vuota, la route `GET /api/standings` tenta un sync on-demand prima di fallire.
-- Se il sync fallisce ma la cache esiste gia', il backend continua a servire l'ultimo snapshot valido disponibile.
-
-### Risultati gara
-
-- Endpoint interno: `GET /api/results/:meetingKey`.
-- Il backend costruisce gli URL risultati Formula1.com a partire da `detailUrl` e `meetingKey` del weekend salvato in cache, usando il formato `.../results/<year>/races/<meetingKey>/<slug>/...`.
-- Per weekend standard recupera gara e qualifying.
-- Per weekend Sprint recupera gara e sprint-results.
-- Il parser legge la tabella HTML corrente di Formula1.com ed estrae 1°, 2°, 3° e bonus pole/Sprint dalle prime righe ufficiali disponibili.
-- Se la pagina ufficiale riporta `No results available`, l'endpoint restituisce tutti i campi vuoti.
-- I risultati ufficiali sono messi in cache in memoria con TTL corto per supportare il polling live senza moltiplicare le richieste verso Formula1.com.
-
-## API backend
+- `GET /api/health`
+- `GET /api/data`
+- `GET /api/session`
+- `POST /api/admin/session`
+- `DELETE /api/admin/session`
+- `POST /api/data`
+- `POST /api/predictions`
+- `GET /api/drivers`
+- `GET /api/calendar`
+- `GET /api/results/:meetingKey`
+- `GET /api/standings`
 
 ### `GET /api/health`
 
@@ -370,81 +167,7 @@ Restituisce:
 - `environment`
 - `databaseTarget`
 
-Usato dal launcher locale e dai controlli di health.
-
-### `GET /api/data`
-
-Restituisce lo stato globale del gioco:
-
-- utenti;
-- storico;
-- GP selezionato;
-- risultati correnti;
-- `selectedMeetingKey`;
-- `weekendStateByMeetingKey`.
-
-### `GET /api/session`
-
-Restituisce lo stato sessione runtime:
-
-- `isAdmin`;
-- `defaultViewMode`.
-
-### `POST /api/admin/session`
-
-Crea la sessione admin dopo verifica password e imposta il cookie HTTP-only firmato.
-
-### `DELETE /api/admin/session`
-
-Invalida subito la sessione admin e rimuove il cookie.
-
-### `POST /api/data`
-
-Salva lo stato globale del gioco dopo sanitizzazione e validazione per i flussi generici dell'applicazione.
-
-Comportamenti rilevanti:
-
-- `400` se il numero di partecipanti non e' quello atteso;
-- `403` se la gara e' iniziata e i pronostici correnti vengono modificati;
-- `500` in caso di errore persistente di salvataggio.
-- In caso di errore il payload include sempre `error`, `code` e `requestId`.
-- `details` viene esposto solo fuori da production, per rendere diagnosticabili i fallimenti locali senza esporre stack in deploy.
-
-### `POST /api/predictions`
-
-Salva manualmente i pronostici correnti con le stesse verifiche di partecipanti e race lock di `POST /api/data`, aggiungendo il vincolo di contenere almeno un pronostico compilato.
-
-Comportamenti rilevanti:
-
-- `400` con `code=predictions_missing` se tutti i campi pronostico sono vuoti;
-- `400` se il numero di partecipanti non e' quello atteso;
-- `403` se la gara e' iniziata e i pronostici correnti vengono modificati;
-- `500` in caso di errore persistente di salvataggio.
-
-### `GET /api/drivers`
-
-Restituisce il roster piloti ordinato alfabeticamente lato backend.
-
-### `GET /api/calendar`
-
-Restituisce il calendario ordinato per round.
-
-### `GET /api/results/:meetingKey`
-
-Recupera i risultati reali del weekend a partire dalla cache calendario.
-
-Comportamenti rilevanti:
-
-- restituisce sempre un payload con `first`, `second`, `third`, `pole` e `racePhase`;
-- `racePhase` vale:
-  - `open` prima del `raceStartTime`
-  - `live` dopo il `raceStartTime` ma senza classifica gara ufficiale completa
-  - `finished` quando Formula1.com ha pubblicato `first`, `second` e `third`;
-- se Formula1.com non ha ancora pubblicato risultati ufficiali, i campi restano stringhe vuote;
-- il fetch e' read-only e non persiste automaticamente nulla nel database;
-- il backend applica una cache in-memory a TTL corto per proteggere il polling live del frontend.
-
-## Modello dati applicativo
+## Modello dati
 
 ### Stato gioco
 
@@ -457,26 +180,7 @@ Lo stato persistito contiene:
 - `selectedMeetingKey`
 - `weekendStateByMeetingKey`
 
-Ogni utente contiene:
-
-- `name`
-- `predictions`
-- `points`
-
-Ogni record storico contiene:
-
-- `gpName`
-- `meetingKey`
-- `date`
-- `results`
-- `userPredictions`
-
-Ogni `userPredictions[name]` storico contiene:
-
-- `prediction`
-- `pointsEarned`
-
-### Weekend di gara
+### Weekend
 
 Ogni weekend puo' includere:
 
@@ -493,228 +197,252 @@ Ogni weekend puo' includere:
 - `endDate`
 - `raceStartTime`
 - `sessions`
+- `highlightsVideoUrl`
 
-## Variabili ambiente
+## Database e migrazioni
 
-### Obbligatorie
+L'analisi corrente del branch mostra che `fantaf1` e `fantaf1_staging` sono allineati sulle collection principali, sugli indici e sulla shape dei documenti campionati per:
+
+- `appdatas`
+- `drivers`
+- `weekends`
+- `standingscaches`
+- `admincredentials`
+
+Alla data di questa verifica non emerge una migrazione obbligatoria da applicare ai database live per il cutover. Eventuali future migrazioni dovranno essere:
+
+- esplicite
+- idempotenti
+- testate solo su clone locale o database isolato
+- mai eseguite direttamente su `fantaf1` o `fantaf1_staging` durante l'audit
+
+## Variabili di ambiente
+
+### Runtime C# obbligatorie
 
 - `MONGODB_URI`
-  - stringa di connessione MongoDB usata dal backend;
-  - puo' includere direttamente il nome del database nel path della URI;
-  - se assente il server termina in fase di bootstrap.
+  - URI MongoDB completa
+  - il path della URI deve puntare al database dell'ambiente target
 - `ADMIN_SESSION_SECRET`
-  - segreto usato per firmare e verificare la sessione admin;
-  - in produzione va impostato esplicitamente con una stringa lunga e casuale;
-  - se cambia, le sessioni admin esistenti diventano invalide.
+  - secret usato per firmare la sessione admin
 
-### Opzionali
+### Runtime C# opzionali
 
-- `PORT`
-  - porta HTTP del backend;
-  - in locale il default e' `3001`.
 - `ASPNETCORE_ENVIRONMENT`
-  - controlla il profilo runtime del backend C# (`Development`, `Staging`, `Production`);
-  - `Development` abilita il comportamento admin-open locale, mentre `Staging` e `Production` applicano l'autenticazione admin production-like.
+  - `Development`, `Staging`, `Production`
+- `PORT`
+  - porta HTTP del runtime
+- `Frontend__BuildPath`
+  - path del build frontend servito same-origin
 - `VITE_APP_LOCAL_NAME`
-  - override del titolo visualizzato nell'hero del frontend;
-  - se estende il titolo base `Fanta Formula 1`, la hero lo divide in due righe: base title sopra, suffisso sotto;
-  - viene letta da Vite a build-time per il bundle frontend;
-  - in produzione richiede rebuild/redeploy per avere effetto.
+  - override visuale del titolo hero, letto a build-time dal frontend
 
-### Precedenza locale
+### Variabili di servizio locali
 
-Il launcher locale carica:
+- `MONGODB_DB_NAME_OVERRIDE`
+  - usata dai runner locali e dalla CI per forzare un database isolato
+  - non va usata per puntare a `fantaf1` o `fantaf1_staging`
 
-1. variabili di processo correnti;
-2. `.env`.
+### Seed admin locale production-like
 
-Il resolver dei target locali C# forza il database atteso tramite `MONGODB_DB_NAME_OVERRIDE`.
-Per lo stato attuale del repository i target locali C# validati puntano a `fantaf1_staging`, sia in `Development` sia in `Staging` locale.
-Se `MONGODB_URI` contiene gia' un database nel path, gli script locali lo riscrivono sul target atteso del runtime selezionato.
+Il target locale `csharp-staging-local` usa seed runtime non versionati come plaintext:
+
+- `AdminCredentialSeed__PasswordSalt`
+- `AdminCredentialSeed__PasswordHashHex`
+
+Queste variabili vengono generate dai runner locali; non vanno impostate manualmente su Render.
+
+## Matrice ambiente esplicita
+
+### Locale `csharp-dev`
+
+- `MONGODB_URI`: obbligatoria, base URI Atlas o locale
+- `ADMIN_SESSION_SECRET`: obbligatoria
+- `ASPNETCORE_ENVIRONMENT`: forzata a `Development` dal launcher
+- `MONGODB_DB_NAME_OVERRIDE`: forzata a `fantaf1_local_dev` dal tooling locale
+- `PORT`: non necessaria nel launcher locale canonico; l'host locale usa `3002`
+- `Frontend__BuildPath`: non necessaria in split mode
+- `VITE_APP_LOCAL_NAME`: opzionale
+
+### Locale `csharp-staging-local`
+
+- `MONGODB_URI`: obbligatoria, base URI Atlas o locale
+- `ADMIN_SESSION_SECRET`: obbligatoria
+- `ASPNETCORE_ENVIRONMENT`: forzata a `Staging`
+- `MONGODB_DB_NAME_OVERRIDE`: forzata a `fantaf1_local_staging`
+- `PORT`: non necessaria; l'host locale usa `3003`
+- `Frontend__BuildPath`: gestita dal runtime same-origin locale
+- `VITE_APP_LOCAL_NAME`: opzionale
+
+### Render staging
+
+Impostare esplicitamente:
+
+- `MONGODB_URI=<uri che punta a fantaf1_staging>`
+- `ADMIN_SESSION_SECRET=<secret lungo e casuale>`
+- `ASPNETCORE_ENVIRONMENT=Staging`
+- `Frontend__BuildPath=./dist`
+- `PORT=3001`
+- `VITE_APP_LOCAL_NAME=<opzionale>`
+
+Non impostare:
+
+- `MONGODB_DB_NAME_OVERRIDE`
+- `AdminCredentialSeed__PasswordSalt`
+- `AdminCredentialSeed__PasswordHashHex`
+
+### Render produzione
+
+Impostare esplicitamente:
+
+- `MONGODB_URI=<uri che punta a fantaf1>`
+- `ADMIN_SESSION_SECRET=<secret lungo e casuale>`
+- `ASPNETCORE_ENVIRONMENT=Production`
+- `Frontend__BuildPath=./dist`
+- `PORT=3001`
+- `VITE_APP_LOCAL_NAME=<opzionale>`
+
+Non impostare:
+
+- `MONGODB_DB_NAME_OVERRIDE`
+- `AdminCredentialSeed__PasswordSalt`
+- `AdminCredentialSeed__PasswordHashHex`
+
+### GitHub Actions
+
+Secret richiesti:
+
+- `MONGODB_URI_CI`
+- `ADMIN_SESSION_SECRET_CI`
+
+Secret opzionale:
+
+- `RENDER_HEALTHCHECK_URL`
+
+La pipeline normalizza la URI CI e usa `MONGODB_DB_NAME_OVERRIDE=fantaf1_ci` per impedire mutazioni dei database condivisi.
 
 ## Avvio locale
 
 ### Prerequisiti
 
-- Node.js (per il frontend Vite) e .NET 10 SDK (per il backend C#).
-- Dipendenze installate con `npm install`.
-- MongoDB raggiungibile tramite `MONGODB_URI`.
-- Google Chrome installato in `/Applications/Google Chrome.app` se si usa il launcher integrato.
-- Runtime locale canonico di default: `csharp-dev`.
-- Target locali supportati:
-  - `csharp-dev` -> frontend Vite + backend ASP.NET Core, environment `Development`, database atteso `fantaf1_staging`
-  - `csharp-staging-local` -> host ASP.NET Core same-origin, environment `Staging` locale, database atteso `fantaf1_staging`
-- La `MONGODB_URI` locale deve essere presente e coerente con il target selezionato; gli script locali riscrivono il database target dei runtime C# verso `fantaf1_staging`.
+- `npm install`
+- .NET 10 SDK
+- Node.js
+- MongoDB raggiungibile tramite `MONGODB_URI`
+- Google Chrome in `/Applications/Google Chrome.app` per il launcher monitorato
 
-### Modalita' sviluppo separate
+### Launcher canonico
 
-- `dotnet run --project backend-csharp/src/FantaF1.Api/FantaF1.Api.csproj`
-- `npm run dev:frontend`
+- [start_fantaf1.command](/Users/matteobernardini/code/FantaF1/start_fantaf1.command)
 
-Il frontend Vite gira su `127.0.0.1:5173` e usa proxy `/api` verso il server ASP.NET Core.
-Il backend verifica in startup che `MONGODB_URI` sia allineata con l'environment corrente.
+Quando un task richiede di `avviare l'app`, questo e' il solo entrypoint canonico.
 
-### Modalita' integrata consigliata
+### Comandi principali
 
 - `npm run start:local`
-- `./start_fantaf1.command`
-- `./clean_google_chrome.command`
-
-Lo script integrato:
-
-- forza il target locale canonico `csharp-dev` salvo override esplicito `FANTAF1_LOCAL_RUNTIME`;
-- usa l'host ASP.NET Core come default monitorato ed esclusivo per il backend;
-- esegue `npm run lint`, `npm run test`, `npm run build` e `npm run test:save-local`;
-- esegue uno smoke reale di lettura/scrittura sul target locale selezionato prima dell'avvio finale;
-- verifica le porte richieste dal target locale selezionato;
-- avvia l'host same-origin ASP.NET Core;
-- attende gli health check locali;
-- apre Chrome in modalita' app sul frontend;
-- prova a massimizzare la finestra;
-- chiude i processi se uno dei child fallisce o, quando la finestra Chrome e' rilevabile, se la finestra viene chiusa.
-
-Il controllo browser `npm run test:ui-responsive` resta disponibile come verifica esplicita separata per task con impatto UI/responsive, ma non fa piu' parte del preflight automatico di `./start_fantaf1.command`.
-Esempi:
-
-- `./start_fantaf1.command` -> avvia l'ambiente con backend C#
-- `FANTAF1_LOCAL_RUNTIME=csharp-staging-local ./start_fantaf1.command`
-
-### Ripristino rapido di Google Chrome
-
-Se Google Chrome non si apre correttamente dopo esecuzioni Playwright o altri tool di automazione locali, il repository include:
-
-- `./clean_google_chrome.command`
-
-Lo script:
-
-- chiude solo i processi Chrome di automazione riconoscibili collegati a profili `playwright_chromiumdev_profile-*` o a `chrome-devtools-mcp`;
-- non modifica il launcher principale `./start_fantaf1.command`;
-- rilancia Google Chrome da `/Applications/Google Chrome.app`;
-- esegue un controllo breve per verificare che Chrome sia tornato attivo.
-
-## Deploy su Render
-
-### Configurazione servizio
-
-- Build command: `npm install && npm run build`
-- Il repository forza l'installazione delle `devDependencies` anche durante la build tramite `.npmrc`, per garantire su Render la presenza della toolchain TypeScript/Vite e dei type package React necessari alla compilazione frontend.
-- Docker context: root del repository
-- Dockerfile path: `./Dockerfile`
-- Environment: Docker per Render.com
-
-### Variabili da configurare
-
-- `MONGODB_URI` obbligatoria.
-- `MONGODB_URI` deve puntare al database dell'ambiente target; per lo staging attuale deve puntare a `.../fantaf1_staging`.
-- `ADMIN_SESSION_SECRET` obbligatoria e privata.
-- `ASPNETCORE_ENVIRONMENT=Staging` per l'ambiente di staging attuale su Render.
-- `Frontend__BuildPath=./dist` per il serving same-origin dei file frontend pubblicati nell'immagine Docker.
-- `PORT=3001` coerente con il binding corrente dell'immagine staging Render.
-- `VITE_APP_LOCAL_NAME` opzionale se si vuole un titolo hero personalizzato anche in produzione.
-
-### Comportamento in produzione
-
-- L'applicazione ASP.NET Core serve i file statici generati in `dist`.
-- In `Staging` e `Production` il backend C# richiede una sessione admin valida per i canali di salvataggio.
-- Dopo la connessione al database il server parte subito e sincronizza piloti e calendario in background, evitando di bloccare lo startup su sorgenti lente.
-
-## Qualita' tecnica
-
-### Comandi disponibili
-
 - `npm run lint`
-- `npm run test:csharp-coverage`
+- `npm run test`
+- `npm run build`
 - `npm run test:save-local`
 - `npm run test:ui-responsive`
-- `npm run build`
-- `npm run preview`
+- `npm run test:csharp-coverage`
+- `npm run format:csharp`
+- `npm run format:csharp:check`
 
-### Lint
+### Guardrail sui database locali
 
-- ESLint configurato per frontend TypeScript/React e suite test.
-- Ignore principali: `dist`, `coverage`, `.playwright-cli`.
+I runner locali mutanti non devono mai toccare `fantaf1` o `fantaf1_staging`.
 
-### Test
+Target supportati:
 
-- Runner: Vitest.
-- Coverage provider: v8.
-- Baseline coverage verificata corrente sullo scope ufficiale del repository/applicazione:
-  - `5176 / 5176` statements
-  - `408 / 408` functions
-  - `2096 / 2096` branches
-  - `5176 / 5176` lines
-- Coverage ufficiale verificata corrente del backend C# sullo scope `backend-csharp/src/`:
-  - `2927 / 2927` lines
-  - `1647 / 1647` branches
-  - `487 / 487` methods
-  - `70` file inclusi nel riepilogo ufficiale
-- Scope coverage configurato:
-  - `backend-csharp/src/**/*.cs`
-  - `src/**/*.ts`
-  - `src/**/*.tsx`
-- Esclusioni coverage:
-  - `src/types.ts`
-  - `src/vite-env.d.ts`
-- Soglie attuali:
-  - `lines: 100`
-  - `functions: 100`
-  - `branches: 100`
-  - `statements: 100`
+- `csharp-dev` -> `fantaf1_local_dev`
+- `csharp-staging-local` -> `fantaf1_local_staging`
 
-La suite copre business logic, storage MongoDB, formattazione UI e regressioni sui flussi principali tramite `xUnit`/`NUnit` (C#) e Vitest/React Testing Library (Frontend).
-Include anche test unitari dedicati allo split deterministico del titolo hero e ai fallback responsive del titolo configurato.
-Include test dedicati alla live projection del weekend selezionato, agli stati UI `nessun risultato ufficiale` / `risultati parziali`, al parser risultati Formula1.com corrente e alla cache TTL di `GET /api/results/:meetingKey`.
-Per la UI e' disponibile anche `npm run test:ui-responsive`, che usa Playwright CLI via `npx` contro l'app locale avviata e verifica i breakpoint principali, il box "Prossimo weekend", il tooltip risultati, l'assenza di overflow orizzontali fuori dal carosello calendario e la coerenza tra vista admin e vista pubblica.
-Il controllo responsive verifica anche la presenza del menu corretto per breakpoint: nav desktop persistente nelle viewport larghe, trigger `Sezioni` e drawer laterale sinistro su mobile, coerenza delle voci admin/public e assenza di regressioni sulla CTA `INSTALLA APPLICAZIONE`, che deve restare visibile in viewport.
-Il comando esegue un preflight fail-fast sull'ambiente Playwright: se trova sessioni responsive residue (`ui-*`) o una CLI non reattiva, interrompe il run senza killare processi non creati da lui e riporta le istruzioni di bonifica manuale.
-Su errori di navigazione o shell UI bloccata raccoglie artefatti diagnostici in `output/playwright/ui-responsive/` (summary, stato pagina, tab-list, screenshot se disponibile, console e network log) per distinguere facilmente tra regressione UI, splash bloccata e sessione Playwright incoerente.
-Per il salvataggio locale e' disponibile `npm run test:save-local`, che per default usa `csharp-dev`, legge `/api/data`, re-invia lo stesso payload su `POST /api/data`, verifica environment/database target attesi e controlla che lo stato resti invariato dopo il round-trip. Lo stesso smoke puo' essere rieseguito in modo esplicito su `csharp-staging-local` con `SAVE_SMOKE_TARGET=...`, includendo login admin e riuso del cookie nel target production-like locale. Questo smoke test copre il canale di persistenza generica, non il salvataggio manuale dei pronostici su `POST /api/predictions`.
-Lo smoke di persistenza puo' essere eseguito sul database isolato di pipeline impostando `MONGODB_DB_NAME_OVERRIDE`, `SAVE_SMOKE_EXPECTED_ENVIRONMENT` e `SAVE_SMOKE_EXPECTED_DATABASE_TARGET` senza toccare `fantaf1_dev`, `fantaf1` o il dataset staging reale.
-Per il backend C# e' disponibile `npm run test:csharp-coverage`, comando ufficiale che esegue la raccolta coverlet sui test unit/integration/contract, filtra `obj/` e generated code, limita lo scope a `backend-csharp/src/` e scrive il riepilogo verificabile in `backend-csharp/TestResults/OfficialCoverage/Summary.txt` e `backend-csharp/TestResults/OfficialCoverage/summary.json`.
-L'ultimo riepilogo ufficiale verificato per il backend C# chiude a `100%` su linee, branch e metodi per tutti i `70` file inclusi nello scope `backend-csharp/src/`.
-Per una verifica browser production-like coerente con il guardrail sul database, il repository supporta anche l'avvio con `ASPNETCORE_ENVIRONMENT=Production MONGODB_DB_NAME_OVERRIDE=fantaf1_dev dotnet run --project backend-csharp/src/FantaF1.Api/FantaF1.Api.csproj`, mantenendo runtime `production` ma puntando in modo esplicito al database locale di sviluppo per smoke desktop/mobile della build servita dal backend C#.
+Se `MONGODB_URI` contiene un database condiviso, i runner locali:
 
-## CI/CD GitHub
+- lo riscrivono sul database isolato previsto quando il target e' consentito
+- falliscono esplicitamente se qualcuno tenta di usarli verso `fantaf1` o `fantaf1_staging`
 
-### Obiettivo
+## Docker
 
-- `main` e' il branch protetto di rilascio.
-- Ogni integrazione verso `main` deve passare da Pull Request.
-- L'auto-merge GitHub puo' chiudere la Pull Request solo quando tutti i check richiesti sono verdi.
-- Il deploy Render resta post-merge su `main`, quindi non parte da workflow di PR.
+Il deploy Docker usa il [Dockerfile](/Users/matteobernardini/code/FantaF1/Dockerfile) nella root del repository.
 
-### Workflow previsti
+Caratteristiche:
 
-- `.github/workflows/pr-ci.yml`: esegue `lint`, `build`, `format-csharp`, `build-csharp`, `test-csharp`, `responsive-dev` e `smoke-ci-db` sulle Pull Request verso `main`.
-- `.github/workflows/pr-auto-merge.yml`: arma l'auto-merge `squash` per PR non draft verso `main` provenienti dallo stesso repository, senza bypassare la protezione del branch.
-- `.github/workflows/post-merge-health.yml`: esegue un controllo health opzionale dopo i push su `main`.
+- build multi-stage frontend + backend
+- publish .NET 10
+- static serving same-origin del frontend buildato
+- runtime finale `aspnet`
+- binding su `3001`
 
-### Secret e variabili GitHub richiesti
+Validazioni richieste per il Dockerfile:
 
-- `MONGODB_URI_CI`: URI MongoDB dedicata alla pipeline CI.
-- `ADMIN_SESSION_SECRET_CI`: secret admin dedicato alla pipeline CI.
-- `RENDER_HEALTHCHECK_URL`: URL health pubblico del deploy Render, usato solo dal workflow post-merge opzionale.
+- `docker build -t fantaf1-local-check .`
+- avvio locale del container con env coerenti
+- `GET /api/health`
+- verifica del serving same-origin
 
-### Protezione richiesta per `main`
+## Deploy Render
 
-- push diretti bloccati;
-- merge consentito solo via Pull Request;
-- required status checks allineati ai job `lint`, `build`, `format-csharp`, `build-csharp`, `test-csharp`, `responsive-dev`, `smoke-ci-db`;
-- branch up-to-date richiesta prima del merge;
-- conversation resolution richiesta;
-- auto-merge attivo;
-- force-push e deletion disattivati.
+Configurazione servizio:
 
-## Struttura del repository
+- Docker context: root repository
+- Dockerfile path: `./Dockerfile`
+- build toolchain frontend installata via `npm install`
 
-- `src/`: frontend React, costanti, tipi e utility UI.
-- `backend-csharp/`: backend ASP.NET Core in C# (API, Application, Domain, Infrastructure).
-- `docs/`: documentazione del progetto, incluso il porting C#.
-- `config/`: configurazione applicativa centralizzata.
-- `scripts/`: launcher locale e script di automazione.
-- `tests/`: test frontend e controlli responsive.
-- `public/`: font e asset statici serviti dal frontend.
+Lo staging corrente usa `fantaf1_staging`; la produzione usa `fantaf1`.
 
-## Changelog
+## CI/CD
 
-La cronologia delle release e delle implementazioni documentate e' disponibile in [CHANGELOG.md](CHANGELOG.md).
+Workflow principali:
+
+- [pr-ci.yml](/Users/matteobernardini/code/FantaF1/.github/workflows/pr-ci.yml)
+- [pr-auto-merge.yml](/Users/matteobernardini/code/FantaF1/.github/workflows/pr-auto-merge.yml)
+- [post-merge-health.yml](/Users/matteobernardini/code/FantaF1/.github/workflows/post-merge-health.yml)
+
+Job richiesti su PR verso `main`:
+
+- `lint`
+- `build`
+- `format-csharp`
+- `build-csharp`
+- `test-csharp`
+- `responsive-dev`
+- `smoke-ci-db`
+
+I workflow aggiuntivi `gemini-*` restano validi come automazioni repository-side e devono continuare a parsare correttamente come YAML.
+
+## Coverage e qualita'
+
+Baseline verificata corrente sullo scope ufficiale frontend/repository:
+
+- `5176 / 5176` statements
+- `408 / 408` functions
+- `2096 / 2096` branches
+- `5176 / 5176` lines
+
+Baseline verificata corrente su `backend-csharp/src/`:
+
+- `2927 / 2927` lines
+- `1647 / 1647` branches
+- `487 / 487` methods
+- `70` file inclusi
+
+Le soglie repository restano a `100%` su statements, branches, functions e lines.
+
+## Struttura repository
+
+- `src/`: frontend React
+- `backend-csharp/`: backend ASP.NET Core
+- `config/`: configurazione applicativa
+- `scripts/`: launcher, smoke, automation e utility runtime
+- `tests/`: test frontend e tooling
+- `public/`: asset statici frontend
+- `.github/workflows/`: CI/CD e automazioni GitHub
+
+## Documenti canonici
+
+- [README.md](/Users/matteobernardini/code/FantaF1/README.md): stato operativo reale, runtime, env, deploy, CI/CD
+- [CHANGELOG.md](/Users/matteobernardini/code/FantaF1/CHANGELOG.md): cronologia release e audit
+- [PROJECT.md](/Users/matteobernardini/code/FantaF1/PROJECT.md): vincoli di business e invarianti di dominio
+- [AGENTS.md](/Users/matteobernardini/code/FantaF1/AGENTS.md): disciplina ingegneristica obbligatoria

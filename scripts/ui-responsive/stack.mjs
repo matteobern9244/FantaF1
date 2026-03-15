@@ -1,7 +1,7 @@
 import { spawn } from 'child_process';
 import { backendHealthUrl, baseUrl, pollIntervalMs, projectRoot, runtimeTarget, startupTimeoutMs } from './config.mjs';
 import { fail, loadRuntimeEnv } from './diagnostics.mjs';
-import { rewriteMongoDatabaseName } from '../local-runtime-targets.mjs';
+import { assertSafeLocalMongoUri, rewriteMongoDatabaseName } from '../local-runtime-targets.mjs';
 
 function sleep(durationMs) {
   return new Promise((resolve) => {
@@ -165,6 +165,7 @@ async function ensureLocalAppStack({
       targetConfig.startupEnv.MONGODB_DB_NAME_OVERRIDE,
     );
   }
+  assertSafeLocalMongoUri(resolvedEnv.MONGODB_URI, 'Il browser gate responsive locale');
 
   if (frontendReachable && backendReachable) {
     await waitForApiReadiness(appProbeUrls, {

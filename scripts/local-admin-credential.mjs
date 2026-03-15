@@ -2,7 +2,11 @@ import fs from 'fs';
 import path from 'path';
 import mongoose from 'mongoose';
 import { fileURLToPath } from 'url';
-import { rewriteMongoDatabaseName } from './local-runtime-targets.mjs';
+import {
+  assertSafeLocalDatabaseTarget,
+  assertSafeLocalMongoUri,
+  rewriteMongoDatabaseName,
+} from './local-runtime-targets.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -52,7 +56,10 @@ function resolveLocalMongoUri({
     throw new Error('MONGODB_URI environment variable is not defined');
   }
 
-  return rewriteMongoDatabaseName(mergedEnv.MONGODB_URI, databaseTarget);
+  assertSafeLocalDatabaseTarget(databaseTarget, 'Il bootstrap locale delle credenziali admin');
+  const rewrittenUri = rewriteMongoDatabaseName(mergedEnv.MONGODB_URI, databaseTarget);
+  assertSafeLocalMongoUri(rewrittenUri, 'Il bootstrap locale delle credenziali admin');
+  return rewrittenUri;
 }
 
 async function ensureLocalAdminCredential({

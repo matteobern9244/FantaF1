@@ -18,7 +18,8 @@ All three files are mandatory and complementary.
 - The application always manages exactly 3 participants and keeps live projections plus historical standings.
 - The repository contains production-facing business logic and persistent data constraints that must remain safe.
 - `PROJECT.md` remains the source of truth for business rules, critical flows, and domain invariants.
-- `docs/backend-csharp-porting-plan.md` is the canonical migration plan for the backend C# port.
+- `README.md` is the canonical operational document for runtime, deploy, environment matrix, local startup, and CI/CD.
+- `CHANGELOG.md` is the canonical release and audit history.
 
 ### Main Technologies
 
@@ -33,7 +34,6 @@ All three files are mandatory and complementary.
 - `src/`: SPA frontend, UI shell, feature panels, and shared frontend utilities in `src/utils`.
 - `backend-csharp/`: Official REST API (ASP.NET Core 10), Domain logic, Persistence (MongoDB), and Infrastructure.
 - `tests/`: unit, integration, and UI regression coverage across frontend and supporting scripts.
-- `docs/backend-csharp-porting-plan.md`: canonical backend migration plan, environment matrix, staging strategy, and cutover guardrails.
 
 ### Building and Running
 
@@ -75,11 +75,11 @@ Optional helper commands already supported by the repository:
 
 - `AGENTS.md`
 - `PROJECT.md`
-- `docs/backend-csharp-porting-plan.md`
 - `GEMINI.md`
 - `CLAUDE.md`
 - `package.json`
 - `README.md`
+- `CHANGELOG.md`
 
 ---
 
@@ -127,7 +127,7 @@ Do not jump directly into editing without understanding the current implementati
 - **Source Of Truth:** For every task, explicitly identify and follow the currently authoritative runtime path and document set. C# is authoritative.
 - Read the affected legacy and target implementations before proposing structural changes.
 - If business logic, expected behavior, or data flow is unclear, stop and ask for clarification.
-- If the repository contains current migration docs, treat them as part of the specification.
+- If the repository contains current migration notes or temporary cutover material, treat them only as supplemental context after checking `README.md`, `PROJECT.md`, and the actual runtime implementation.
 - If the repository already defines the behavior, follow the repository files instead of guessing.
 
 ---

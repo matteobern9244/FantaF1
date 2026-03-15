@@ -5,60 +5,46 @@ namespace FantaF1.Tests.Unit;
 public sealed class PortingDocumentationConsistencyTests
 {
     [Fact]
-    public void Canonical_porting_docs_do_not_reference_the_removed_guide_plan_path()
+    public void Legacy_porting_document_directories_are_removed_from_the_repository()
     {
-        var canonicalPlan = ReadRepositoryFile("docs", "backend-csharp-porting-plan.md");
-        var subphaseOnePlan = ReadRepositoryFile(
-            "docs",
-            "backend-csharp-porting-subphases",
-            "subphase-01-foundation-and-safety-rails.md");
-
-        Assert.DoesNotContain("guide-porting-c#/backend-csharp-porting-plan.md", canonicalPlan, StringComparison.Ordinal);
-        Assert.DoesNotContain("guide-porting-c#/backend-csharp-porting-plan.md", subphaseOnePlan, StringComparison.Ordinal);
+        Assert.False(Directory.Exists(GetRepositoryPath("docs")));
+        Assert.False(Directory.Exists(GetRepositoryPath("guide-porting-c#")));
     }
 
     [Fact]
-    public void Canonical_docs_align_the_current_branch_with_the_csharp_runtime_and_keep_main_cutover_pending()
-    {
-        var canonicalPlan = ReadRepositoryFile("docs", "backend-csharp-porting-plan.md");
-        var subphaseElevenPlan = ReadRepositoryFile(
-            "docs",
-            "backend-csharp-porting-subphases",
-            "subphase-11-future-cicd-cutover-certification-and-legacy-removal.md");
-
-        Assert.Contains("| `Subphase 10` | `completed` |", canonicalPlan, StringComparison.Ordinal);
-        Assert.Contains("| `Subphase 11` | `pending` |", canonicalPlan, StringComparison.Ordinal);
-        Assert.Contains(
-            "the authoritative runtime path for the migrated branch is the ASP.NET Core backend under `backend-csharp/`",
-            canonicalPlan,
-            StringComparison.Ordinal);
-        Assert.Contains(
-            "`main` resta invece il branch legacy protetto fino a certificazione utente e autorizzazione esplicita al cutover",
-            subphaseElevenPlan,
-            StringComparison.Ordinal);
-    }
-
-    [Fact]
-    public void Render_docs_reference_the_root_dockerfile_and_current_staging_environment_variables()
+    public void Canonical_docs_do_not_reference_removed_porting_paths()
     {
         var readme = ReadRepositoryFile("README.md");
-        var renderGuide = ReadRepositoryFile("docs", "render-migration-guide.md");
-        var subphaseTenPlan = ReadRepositoryFile(
-            "docs",
-            "backend-csharp-porting-subphases",
-            "subphase-10-docker-render-staging-and-atlas-operationalization.md");
+        var project = ReadRepositoryFile("PROJECT.md");
+        var agents = ReadRepositoryFile("AGENTS.md");
 
-        Assert.Contains("Dockerfile path: `./Dockerfile`", readme, StringComparison.Ordinal);
-        Assert.Contains("`./Dockerfile`", renderGuide, StringComparison.Ordinal);
-        Assert.Contains("`Frontend__BuildPath=./dist`", renderGuide, StringComparison.Ordinal);
-        Assert.Contains("`PORT=3001`", renderGuide, StringComparison.Ordinal);
-        Assert.Contains("`Dockerfile` root", subphaseTenPlan, StringComparison.Ordinal);
-        Assert.DoesNotContain("backend-csharp/Dockerfile", renderGuide, StringComparison.Ordinal);
-        Assert.DoesNotContain("backend-csharp/Dockerfile", subphaseTenPlan, StringComparison.Ordinal);
+        Assert.DoesNotContain("docs/backend-csharp-porting-plan.md", readme, StringComparison.Ordinal);
+        Assert.DoesNotContain("docs/backend-csharp-porting-plan.md", agents, StringComparison.Ordinal);
+        Assert.DoesNotContain("guide-porting-c#", readme, StringComparison.Ordinal);
+        Assert.DoesNotContain("guide-porting-c#", agents, StringComparison.Ordinal);
+        Assert.DoesNotContain("docs/render-migration-guide.md", readme, StringComparison.Ordinal);
+        Assert.DoesNotContain("docs/backend-csharp-porting-subphases", readme, StringComparison.Ordinal);
+        Assert.DoesNotContain("docs/backend-csharp-porting-subphases", project, StringComparison.Ordinal);
     }
 
     [Fact]
-    public void Project_and_readme_align_with_current_persistence_and_participant_runtime_rules()
+    public void Canonical_docs_align_the_current_branch_with_the_csharp_runtime_and_cutover_guardrails()
+    {
+        var readme = ReadRepositoryFile("README.md");
+        var agents = ReadRepositoryFile("AGENTS.md");
+
+        Assert.Contains("Il backend autorevole del repository e' C#", readme, StringComparison.Ordinal);
+        Assert.Contains("`main` resta il target di rilascio protetto", readme, StringComparison.Ordinal);
+        Assert.Contains("`README.md` is the canonical operational document", agents, StringComparison.Ordinal);
+        Assert.Contains("`CHANGELOG.md` is the canonical release and audit history.", agents, StringComparison.Ordinal);
+        Assert.Contains(
+            "If `main` intentionally still points to a legacy or cutover-pending structure, stop immediately and report that `deploya` is not currently activatable.",
+            agents,
+            StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Project_and_readme_align_with_current_persistence_runtime_and_local_database_rules()
     {
         var project = ReadRepositoryFile("PROJECT.md");
         var readme = ReadRepositoryFile("README.md");
@@ -66,125 +52,52 @@ public sealed class PortingDocumentationConsistencyTests
         Assert.Contains("`appdatas`", project, StringComparison.Ordinal);
         Assert.Contains("`standingscaches`", project, StringComparison.Ordinal);
         Assert.Contains("`admincredentials`", project, StringComparison.Ordinal);
-        Assert.DoesNotContain("There are always exactly 3 players: Adriano, Fabio, Matteo.", project, StringComparison.Ordinal);
         Assert.Contains("There are always exactly 3 participant slots.", project, StringComparison.Ordinal);
         Assert.Contains("Participant names are runtime data persisted in the application state;", project, StringComparison.Ordinal);
-        Assert.Contains("- standings must synchronize from the external source", project, StringComparison.Ordinal);
         Assert.Contains("stato globale del gioco (`appdatas`)", readme, StringComparison.Ordinal);
-        Assert.Contains("cache classifiche piloti/costruttori (`standingscaches`)", readme, StringComparison.Ordinal);
-        Assert.Contains("credenziali admin hashate e metadata di autenticazione (`admincredentials`)", readme, StringComparison.Ordinal);
-        Assert.Contains("Se il sync fallisce ma la cache esiste gia', il backend continua a servire l'ultimo snapshot valido disponibile.", readme, StringComparison.Ordinal);
+        Assert.Contains("cache standings piloti/costruttori (`standingscaches`)", readme, StringComparison.Ordinal);
+        Assert.Contains("credenziali admin hashate e metadata auth (`admincredentials`)", readme, StringComparison.Ordinal);
+        Assert.Contains("fantaf1_local_dev", readme, StringComparison.Ordinal);
+        Assert.Contains("fantaf1_local_staging", readme, StringComparison.Ordinal);
+        Assert.Contains("I runner locali mutanti non devono mai toccare `fantaf1` o `fantaf1_staging`.", readme, StringComparison.Ordinal);
+        Assert.Contains("local mutating runners must never target shared databases", project, StringComparison.Ordinal);
     }
 
     [Fact]
-    public void Readme_and_agents_align_on_current_ci_jobs_and_deploya_cutover_guard()
+    public void Readme_documents_the_required_render_and_ci_environment_variables()
+    {
+        var readme = ReadRepositoryFile("README.md");
+        var envExample = ReadRepositoryFile(".env.example");
+
+        Assert.Contains("`MONGODB_URI=<uri che punta a fantaf1_staging>`", readme, StringComparison.Ordinal);
+        Assert.Contains("`ADMIN_SESSION_SECRET=<secret lungo e casuale>`", readme, StringComparison.Ordinal);
+        Assert.Contains("`ASPNETCORE_ENVIRONMENT=Staging`", readme, StringComparison.Ordinal);
+        Assert.Contains("`ASPNETCORE_ENVIRONMENT=Production`", readme, StringComparison.Ordinal);
+        Assert.Contains("`Frontend__BuildPath=./dist`", readme, StringComparison.Ordinal);
+        Assert.Contains("`PORT=3001`", readme, StringComparison.Ordinal);
+        Assert.Contains("`MONGODB_URI_CI`", readme, StringComparison.Ordinal);
+        Assert.Contains("`ADMIN_SESSION_SECRET_CI`", readme, StringComparison.Ordinal);
+        Assert.Contains("ASPNETCORE_ENVIRONMENT=Development", envExample, StringComparison.Ordinal);
+        Assert.Contains("MONGODB_DB_NAME_OVERRIDE=", envExample, StringComparison.Ordinal);
+        Assert.DoesNotContain("NODE_ENV=", envExample, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Readme_and_agents_align_on_current_ci_jobs_and_dotnet_format_gate()
     {
         var readme = ReadRepositoryFile("README.md");
         var agents = ReadRepositoryFile("AGENTS.md");
+        var packageJson = ReadRepositoryFile("package.json");
 
         Assert.Contains(
-            "`lint`, `build`, `format-csharp`, `build-csharp`, `test-csharp`, `responsive-dev` e `smoke-ci-db`",
-            readme,
-            StringComparison.Ordinal);
-        Assert.Contains(
-            "If `main` intentionally still points to a legacy or cutover-pending structure, stop immediately and report that `deploya` is not currently activatable.",
-            agents,
-            StringComparison.Ordinal);
-        Assert.Contains(
-            "If there are staged files and `main` is the correct release target, proceed with the workflow.",
-            agents,
-            StringComparison.Ordinal);
-    }
-
-    [Fact]
-    public void Canonical_porting_docs_use_the_official_csharp_coverage_command()
-    {
-        var canonicalPlan = ReadRepositoryFile("docs", "backend-csharp-porting-plan.md");
-        var portingDocs = Directory.GetFiles(
-            GetRepositoryPath("docs", "backend-csharp-porting-subphases"),
-            "*.md",
-            SearchOption.TopDirectoryOnly)
-            .Select(path => File.ReadAllText(path, Encoding.UTF8))
-            .Append(canonicalPlan)
-            .ToArray();
-
-        Assert.All(portingDocs, content =>
-            Assert.DoesNotContain(
-                "dotnet test backend-csharp/FantaF1.Backend.sln -c Release /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura",
-                content,
-                StringComparison.Ordinal));
-        Assert.Contains("`npm run test:csharp-coverage`", canonicalPlan, StringComparison.Ordinal);
-    }
-
-    [Fact]
-    public void Subphase_eleven_doc_makes_legacy_removal_inventory_and_verified_runtime_rules_explicit()
-    {
-        var subphaseElevenPlan = ReadRepositoryFile(
-            "docs",
-            "backend-csharp-porting-subphases",
-            "subphase-11-future-cicd-cutover-certification-and-legacy-removal.md");
-
-        Assert.Contains("## Inventario esplicito dei path legacy", subphaseElevenPlan, StringComparison.Ordinal);
-        Assert.Contains("- Da rimuovere:", subphaseElevenPlan, StringComparison.Ordinal);
-        Assert.Contains("- Da migrare o aggiornare:", subphaseElevenPlan, StringComparison.Ordinal);
-        Assert.Contains("- Da conservare:", subphaseElevenPlan, StringComparison.Ordinal);
-        Assert.Contains("`backend/`", subphaseElevenPlan, StringComparison.Ordinal);
-        Assert.Contains("`app.js`", subphaseElevenPlan, StringComparison.Ordinal);
-        Assert.Contains("`server.js`", subphaseElevenPlan, StringComparison.Ordinal);
-        Assert.Contains("remove only after C# becomes the verified runtime", subphaseElevenPlan, StringComparison.Ordinal);
-        Assert.Contains("diff minimale e senza bridge permanenti", subphaseElevenPlan, StringComparison.Ordinal);
-    }
-
-    [Fact]
-    public void Agents_doc_explicitly_records_the_required_migration_template_principles()
-    {
-        var agents = ReadRepositoryFile("AGENTS.md");
-        var requiredPhrases = new[]
-        {
-            "**Behavior Preservation First:**",
-            "**Incremental Migration:**",
-            "**Strangler Mindset:**",
-            "**Business Logic Isolation:**",
-            "**SOLID Principles:**",
-            "**Dependency Injection by Default:**",
-            "**No Hidden Collaborator Graphs:**",
-            "**Compatibility Layers Must Be Intentional:**",
-            "**Avoid Legacy Leakage:**",
-            "**Delete Dead Paths Promptly:**",
-            "**Static Logic Policy:**",
-            "**Cross-Platform Discipline:**",
-            "**Source Of Truth:**",
-            "**Data Safety:**",
-            "**Contract Preservation:**",
-            "**Feature Flags For Cutover:**",
-            "**Legacy Decommission Rule:**",
-            "**Observability During Migration:**",
-            "**No Silent Fallbacks:**",
-            "**TDD By Default:**",
-            "**Deterministic Tests Only:**",
-            "**Parity Tests:**",
-            "**Contract Tests:**",
-            "**Mock Narrowly:**",
-            "**Migration Regression Coverage:**",
-            "**Time And Clock Access:**",
-            "**Test Data Management:**",
-            "**Separation Of Concerns:**",
-            "**Abstraction Naming:**",
-            "**Configuration Discipline:**",
-            "**Credential Secrecy:**",
-            "**Localization:**",
-            "**Error Handling:**",
-            "**Documentation:**",
-            "Read the affected legacy and target implementations before proposing structural changes.",
-            "Do not collapse migration, refactor, and feature work into one edit unless explicitly requested.",
-            "Prefer edits that improve the seam between old and new systems.",
-            "If a task risks breaking parity, state the risk explicitly and verify with targeted tests before finishing.",
-            "If the repository contains current migration docs, treat them as part of the specification.",
-            "Passwords and equivalent credentials must never appear in clear text in versioned files, including production code, tests, fixtures, documentation, and examples.",
-        };
-
-        Assert.All(requiredPhrases, requiredPhrase =>
-            Assert.Contains(requiredPhrase, agents, StringComparison.Ordinal));
+            "`lint`", readme, StringComparison.Ordinal);
+        Assert.Contains("`format-csharp`", readme, StringComparison.Ordinal);
+        Assert.Contains("`build-csharp`", readme, StringComparison.Ordinal);
+        Assert.Contains("`test-csharp`", readme, StringComparison.Ordinal);
+        Assert.Contains("`responsive-dev`", readme, StringComparison.Ordinal);
+        Assert.Contains("`smoke-ci-db`", readme, StringComparison.Ordinal);
+        Assert.Contains("GitHub Actions workflows under `.github/workflows/` must stay aligned", agents, StringComparison.Ordinal);
+        Assert.Contains("dotnet format backend-csharp/FantaF1.Backend.sln --verify-no-changes", packageJson, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -203,14 +116,22 @@ public sealed class PortingDocumentationConsistencyTests
             StringComparison.Ordinal);
         Assert.Contains("`2927 / 2927` lines", readme, StringComparison.Ordinal);
         Assert.Contains("`1647 / 1647` branches", readme, StringComparison.Ordinal);
+        Assert.Contains("`487 / 487` methods", readme, StringComparison.Ordinal);
         Assert.Contains("**100% line coverage (2927 / 2927)**", agents, StringComparison.Ordinal);
         Assert.Contains("**100% branch coverage (1647 / 1647)**", agents, StringComparison.Ordinal);
+        Assert.Contains("**100% method coverage (487 / 487)**", agents, StringComparison.Ordinal);
     }
 
     [Fact]
-    public void Referenced_migration_template_still_exists_in_the_repository()
+    public void Changelog_records_the_latest_documentation_cleanup_and_database_audit()
     {
-        Assert.True(File.Exists(GetRepositoryPath("guide-porting-c#", "AGENTS_migration_template.md")));
+        var changelog = ReadRepositoryFile("CHANGELOG.md");
+
+        Assert.Contains("## [1.5.0] - 2026-03-15", changelog, StringComparison.Ordinal);
+        Assert.Contains("Documentazione Canonica Consolidata", changelog, StringComparison.Ordinal);
+        Assert.Contains("Audit Finale Database Pre-Cutover", changelog, StringComparison.Ordinal);
+        Assert.Contains("Workflow CI/CD Riverificati Localmente", changelog, StringComparison.Ordinal);
+        Assert.Contains("Dotnet Format Formalizzato Come Gate Reale", changelog, StringComparison.Ordinal);
     }
 
     private static string ReadRepositoryFile(params string[] segments)

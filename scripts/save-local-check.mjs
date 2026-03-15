@@ -8,7 +8,11 @@ import path from 'path';
 import { spawn } from 'child_process';
 import { fileURLToPath, pathToFileURL } from 'url';
 import { ensureLocalAdminCredential } from './local-admin-credential.mjs';
-import { resolveSaveSmokeTarget, rewriteMongoDatabaseName } from './local-runtime-targets.mjs';
+import {
+  assertSafeLocalMongoUri,
+  resolveSaveSmokeTarget,
+  rewriteMongoDatabaseName,
+} from './local-runtime-targets.mjs';
 
 const defaultTarget = resolveSaveSmokeTarget();
 const DATA_PATH = '/api/data';
@@ -210,6 +214,7 @@ async function ensureLocalBackend({
   ) {
     env.MONGODB_URI = rewriteMongoDatabaseName(env.MONGODB_URI, startupEnv.MONGODB_DB_NAME_OVERRIDE);
   }
+  assertSafeLocalMongoUri(env.MONGODB_URI, 'Lo smoke save locale');
   const child = spawn(backendCommand, backendArgs, {
     cwd: projectRoot,
     env,

@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import { ensureLocalAdminCredential, resolveLocalMongoUri } from '../scripts/local-admin-credential.mjs';
-import { resolveSaveSmokeTarget } from '../scripts/local-runtime-targets.mjs';
+import { DEFAULT_LOCAL_DATABASES, resolveSaveSmokeTarget } from '../scripts/local-runtime-targets.mjs';
 
 describe('local admin credential helper', () => {
   it('resolves the local mongo uri against the requested database target', () => {
@@ -11,11 +11,11 @@ describe('local admin credential helper', () => {
       fsImpl: {
         existsSync: () => false,
       },
-      databaseTarget: 'fantaf1_staging',
+      databaseTarget: DEFAULT_LOCAL_DATABASES.csharpStaging,
     });
 
     expect(mongoUri).toBe(
-      'mongodb+srv://user:pass@cluster.mongodb.net/fantaf1_staging?retryWrites=true&w=majority',
+      'mongodb+srv://user:pass@cluster.mongodb.net/fantaf1_local_staging?retryWrites=true&w=majority',
     );
   });
 
@@ -48,7 +48,7 @@ describe('local admin credential helper', () => {
 
     expect(changed).toBe(true);
     expect(createConnectionImpl).toHaveBeenCalledWith(
-      'mongodb+srv://user:pass@cluster.mongodb.net/fantaf1_staging?retryWrites=true&w=majority',
+      'mongodb+srv://user:pass@cluster.mongodb.net/fantaf1_local_staging?retryWrites=true&w=majority',
     );
     expect(updateOne).toHaveBeenCalledWith(
       { role: 'admin' },
@@ -74,5 +74,19 @@ describe('local admin credential helper', () => {
     });
 
     expect(changed).toBe(false);
+  });
+
+  it('rejects shared staging for local admin bootstrap', () => {
+    expect(() => resolveLocalMongoUri({
+      env: {
+        MONGODB_URI: 'mongodb+srv://user:pass@cluster.mongodb.net/fantaf1_staging?retryWrites=true&w=majority',
+      },
+      fsImpl: {
+        existsSync: () => false,
+      },
+      databaseTarget: 'fantaf1_staging',
+    })).toThrow(
+      'Il bootstrap locale delle credenziali admin non puo\' puntare al database condiviso "fantaf1_staging". Usa un database locale isolato.',
+    );
   });
 });
