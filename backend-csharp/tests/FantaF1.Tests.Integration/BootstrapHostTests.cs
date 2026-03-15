@@ -40,9 +40,10 @@ public sealed class BootstrapHostTests : IClassFixture<WebApplicationFactory<Pro
     [Fact]
     public async Task Root_endpoint_serves_the_frontend_index_when_the_build_is_available()
     {
+        using var frontendBuild = TemporaryFrontendBuild.Create();
         await using var factory = CreateFactory(new Dictionary<string, string?>
         {
-            ["Frontend:BuildPath"] = GetRepositoryPath("dist"),
+            ["Frontend:BuildPath"] = frontendBuild.DirectoryPath,
         });
         using var client = factory.CreateClient();
 
@@ -140,6 +141,38 @@ public sealed class BootstrapHostTests : IClassFixture<WebApplicationFactory<Pro
         public IApplicationBuilder CreateApplicationBuilder()
         {
             return new ApplicationBuilder(ServiceProvider);
+        }
+    }
+
+    private sealed class TemporaryFrontendBuild : IDisposable
+    {
+        private TemporaryFrontendBuild(string directoryPath)
+        {
+            DirectoryPath = directoryPath;
+        }
+
+        public string DirectoryPath { get; }
+
+        public static TemporaryFrontendBuild Create()
+        {
+            var directoryPath = Path.Combine(
+                Path.GetTempPath(),
+                "fantaf1-bootstrap-host-tests",
+                Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(directoryPath);
+            File.WriteAllText(
+                Path.Combine(directoryPath, "index.html"),
+                "<!doctype html><html><body><div id=\"root\"></div></body></html>",
+                System.Text.Encoding.UTF8);
+            return new TemporaryFrontendBuild(directoryPath);
+        }
+
+        public void Dispose()
+        {
+            if (Directory.Exists(DirectoryPath))
+            {
+                Directory.Delete(DirectoryPath, recursive: true);
+            }
         }
     }
 
