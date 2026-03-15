@@ -2,7 +2,13 @@
 
 Cronologia sintetica delle release documentate del progetto Fanta Formula 1.
 
-## Unreleased
+## [1.4.6] - 2026-03-15
+- **Fix Docker Build Error**: rimosso il comando `COPY backend/` obsoleto dal `Dockerfile` di `backend-csharp`, risolvendo il fallimento del build su Render ambiente staging dopo la rimozione del backend Node.js.
+- **Ripristino Tooling MongoDB Locale**: riaggiunto `mongoose` alle `devDependencies` per ripristinare il funzionamento degli script di setup e provisioning locale (`atlas-provisioning.mjs`, `local-admin-credential.mjs`) e dei relativi test unitari.
+- **Rimozione Script Legacy Obsoleti**: eliminato `scripts/remove-weekend-boost.mjs` e il relativo comando `npm run migrate:remove-weekend-boost`, in quanto dipendevano da path e modelli del backend Node.js rimosso.
+- **Certificazione Baseline C#**: verificata la completa integrità del backend C# con 100% di copertura (linee, branch, metodi) e avvio positivo del servizio locale.
+
+## [1.4.5] - 2026-03-14
 
 - **Certificazione Copertura Test 100% (Frontend, Node, C#)**: raggiunto il traguardo della copertura totale (statements, branches, functions, lines) su tutti gli stack tecnologici del repository; rifattorizzato il caricamento di `dotenv` tramite `backend/config-loader.js` per garantire l'isolamento dell'ambiente di test senza inquinamento delle variabili locali; aggiornata la baseline ufficiale a **5176 lines** (Node/Frontend) e **2928 lines** (C#).
 - **Analisi e Pulizia Database MongoDB Atlas**: completata una revisione strutturale dei database presenti sul cluster Atlas; identificati ed eliminati i database obsoleti (`mongodbVSCodePlaygroundDB`, `fantaf1_porting_audit_subphase15`) per ottimizzare le risorse, mantenendo l'integrità di produzione, staging, sviluppo locale e CI/CD.

@@ -6,7 +6,7 @@ L'applicazione e' pensata per un flusso amministrato: un admin seleziona il week
 
 ## Stato release e confronto con la produzione
 
-La versione attualmente in produzione e pubblicata e' `v1.4.4`. Il repository e' aggiornato alla versione `v1.4.5` in `package.json`, includendo l'integrazione del framework Conductor e la certificazione del workflow.
+La versione attualmente in produzione e pubblicata e' `v1.4.4`. Il repository e' aggiornato alla versione `v1.4.6` in `package.json`, includendo l'integrazione del framework Conductor, la certificazione del workflow e il fix del build Docker.
 
 ### Baseline produzione `v1.4.4`
 
@@ -616,7 +616,6 @@ Lo script:
 - `npm run test:ui-responsive`
 - `npm run build`
 - `npm run preview`
-- `npm run migrate:remove-weekend-boost`
 
 ### Lint
 
@@ -662,7 +661,6 @@ Lo smoke di persistenza puo' essere eseguito sul database isolato di pipeline, m
 Per il backend C# e' disponibile `npm run test:csharp-coverage`, comando ufficiale che esegue la raccolta coverlet sui test unit/integration/contract, filtra `obj/` e generated code, limita lo scope a `backend-csharp/src/` e scrive il riepilogo verificabile in `backend-csharp/TestResults/OfficialCoverage/Summary.txt` e `backend-csharp/TestResults/OfficialCoverage/summary.json`.
 L'ultimo riepilogo ufficiale verificato per il backend C# chiude a `100%` su linee, branch e metodi per tutti i `70` file inclusi nello scope `backend-csharp/src/`.
 Per una verifica browser production-like coerente con il guardrail sul database, il repository supporta anche l'avvio con `ASPNETCORE_ENVIRONMENT=Production MONGODB_DB_NAME_OVERRIDE=fantaf1_dev dotnet run --project backend-csharp/src/FantaF1.Api/FantaF1.Api.csproj`, mantenendo runtime `production` ma puntando in modo esplicito al database locale di sviluppo per smoke desktop/mobile della build servita dal backend C#.
-Per ripulire documenti legacy che contengono ancora campi del `Weekend Boost` e' disponibile `npm run migrate:remove-weekend-boost`, script idempotente che riscrive gli `AppData` del database corrente in forma sanificata.
 
 ## CI/CD GitHub
 
