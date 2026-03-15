@@ -49,6 +49,8 @@ describe('MobileOverlay Component', () => {
     const activeItem = screen.getByRole('button', { name: 'Calendar' });
     expect(activeItem).toHaveClass('active');
     expect(activeItem).toHaveAttribute('aria-current', 'page');
+    expect(activeItem.querySelector('.mobile-nav-copy')).toBeInTheDocument();
+    expect(activeItem.querySelector('.mobile-nav-label')).toBeInTheDocument();
   });
 
   it('shows the current section summary using the active item label', () => {
