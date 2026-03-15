@@ -81,3 +81,8 @@ Questo file tiene traccia di tutte le track principali del progetto. Ogni track 
 
 - [x] **Track: Fix Render Dockerfile not found error (clean rewrite)**
   *Link: [./tracks/fix_render_dockerfile_not_found_20260315/](./tracks/fix_render_dockerfile_not_found_20260315/)*
+
+---
+
+- [ ] **Track: Local verification of Docker build and staging simulation**
+  *Link: [./tracks/verify_docker_staging_local_20260315/](./tracks/verify_docker_staging_local_20260315/)*
