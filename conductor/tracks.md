@@ -86,3 +86,8 @@ Questo file tiene traccia di tutte le track principali del progetto. Ogni track 
 
 - [x] **Track: Local verification of Docker build and staging simulation**
   *Link: [./tracks/verify_docker_staging_local_20260315/](./tracks/verify_docker_staging_local_20260315/)*
+
+---
+
+- [ ] **Track: Fix Local Startup**
+  *Link: [./tracks/fix_local_startup_20260315/](./tracks/fix_local_startup_20260315/)*
