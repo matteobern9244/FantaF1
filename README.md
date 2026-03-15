@@ -6,8 +6,8 @@ Applicazione full-stack privata per gestire un Fanta Formula 1 con frontend Reac
 
 - Il backend autorevole del repository e' C# sotto [backend-csharp/](/Users/matteobernardini/code/FantaF1/backend-csharp).
 - Il runtime locale, Docker, staging Render e CI/CD sono allineati al backend C#.
-- Il branch `develop` e' il branch di certificazione corrente.
-- La release candidata corrente del branch `develop` e' `1.5.2`.
+- Il branch `staging` e' il branch di certificazione corrente.
+- La release candidata corrente del branch `staging` e' `1.5.2`.
 - `main` resta il target di rilascio protetto e va aggiornato solo dopo cutover esplicito.
 - La documentazione operativa canonica del repository vive in questo file; la cronologia di rilascio vive in [CHANGELOG.md](/Users/matteobernardini/code/FantaF1/CHANGELOG.md).
 
@@ -23,6 +23,12 @@ Applicazione full-stack privata per gestire un Fanta Formula 1 con frontend Reac
 - Produzione live: [fantaf1-47vy.onrender.com](https://fantaf1-47vy.onrender.com)
 
 Lo staging deve rimanere allineato alla produzione a livello di funzionalita'. Differenze di branding, testo o layout sono tollerabili solo se non introducono divergenze funzionali.
+
+## Governance Branch
+
+- `staging` e' il branch candidato di certificazione e il branch sorgente atteso per l'ambiente Render di staging.
+- `main` resta il branch protetto di release e il target finale del flusso di deploy.
+- Il rename operativo da `develop` a `staging` richiede anche il riallineamento fuori repo della configurazione Render, delle branch protection e di eventuali automazioni GitHub/Render che puntavano al vecchio nome branch.
 
 ## Panoramica funzionale
 

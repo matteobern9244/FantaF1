@@ -323,9 +323,9 @@ No version/tag/release task is complete if `CHANGELOG.md` is out of sync with th
 
 ### Persistent deploy trigger
 
-If the user writes exactly `deploya`, treat that as explicit authorization to run the full deployment workflow below without asking for confirmation and without changing the sequence. Before starting, also verify that `main` is already the branch that represents the current releasable stack and that the current working branch is `develop`. If `main` intentionally still points to a legacy or cutover-pending structure, stop immediately and report that `deploya` is not currently activatable.
+If the user writes exactly `deploya`, treat that as explicit authorization to run the full deployment workflow below without asking for confirmation and without changing the sequence. Before starting, also verify that `main` is already the branch that represents the current releasable stack and that the current working branch is `staging`. If `main` intentionally still points to a legacy or cutover-pending structure, stop immediately and report that `deploya` is not currently activatable.
 
-1. Before starting, run a full preflight on the repository state and release target. Verify there are no unstaged files, `main` is aligned with the stack intended for release, the current branch is exactly `develop`, the branch is synced with its remote, required `git` and `gh` authentication are available, the required runtime/toolchain versions are present, the minimum required environment variables and deploy secrets exist, and the release target is still valid. If any of these checks fail, stop immediately and do not proceed.
+1. Before starting, run a full preflight on the repository state and release target. Verify there are no unstaged files, `main` is aligned with the stack intended for release, the current branch is exactly `staging`, the branch is synced with its remote, required `git` and `gh` authentication are available, the required runtime/toolchain versions are present, the minimum required environment variables and deploy secrets exist, and the release target is still valid. If any of these checks fail, stop immediately and do not proceed.
 2. Run a dry-run summary before any mutating action. Show the computed next version, the files expected to change, the validations that will run, the Pull Request target, and any tag/release names that would be created. Do not commit, push, tag, or release during the dry-run phase.
 3. Determine the correct next application version and bump it consistently across the repository wherever needed.
 4. Verify the version bump diff is coherent across `package.json`, `package-lock.json`, `README.md`, `CHANGELOG.md`, and every other repository file that must reflect the released version. If any required file is missing, stale, or inconsistent, stop immediately.
@@ -340,7 +340,7 @@ If the user writes exactly `deploya`, treat that as explicit authorization to ru
 10. Create an intelligent commit message that accurately summarizes the work performed.
 11. Commit all required changes.
 12. Push the current working branch to its remote branch.
-13. Create or update a Pull Request from `develop` into `main`.
+13. Create or update a Pull Request from `staging` into `main`.
 14. Verify that the Pull Request configuration is correct before enabling merge automation. Confirm the title, body, labels, base branch, head branch, reviewers, assignees, and release metadata are accurate and complete.
 15. Enable auto-merge on that Pull Request using the repository's configured merge method, without bypassing branch protection on `main`.
 16. Wait until the Pull Request is either merged by GitHub after all required checks pass or remains open because at least one required check failed or stayed pending.
@@ -355,7 +355,7 @@ If the user writes exactly `deploya`, treat that as explicit authorization to ru
 Failure policy for `deploya`:
 
 - stop immediately if any critical step fails
-- do not proceed if the current branch is not `develop`
+- do not proceed if the current branch is not `staging`
 - do not proceed if preflight, dry-run, version-diff, changelog-quality, workflow-validation, or post-merge verification checks fail
 - do not bypass Pull Request requirements, required checks, or branch protection on `main`
 - do not create tags unless GitHub completed the merge to `main` successfully through the protected Pull Request flow

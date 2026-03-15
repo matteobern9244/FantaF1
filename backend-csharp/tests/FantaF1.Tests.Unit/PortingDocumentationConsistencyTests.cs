@@ -38,9 +38,10 @@ public sealed class PortingDocumentationConsistencyTests
         Assert.Contains("`README.md` is the canonical operational document", agents, StringComparison.Ordinal);
         Assert.Contains("`CHANGELOG.md` is the canonical release and audit history.", agents, StringComparison.Ordinal);
         Assert.Contains(
-            "Before starting, also verify that `main` is already the branch that represents the current releasable stack and that the current working branch is `develop`.",
+            "Before starting, also verify that `main` is already the branch that represents the current releasable stack and that the current working branch is `staging`.",
             agents,
             StringComparison.Ordinal);
+        Assert.Contains("Il branch `staging` e' il branch di certificazione corrente.", readme, StringComparison.Ordinal);
     }
 
     [Fact]

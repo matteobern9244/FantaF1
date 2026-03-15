@@ -3,6 +3,8 @@
 Cronologia sintetica delle release documentate del progetto Fanta Formula 1.
 
 ## [Unreleased]
+- **Governance Branch Rinominata da `develop` a `staging`**: la documentazione canonica del repository e il trigger operativo `deploya` trattano ora `staging` come branch di certificazione corrente e come sorgente della Pull Request verso `main`, eliminando il contratto operativo precedente basato su `develop`.
+- **Runbook di Riallineamento Esterno per il Rename Branch**: il repository documenta ora esplicitamente che il rename richiede anche l'aggiornamento del branch sorgente di Render staging e delle eventuali branch protection o automazioni GitHub esterne ancora puntate a `develop`.
 - **Archiviazione Completa del Workspace Conductor**: tutti i track live sono stati promossi amministrativamente a `done`, archiviati sotto `conductor/archive/` e rimossi dalla navigazione attiva; `conductor/tracks` non contiene piu' track residui e gli indici `conductor/index.md` e `conductor/tracks.md` sono stati rigenerati in coerenza con lo stato finale.
 - **Hardening della Skill Conductor sul Flusso Archive**: la skill installata normalizza ora il pre-archive dei track, aggiorna in modo minimo `review.md` e `verify.md` durante la chiusura amministrativa e supporta l'archiviazione coerente dei track legacy/non-`done` nel repository reale.
 - **Archiviazione dei Root Plans Legacy di Conductor**: i documenti di piano rimasti nel root di `conductor/` (`fix-mappa`, `fix-scroll-jank`, `feature-standings`, `enforce-commit-docs-rule`, `subphase-11-plan`) sono stati spostati in `conductor/archive/_root-plans/`, lasciando nel root solo i file operativi ancora vivi del workspace.
