@@ -51,6 +51,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       ADMIN_SESSION_SECRET: ${{ secrets.ADMIN_SESSION_SECRET_CI }}
+      ASPNETCORE_ENVIRONMENT: Development
       CI: true
       MONGODB_DB_NAME_OVERRIDE: fantaf1_ci
       MONGODB_URI: ${{ secrets.MONGODB_URI_CI }}
@@ -111,6 +112,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       ADMIN_SESSION_SECRET: ${{ secrets.ADMIN_SESSION_SECRET_CI }}
+      ASPNETCORE_ENVIRONMENT: Development
       MONGODB_DB_NAME_OVERRIDE: fantaf1_ci
       MONGODB_URI: ${{ secrets.MONGODB_URI_CI }}
       SAVE_SMOKE_EXPECTED_DATABASE_TARGET: fantaf1_ci
