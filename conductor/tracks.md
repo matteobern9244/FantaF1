@@ -10,6 +10,7 @@ This file is the compact summary view of Conductor tracks in this repository.
 - `fix_menu_third_item_focus_20260315` | Fix Menu Third Item Focus | `done` | phase `done` | Completed | `conductor/tracks/fix_menu_third_item_focus_20260315`
 - `fix_multi_race_highlights_20260315` | Fix Multi Race Highlights | `done` | phase `done` | Completed | `conductor/tracks/fix_multi_race_highlights_20260315`
 - `merge_develop_into_staging_release_20260315` | Merge Develop Into Staging Release | `done` | phase `done` | Completed | `conductor/tracks/merge_develop_into_staging_release_20260315`
+- `restaylyng_menu_mobile_20260316` | Mobile Menu Restyling | `new` | phase `new` | No active task | `conductor/tracks/restaylyng-menu-mobile`
 - `track-001` | Fix Mobile Menu Readability And Scroll Affordance | `done` | phase `done` | Completed | `conductor/tracks/track-001-fix-mobile-menu-readability-and-scroll-affordance`
 
 ## Archived Tracks
