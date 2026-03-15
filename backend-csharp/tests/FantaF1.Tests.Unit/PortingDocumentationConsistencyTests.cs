@@ -77,6 +77,8 @@ public sealed class PortingDocumentationConsistencyTests
         Assert.Contains("`PORT=3001`", readme, StringComparison.Ordinal);
         Assert.Contains("`VITE_APP_LOCAL_NAME=<opzionale; solo se serve un titolo hero differenziato>`", readme, StringComparison.Ordinal);
         Assert.Contains("`VITE_APP_LOCAL_NAME=<opzionale; normalmente da lasciare vuota>`", readme, StringComparison.Ordinal);
+        Assert.Contains("`VITE_APP_LOCAL_NAME` viene letta dal frontend Vite a build-time", readme, StringComparison.Ordinal);
+        Assert.Contains("richiede un rebuild/redeploy per diventare visibile", readme, StringComparison.Ordinal);
         Assert.Contains("`MONGODB_URI_CI`", readme, StringComparison.Ordinal);
         Assert.Contains("`ADMIN_SESSION_SECRET_CI`", readme, StringComparison.Ordinal);
         Assert.Contains("ASPNETCORE_ENVIRONMENT=Development", envExample, StringComparison.Ordinal);
@@ -146,6 +148,7 @@ public sealed class PortingDocumentationConsistencyTests
 
         Assert.Contains("## [1.5.1] - 2026-03-15", changelog, StringComparison.Ordinal);
         Assert.Contains("Runbook Ufficiale di Cutover Render Produzione", changelog, StringComparison.Ordinal);
+        Assert.Contains("Fix Propagazione `VITE_APP_LOCAL_NAME` nel Docker Build", changelog, StringComparison.Ordinal);
         Assert.Contains("Documentazione Canonica Consolidata", changelog, StringComparison.Ordinal);
         Assert.Contains("Audit Finale Database Pre-Cutover", changelog, StringComparison.Ordinal);
         Assert.Contains("Workflow CI/CD Riverificati Localmente", changelog, StringComparison.Ordinal);

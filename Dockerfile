@@ -2,6 +2,9 @@
 FROM node:22-alpine AS frontend-build
 WORKDIR /app
 
+ARG VITE_APP_LOCAL_NAME
+ENV VITE_APP_LOCAL_NAME=$VITE_APP_LOCAL_NAME
+
 # Copy package files and .npmrc
 COPY package.json package-lock.json .npmrc ./
 RUN npm ci

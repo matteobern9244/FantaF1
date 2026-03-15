@@ -3,6 +3,8 @@
 Cronologia sintetica delle release documentate del progetto Fanta Formula 1.
 
 ## [1.5.1] - 2026-03-15
+- **Fix Propagazione `VITE_APP_LOCAL_NAME` nel Docker Build**: il `Dockerfile` passa ora esplicitamente `VITE_APP_LOCAL_NAME` allo stage frontend `vite build`, cosi' gli override configurati su Render entrano davvero nel bundle statico invece di essere ignorati sul deploy staging/production-like.
+- **Contratto Documentale su `VITE_APP_LOCAL_NAME` Esplicitato**: `README.md` chiarisce ora che `VITE_APP_LOCAL_NAME` e' una build env del frontend Vite, non una runtime env del backend C#, e che ogni modifica su Render richiede rebuild/redeploy del servizio per diventare visibile.
 - **Bump Versione Patch e Riallineamento Release**: aggiornati `package.json`, `package-lock.json`, `README.md` e `CHANGELOG.md` per pubblicare il branch `develop` con una release patch coerente con il change set finale di hardening, cleanup documentale e guardrail operativi del porting C#.
 - **Runbook Ufficiale di Cutover Render Produzione**: `README.md` ora descrive in modo decision-complete le env obbligatorie/vietate per staging e produzione su Render e la procedura passo-passo per switchare il servizio live dal setup Node legacy al runtime Docker/C# dopo il merge su `main`.
 - **Documentazione Canonica Consolidata**: [README.md](/Users/matteobernardini/code/FantaF1/README.md), [CHANGELOG.md](/Users/matteobernardini/code/FantaF1/CHANGELOG.md), [PROJECT.md](/Users/matteobernardini/code/FantaF1/PROJECT.md) e [AGENTS.md](/Users/matteobernardini/code/FantaF1/AGENTS.md) sono stati riallineati per diventare l'unica fonte operativa e di governance del repository; la documentazione di porting C# sotto `docs/` e `guide-porting-c#/` e' stata rimossa dal repository attivo.

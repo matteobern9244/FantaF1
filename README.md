@@ -237,6 +237,8 @@ Alla data di questa verifica non emerge una migrazione obbligatoria da applicare
 - `VITE_APP_LOCAL_NAME`
   - override visuale del titolo hero, letto a build-time dal frontend
 
+`VITE_APP_LOCAL_NAME` viene letta dal frontend Vite a build-time. Su Docker/Render non e' una variabile runtime del backend C#: deve entrare nello stage di build frontend e ogni modifica richiede un rebuild/redeploy per diventare visibile.
+
 ### Variabili di servizio locali
 
 - `MONGODB_DB_NAME_OVERRIDE`
@@ -291,6 +293,12 @@ Non impostare:
 - `AdminCredentialSeed__PasswordSalt`
 - `AdminCredentialSeed__PasswordHashHex`
 
+Note operative:
+
+- `VITE_APP_LOCAL_NAME` agisce solo sul titolo visuale frontend buildato
+- se viene modificata su Render staging, richiede un rebuild/redeploy del servizio per diventare visibile
+- non modifica `GET /api/health` o il runtime environment del backend
+
 ### Render produzione
 
 Impostare esplicitamente:
@@ -307,6 +315,12 @@ Non impostare:
 - `MONGODB_DB_NAME_OVERRIDE`
 - `AdminCredentialSeed__PasswordSalt`
 - `AdminCredentialSeed__PasswordHashHex`
+
+Note operative:
+
+- `VITE_APP_LOCAL_NAME` e' una build env del frontend e non una runtime env del backend
+- se viene cambiata su produzione, il servizio va rebuildato/redeployato
+- salvo esigenza esplicita, lasciarla vuota per usare il fallback da `config/app-config.json`
 
 ### GitHub Actions
 
