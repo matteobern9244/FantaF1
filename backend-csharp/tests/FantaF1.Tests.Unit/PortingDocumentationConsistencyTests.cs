@@ -38,7 +38,7 @@ public sealed class PortingDocumentationConsistencyTests
         Assert.Contains("`README.md` is the canonical operational document", agents, StringComparison.Ordinal);
         Assert.Contains("`CHANGELOG.md` is the canonical release and audit history.", agents, StringComparison.Ordinal);
         Assert.Contains(
-            "If `main` intentionally still points to a legacy or cutover-pending structure, stop immediately and report that `deploya` is not currently activatable.",
+            "Before starting, also verify that `main` is already the branch that represents the current releasable stack and that the current working branch is `develop`.",
             agents,
             StringComparison.Ordinal);
     }
