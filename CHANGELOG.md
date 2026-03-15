@@ -2,6 +2,11 @@
 
 Cronologia sintetica delle release documentate del progetto Fanta Formula 1.
 
+## [1.5.2] - 2026-03-15
+- **Fix Operativo del Trigger `deploya`**: [AGENTS.md](/Users/matteobernardini/code/FantaF1/AGENTS.md) distingue ora in modo piu' preciso il preflight del trigger persistente e il caso di cutover intenzionale `develop -> main`, evitando falsi stop quando `main` e' ancora sul vecchio stack per scelta di governance pre-merge.
+- **Coerenza Test Documentali sul Flusso di Release**: i controlli di consistenza in [backend-csharp/tests/FantaF1.Tests.Unit/PortingDocumentationConsistencyTests.cs](/Users/matteobernardini/code/FantaF1/backend-csharp/tests/FantaF1.Tests.Unit/PortingDocumentationConsistencyTests.cs) sono stati riallineati ai guardrail aggiornati del workflow di deploy, mantenendo invariata la safety net del branch C#.
+- **Bump Versione Patch per il Cutover su `main`**: aggiornati `package.json`, `package-lock.json`, `README.md` e `CHANGELOG.md` per pubblicare su `main` il delta successivo al tag `v1.5.1`, senza riutilizzare una versione gia' taggata.
+
 ## [1.5.1] - 2026-03-15
 - **Fix Propagazione `VITE_APP_LOCAL_NAME` nel Docker Build**: il `Dockerfile` passa ora esplicitamente `VITE_APP_LOCAL_NAME` allo stage frontend `vite build`, cosi' gli override configurati su Render entrano davvero nel bundle statico invece di essere ignorati sul deploy staging/production-like.
 - **Contratto Documentale su `VITE_APP_LOCAL_NAME` Esplicitato**: `README.md` chiarisce ora che `VITE_APP_LOCAL_NAME` e' una build env del frontend Vite, non una runtime env del backend C#, e che ogni modifica su Render richiede rebuild/redeploy del servizio per diventare visibile.
