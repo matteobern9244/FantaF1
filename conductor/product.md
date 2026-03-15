@@ -4,7 +4,7 @@ FantaF1: Un'applicazione full-stack privata per gestire una lega di Fanta Formul
 # Product Definition
 
 ## Panoramica
-FantaF1 è una piattaforma specializzata per una lega fantasy privata, focalizzata su un flusso di lavoro amministrato per 3 partecipanti fissi. L'applicazione offre un'esperienza fluida su browser desktop e mobile, funzionando come una Progressive Web App (PWA).
+FantaF1 è una piattaforma specializzata per una lega fantasy privata, focalizzata su un flusso di lavoro amministrato per 3 partecipanti fissi. L'applicazione offre un'esperienza fluida su browser desktop e mobile, funzionando come una Progressive Web App (PWA). L'interfaccia adotta un design adattivo con una sidebar fissa a sinistra per desktop e un menu overlay a tutto schermo per mobile, garantendo un'esperienza immersiva in stile F1.
 
 ## Pubblico di Riferimento
 - **Amministratore della Lega Privata:** Responsabile della gestione dei weekend, dei pronostici e dei risultati reali delle gare.

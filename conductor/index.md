@@ -4,7 +4,12 @@ This file is the prompt-first navigation index for the Conductor workspace in th
 
 ## Active Tracks
 
-No active tracks currently registered.
+## fix_local_startup_20260315 - Fix Local Startup
+
+- Status: `new`
+- Phase: `new`
+- Active task: No active task
+- Path: `conductor/tracks/fix_local_startup_20260315`
 
 ## Archived Tracks
 

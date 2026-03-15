@@ -4,7 +4,7 @@ This file is the compact summary view of Conductor tracks in this repository.
 
 ## Active Tracks
 
-No active tracks currently registered.
+- `fix_local_startup_20260315` | Fix Local Startup | `new` | phase `new` | No active task | `conductor/tracks/fix_local_startup_20260315`
 
 ## Archived Tracks
 

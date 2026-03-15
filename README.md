@@ -104,9 +104,11 @@ Il lock e' server-side:
 
 ### UI
 
-- shell responsive desktop/mobile
-- navigazione sticky desktop e drawer mobile `Sezioni`
-- hero full-width
+- shell responsive desktop/mobile (F1 Racing Theme)
+- sidebar adattiva desktop (collassabile) e menu mobile overlay a tutto schermo
+- hardening della navigation shell: collapse desktop agganciato allo stato reale della shell, trigger mobile localizzato e scroll lock del body mentre l'overlay e' aperto
+- branding MenuLogo integrato con accenti hi-contrast
+- hero full-width pulita (controlli admin/public spostati nel menu)
 - stato admin/public coerente in tutte le superfici
 - track map coerente tra hero, recap e pannello risultati
 
@@ -498,10 +500,10 @@ I workflow aggiuntivi `gemini-*` restano validi come automazioni repository-side
 
 Baseline verificata corrente sullo scope ufficiale frontend/repository:
 
-- `5176 / 5176` statements
-- `408 / 408` functions
-- `2096 / 2096` branches
-- `5176 / 5176` lines
+- `5212 / 5212` statements
+- `412 / 412` functions
+- `2114 / 2114` branches
+- `5212 / 5212` lines
 
 Baseline verificata corrente su `backend-csharp/src/`:
 

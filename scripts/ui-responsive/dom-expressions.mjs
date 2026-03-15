@@ -126,8 +126,8 @@ const inspectStateExpression = `() => {
   const historyFilterSelect = document.querySelector('#history-user-filter');
   const firstPredictionOption = firstPredictionSelect?.querySelector('option');
   const firstResultOption = firstResultSelect?.querySelector('option');
-  const sectionNav = document.querySelector('.section-nav');
-  const activeSectionButton = document.querySelector('.section-nav-button.active');
+  const sectionNav = document.querySelector('.app-sidebar, .mobile-menu-trigger');
+  const activeSectionButton = document.querySelector('.sidebar-item.active, .mobile-nav-item.active');
   const installButton = [...document.querySelectorAll('button')]
     .find((button) => /installa applicazione/i.test(normalizeText(button.textContent)));
 
@@ -189,16 +189,15 @@ const inspectStateExpression = `() => {
     },
     viewMode: {
       current: (() => {
-        const activeButton = [...document.querySelectorAll('.view-mode-toggle button')]
-          .find((button) => button.getAttribute('aria-pressed') === 'true');
-        const activeLabel = normalizeText(activeButton?.textContent);
-        if (/pubblica/i.test(activeLabel)) {
-          return 'public';
+        const toggleButton = [
+          ...document.querySelectorAll('.view-mode-toggle button[aria-pressed]'),
+          ...document.querySelectorAll('.sidebar-footer .sidebar-item[aria-pressed]'),
+          ...document.querySelectorAll('.mobile-nav-section.footer-section .mobile-nav-item[aria-pressed]'),
+        ][0];
+        if (!toggleButton) {
+          return '';
         }
-        if (/admin/i.test(activeLabel)) {
-          return 'admin';
-        }
-        return '';
+        return toggleButton.getAttribute('aria-pressed') === 'true' ? 'admin' : 'public';
       })(),
       readonlyBannerPresent: Boolean(document.querySelector('.public-readonly-panel .locked-banner')),
       adminLoginPresent: Boolean(document.querySelector('.auth-overlay')),
@@ -252,7 +251,7 @@ const inspectStateExpression = `() => {
     },
     navigation: {
       present: Boolean(sectionNav),
-      itemCount: document.querySelectorAll('.section-nav-button').length,
+      itemCount: document.querySelectorAll('.sidebar-item').length || 1,
       activeText: normalizeText(activeSectionButton?.textContent),
       anchor: readBoxMetrics(sectionNav),
     },
@@ -290,7 +289,7 @@ const appShellStateExpression = `() => {
       resultsActions: Boolean(document.querySelector('.results-actions')),
       liveScoreValue: Boolean(document.querySelector('.live-score-value')),
       pointsPreviewValue: Boolean(document.querySelector('.points-preview-value')),
-      sectionNav: Boolean(document.querySelector('.section-nav')),
+      sectionNav: Boolean(document.querySelector('.app-sidebar, .mobile-menu-trigger')),
     },
   };
 }`;

@@ -126,12 +126,12 @@ public sealed class PortingDocumentationConsistencyTests
         var readme = ReadRepositoryFile("README.md");
         var agents = ReadRepositoryFile("AGENTS.md");
 
-        Assert.Contains("`5176 / 5176` statements", readme, StringComparison.Ordinal);
-        Assert.Contains("`408 / 408` functions", readme, StringComparison.Ordinal);
-        Assert.Contains("`2096 / 2096` branches", readme, StringComparison.Ordinal);
-        Assert.Contains("`5176 / 5176` lines", readme, StringComparison.Ordinal);
+        Assert.Contains("`5212 / 5212` statements", readme, StringComparison.Ordinal);
+        Assert.Contains("`412 / 412` functions", readme, StringComparison.Ordinal);
+        Assert.Contains("`2114 / 2114` branches", readme, StringComparison.Ordinal);
+        Assert.Contains("`5212 / 5212` lines", readme, StringComparison.Ordinal);
         Assert.Contains(
-            "**100% statements (5176 / 5176)**, **100% functions (408 / 408)**, **100% branches (2096 / 2096)**, and **100% lines (5176 / 5176)**",
+            "**100% statements (5212 / 5212)**, **100% functions (412 / 412)**, **100% branches (2114 / 2114)**, and **100% lines (5212 / 5212)**",
             agents,
             StringComparison.Ordinal);
         Assert.Contains("`2932 / 2932` lines", readme, StringComparison.Ordinal);

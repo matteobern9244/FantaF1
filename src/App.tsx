@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
 import {
-  ArrowUp,
   CalendarDays,
   Flag,
   ListChecks,
@@ -13,11 +12,9 @@ import {
   Zap,
   FastForward,
   Gauge,
-  Smartphone,
   BarChart3,
   LockKeyhole,
   Download,
-  LogOut,
 } from 'lucide-react';
 import './App.css';
 import {
@@ -94,6 +91,8 @@ import PublicStandingsPanel from './components/PublicStandingsPanel';
 import SeasonAnalysisPanel from './components/SeasonAnalysisPanel';
 import WeekendLivePanel from './components/WeekendLivePanel';
 import WeekendPulseHeroCard from './components/WeekendPulseHeroCard';
+import Sidebar from './components/Sidebar';
+import MobileOverlay from './components/MobileOverlay';
 import { appText } from './uiText';
 import {
   getWeekendPredictionState,
@@ -255,7 +254,8 @@ function App() {
   const [toast, setToast] = useState<ToastState | null>(null);
   const [installPromptEvent, setInstallPromptEvent] = useState<DeferredInstallPromptEvent | null>(null);
   const [isAppInstalled, setIsAppInstalled] = useState(() => isStandaloneInstallContext());
-  const [isMobileViewport, setIsMobileViewport] = useState(() => window.matchMedia('(max-width: 767px)').matches);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
   const [showInstallInstructions, setShowInstallInstructions] = useState(false);
   const [showAdminLogin, setShowAdminLogin] = useState(false);
   const [adminPassword, setAdminPassword] = useState('');
@@ -266,7 +266,6 @@ function App() {
   const [selectedRacePhase, setSelectedRacePhase] = useState<RacePhase>('open');
   const [selectedRaceHighlightsVideoUrl, setSelectedRaceHighlightsVideoUrl] = useState('');
   const [activeSectionId, setActiveSectionId] = useState('');
-  const [showBackToTop, setShowBackToTop] = useState(false);
   const selectedMeetingKeyRef = useRef(selectedMeetingKey);
   const toastTimeoutRef = useRef<number | null>(null);
   const initialHashHandledRef = useRef(false);
@@ -391,6 +390,22 @@ function App() {
     setActiveSectionId(sectionId);
   }
 
+  function handleOpenMobileNav() {
+    setIsMobileNavOpen(true);
+  }
+
+  function handleCloseMobileNav() {
+    setIsMobileNavOpen(false);
+  }
+
+  function handleOpenAdminLogin() {
+    setShowAdminLogin(true);
+  }
+
+  function handleToggleViewMode() {
+    setViewMode((currentViewMode) => (currentViewMode === 'public' ? 'admin' : 'public'));
+  }
+
   useEffect(() => {
     if (!selectedInsightsUser && users[0]?.name) {
       setSelectedInsightsUser(users[0].name);
@@ -398,25 +413,17 @@ function App() {
   }, [selectedInsightsUser, users]);
 
   useEffect(() => {
-    const mobileViewportQuery = window.matchMedia('(max-width: 767px)');
     const standaloneModeQuery = window.matchMedia('(display-mode: standalone)');
-
-    function handleMobileViewportChange(event: MediaQueryListEvent) {
-      setIsMobileViewport(event.matches);
-    }
 
     function handleStandaloneChange(event: MediaQueryListEvent) {
       setIsAppInstalled(event.matches || (navigator as NavigatorWithStandalone).standalone === true);
     }
 
-    setIsMobileViewport(mobileViewportQuery.matches);
     setIsAppInstalled(standaloneModeQuery.matches || (navigator as NavigatorWithStandalone).standalone === true);
 
-    mobileViewportQuery.addEventListener('change', handleMobileViewportChange);
     standaloneModeQuery.addEventListener('change', handleStandaloneChange);
 
     return () => {
-      mobileViewportQuery.removeEventListener('change', handleMobileViewportChange);
       standaloneModeQuery.removeEventListener('change', handleStandaloneChange);
     };
   }, []);
@@ -452,39 +459,19 @@ function App() {
   }, []);
 
   useEffect(() => {
-    // viewMode effect placeholder
-  }, [viewMode]);
+    const previousOverflow = document.body.style.overflow;
+    const previousTouchAction = document.body.style.touchAction;
 
-  useEffect(() => {
-    // isMobileViewport effect placeholder
-  }, [isMobileViewport]);
-
-  useEffect(() => {
-    const heroPanel = document.querySelector('header.hero-panel');
-
-    if (typeof window.IntersectionObserver === 'function' && heroPanel) {
-      const observer = new window.IntersectionObserver(
-        ([entry]) => {
-          setShowBackToTop(!entry.isIntersecting);
-        },
-        { threshold: 0 }
-      );
-
-      observer.observe(heroPanel);
-
-      return () => {
-        observer.disconnect();
-      };
-    } else {
-      // Fallback
-      function handleScroll() {
-        setShowBackToTop(window.scrollY > 400);
-      }
-
-      window.addEventListener('scroll', handleScroll);
-      return () => window.removeEventListener('scroll', handleScroll);
+    if (isMobileNavOpen) {
+      document.body.style.overflow = 'hidden';
+      document.body.style.touchAction = 'none';
     }
-  }, []);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.body.style.touchAction = previousTouchAction;
+    };
+  }, [isMobileNavOpen]);
 
   useEffect(() => {
     let isCancelled = false;
@@ -1278,15 +1265,6 @@ function App() {
     }
   }
 
-  function renderInstallButton() {
-    return (
-      <button className="secondary-button install-button" onClick={handleInstallApp} type="button">
-        <Download size={16} />
-        {uiText.buttons.installApp}
-      </button>
-    );
-  }
-
   function getExpandedHistoryKey(record: AppData['history'][number], index: number) {
     return `${record.gpName}-${record.date}-${index}`;
   }
@@ -1413,7 +1391,46 @@ function App() {
 
   /* v8 ignore next -- layout is exercised end-to-end via RTL and browser smoke tests */
   return (
-    <div className="app-shell">
+    <div className={`app-shell ${isSidebarCollapsed ? 'app-shell-sidebar-collapsed' : ''}`.trim()}>
+      <Sidebar
+        items={sectionNavigationItems}
+        activeId={activeSectionId}
+        onItemClick={navigateToSection}
+        isAdmin={sessionState.isAdmin}
+        viewMode={viewMode}
+        onViewModeToggle={handleToggleViewMode}
+        onLogout={handleAdminLogout}
+        onLogin={handleOpenAdminLogin}
+        onCollapseChange={setIsSidebarCollapsed}
+        onInstall={handleInstallApp}
+        showInstall={true}
+      />
+
+      {isMobileNavOpen && (
+        <MobileOverlay
+          items={sectionNavigationItems}
+          activeId={activeSectionId}
+          onItemClick={navigateToSection}
+          isAdmin={sessionState.isAdmin}
+          viewMode={viewMode}
+          onViewModeToggle={handleToggleViewMode}
+          onLogout={handleAdminLogout}
+          onLogin={handleOpenAdminLogin}
+          onClose={handleCloseMobileNav}
+          onInstall={handleInstallApp}
+          showInstall={true}
+        />
+      )}
+
+      <button
+        className="mobile-menu-trigger"
+        onClick={handleOpenMobileNav}
+        aria-label={appText.shell.navigation.openButton}
+        type="button"
+      >
+        <ListChecks size={24} />
+      </button>
+
       <header
         className="hero-panel"
       >
@@ -1438,41 +1455,6 @@ function App() {
               </span>
             ))}
           </div>
-          <div className="hero-controls">
-            <div className="view-mode-toggle" aria-label={uiText.labels.viewMode} role="group">
-              <button
-                className={`secondary-button toggle-button ${!isPublicView ? 'active' : ''}`.trim()}
-                onClick={() => {
-                  if (sessionState.isAdmin) {
-                    setViewMode('admin');
-                    return;
-                  }
-
-                  setShowAdminLogin(true);
-                }}
-                type="button"
-                aria-pressed={!isPublicView}
-              >
-                <LockKeyhole size={16} />
-                {uiText.buttons.adminView}
-              </button>
-              <button
-                className={`secondary-button toggle-button ${isPublicView ? 'active' : ''}`.trim()}
-                onClick={() => setViewMode('public')}
-                type="button"
-                aria-pressed={isPublicView}
-              >
-                <Smartphone size={16} />
-                {uiText.buttons.publicView}
-              </button>
-            </div>
-            {sessionState.isAdmin ? (
-              <button className="secondary-button install-button" onClick={handleAdminLogout} type="button">
-                <LogOut size={16} />
-                {uiText.buttons.logout}
-              </button>
-            ) : null}
-          </div>
         </div>
         <div className="hero-brand">
           <AppLogo />
@@ -1485,23 +1467,6 @@ function App() {
           </h1>
           <p className="subtitle">{currentYear}</p>
         </div>
-
-        <nav aria-label={appText.shell.navigation.ariaLabel} className="section-nav">
-          <div className="section-nav-list">
-            {sectionNavigationItems.map((item) => (
-              <button
-                key={item.id}
-                aria-pressed={activeSectionId === item.id}
-                className={`secondary-button section-nav-button ${activeSectionId === item.id ? 'active' : ''}`.trim()}
-                onClick={() => navigateToSection(item.id)}
-                type="button"
-              >
-                {item.label}
-              </button>
-            ))}
-            {renderInstallButton()}
-          </div>
-        </nav>
 
         <div className="hero-summary-grid">
           <section className="hero-card next-race-card interactive-surface">
@@ -2121,20 +2086,6 @@ function App() {
         <div className={`toast-shell toast-${toast.tone}`} role="status" aria-live="polite">
           {toast.message}
         </div>
-      ) : null}
-
-      {showBackToTop ? (
-        <button
-          aria-label="Torna al menu"
-          className="secondary-button back-to-top"
-          onClick={() => {
-            const navElement = document.querySelector('.section-nav');
-            navElement?.scrollIntoView({ behavior: 'smooth' });
-          }}
-          type="button"
-        >
-          <ArrowUp size={20} />
-        </button>
       ) : null}
 
       <footer className="app-footer">
