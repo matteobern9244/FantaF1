@@ -1,0 +1,8 @@
+{
+  "track_id": "ui_menu_rework_20260315",
+  "type": "feature",
+  "status": "new",
+  "created_at": "2026-03-15T12:00:00Z",
+  "updated_at": "2026-03-15T12:00:00Z",
+  "description": "Rework UI menu with left-sidebar for desktop and full-screen overlay for mobile."
+}

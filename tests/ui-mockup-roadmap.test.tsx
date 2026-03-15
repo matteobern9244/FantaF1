@@ -347,13 +347,13 @@ describe('Mockup roadmap UI features', () => {
     });
 
     expect(screen.queryByText(/regole del gioco/i)).not.toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /modalita' admin/i })).toHaveAttribute(
+    expect(screen.getByRole('button', { name: /public view/i })).toHaveAttribute(
       'aria-pressed',
       'true',
     );
     expect(screen.getByRole('button', { name: /salva dati inseriti/i })).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('button', { name: /vista pubblica/i }));
+    fireEvent.click(screen.getByRole('button', { name: /public view/i }));
 
     expect(screen.queryByRole('button', { name: /salva dati inseriti/i })).not.toBeInTheDocument();
     expect(
@@ -428,7 +428,7 @@ describe('Mockup roadmap UI features', () => {
     expect(weekendPulsePanel).not.toBeNull();
     expect((weekendPulsePanel as HTMLElement).querySelectorAll('.analytics-card.interactive-surface').length).toBeGreaterThan(0);
 
-    fireEvent.click(screen.getByRole('button', { name: /vista pubblica/i }));
+    fireEvent.click(screen.getByRole('button', { name: /public view/i }));
 
     expect(screen.getByRole('heading', { name: /come funziona/i })).toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /classifica piloti/i })).toBeInTheDocument();
@@ -513,7 +513,7 @@ describe('Mockup roadmap UI features', () => {
 
     expect(screen.getByRole('img', { name: 'Monza' })).toHaveAttribute('src', australiaMapUrl);
 
-    fireEvent.click(screen.getByRole('button', { name: /vista pubblica/i }));
+    fireEvent.click(screen.getByRole('button', { name: /public view/i }));
 
     await waitFor(() => {
       // 1 nella hero (Monza) e 1 nel recap (Silverstone - ma nel test calendar Silverstone non ha australiaMapUrl)
@@ -725,8 +725,7 @@ describe('Mockup roadmap UI features', () => {
       expect(screen.queryByTestId('pitstop-loader')).not.toBeInTheDocument();
     });
 
-    expect(screen.getByRole('button', { name: /vista pubblica/i })).toHaveAttribute('aria-pressed', 'true');
-    expect(screen.getByRole('button', { name: /modalita' admin/i })).toHaveAttribute('aria-pressed', 'false');
+    expect(screen.getByRole('button', { name: /admin login/i })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /salva dati inseriti/i })).not.toBeInTheDocument();
     expect(screen.getByRole('heading', { name: /come funziona/i })).toBeInTheDocument();
   });
@@ -746,7 +745,7 @@ describe('Mockup roadmap UI features', () => {
     expect(within(navigation).queryByRole('button', { name: /come funziona/i })).not.toBeInTheDocument();
     expect(within(navigation).queryByRole('button', { name: /classifiche reali/i })).not.toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('button', { name: /vista pubblica/i }));
+    fireEvent.click(screen.getByRole('button', { name: /public view/i }));
 
     expect(within(navigation).getByRole('button', { name: /come funziona/i })).toBeInTheDocument();
     expect(within(navigation).getByRole('button', { name: /classifiche reali/i })).toBeInTheDocument();
@@ -769,9 +768,7 @@ describe('Mockup roadmap UI features', () => {
 
     const navigation = screen.getByRole('navigation', { name: /sezioni applicazione/i });
     expect(navigation).toBeInTheDocument();
-
-    const navList = navigation.querySelector('.section-nav-list');
-    expect(navList).toBeInTheDocument();
+    expect(navigation).toHaveClass('section-nav-list');
 
     const seasonAnalysisButton = within(navigation).getByRole('button', { name: /analisi stagione/i });
     fireEvent.click(seasonAnalysisButton);
@@ -780,7 +777,7 @@ describe('Mockup roadmap UI features', () => {
     expect(scrollIntoView).toHaveBeenCalled();
   });
 
-  it('renders the install button as the last item in the navigation list', async () => {
+  it('renders the install button in the navigation menu', async () => {
     setupFetch();
     render(<App />);
 
@@ -788,51 +785,7 @@ describe('Mockup roadmap UI features', () => {
       expect(screen.queryByTestId('pitstop-loader')).not.toBeInTheDocument();
     });
 
-    const navList = screen.getByRole('navigation', { name: /sezioni applicazione/i }).querySelector('.section-nav-list');
-    const buttons = within(navList as HTMLElement).getAllByRole('button');
-    const lastButton = buttons[buttons.length - 1];
-
-    expect(lastButton).toHaveTextContent(/installa applicazione/i);
-  });
-
-  it('shows the back-to-top button when the hero panel is scrolled out of view and scrolls back to the navigation element', async () => {
-    const originalObserver = window.IntersectionObserver;
-    Object.defineProperty(window, 'IntersectionObserver', {
-      writable: true,
-      value: undefined,
-    });
-
-    setupFetch();
-    const scrollIntoViewMock = vi.fn();
-
-    render(<App />);
-
-    await waitFor(() => {
-      expect(screen.queryByTestId('pitstop-loader')).not.toBeInTheDocument();
-    });
-
-    const navigation = screen.getByRole('navigation', { name: /sezioni applicazione/i });
-    Object.defineProperty(navigation, 'scrollIntoView', {
-      configurable: true,
-      value: scrollIntoViewMock,
-    });
-
-    expect(screen.queryByRole('button', { name: /torna al menu/i })).not.toBeInTheDocument();
-
-    await act(async () => {
-      Object.defineProperty(window, 'scrollY', { value: 500, configurable: true });
-      window.dispatchEvent(new Event('scroll'));
-    });
-
-    const backToTopButton = screen.getByRole('button', { name: /torna al menu/i });
-    expect(backToTopButton).toBeInTheDocument();
-
-    fireEvent.click(backToTopButton);
-    expect(scrollIntoViewMock).toHaveBeenCalledWith({ behavior: 'smooth' });
-
-    Object.defineProperty(window, 'IntersectionObserver', {
-      writable: true,
-      value: originalObserver,
-    });
+    const installButton = screen.getByRole('button', { name: /installa/i });
+    expect(installButton).toBeInTheDocument();
   });
 });

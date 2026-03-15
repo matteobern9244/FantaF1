@@ -2,6 +2,14 @@
 
 Cronologia sintetica delle release documentate del progetto Fanta Formula 1.
 
+## [In Progress]
+- **Rielaborazione Menu UI Adattivo (F1 Racing Theme)**: introdotta una nuova architettura di navigazione con sidebar fissa a sinistra per desktop (collassabile) e menu overlay a tutto schermo per mobile, garantendo un'esperienza immersiva e moderna.
+- **Visual Design Immersivo**: implementato il nuovo branding "F1 Racing Theme" con background scuri, pattern carbon-fiber, accenti rosso F1 hi-contrast e un nuovo componente `MenuLogo` stilizzato con ombre e inclinazioni racing.
+- **Consolidamento Controlli Utente e Admin**: i pulsanti "Modalità Admin", "Vista Pubblica", "Logout" e "Installa Applicazione" sono stati rimossi dall'header principale e integrati organicamente nel footer del menu di navigazione, pulendo drasticamente la visuale della hero.
+- **Rimozione Componenti Ridondanti**: eliminato il pulsante floating "Torna al menu" e la relativa logica di scroll, resi obsoleti dalla nuova navigazione fissa sempre accessibile.
+- **Zero Regressioni e Troncamento Testi**: risolti i problemi di troncamento dei testi nelle voci di menu tramite layout flessibile; garantita la piena cliccabilità e funzionalità di ogni voce di navigazione su tutti i breakpoint.
+- **TDD e Validazione Totale**: aggiunti 18 nuovi unit test per i componenti `Sidebar` e `MobileOverlay`; aggiornata l'intera suite di roadmap test (13 test) e la diagnostica `ui-responsive` per riflettere i nuovi selettori DOM, mantenendo la copertura al 100% su tutto il perimetro modificato.
+
 ## [1.5.2] - 2026-03-15
 - **Fix Operativo del Trigger `deploya`**: [AGENTS.md](/Users/matteobernardini/code/FantaF1/AGENTS.md) distingue ora in modo piu' preciso il preflight del trigger persistente e il caso di cutover intenzionale `develop -> main`, evitando falsi stop quando `main` e' ancora sul vecchio stack per scelta di governance pre-merge.
 - **Coerenza Test Documentali sul Flusso di Release**: i controlli di consistenza in [backend-csharp/tests/FantaF1.Tests.Unit/PortingDocumentationConsistencyTests.cs](/Users/matteobernardini/code/FantaF1/backend-csharp/tests/FantaF1.Tests.Unit/PortingDocumentationConsistencyTests.cs) sono stati riallineati ai guardrail aggiornati del workflow di deploy, mantenendo invariata la safety net del branch C#.

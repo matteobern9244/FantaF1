@@ -94,6 +94,8 @@ import PublicStandingsPanel from './components/PublicStandingsPanel';
 import SeasonAnalysisPanel from './components/SeasonAnalysisPanel';
 import WeekendLivePanel from './components/WeekendLivePanel';
 import WeekendPulseHeroCard from './components/WeekendPulseHeroCard';
+import Sidebar from './components/Sidebar';
+import MobileOverlay from './components/MobileOverlay';
 import { appText } from './uiText';
 import {
   getWeekendPredictionState,
@@ -256,6 +258,7 @@ function App() {
   const [installPromptEvent, setInstallPromptEvent] = useState<DeferredInstallPromptEvent | null>(null);
   const [isAppInstalled, setIsAppInstalled] = useState(() => isStandaloneInstallContext());
   const [isMobileViewport, setIsMobileViewport] = useState(() => window.matchMedia('(max-width: 767px)').matches);
+  const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
   const [showInstallInstructions, setShowInstallInstructions] = useState(false);
   const [showAdminLogin, setShowAdminLogin] = useState(false);
   const [adminPassword, setAdminPassword] = useState('');
@@ -266,7 +269,6 @@ function App() {
   const [selectedRacePhase, setSelectedRacePhase] = useState<RacePhase>('open');
   const [selectedRaceHighlightsVideoUrl, setSelectedRaceHighlightsVideoUrl] = useState('');
   const [activeSectionId, setActiveSectionId] = useState('');
-  const [showBackToTop, setShowBackToTop] = useState(false);
   const selectedMeetingKeyRef = useRef(selectedMeetingKey);
   const toastTimeoutRef = useRef<number | null>(null);
   const initialHashHandledRef = useRef(false);
@@ -458,33 +460,6 @@ function App() {
   useEffect(() => {
     // isMobileViewport effect placeholder
   }, [isMobileViewport]);
-
-  useEffect(() => {
-    const heroPanel = document.querySelector('header.hero-panel');
-
-    if (typeof window.IntersectionObserver === 'function' && heroPanel) {
-      const observer = new window.IntersectionObserver(
-        ([entry]) => {
-          setShowBackToTop(!entry.isIntersecting);
-        },
-        { threshold: 0 }
-      );
-
-      observer.observe(heroPanel);
-
-      return () => {
-        observer.disconnect();
-      };
-    } else {
-      // Fallback
-      function handleScroll() {
-        setShowBackToTop(window.scrollY > 400);
-      }
-
-      window.addEventListener('scroll', handleScroll);
-      return () => window.removeEventListener('scroll', handleScroll);
-    }
-  }, []);
 
   useEffect(() => {
     let isCancelled = false;
@@ -1278,15 +1253,6 @@ function App() {
     }
   }
 
-  function renderInstallButton() {
-    return (
-      <button className="secondary-button install-button" onClick={handleInstallApp} type="button">
-        <Download size={16} />
-        {uiText.buttons.installApp}
-      </button>
-    );
-  }
-
   function getExpandedHistoryKey(record: AppData['history'][number], index: number) {
     return `${record.gpName}-${record.date}-${index}`;
   }
@@ -1414,6 +1380,43 @@ function App() {
   /* v8 ignore next -- layout is exercised end-to-end via RTL and browser smoke tests */
   return (
     <div className="app-shell">
+      <Sidebar
+        items={sectionNavigationItems}
+        activeId={activeSectionId}
+        onItemClick={navigateToSection}
+        isAdmin={sessionState.isAdmin}
+        viewMode={viewMode}
+        onViewModeToggle={() => setViewMode(viewMode === 'public' ? 'admin' : 'public')}
+        onLogout={handleAdminLogout}
+        onLogin={() => setShowAdminLogin(true)}
+        onInstall={handleInstallApp}
+        showInstall={true}
+      />
+
+      {isMobileNavOpen && (
+        <MobileOverlay
+          items={sectionNavigationItems}
+          activeId={activeSectionId}
+          onItemClick={navigateToSection}
+          isAdmin={sessionState.isAdmin}
+          viewMode={viewMode}
+          onViewModeToggle={() => setViewMode(viewMode === 'public' ? 'admin' : 'public')}
+          onLogout={handleAdminLogout}
+          onLogin={() => setShowAdminLogin(true)}
+          onClose={() => setIsMobileNavOpen(false)}
+          onInstall={handleInstallApp}
+          showInstall={true}
+        />
+      )}
+
+      <button
+        className="mobile-menu-trigger"
+        onClick={() => setIsMobileNavOpen(true)}
+        aria-label="Open menu"
+      >
+        <ListChecks size={24} />
+      </button>
+
       <header
         className="hero-panel"
       >
@@ -1438,41 +1441,6 @@ function App() {
               </span>
             ))}
           </div>
-          <div className="hero-controls">
-            <div className="view-mode-toggle" aria-label={uiText.labels.viewMode} role="group">
-              <button
-                className={`secondary-button toggle-button ${!isPublicView ? 'active' : ''}`.trim()}
-                onClick={() => {
-                  if (sessionState.isAdmin) {
-                    setViewMode('admin');
-                    return;
-                  }
-
-                  setShowAdminLogin(true);
-                }}
-                type="button"
-                aria-pressed={!isPublicView}
-              >
-                <LockKeyhole size={16} />
-                {uiText.buttons.adminView}
-              </button>
-              <button
-                className={`secondary-button toggle-button ${isPublicView ? 'active' : ''}`.trim()}
-                onClick={() => setViewMode('public')}
-                type="button"
-                aria-pressed={isPublicView}
-              >
-                <Smartphone size={16} />
-                {uiText.buttons.publicView}
-              </button>
-            </div>
-            {sessionState.isAdmin ? (
-              <button className="secondary-button install-button" onClick={handleAdminLogout} type="button">
-                <LogOut size={16} />
-                {uiText.buttons.logout}
-              </button>
-            ) : null}
-          </div>
         </div>
         <div className="hero-brand">
           <AppLogo />
@@ -1485,23 +1453,6 @@ function App() {
           </h1>
           <p className="subtitle">{currentYear}</p>
         </div>
-
-        <nav aria-label={appText.shell.navigation.ariaLabel} className="section-nav">
-          <div className="section-nav-list">
-            {sectionNavigationItems.map((item) => (
-              <button
-                key={item.id}
-                aria-pressed={activeSectionId === item.id}
-                className={`secondary-button section-nav-button ${activeSectionId === item.id ? 'active' : ''}`.trim()}
-                onClick={() => navigateToSection(item.id)}
-                type="button"
-              >
-                {item.label}
-              </button>
-            ))}
-            {renderInstallButton()}
-          </div>
-        </nav>
 
         <div className="hero-summary-grid">
           <section className="hero-card next-race-card interactive-surface">
@@ -2121,20 +2072,6 @@ function App() {
         <div className={`toast-shell toast-${toast.tone}`} role="status" aria-live="polite">
           {toast.message}
         </div>
-      ) : null}
-
-      {showBackToTop ? (
-        <button
-          aria-label="Torna al menu"
-          className="secondary-button back-to-top"
-          onClick={() => {
-            const navElement = document.querySelector('.section-nav');
-            navElement?.scrollIntoView({ behavior: 'smooth' });
-          }}
-          type="button"
-        >
-          <ArrowUp size={20} />
-        </button>
       ) : null}
 
       <footer className="app-footer">
