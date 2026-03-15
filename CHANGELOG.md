@@ -4,9 +4,8 @@ Cronologia sintetica delle release documentate del progetto Fanta Formula 1.
 
 ## [Unreleased]
 
-- **Menu Hambuger**: trasformato il menu in style hambuger.
-- **Menu Mobile con Label `Formula1` e Card Più Ariose**: le voci dell'overlay mobile usano ora il font `Formula1` invece di `Formula1Wide`, con altezza aumentata e contenuto centrato nella card per una lettura più pulita sui viewport stretti.
-- **Menu Mobile Più Leggibile Senza Cambiare Font**: l'overlay mobile mantiene il font Formula 1 esistente ma usa ora geometria piu' favorevole per copy, icone e wrapping, cosi' le label non appaiono piu' schiacciate o stretchate sui viewport stretti.
+- **Menu Hamburger Rifinito per Mobile**: l'overlay mobile mantiene il font `Formula1` sulle voci di navigazione, con dimensione finale portata a `20px` per una leggibilita' piu' netta senza tornare al font `Formula1Wide`.
+- **Label Mobile Più Chiare e Centrate**: le voci del menu mobile mantengono card piu' ariose, contenuto centrato e wrapping meno aggressivo, cosi' il testo resta piu' leggibile e non appare schiacciato sui viewport stretti.
 - **Affordance della Sezione Corrente Migliorata su Mobile**: il menu overlay espone un riepilogo sticky della sezione attiva e conserva una navigazione piu' intuitiva durante lo scroll, riallineando l'esperienza mobile alla chiarezza gia' presente nella sidebar desktop.
 - **TDD Regressivo su Overlay Mobile e Roadmap Navigation**: estesi i test UI per coprire il riepilogo della sezione corrente, i fallback di rendering del menu mobile e la persistenza dell'orientamento utente dopo riapertura e navigazione tra le sezioni.
 - **TDD Statico sui Nuovi Vincoli Tipografici del Menu Mobile**: aggiunto un test CSS dedicato per bloccare altezza minima, centratura del contenuto e uso di `Formula1` sulle label dell'overlay mobile, evitando regressioni future sul layout.

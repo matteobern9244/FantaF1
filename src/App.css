@@ -2344,7 +2344,7 @@ select:disabled {
   font-family: 'Formula1', sans-serif;
   display: block;
   min-width: 0;
-  font-size: 0.84rem;
+  font-size: 20px;
   font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.04em;
@@ -2361,10 +2361,6 @@ select:disabled {
 
   .mobile-nav-current {
     padding: 13px 14px;
-  }
-
-  .mobile-nav-label {
-    font-size: 0.8rem;
   }
 
   .mobile-nav-current-label {

@@ -108,7 +108,7 @@ Il lock e' server-side:
 - shell responsive desktop/mobile (F1 Racing Theme)
 - sidebar adattiva desktop (collassabile) e menu mobile overlay a tutto schermo
 - hardening della navigation shell: collapse desktop agganciato allo stato reale della shell, trigger mobile localizzato e scroll lock del body mentre l'overlay e' aperto
-- overlay mobile rifinito per leggibilita' e orientamento: label delle voci in font `Formula1`, card piu' alte, contenuto centrato e wrapping meno aggressivo per evitare label schiacciate sui viewport stretti
+- overlay mobile rifinito per leggibilita' e orientamento: label delle voci in font `Formula1` a `20px`, card piu' alte, contenuto centrato e wrapping meno aggressivo per evitare label schiacciate sui viewport stretti
 - riepilogo sticky della sezione corrente nel menu mobile per mantenere piu' intuitiva la navigazione quando l'utente scrolla o riapre l'overlay
 - branding MenuLogo integrato con accenti hi-contrast
 - hero full-width pulita (controlli admin/public spostati nel menu)
