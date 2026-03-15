@@ -257,7 +257,7 @@ Where applicable this includes:
 - Main automated test stack: Vitest (Frontend), xUnit (Backend), and React Testing Library.
 - Coverage provider: V8 (Frontend), coverlet (Backend).
 - Current verified merged baseline for the configured official application-code scope is **100% statements (5176 / 5176)**, **100% functions (408 / 408)**, **100% branches (2096 / 2096)**, and **100% lines (5176 / 5176)**, aligned with the thresholds currently documented in `README.md`.
-- Official backend-csharp application coverage on `backend-csharp/src/` is **100% line coverage (2927 / 2927)**, **100% branch coverage (1647 / 1647)**, and **100% method coverage (487 / 487)** across **70 included files**, as reported by `npm run test:csharp-coverage`.
+- Official backend-csharp application coverage on `backend-csharp/src/` is **100% line coverage (2932 / 2932)**, **100% branch coverage (1653 / 1653)**, and **100% method coverage (489 / 489)** across **70 included files**, as reported by `npm run test:csharp-coverage`.
 - Whenever a task produces a new verified merged Release coverage result, update this baseline in `AGENTS.md` to the new numbers.
 - If a task produces a new verified merged coverage result for the tracked scope, update the baseline in `AGENTS.md` and never accept a regression below that verified baseline.
 

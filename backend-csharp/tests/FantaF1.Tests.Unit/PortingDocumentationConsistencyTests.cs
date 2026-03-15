@@ -75,11 +75,28 @@ public sealed class PortingDocumentationConsistencyTests
         Assert.Contains("`ASPNETCORE_ENVIRONMENT=Production`", readme, StringComparison.Ordinal);
         Assert.Contains("`Frontend__BuildPath=./dist`", readme, StringComparison.Ordinal);
         Assert.Contains("`PORT=3001`", readme, StringComparison.Ordinal);
+        Assert.Contains("`VITE_APP_LOCAL_NAME=<opzionale; solo se serve un titolo hero differenziato>`", readme, StringComparison.Ordinal);
+        Assert.Contains("`VITE_APP_LOCAL_NAME=<opzionale; normalmente da lasciare vuota>`", readme, StringComparison.Ordinal);
         Assert.Contains("`MONGODB_URI_CI`", readme, StringComparison.Ordinal);
         Assert.Contains("`ADMIN_SESSION_SECRET_CI`", readme, StringComparison.Ordinal);
         Assert.Contains("ASPNETCORE_ENVIRONMENT=Development", envExample, StringComparison.Ordinal);
         Assert.Contains("MONGODB_DB_NAME_OVERRIDE=", envExample, StringComparison.Ordinal);
         Assert.DoesNotContain("NODE_ENV=", envExample, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Readme_contains_an_explicit_render_cutover_runbook_for_production()
+    {
+        var readme = ReadRepositoryFile("README.md");
+
+        Assert.Contains("### Runbook di switch produzione post-merge", readme, StringComparison.Ordinal);
+        Assert.Contains("Environment type: `Docker`", readme, StringComparison.Ordinal);
+        Assert.Contains("Dockerfile path: `./Dockerfile`", readme, StringComparison.Ordinal);
+        Assert.Contains("branch: `main`", readme, StringComparison.Ordinal);
+        Assert.Contains("`GET /api/health`", readme, StringComparison.Ordinal);
+        Assert.Contains("`databaseTarget=fantaf1`", readme, StringComparison.Ordinal);
+        Assert.Contains("`environment=production`", readme, StringComparison.Ordinal);
+        Assert.Contains("vecchie env Node/Express non piu' usate", readme, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -114,12 +131,12 @@ public sealed class PortingDocumentationConsistencyTests
             "**100% statements (5176 / 5176)**, **100% functions (408 / 408)**, **100% branches (2096 / 2096)**, and **100% lines (5176 / 5176)**",
             agents,
             StringComparison.Ordinal);
-        Assert.Contains("`2927 / 2927` lines", readme, StringComparison.Ordinal);
-        Assert.Contains("`1647 / 1647` branches", readme, StringComparison.Ordinal);
-        Assert.Contains("`487 / 487` methods", readme, StringComparison.Ordinal);
-        Assert.Contains("**100% line coverage (2927 / 2927)**", agents, StringComparison.Ordinal);
-        Assert.Contains("**100% branch coverage (1647 / 1647)**", agents, StringComparison.Ordinal);
-        Assert.Contains("**100% method coverage (487 / 487)**", agents, StringComparison.Ordinal);
+        Assert.Contains("`2932 / 2932` lines", readme, StringComparison.Ordinal);
+        Assert.Contains("`1653 / 1653` branches", readme, StringComparison.Ordinal);
+        Assert.Contains("`489 / 489` methods", readme, StringComparison.Ordinal);
+        Assert.Contains("**100% line coverage (2932 / 2932)**", agents, StringComparison.Ordinal);
+        Assert.Contains("**100% branch coverage (1653 / 1653)**", agents, StringComparison.Ordinal);
+        Assert.Contains("**100% method coverage (489 / 489)**", agents, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -127,7 +144,8 @@ public sealed class PortingDocumentationConsistencyTests
     {
         var changelog = ReadRepositoryFile("CHANGELOG.md");
 
-        Assert.Contains("## [1.5.0] - 2026-03-15", changelog, StringComparison.Ordinal);
+        Assert.Contains("## [1.5.1] - 2026-03-15", changelog, StringComparison.Ordinal);
+        Assert.Contains("Runbook Ufficiale di Cutover Render Produzione", changelog, StringComparison.Ordinal);
         Assert.Contains("Documentazione Canonica Consolidata", changelog, StringComparison.Ordinal);
         Assert.Contains("Audit Finale Database Pre-Cutover", changelog, StringComparison.Ordinal);
         Assert.Contains("Workflow CI/CD Riverificati Localmente", changelog, StringComparison.Ordinal);

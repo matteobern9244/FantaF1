@@ -283,7 +283,7 @@ Impostare esplicitamente:
 - `ASPNETCORE_ENVIRONMENT=Staging`
 - `Frontend__BuildPath=./dist`
 - `PORT=3001`
-- `VITE_APP_LOCAL_NAME=<opzionale>`
+- `VITE_APP_LOCAL_NAME=<opzionale; solo se serve un titolo hero differenziato>`
 
 Non impostare:
 
@@ -300,7 +300,7 @@ Impostare esplicitamente:
 - `ASPNETCORE_ENVIRONMENT=Production`
 - `Frontend__BuildPath=./dist`
 - `PORT=3001`
-- `VITE_APP_LOCAL_NAME=<opzionale>`
+- `VITE_APP_LOCAL_NAME=<opzionale; normalmente da lasciare vuota>`
 
 Non impostare:
 
@@ -392,6 +392,61 @@ Configurazione servizio:
 
 Lo staging corrente usa `fantaf1_staging`; la produzione usa `fantaf1`.
 
+### Runbook di switch produzione post-merge
+
+Obiettivo del cutover:
+
+- usare in produzione lo stesso modello di deploy Docker gia' attivo su staging
+- servire frontend buildato e backend C# dallo stesso servizio same-origin
+- puntare il runtime di produzione al database `fantaf1`
+- esporre `GET /api/health` con `environment=production` e `databaseTarget=fantaf1`
+
+Procedura operativa:
+
+1. eseguire il merge del branch certificato su `main`
+2. aprire il servizio Render di produzione attuale
+3. verificare se il servizio usa ancora il runtime Node legacy
+4. riallineare il servizio produzione al modello staging:
+   - Environment type: `Docker`
+   - Docker context: root repository
+   - Dockerfile path: `./Dockerfile`
+   - branch: `main`
+5. rimuovere configurazioni legacy non piu' valide:
+   - Node build command
+   - Node start command
+   - root dir legacy pensata per il backend Node
+6. impostare solo le env di produzione ufficiali:
+   - `MONGODB_URI=<uri che punta a fantaf1>`
+   - `ADMIN_SESSION_SECRET=<secret lungo e casuale>`
+   - `ASPNETCORE_ENVIRONMENT=Production`
+   - `Frontend__BuildPath=./dist`
+   - `PORT=3001`
+   - `VITE_APP_LOCAL_NAME=<opzionale; normalmente vuota>`
+7. verificare che non siano presenti env vietate:
+   - `MONGODB_DB_NAME_OVERRIDE`
+   - `AdminCredentialSeed__PasswordSalt`
+   - `AdminCredentialSeed__PasswordHashHex`
+   - vecchie env Node/Express non piu' usate
+8. salvare la configurazione e deployare `main`
+9. attendere il completamento del build Docker e del boot runtime
+10. verificare immediatamente:
+   - `GET /api/health`
+   - `GET /`
+   - `GET /api/session`
+   - `GET /api/data`
+   - `GET /api/drivers`
+   - `GET /api/calendar`
+   - `GET /api/standings`
+11. verificare login admin e save flow
+12. confrontare staging e produzione per confermare allineamento funzionale
+
+Condizioni di stop:
+
+- se il servizio produzione non usa davvero Docker + `./Dockerfile`, il cutover non e' pronto
+- se `GET /api/health` non restituisce `environment=production`, il cutover e' fallito
+- se `GET /api/health` non restituisce `databaseTarget=fantaf1`, il cutover e' fallito
+- non usare `MONGODB_DB_NAME_OVERRIDE` per forzare la produzione: il runtime rifiuta target non coerenti
+
 ## CI/CD
 
 Workflow principali:
@@ -423,9 +478,9 @@ Baseline verificata corrente sullo scope ufficiale frontend/repository:
 
 Baseline verificata corrente su `backend-csharp/src/`:
 
-- `2927 / 2927` lines
-- `1647 / 1647` branches
-- `487 / 487` methods
+- `2932 / 2932` lines
+- `1653 / 1653` branches
+- `489 / 489` methods
 - `70` file inclusi
 
 Le soglie repository restano a `100%` su statements, branches, functions e lines.
