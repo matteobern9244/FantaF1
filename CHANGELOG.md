@@ -3,6 +3,8 @@
 Cronologia sintetica delle release documentate del progetto Fanta Formula 1.
 
 ## [Unreleased]
+
+- **Menu Hambuger**: trasformato il menu in style hambuger.
 - **Menu Mobile Più Leggibile Senza Cambiare Font**: l'overlay mobile mantiene il font Formula 1 esistente ma usa ora geometria piu' favorevole per copy, icone e wrapping, cosi' le label non appaiono piu' schiacciate o stretchate sui viewport stretti.
 - **Affordance della Sezione Corrente Migliorata su Mobile**: il menu overlay espone un riepilogo sticky della sezione attiva e conserva una navigazione piu' intuitiva durante lo scroll, riallineando l'esperienza mobile alla chiarezza gia' presente nella sidebar desktop.
 - **TDD Regressivo su Overlay Mobile e Roadmap Navigation**: estesi i test UI per coprire il riepilogo della sezione corrente, i fallback di rendering del menu mobile e la persistenza dell'orientamento utente dopo riapertura e navigazione tra le sezioni.
@@ -11,6 +13,7 @@ Cronologia sintetica delle release documentate del progetto Fanta Formula 1.
 - **TDD Regressivo Multi-Gara sugli Highlights**: aggiunti test backend sul lookup di una gara successiva con naming localizzato e test frontend sulla seconda gara finita e sul fallback UI, mantenendo la coverage ufficiale al `100%`.
 
 ## [1.6.0] - 2026-03-15
+
 - **Rielaborazione Menu UI Adattivo (F1 Racing Theme)**: introdotta una nuova architettura di navigazione con sidebar fissa a sinistra per desktop (collassabile) e menu overlay a tutto schermo per mobile, garantendo un'esperienza immersiva e moderna.
 - **Visual Design Immersivo**: implementato il nuovo branding "F1 Racing Theme" con background scuri, pattern carbon-fiber, accenti rosso F1 hi-contrast e un nuovo componente `MenuLogo` stilizzato con ombre e inclinazioni racing.
 - **Consolidamento Controlli Utente e Admin**: i pulsanti "Modalità Admin", "Vista Pubblica", "Logout" e "Installa Applicazione" sono stati rimossi dall'header principale e integrati organicamente nel footer del menu di navigazione, pulendo drasticamente la visuale della hero.
@@ -31,6 +34,7 @@ Cronologia sintetica delle release documentate del progetto Fanta Formula 1.
 - **Track Conductor di Release Chiusa**: aggiunta e chiusa la track `merge_develop_into_staging_release_20260315` per documentare merge, validazioni, bump versione e allineamento dei documenti canonici.
 
 ## [1.5.2] - 2026-03-15
+
 - **Fix Operativo del Trigger `deploya`**: [AGENTS.md](/Users/matteobernardini/code/FantaF1/AGENTS.md) distingue ora in modo piu' preciso il preflight del trigger persistente e il caso di cutover intenzionale `develop -> main`, evitando falsi stop quando `main` e' ancora sul vecchio stack per scelta di governance pre-merge.
 - **Coerenza Test Documentali sul Flusso di Release**: i controlli di consistenza in [backend-csharp/tests/FantaF1.Tests.Unit/PortingDocumentationConsistencyTests.cs](/Users/matteobernardini/code/FantaF1/backend-csharp/tests/FantaF1.Tests.Unit/PortingDocumentationConsistencyTests.cs) sono stati riallineati ai guardrail aggiornati del workflow di deploy, mantenendo invariata la safety net del branch C#.
 - **PR CI Riallineata al Profilo `Development` per i Gate Locali**: il workflow [.github/workflows/pr-ci.yml](/Users/matteobernardini/code/FantaF1/.github/workflows/pr-ci.yml) esporta ora `ASPNETCORE_ENVIRONMENT=Development` nei job che avviano il backend locale contro `fantaf1_ci`, evitando il crash del bootstrap C# che rifiutava un database CI in profilo `production`.
@@ -40,6 +44,7 @@ Cronologia sintetica delle release documentate del progetto Fanta Formula 1.
 - **Bump Versione Patch per il Cutover su `main`**: aggiornati `package.json`, `package-lock.json`, `README.md` e `CHANGELOG.md` per pubblicare su `main` il delta successivo al tag `v1.5.1`, senza riutilizzare una versione gia' taggata.
 
 ## [1.5.1] - 2026-03-15
+
 - **Fix Propagazione `VITE_APP_LOCAL_NAME` nel Docker Build**: il `Dockerfile` passa ora esplicitamente `VITE_APP_LOCAL_NAME` allo stage frontend `vite build`, cosi' gli override configurati su Render entrano davvero nel bundle statico invece di essere ignorati sul deploy staging/production-like.
 - **Contratto Documentale su `VITE_APP_LOCAL_NAME` Esplicitato**: `README.md` chiarisce ora che `VITE_APP_LOCAL_NAME` e' una build env del frontend Vite, non una runtime env del backend C#, e che ogni modifica su Render richiede rebuild/redeploy del servizio per diventare visibile.
 - **Bump Versione Patch e Riallineamento Release**: aggiornati `package.json`, `package-lock.json`, `README.md` e `CHANGELOG.md` per pubblicare il branch `develop` con una release patch coerente con il change set finale di hardening, cleanup documentale e guardrail operativi del porting C#.
@@ -56,17 +61,21 @@ Cronologia sintetica delle release documentate del progetto Fanta Formula 1.
 - **Riallineamento Documentale del Branch C#**: aggiornati `README.md`, `AGENTS.md`, [PROJECT.md](/Users/matteobernardini/code/FantaF1/PROJECT.md) e i guardrail documentali per riflettere il `Dockerfile` root, le variabili Render correnti, i job CI/CD reali, il default launcher `csharp-dev`, l'uso operativo di `fantaf1_staging` e il fatto che il cutover verso `main` resti soggetto a certificazione finale.
 
 ## [1.4.9] - 2026-03-15
+
 - **Fix Render Dockerfile Rewrite**: eseguita una riscrittura pulita del `Dockerfile` nella root per risolvere l'errore di rilevamento su Render (`open Dockerfile: no such file or directory`); eliminata ogni ambiguità derivante da metadati o varianti del filesystem.
 
 ## [1.4.8] - 2026-03-15
+
 - **Fix Docker Staging Deploy**: spostato il `Dockerfile` nella root del progetto per risolvere definitivamente l'errore di build su Render (`COPY backend/ not found`) derivante da ambiguità nella risoluzione dei percorsi del contesto di build.
 - **Verifica Non-Regressione Locale**: confermata la completa integrità del launcher locale e delle viste responsive dopo la ristrutturazione dei file Docker.
 
 ## [1.4.7] - 2026-03-15
+
 - **Certificazione Baseline C#**: verificata la completa integrità del backend C# con 100% di copertura (linee, branch, metodi) e avvio positivo del servizio locale.
 - **Archiviazione Track Conductor**: completata e archiviata la track dedicata al fix del build Docker e al ripristino del tooling locale.
 
 ## [1.4.6] - 2026-03-15
+
 - **Fix Docker Build Error**: rimosso il comando `COPY backend/` obsoleto dal `Dockerfile` di `backend-csharp`, risolvendo il fallimento del build su Render ambiente staging dopo la rimozione del backend Node.js.
 - **Ripristino Tooling MongoDB Locale**: riaggiunto `mongoose` alle `devDependencies` per ripristinare il funzionamento degli script di setup e provisioning locale (`atlas-provisioning.mjs`, `local-admin-credential.mjs`) e dei relativi test unitari.
 - **Rimozione Script Legacy Obsoleti**: eliminato `scripts/remove-weekend-boost.mjs` e il relativo comando `npm run migrate:remove-weekend-boost`, in quanto dipendevano da path e modelli del backend Node.js rimosso.
