@@ -15,6 +15,7 @@ import {
   BarChart3,
   LockKeyhole,
   Download,
+  Menu,
 } from 'lucide-react';
 import './App.css';
 import {
@@ -1487,7 +1488,7 @@ function App() {
         aria-label={appText.shell.navigation.openButton}
         type="button"
       >
-        <ListChecks size={24} />
+        <Menu size={24} />
       </button>
 
       <header
