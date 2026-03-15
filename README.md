@@ -11,6 +11,12 @@ Applicazione full-stack privata per gestire un Fanta Formula 1 con frontend Reac
 - `main` resta il target di rilascio protetto e va aggiornato solo dopo cutover esplicito.
 - La documentazione operativa canonica del repository vive in questo file; la cronologia di rilascio vive in [CHANGELOG.md](/Users/matteobernardini/code/FantaF1/CHANGELOG.md).
 
+## Stato workspace Conductor
+
+- Il workspace live di Conductor non contiene piu' track attivi sotto [conductor/tracks](/Users/matteobernardini/code/FantaF1/conductor/tracks); tutti i track storici sono stati archiviati sotto [conductor/archive](/Users/matteobernardini/code/FantaF1/conductor/archive).
+- I documenti di piano legacy rimasti in precedenza nel root di `conductor/` sono stati spostati in [conductor/archive/_root-plans](/Users/matteobernardini/code/FantaF1/conductor/archive/_root-plans) e non fanno parte della navigazione live della skill.
+- Il report operativo sul fix di compatibilita' della skill installata vive in [conductor/conductor-skill-operational-feedback.md](/Users/matteobernardini/code/FantaF1/conductor/conductor-skill-operational-feedback.md).
+
 ## Superfici runtime
 
 - Staging Render: [fantaf1-staging.onrender.com](https://fantaf1-staging.onrender.com/)

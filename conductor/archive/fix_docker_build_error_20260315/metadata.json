@@ -1,8 +1,18 @@
 {
-  "track_id": "fix_docker_build_error_20260315",
+  "id": "fix_docker_build_error_20260315",
+  "slug": "fix-docker-build-error-on-render-staging-due-to-missing-backend-directory-in-backend-csharp-dockerfile",
+  "title": "Fix Docker build error on Render staging due to missing /backend directory in backend-csharp/Dockerfile.",
+  "status": "archived",
+  "phase": "archived",
+  "createdAt": "2026-03-15T06:55:00Z",
+  "updatedAt": "2026-03-15T06:55:00Z",
+  "archivedAt": "2026-03-15T06:55:00Z",
+  "path": "conductor/archive/fix_docker_build_error_20260315",
+  "relatedTrackIds": [],
+  "activeTask": "Archived",
+  "description": "Fix Docker build error on Render staging due to missing /backend directory in backend-csharp/Dockerfile.",
   "type": "bug",
-  "status": "new",
+  "track_id": "fix_docker_build_error_20260315",
   "created_at": "2026-03-15T06:55:00Z",
-  "updated_at": "2026-03-15T06:55:00Z",
-  "description": "Fix Docker build error on Render staging due to missing /backend directory in backend-csharp/Dockerfile."
+  "updated_at": "2026-03-15T06:55:00Z"
 }

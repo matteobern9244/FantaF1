@@ -1,0 +1,17 @@
+{
+  "id": "integrate_dotnet_format_20260314",
+  "slug": "integrazione-dotnet-format-nel-workflow-c-e-ci-cd",
+  "title": "Integrazione dotnet format nel workflow C# e CI/CD",
+  "status": "archived",
+  "phase": "archived",
+  "createdAt": "2026-03-14T16:15:00Z",
+  "updatedAt": "2026-03-15T18:20:50Z",
+  "archivedAt": "2026-03-15T18:20:50Z",
+  "path": "conductor/archive/integrate_dotnet_format_20260314",
+  "relatedTrackIds": [],
+  "activeTask": "Archived",
+  "description": "Aggiunta del controllo di formattazione C# tramite 'dotnet format' sia localmente che nella pipeline CI/CD per garantire la qualit\u00e0 del codice.",
+  "created_at": "2026-03-14T16:15:00Z",
+  "updated_at": "2026-03-14T16:30:00Z",
+  "directory": "integrate_dotnet_format_20260314"
+}

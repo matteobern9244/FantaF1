@@ -2,6 +2,12 @@
 
 Cronologia sintetica delle release documentate del progetto Fanta Formula 1.
 
+## [Unreleased]
+- **Archiviazione Completa del Workspace Conductor**: tutti i track live sono stati promossi amministrativamente a `done`, archiviati sotto `conductor/archive/` e rimossi dalla navigazione attiva; `conductor/tracks` non contiene piu' track residui e gli indici `conductor/index.md` e `conductor/tracks.md` sono stati rigenerati in coerenza con lo stato finale.
+- **Hardening della Skill Conductor sul Flusso Archive**: la skill installata normalizza ora il pre-archive dei track, aggiorna in modo minimo `review.md` e `verify.md` durante la chiusura amministrativa e supporta l'archiviazione coerente dei track legacy/non-`done` nel repository reale.
+- **Archiviazione dei Root Plans Legacy di Conductor**: i documenti di piano rimasti nel root di `conductor/` (`fix-mappa`, `fix-scroll-jank`, `feature-standings`, `enforce-commit-docs-rule`, `subphase-11-plan`) sono stati spostati in `conductor/archive/_root-plans/`, lasciando nel root solo i file operativi ancora vivi del workspace.
+- **Test di Compatibilita' Conductor Estesi**: [tests/conductor-skill-compatibility.test.js](/Users/matteobernardini/code/FantaF1/tests/conductor-skill-compatibility.test.js) copre ora anche l'archiviazione massiva dei track attivi e la verifica che i root plans legacy non restino piu' nel root di `conductor/`.
+
 ## [1.5.2] - 2026-03-15
 - **Fix Operativo del Trigger `deploya`**: [AGENTS.md](/Users/matteobernardini/code/FantaF1/AGENTS.md) distingue ora in modo piu' preciso il preflight del trigger persistente e il caso di cutover intenzionale `develop -> main`, evitando falsi stop quando `main` e' ancora sul vecchio stack per scelta di governance pre-merge.
 - **Coerenza Test Documentali sul Flusso di Release**: i controlli di consistenza in [backend-csharp/tests/FantaF1.Tests.Unit/PortingDocumentationConsistencyTests.cs](/Users/matteobernardini/code/FantaF1/backend-csharp/tests/FantaF1.Tests.Unit/PortingDocumentationConsistencyTests.cs) sono stati riallineati ai guardrail aggiornati del workflow di deploy, mantenendo invariata la safety net del branch C#.

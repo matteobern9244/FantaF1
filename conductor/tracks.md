@@ -1,88 +1,40 @@
-# Project Tracks
+# Tracks
 
-Questo file tiene traccia di tutte le track principali del progetto. Ogni track ha il suo piano dettagliato nella rispettiva cartella.
+This file is the compact summary view of Conductor tracks in this repository.
 
----
+## Active Tracks
 
-- [x] **Track: Verifica e certificazione della copertura test al 100% e dell'integrità del workflow Conductor**
-  *Link: [./tracks/verify_workflow_20260314/](./tracks/verify_workflow_20260314/)*
+No active tracks currently registered.
 
----
+## Archived Tracks
 
-- [x] **Track: Verifica Anti-Regressione Porting C# (Fase 1-9)**
-  *Link: [./tracks/verify_csharp_porting_20260314/](./tracks/verify_csharp_porting_20260314/)*
+- `achieve_100_coverage_20260314` | Certificazione Copertura Test 100% (Frontend, Node, C#) | `archived` | phase `archived` | Archived | `conductor/archive/achieve_100_coverage_20260314`
+- `archive_completed_tasks_20260314` | eliminare tutti i task effettuati e completi all'interno della folder conductor | `archived` | phase `archived` | Archived | `conductor/archive/archive_completed_tasks_20260314`
+- `backup_production_db_20260314` | Full dump of production database 'fantaf1' before Phase 11 | `archived` | phase `archived` | Archived | `conductor/archive/backup_production_db_20260314`
+- `build_verify_launch_20260314` | Build completa, verifica e lancio locale | `archived` | phase `archived` | Archived | `conductor/archive/build_verify_launch_20260314`
+- `cleanup_atlas_databases_20260314` | Analisi e Pulizia Database MongoDB Atlas | `archived` | phase `archived` | Archived | `conductor/archive/cleanup_atlas_databases_20260314`
+- `create_env_config_20260314` | Creazione e configurazione file .env locale | `archived` | phase `archived` | Archived | `conductor/archive/create_env_config_20260314`
+- `csharp_backend_migration_20260314` | Rimuovere completamente il backend Node.js, mantenendo solo il backend C# come backend ufficiale, la parte frontend e i file vitali dell'applicazione, garantendo la piena funzionalità e la copertura del 100% senza regressioni in locale e in produzione per render.com (ambiente staging). | `archived` | phase `archived` | Archived | `conductor/archive/csharp_backend_migration_20260314`
+- `enforce_versioning_rule_20260314` | enforce versioning rule 20260314 | `archived` | phase `archived` | Archived | `conductor/archive/enforce_versioning_rule_20260314`
+- `fix-dropdowns` | fix-dropdowns | `archived` | phase `archived` | Archived | `conductor/archive/fix-dropdowns`
+- `fix-scroll-performance` | fix-scroll-performance | `archived` | phase `archived` | Archived | `conductor/archive/fix-scroll-performance`
+- `fix_docker_build_error_20260315` | Fix Docker build error on Render staging due to missing /backend directory in backend-csharp/Dockerfile. | `archived` | phase `archived` | Archived | `conductor/archive/fix_docker_build_error_20260315`
+- `fix_local_backend_startup_failure_20260314` | Fix fallimento avvio backend locale durante preflight | `archived` | phase `archived` | Archived | `conductor/archive/fix_local_backend_startup_failure_20260314`
+- `fix_render_dockerfile_not_found_20260315` | Fix Render Dockerfile not found error by clean rewrite and verification. | `archived` | phase `archived` | Archived | `conductor/archive/fix_render_dockerfile_not_found_20260315`
+- `fix_render_staging_deploy_definitive_20260315` | Definitive fix for Render staging deploy error: '/backend' not found. | `archived` | phase `archived` | Archived | `conductor/archive/fix_render_staging_deploy_definitive_20260315`
+- `integrate_dotnet_format_20260314` | Integrazione dotnet format nel workflow C# e CI/CD | `archived` | phase `archived` | Archived | `conductor/archive/integrate_dotnet_format_20260314`
+- `porting_csharp_phase_10_20260314` | Docker Render Staging and Atlas Operationalization (Phase 10) for C# Backend Port | `archived` | phase `archived` | Archived | `conductor/archive/porting_csharp_phase_10_20260314`
+- `restore_prod_to_staging_20260314` | Restore production database dump to staging for testing | `archived` | phase `archived` | Archived | `conductor/archive/restore_prod_to_staging_20260314`
+- `setup_dotnet10_20260314` | setup dotnet10 20260314 | `archived` | phase `archived` | Archived | `conductor/archive/setup_dotnet10_20260314`
+- `setup_mongodb_tooling_20260314` | Install MongoDB Database Tools and mongosh via Homebrew | `archived` | phase `archived` | Archived | `conductor/archive/setup_mongodb_tooling_20260314`
+- `verify-subphase-07` | verify-subphase-07 | `archived` | phase `archived` | Archived | `conductor/archive/verify-subphase-07`
+- `verify_after_clean_20260314` | Verify Build and Tests after git clean -fdx | `archived` | phase `archived` | Archived | `conductor/archive/verify_after_clean_20260314`
+- `verify_csharp_porting_20260314` | Verifica Anti-Regressione Porting C# (Fase 1-9) | `archived` | phase `archived` | Archived | `conductor/archive/verify_csharp_porting_20260314`
+- `verify_docker_dotnet10_20260314` | verify docker dotnet10 20260314 | `archived` | phase `archived` | Archived | `conductor/archive/verify_docker_dotnet10_20260314`
+- `verify_docker_staging_local_20260315` | Local verification of Docker build and staging simulation. | `archived` | phase `archived` | Archived | `conductor/archive/verify_docker_staging_local_20260315`
+- `verify_workflow_20260314` | Verifica e certificazione della copertura test al 100% e dell'integrità del workflow Conductor | `archived` | phase `archived` | Archived | `conductor/archive/verify_workflow_20260314`
 
----
+## Notes
 
-- [x] **Track: Docker Render Staging and Atlas Operationalization (Fase 10)**
-  *Link: [./tracks/porting_csharp_phase_10_20260314/](./tracks/porting_csharp_phase_10_20260314/)*
-
----
-
-- [x] **Track: Setup Tooling MongoDB (mongodump, mongosh)**
-  *Link: [./tracks/setup_mongodb_tooling_20260314/](./tracks/setup_mongodb_tooling_20260314/)*
-
----
-
-- [x] **Track: Backup Database Produzione (fantaf1)**
-  *Link: [./tracks/backup_production_db_20260314/](./tracks/backup_production_db_20260314/)*
-
----
-
-- [x] **Track: Ripristino Dati Produzione su Staging**
-  *Link: [./tracks/restore_prod_to_staging_20260314/](./tracks/restore_prod_to_staging_20260314/)*
-
----
-
-- [x] **Track: Enforce Versioning Discipline**
-  *Link: [./tracks/enforce_versioning_rule_20260314/](./tracks/enforce_versioning_rule_20260314/)*
-
----
-
-- [x] **Track: Verifica e Setup .NET 10 (Locale, Docker, CI/CD)**
-  *Link: [./tracks/setup_dotnet10_20260314/](./tracks/setup_dotnet10_20260314/)*
-
----
-
-- [x] **Track: Validazione Immagine Docker (.NET 10)**
-  *Link: [./tracks/verify_docker_dotnet10_20260314/](./tracks/verify_docker_dotnet10_20260314/)*
-
----
-
-- [x] **Track: Verifica Build e Test dopo git clean -fdx**
-  *Link: [./tracks/verify_after_clean_20260314/](./tracks/verify_after_clean_20260314/)*
-
----
-
-- [x] **Track: Creazione e configurazione file .env locale**
-  *Link: [./tracks/create_env_config_20260314/](./tracks/create_env_config_20260314/)*
-
----
-
-- [x] **Track: Integrazione dotnet format nel workflow C# e CI/CD**
-  *Link: [./tracks/integrate_dotnet_format_20260314/](./tracks/integrate_dotnet_format_20260314/)*
-
----
-
-- [x] **Track: Certificazione Copertura Test 100% (Frontend, Node, C#)**
-  *Link: [./tracks/achieve_100_coverage_20260314/](./tracks/achieve_100_coverage_20260314/)*
-
----
-
-- [x] **Track: Migrazione Finale a C# (Rimozione Node.js)**
-  *Link: [./tracks/csharp_backend_migration_20260314/](./tracks/csharp_backend_migration_20260314/)*
-
----
-
-- [x] **Track: eliminare tutti i task effettuati e completi all'interno della folder conductor**
-  *Link: [./tracks/archive_completed_tasks_20260314/](./tracks/archive_completed_tasks_20260314/)*
-
----
-
-- [x] **Track: Fix Render Dockerfile not found error (clean rewrite)**
-  *Link: [./tracks/fix_render_dockerfile_not_found_20260315/](./tracks/fix_render_dockerfile_not_found_20260315/)*
-
----
-
-- [x] **Track: Local verification of Docker build and staging simulation**
-  *Link: [./tracks/verify_docker_staging_local_20260315/](./tracks/verify_docker_staging_local_20260315/)*
+- `conductor/index.md` is the primary navigation index.
+- Per-track structured state lives in each track's `metadata.json`.
