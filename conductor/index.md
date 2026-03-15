@@ -11,6 +11,13 @@ This file is the prompt-first navigation index for the Conductor workspace in th
 - Active task: No active task
 - Path: `conductor/tracks/fix_local_startup_20260315`
 
+## merge_develop_into_staging_release_20260315 - Merge Develop Into Staging Release
+
+- Status: `done`
+- Phase: `done`
+- Active task: Completed
+- Path: `conductor/tracks/merge_develop_into_staging_release_20260315`
+
 ## Archived Tracks
 
 ## achieve_100_coverage_20260314 - Certificazione Copertura Test 100% (Frontend, Node, C#)

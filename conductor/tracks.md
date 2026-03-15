@@ -5,6 +5,7 @@ This file is the compact summary view of Conductor tracks in this repository.
 ## Active Tracks
 
 - `fix_local_startup_20260315` | Fix Local Startup | `new` | phase `new` | No active task | `conductor/tracks/fix_local_startup_20260315`
+- `merge_develop_into_staging_release_20260315` | Merge Develop Into Staging Release | `done` | phase `done` | Completed | `conductor/tracks/merge_develop_into_staging_release_20260315`
 
 ## Archived Tracks
 
