@@ -4,11 +4,13 @@ This file is the compact summary view of Conductor tracks in this repository.
 
 ## Active Tracks
 
-- `fix_menu_focus_navigation_20260315` | Fix Menu Focus And Active Navigation | `done` | phase `done` | Completed | `conductor/tracks/fix_menu_focus_navigation_20260315`
 - `fix_highlights_lookup_20260315` | Fix Highlights Lookup Availability | `done` | phase `done` | Completed | `conductor/tracks/fix_highlights_lookup_20260315`
 - `fix_local_startup_20260315` | Fix Local Startup | `new` | phase `new` | No active task | `conductor/tracks/fix_local_startup_20260315`
-- `merge_develop_into_staging_release_20260315` | Merge Develop Into Staging Release | `done` | phase `done` | Completed | `conductor/tracks/merge_develop_into_staging_release_20260315`
+- `fix_menu_focus_navigation_20260315` | Fix Menu Focus And Active Navigation | `done` | phase `done` | Completed | `conductor/tracks/fix_menu_focus_navigation_20260315`
+- `fix_menu_third_item_focus_20260315` | Fix Menu Third Item Focus | `done` | phase `done` | Completed | `conductor/tracks/fix_menu_third_item_focus_20260315`
 - `fix_multi_race_highlights_20260315` | Fix Multi Race Highlights | `done` | phase `done` | Completed | `conductor/tracks/fix_multi_race_highlights_20260315`
+- `merge_develop_into_staging_release_20260315` | Merge Develop Into Staging Release | `done` | phase `done` | Completed | `conductor/tracks/merge_develop_into_staging_release_20260315`
+- `track-001` | Fix Mobile Menu Readability And Scroll Affordance | `done` | phase `done` | Completed | `conductor/tracks/track-001-fix-mobile-menu-readability-and-scroll-affordance`
 
 ## Archived Tracks
 
@@ -31,6 +33,7 @@ This file is the compact summary view of Conductor tracks in this repository.
 - `restore_prod_to_staging_20260314` | Restore production database dump to staging for testing | `archived` | phase `archived` | Archived | `conductor/archive/restore_prod_to_staging_20260314`
 - `setup_dotnet10_20260314` | setup dotnet10 20260314 | `archived` | phase `archived` | Archived | `conductor/archive/setup_dotnet10_20260314`
 - `setup_mongodb_tooling_20260314` | Install MongoDB Database Tools and mongosh via Homebrew | `archived` | phase `archived` | Archived | `conductor/archive/setup_mongodb_tooling_20260314`
+- `ui_menu_rework_20260315` | UI Menu Rework | `archived` | phase `archived` | Completed and archived | `conductor/archive/ui_menu_rework_20260315`
 - `verify-subphase-07` | verify-subphase-07 | `archived` | phase `archived` | Archived | `conductor/archive/verify-subphase-07`
 - `verify_after_clean_20260314` | Verify Build and Tests after git clean -fdx | `archived` | phase `archived` | Archived | `conductor/archive/verify_after_clean_20260314`
 - `verify_csharp_porting_20260314` | Verifica Anti-Regressione Porting C# (Fase 1-9) | `archived` | phase `archived` | Archived | `conductor/archive/verify_csharp_porting_20260314`

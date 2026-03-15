@@ -458,7 +458,8 @@
       "publicGuide": "Come funziona",
       "predictions": "Pronostici dei giocatori",
       "results": "Risultati del weekend",
-      "history": "Storico gare"
+      "history": "Storico gare",
+      "currentSection": "Sezione corrente"
     },
     "backend": {
       "health": {

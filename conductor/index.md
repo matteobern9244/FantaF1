@@ -4,13 +4,6 @@ This file is the prompt-first navigation index for the Conductor workspace in th
 
 ## Active Tracks
 
-## fix_menu_focus_navigation_20260315 - Fix Menu Focus And Active Navigation
-
-- Status: `done`
-- Phase: `done`
-- Active task: Completed
-- Path: `conductor/tracks/fix_menu_focus_navigation_20260315`
-
 ## fix_highlights_lookup_20260315 - Fix Highlights Lookup Availability
 
 - Status: `done`
@@ -25,12 +18,19 @@ This file is the prompt-first navigation index for the Conductor workspace in th
 - Active task: No active task
 - Path: `conductor/tracks/fix_local_startup_20260315`
 
-## merge_develop_into_staging_release_20260315 - Merge Develop Into Staging Release
+## fix_menu_focus_navigation_20260315 - Fix Menu Focus And Active Navigation
 
 - Status: `done`
 - Phase: `done`
 - Active task: Completed
-- Path: `conductor/tracks/merge_develop_into_staging_release_20260315`
+- Path: `conductor/tracks/fix_menu_focus_navigation_20260315`
+
+## fix_menu_third_item_focus_20260315 - Fix Menu Third Item Focus
+
+- Status: `done`
+- Phase: `done`
+- Active task: Completed
+- Path: `conductor/tracks/fix_menu_third_item_focus_20260315`
 
 ## fix_multi_race_highlights_20260315 - Fix Multi Race Highlights
 
@@ -38,6 +38,20 @@ This file is the prompt-first navigation index for the Conductor workspace in th
 - Phase: `done`
 - Active task: Completed
 - Path: `conductor/tracks/fix_multi_race_highlights_20260315`
+
+## merge_develop_into_staging_release_20260315 - Merge Develop Into Staging Release
+
+- Status: `done`
+- Phase: `done`
+- Active task: Completed
+- Path: `conductor/tracks/merge_develop_into_staging_release_20260315`
+
+## track-001 - Fix Mobile Menu Readability And Scroll Affordance
+
+- Status: `done`
+- Phase: `done`
+- Active task: Completed
+- Path: `conductor/tracks/track-001-fix-mobile-menu-readability-and-scroll-affordance`
 
 ## Archived Tracks
 
@@ -173,6 +187,13 @@ This file is the prompt-first navigation index for the Conductor workspace in th
 - Phase: `archived`
 - Active task: Archived
 - Path: `conductor/archive/setup_mongodb_tooling_20260314`
+
+## ui_menu_rework_20260315 - UI Menu Rework
+
+- Status: `archived`
+- Phase: `archived`
+- Active task: Completed and archived
+- Path: `conductor/archive/ui_menu_rework_20260315`
 
 ## verify-subphase-07 - verify-subphase-07
 

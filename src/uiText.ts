@@ -24,6 +24,7 @@ const appText = {
       openButton: uiText.buttons.openSections,
       closeButton: uiText.buttons.closeSections,
       ariaLabel: uiText.labels.sectionNavigation,
+      currentSection: uiText.navigation.currentSection,
       items: {
         ...uiText.navigation,
         installApp: uiText.buttons.installApp,

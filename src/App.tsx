@@ -148,6 +148,16 @@ function buildHashUrl(hash: string) {
   return `${window.location.pathname}${window.location.search}#${normalizedHash}`;
 }
 
+function getNavigationAnchorOffset() {
+  return window.matchMedia('(max-width: 900px)').matches ? 176 : 150;
+}
+
+function scrollSectionIntoView(targetElement: HTMLElement, behavior: ScrollBehavior = 'smooth') {
+  const anchorOffset = getNavigationAnchorOffset();
+  const targetTop = Math.max(0, window.scrollY + targetElement.getBoundingClientRect().top - anchorOffset);
+  window.scrollTo({ top: targetTop, behavior });
+}
+
 function isStandaloneInstallContext() {
   const standaloneMediaQuery = window.matchMedia('(display-mode: standalone)');
   const navigatorWithStandalone = navigator as NavigatorWithStandalone;
@@ -399,7 +409,7 @@ function App() {
     }, manualNavigationLockDurationMs);
 
     window.history.replaceState({}, '', buildHashUrl(sectionId));
-    targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    scrollSectionIntoView(targetElement);
     setActiveSectionId(sectionId);
   }
 
@@ -621,7 +631,7 @@ function App() {
       return;
     }
 
-    targetElement.scrollIntoView();
+    scrollSectionIntoView(targetElement, 'auto');
     setActiveSectionId(targetId);
     initialHashHandledRef.current = true;
   }, [loading, viewMode]);
@@ -672,7 +682,21 @@ function App() {
 
         const visibleEntry = entries
           .filter((entry) => entry.isIntersecting)
-          .sort((left, right) => right.intersectionRatio - left.intersectionRatio)[0];
+          .sort((left, right) => {
+            const navigationAnchorOffset = getNavigationAnchorOffset();
+            const leftDistance = Math.abs(left.boundingClientRect.top - navigationAnchorOffset);
+            const rightDistance = Math.abs(right.boundingClientRect.top - navigationAnchorOffset);
+
+            if (leftDistance !== rightDistance) {
+              return leftDistance - rightDistance;
+            }
+
+            if (left.intersectionRatio !== right.intersectionRatio) {
+              return right.intersectionRatio - left.intersectionRatio;
+            }
+
+            return left.boundingClientRect.top - right.boundingClientRect.top;
+          })[0];
 
         if (visibleEntry?.target?.id) {
           setActiveSectionId(visibleEntry.target.id);

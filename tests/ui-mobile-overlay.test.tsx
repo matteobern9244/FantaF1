@@ -27,13 +27,13 @@ describe('MobileOverlay Component', () => {
 
   it('renders all navigation items', () => {
     render(<MobileOverlay {...defaultProps} />);
-    expect(screen.getByText('Calendar')).toBeInTheDocument();
-    expect(screen.getByText('KPIs')).toBeInTheDocument();
+    expect(screen.getAllByText('Calendar')).not.toHaveLength(0);
+    expect(screen.getAllByText('KPIs')).not.toHaveLength(0);
   });
 
   it('calls onItemClick and onClose when an item is clicked', () => {
     render(<MobileOverlay {...defaultProps} />);
-    fireEvent.click(screen.getByText('KPIs'));
+    fireEvent.click(screen.getAllByText('KPIs')[0]);
     expect(defaultProps.onItemClick).toHaveBeenCalledWith('user-kpi-section');
     expect(defaultProps.onClose).toHaveBeenCalled();
   });
@@ -46,8 +46,29 @@ describe('MobileOverlay Component', () => {
 
   it('highlights the active item', () => {
     render(<MobileOverlay {...defaultProps} />);
-    const activeItem = screen.getByText('Calendar').closest('button');
+    const activeItem = screen.getByRole('button', { name: 'Calendar' });
     expect(activeItem).toHaveClass('active');
+    expect(activeItem).toHaveAttribute('aria-current', 'page');
+  });
+
+  it('shows the current section summary using the active item label', () => {
+    render(<MobileOverlay {...defaultProps} />);
+    const currentSection = screen.getByText(appText.shell.navigation.currentSection);
+    expect(currentSection).toBeInTheDocument();
+    expect(screen.getAllByText('Calendar')).toHaveLength(2);
+    expect(currentSection.closest('.mobile-nav-current')).toBeInTheDocument();
+  });
+
+  it('falls back to the first item in the current section summary when the active id is missing', () => {
+    render(<MobileOverlay {...defaultProps} activeId="missing-section" />);
+    const currentSection = screen.getByText(appText.shell.navigation.currentSection);
+    expect(currentSection).toBeInTheDocument();
+    expect(screen.getAllByText('Calendar')).toHaveLength(2);
+  });
+
+  it('omits the current section summary when the navigation item list is empty', () => {
+    render(<MobileOverlay {...defaultProps} items={[]} activeId="missing-section" />);
+    expect(screen.queryByText(appText.shell.navigation.currentSection)).not.toBeInTheDocument();
   });
 
   it('uses fallback icon for unknown items', () => {
@@ -56,7 +77,16 @@ describe('MobileOverlay Component', () => {
       { id: 'unknown-id' as any, label: 'Unknown' },
     ];
     render(<MobileOverlay {...defaultProps} items={customItems} />);
-    expect(screen.getByText('Unknown')).toBeInTheDocument();
+    expect(screen.getAllByText('Unknown')).not.toHaveLength(0);
+  });
+
+  it('uses the fallback icon in the current section summary for an unknown active item', () => {
+    const customItems = [{ id: 'unknown-id' as any, label: 'Unknown' }];
+    const { container } = render(
+      <MobileOverlay {...defaultProps} items={customItems} activeId="unknown-id" />,
+    );
+    expect(screen.getByText(appText.shell.navigation.currentSection)).toBeInTheDocument();
+    expect(container.querySelector('.mobile-nav-current .lucide-gauge')).toBeInTheDocument();
   });
 
   it('shows Admin View icon when in admin mode', () => {

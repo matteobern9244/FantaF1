@@ -650,10 +650,10 @@ describe('Mockup roadmap UI features', () => {
   });
 
   it('hydrates the shared public url state from query params and preserves the requested public filters', async () => {
-    const scrollIntoView = vi.fn();
-    Object.defineProperty(HTMLElement.prototype, 'scrollIntoView', {
+    const scrollTo = vi.fn();
+    Object.defineProperty(window, 'scrollTo', {
       configurable: true,
-      value: scrollIntoView,
+      value: scrollTo,
     });
 
     const appData = createAppData();
@@ -715,7 +715,7 @@ describe('Mockup roadmap UI features', () => {
     expect(screen.getByLabelText(appText.panels.historyArchive.searchLabel)).toHaveValue('Gran');
     expect(screen.getByDisplayValue(/2\.\s+Chinese Grand Prix 2099/i)).toBeInTheDocument();
     expect(screen.getByText(appText.panels.historyArchive.shownCount(1))).toBeInTheDocument();
-    expect(scrollIntoView).toHaveBeenCalled();
+    expect(scrollTo).toHaveBeenCalled();
 
     expect(window.location.search).toContain('meeting=race-2');
     expect(window.location.search).toContain('view=public');
@@ -765,10 +765,10 @@ describe('Mockup roadmap UI features', () => {
 
   it('renders navigation directly in the header and updates the hash on navigation', async () => {
     setupFetch();
-    const scrollIntoView = vi.fn();
-    Object.defineProperty(HTMLElement.prototype, 'scrollIntoView', {
+    const scrollTo = vi.fn();
+    Object.defineProperty(window, 'scrollTo', {
       configurable: true,
-      value: scrollIntoView,
+      value: scrollTo,
     });
 
     render(<App />);
@@ -785,7 +785,7 @@ describe('Mockup roadmap UI features', () => {
     fireEvent.click(seasonAnalysisButton);
 
     expect(window.location.hash).toBe('#season-analysis');
-    expect(scrollIntoView).toHaveBeenCalled();
+    expect(scrollTo).toHaveBeenCalled();
   });
 
   it('renders the install button in the navigation menu', async () => {
@@ -838,6 +838,8 @@ describe('Mockup roadmap UI features', () => {
     expect(overlay).not.toBeNull();
     expect(document.body.style.overflow).toBe('hidden');
     expect(document.body.style.touchAction).toBe('none');
+    expect(within(overlay as HTMLElement).getByText(appText.shell.navigation.currentSection)).toBeInTheDocument();
+    expect(within(overlay as HTMLElement).getAllByText(appText.shell.navigation.items.calendar)).toHaveLength(2);
 
     fireEvent.click(within(overlay as HTMLElement).getByRole('button', { name: appText.shell.navigation.items.publicView }));
 
@@ -899,11 +901,127 @@ describe('Mockup roadmap UI features', () => {
     expect(window.location.hash).toBe('#results-section');
   });
 
-  it('navigates to history even when no archived races exist yet', async () => {
-    const scrollIntoView = vi.fn();
-    Object.defineProperty(HTMLElement.prototype, 'scrollIntoView', {
+  it('keeps the clicked third menu item active when the previous section remains more visible', async () => {
+    setupFetch();
+    const scrollTo = vi.fn();
+    Object.defineProperty(window, 'scrollTo', {
       configurable: true,
-      value: scrollIntoView,
+      value: scrollTo,
+    });
+
+    render(<App />);
+
+    await waitFor(() => {
+      expect(screen.queryByTestId('pitstop-loader')).not.toBeInTheDocument();
+    });
+
+    const navigation = screen.getByRole('navigation', { name: appText.shell.navigation.ariaLabel });
+    const secondButton = within(navigation).getByRole('button', { name: appText.shell.navigation.items.userKpi });
+    const thirdButton = within(navigation).getByRole('button', { name: appText.shell.navigation.items.userAnalytics });
+
+    fireEvent.click(secondButton);
+    expect(secondButton).toHaveClass('active');
+
+    fireEvent.click(thirdButton);
+    expect(thirdButton).toHaveClass('active');
+
+    const secondSection = document.getElementById('user-kpi-section');
+    const thirdSection = document.getElementById('user-analytics-section');
+    expect(secondSection).not.toBeNull();
+    expect(thirdSection).not.toBeNull();
+    expect(MockIntersectionObserver.instances).not.toHaveLength(0);
+
+    act(() => {
+      MockIntersectionObserver.instances[0]?.trigger([
+        {
+          target: thirdSection as Element,
+          isIntersecting: true,
+          intersectionRatio: 0.25,
+          boundingClientRect: { top: 150 } as DOMRectReadOnly,
+        } as IntersectionObserverEntry,
+      ]);
+    });
+
+    act(() => {
+      MockIntersectionObserver.instances[0]?.trigger([
+        {
+          target: secondSection as Element,
+          isIntersecting: true,
+          intersectionRatio: 0.95,
+          boundingClientRect: { top: 20 } as DOMRectReadOnly,
+        } as IntersectionObserverEntry,
+        {
+          target: thirdSection as Element,
+          isIntersecting: true,
+          intersectionRatio: 0.35,
+          boundingClientRect: { top: 150 } as DOMRectReadOnly,
+        } as IntersectionObserverEntry,
+      ]);
+    });
+
+    expect(thirdButton).toHaveClass('active');
+    expect(thirdButton).toHaveAttribute('aria-current', 'page');
+    expect(window.location.hash).toBe('#user-analytics-section');
+    expect(scrollTo).toHaveBeenCalled();
+  });
+
+  it('aligns the mobile third menu item to the navigation anchor and keeps it active after reopening the overlay', async () => {
+    setupFetch();
+    mockMediaMatches({ '(max-width: 900px)': true });
+    const scrollTo = vi.fn();
+    Object.defineProperty(window, 'scrollTo', {
+      configurable: true,
+      value: scrollTo,
+    });
+    Object.defineProperty(window, 'scrollY', {
+      configurable: true,
+      value: 320,
+      writable: true,
+    });
+
+    render(<App />);
+
+    await waitFor(() => {
+      expect(screen.queryByTestId('pitstop-loader')).not.toBeInTheDocument();
+    });
+
+    const thirdSection = document.getElementById('user-analytics-section');
+    expect(thirdSection).not.toBeNull();
+    Object.defineProperty(thirdSection as HTMLElement, 'getBoundingClientRect', {
+      configurable: true,
+      value: () => ({ top: 580 }),
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: appText.shell.navigation.openButton }));
+    const overlay = document.querySelector('.mobile-nav-overlay');
+    expect(overlay).not.toBeNull();
+    expect(within(overlay as HTMLElement).getByText(appText.shell.navigation.currentSection)).toBeInTheDocument();
+
+    const thirdButton = within(overlay as HTMLElement).getByRole('button', {
+      name: appText.shell.navigation.items.userAnalytics,
+    });
+    fireEvent.click(thirdButton);
+
+    expect(scrollTo).toHaveBeenCalledWith({ top: 724, behavior: 'smooth' });
+    expect(window.location.hash).toBe('#user-analytics-section');
+
+    fireEvent.click(screen.getByRole('button', { name: appText.shell.navigation.openButton }));
+    const reopenedOverlay = document.querySelector('.mobile-nav-overlay');
+    expect(reopenedOverlay).not.toBeNull();
+    const reopenedThirdButton = within(reopenedOverlay as HTMLElement).getByRole('button', {
+      name: appText.shell.navigation.items.userAnalytics,
+    });
+
+    expect(within(reopenedOverlay as HTMLElement).getByText(appText.shell.navigation.currentSection)).toBeInTheDocument();
+    expect(reopenedThirdButton).toHaveClass('active');
+    expect(reopenedThirdButton).toHaveAttribute('aria-current', 'page');
+  });
+
+  it('navigates to history even when no archived races exist yet', async () => {
+    const scrollTo = vi.fn();
+    Object.defineProperty(window, 'scrollTo', {
+      configurable: true,
+      value: scrollTo,
     });
 
     setupFetchWithOverrides({
@@ -924,7 +1042,7 @@ describe('Mockup roadmap UI features', () => {
     fireEvent.click(historyButton);
 
     expect(window.location.hash).toBe('#history-archive');
-    expect(scrollIntoView).toHaveBeenCalled();
+    expect(scrollTo).toHaveBeenCalled();
     expect(document.getElementById('history-archive')).not.toBeNull();
     expect(historyButton).toHaveClass('active');
   });

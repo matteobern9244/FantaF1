@@ -134,12 +134,12 @@ public sealed class PortingDocumentationConsistencyTests
             "**100% statements (5212 / 5212)**, **100% functions (412 / 412)**, **100% branches (2114 / 2114)**, and **100% lines (5212 / 5212)**",
             agents,
             StringComparison.Ordinal);
-        Assert.Contains("`2932 / 2932` lines", readme, StringComparison.Ordinal);
-        Assert.Contains("`1653 / 1653` branches", readme, StringComparison.Ordinal);
-        Assert.Contains("`489 / 489` methods", readme, StringComparison.Ordinal);
-        Assert.Contains("**100% line coverage (2932 / 2932)**", agents, StringComparison.Ordinal);
-        Assert.Contains("**100% branch coverage (1653 / 1653)**", agents, StringComparison.Ordinal);
-        Assert.Contains("**100% method coverage (489 / 489)**", agents, StringComparison.Ordinal);
+        Assert.Contains("`2986 / 2986` lines", readme, StringComparison.Ordinal);
+        Assert.Contains("`1671 / 1671` branches", readme, StringComparison.Ordinal);
+        Assert.Contains("`494 / 494` methods", readme, StringComparison.Ordinal);
+        Assert.Contains("**100% line coverage (2986 / 2986)**", agents, StringComparison.Ordinal);
+        Assert.Contains("**100% branch coverage (1671 / 1671)**", agents, StringComparison.Ordinal);
+        Assert.Contains("**100% method coverage (494 / 494)**", agents, StringComparison.Ordinal);
     }
 
     [Fact]

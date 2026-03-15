@@ -57,6 +57,7 @@ describe('Sidebar Component', () => {
     render(<Sidebar {...defaultProps} />);
     const activeItem = screen.getByText('Calendar').closest('button');
     expect(activeItem).toHaveClass('active');
+    expect(activeItem).toHaveAttribute('aria-current', 'page');
   });
 
   it('uses fallback icon for unknown items', () => {

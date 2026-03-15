@@ -91,6 +91,7 @@ const Sidebar: React.FC<SidebarProps> = ({
             <button
               key={item.id}
               className={`sidebar-item ${activeId === item.id ? 'active' : ''}`}
+              aria-current={activeId === item.id ? 'page' : undefined}
               onClick={() => onItemClick(item.id)}
               title={isCollapsed ? item.label : ''}
               type="button"
