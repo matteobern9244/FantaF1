@@ -2,11 +2,14 @@
 
 Cronologia sintetica delle release documentate del progetto Fanta Formula 1.
 
+## [1.4.7] - 2026-03-15
+- **Certificazione Baseline C#**: verificata la completa integrità del backend C# con 100% di copertura (linee, branch, metodi) e avvio positivo del servizio locale.
+- **Archiviazione Track Conductor**: completata e archiviata la track dedicata al fix del build Docker e al ripristino del tooling locale.
+
 ## [1.4.6] - 2026-03-15
 - **Fix Docker Build Error**: rimosso il comando `COPY backend/` obsoleto dal `Dockerfile` di `backend-csharp`, risolvendo il fallimento del build su Render ambiente staging dopo la rimozione del backend Node.js.
 - **Ripristino Tooling MongoDB Locale**: riaggiunto `mongoose` alle `devDependencies` per ripristinare il funzionamento degli script di setup e provisioning locale (`atlas-provisioning.mjs`, `local-admin-credential.mjs`) e dei relativi test unitari.
 - **Rimozione Script Legacy Obsoleti**: eliminato `scripts/remove-weekend-boost.mjs` e il relativo comando `npm run migrate:remove-weekend-boost`, in quanto dipendevano da path e modelli del backend Node.js rimosso.
-- **Certificazione Baseline C#**: verificata la completa integrità del backend C# con 100% di copertura (linee, branch, metodi) e avvio positivo del servizio locale.
 
 ## [1.4.5] - 2026-03-14
 
