@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
 import {
-  ArrowUp,
   CalendarDays,
   Flag,
   ListChecks,
@@ -13,11 +12,9 @@ import {
   Zap,
   FastForward,
   Gauge,
-  Smartphone,
   BarChart3,
   LockKeyhole,
   Download,
-  LogOut,
 } from 'lucide-react';
 import './App.css';
 import {

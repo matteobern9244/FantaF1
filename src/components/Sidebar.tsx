@@ -35,7 +35,7 @@ interface SidebarProps {
   showInstall?: boolean;
 }
 
-const iconMap: Record<SectionNavigationId, React.ComponentType<{ size?: number }>> = {
+const iconMap: Record<SectionNavigationId, React.ComponentType<{ size?: number | string }>> = {
   'calendar-section': CalendarDays,
   'user-kpi-section': BarChart3,
   'user-analytics-section': Zap,
@@ -69,7 +69,7 @@ const Sidebar: React.FC<SidebarProps> = ({
         <button
           className="sidebar-toggle"
           onClick={() => setIsCollapsed(!isCollapsed)}
-          aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+          aria-label={isCollapsed ? appText.shell.navigation.items.expandSidebar : appText.shell.navigation.items.collapseSidebar}
         >
           {isCollapsed ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
         </button>
@@ -97,12 +97,12 @@ const Sidebar: React.FC<SidebarProps> = ({
           <button
             className="sidebar-item install-item"
             onClick={onInstall}
-            title={isCollapsed ? appText.shell.navigation.items.installApp || 'Install PWA' : ''}
+            title={isCollapsed ? appText.shell.navigation.items.installApp : ''}
           >
             <Download size={20} />
             {!isCollapsed && (
               <span className="sidebar-label">
-                {appText.shell.navigation.items.installApp || 'Installa App'}
+                {appText.shell.navigation.items.installApp}
               </span>
             )}
           </button>
@@ -112,12 +112,12 @@ const Sidebar: React.FC<SidebarProps> = ({
           className={`sidebar-item ${viewMode === 'admin' ? 'admin-active' : ''}`}
           onClick={isAdmin ? onViewModeToggle : onLogin}
           aria-pressed={viewMode === 'admin'}
-          title={isCollapsed ? (isAdmin ? (viewMode === 'admin' ? 'Switch to Public' : 'Switch to Admin') : 'Admin Login') : ''}
+          title={isCollapsed ? (isAdmin ? (viewMode === 'admin' ? appText.shell.navigation.items.publicView : appText.shell.navigation.items.adminView) : appText.shell.navigation.items.adminLogin) : ''}
         >
           {isAdmin && viewMode === 'admin' ? <Smartphone size={20} /> : <LockKeyhole size={20} />}
           {!isCollapsed && (
             <span className="sidebar-label">
-              {isAdmin ? (viewMode === 'admin' ? 'Public View' : 'Admin View') : 'Admin Login'}
+              {isAdmin ? (viewMode === 'admin' ? appText.shell.navigation.items.publicView : appText.shell.navigation.items.adminView) : appText.shell.navigation.items.adminLogin}
             </span>
           )}
         </button>
@@ -126,10 +126,10 @@ const Sidebar: React.FC<SidebarProps> = ({
           <button
             className="sidebar-item logout-item"
             onClick={onLogout}
-            title={isCollapsed ? 'Logout' : ''}
+            title={isCollapsed ? appText.shell.navigation.items.logout : ''}
           >
             <LogOut size={20} />
-            {!isCollapsed && <span className="sidebar-label">Logout</span>}
+            {!isCollapsed && <span className="sidebar-label">{appText.shell.navigation.items.logout}</span>}
           </button>
         )}
       </div>

@@ -35,7 +35,7 @@ interface MobileOverlayProps {
   showInstall?: boolean;
 }
 
-const iconMap: Record<SectionNavigationId, React.ComponentType<{ size?: number }>> = {
+const iconMap: Record<SectionNavigationId, React.ComponentType<{ size?: number | string }>> = {
   'calendar-section': CalendarDays,
   'user-kpi-section': BarChart3,
   'user-analytics-section': Zap,
@@ -68,7 +68,7 @@ const MobileOverlay: React.FC<MobileOverlayProps> = ({
         <button
           className="mobile-nav-close"
           onClick={onClose}
-          aria-label="Close menu"
+          aria-label={appText.shell.navigation.closeButton}
         >
           <X size={24} />
         </button>
@@ -107,7 +107,7 @@ const MobileOverlay: React.FC<MobileOverlayProps> = ({
             >
               <Download size={20} />
               <span className="mobile-nav-label">
-                {appText.shell.navigation.items.installApp || 'Installa App'}
+                {appText.shell.navigation.items.installApp}
               </span>
             </button>
           )}
@@ -126,7 +126,7 @@ const MobileOverlay: React.FC<MobileOverlayProps> = ({
           >
             {isAdmin && viewMode === 'admin' ? <Smartphone size={20} /> : <LockKeyhole size={20} />}
             <span className="mobile-nav-label">
-              {isAdmin ? (viewMode === 'admin' ? 'Public View' : 'Admin View') : 'Admin Login'}
+              {isAdmin ? (viewMode === 'admin' ? appText.shell.navigation.items.publicView : appText.shell.navigation.items.adminView) : appText.shell.navigation.items.adminLogin}
             </span>
           </button>
 
@@ -139,7 +139,7 @@ const MobileOverlay: React.FC<MobileOverlayProps> = ({
               }}
             >
               <LogOut size={20} />
-              <span className="mobile-nav-label">Logout</span>
+              <span className="mobile-nav-label">{appText.shell.navigation.items.logout}</span>
             </button>
           )}
         </div>

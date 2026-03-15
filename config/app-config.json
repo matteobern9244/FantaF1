@@ -405,7 +405,27 @@
         "latestGpLabel": "GP",
         "winnerLabel": "Vincitore weekend",
         "swingLabel": "Swing classifica",
-        "decisivePickLabel": "Pick decisiva"
+        "decisivePickLabel": "Pick decisiva",
+        "swingGapTemplate": "Gap sul secondo: {gap} pt",
+        "swingNoInseguitori": "Weekend senza inseguitori diretti",
+        "narratives": {
+          "charge": {
+            "title": "Chi tiene il passo del leader",
+            "description": "{userName} ha il gap piu' basso dalla vetta."
+          },
+          "consistency": {
+            "title": "Il piu' costante",
+            "description": "{userName} mantiene il rendimento piu' stabile GP dopo GP."
+          },
+          "sprint": {
+            "title": "Specialista Sprint",
+            "description": "{userName} converte meglio i weekend Sprint."
+          },
+          "precision": {
+            "title": "Il cecchino",
+            "description": "{userName} ha la precisione di tiro piu' alta."
+          }
+        }
       },
       "historyArchive": {
         "title": "Storico gare",

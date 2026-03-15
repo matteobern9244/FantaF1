@@ -12,6 +12,7 @@ import type {
   UserKpiSummary,
   UserData,
 } from '../types';
+import { appText } from '../uiText';
 
 const trackedFields: PredictionKey[] = ['first', 'second', 'third', 'pole'];
 
@@ -316,29 +317,31 @@ class SeasonAnalyticsBuilder {
       return secondEntry.seasonPoints - firstEntry.seasonPoints;
     })[0];
 
+    const { seasonAnalysis } = appText.panels;
+
     return [
       {
         slug: 'charge',
-        title: 'Chi tiene il passo del leader',
-        description: `${bestCharge.userName} ha il gap piu' basso dalla vetta.`,
+        title: seasonAnalysis.narratives.charge.title,
+        description: seasonAnalysis.narratives.charge.description(bestCharge.userName),
         userName: bestCharge.userName,
       },
       {
         slug: 'consistency',
-        title: "Il piu' costante",
-        description: `${mostConsistent.userName} mantiene il rendimento piu' stabile GP dopo GP.`,
+        title: seasonAnalysis.narratives.consistency.title,
+        description: seasonAnalysis.narratives.consistency.description(mostConsistent.userName),
         userName: mostConsistent.userName,
       },
       {
         slug: 'sprint',
-        title: 'Specialista Sprint',
-        description: `${sprintLeader.userName} converte meglio i weekend Sprint.`,
+        title: seasonAnalysis.narratives.sprint.title,
+        description: seasonAnalysis.narratives.sprint.description(sprintLeader.userName),
         userName: sprintLeader.userName,
       },
       {
         slug: 'precision',
-        title: "Il piu' preciso",
-        description: `${mostPrecise.userName} ha l'hit rate migliore sui pronostici.`,
+        title: seasonAnalysis.narratives.precision.title,
+        description: seasonAnalysis.narratives.precision.description(mostPrecise.userName),
         userName: mostPrecise.userName,
       },
     ];
@@ -366,13 +369,15 @@ class SeasonAnalyticsBuilder {
 
       return firstEntry[0].localeCompare(secondEntry[0], 'it');
     });
+    const { seasonAnalysis } = appText.panels;
+
     if (ranking.length === 0) {
       return {
         gpName: lastRecord.gpName,
         meetingName: matchedWeekend?.meetingName ?? lastRecord.gpName,
         winnerName: '',
         winnerPoints: 0,
-        swingLabel: 'Weekend senza inseguitori diretti',
+        swingLabel: seasonAnalysis.swingNoInseguitori,
         decisiveField: trackedFields[0],
         trackOutlineUrl: matchedWeekend?.trackOutlineUrl ?? '',
       };
@@ -399,8 +404,8 @@ class SeasonAnalyticsBuilder {
       winnerName: winnerEntry[0],
       winnerPoints: winnerEntry[1].pointsEarned,
       swingLabel: runnerUpEntry
-        ? `Gap sul secondo: ${winnerEntry[1].pointsEarned - runnerUpEntry[1].pointsEarned} pt`
-        : 'Weekend senza inseguitori diretti',
+        ? seasonAnalysis.swingGap(winnerEntry[1].pointsEarned - runnerUpEntry[1].pointsEarned)
+        : seasonAnalysis.swingNoInseguitori,
       decisiveField: fieldHits[0].field,
       trackOutlineUrl: matchedWeekend?.trackOutlineUrl ?? '',
     };

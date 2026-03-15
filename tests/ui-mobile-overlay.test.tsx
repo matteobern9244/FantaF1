@@ -4,6 +4,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import MobileOverlay from '../src/components/MobileOverlay';
+import { appText } from '../src/uiText';
 import type { SectionNavigationId } from '../src/utils/sectionNavigation';
 
 describe('MobileOverlay Component', () => {
@@ -39,7 +40,7 @@ describe('MobileOverlay Component', () => {
 
   it('calls onClose when the close button is clicked', () => {
     render(<MobileOverlay {...defaultProps} />);
-    fireEvent.click(screen.getByLabelText('Close menu'));
+    fireEvent.click(screen.getByLabelText(appText.shell.navigation.closeButton));
     expect(defaultProps.onClose).toHaveBeenCalled();
   });
 
@@ -49,35 +50,58 @@ describe('MobileOverlay Component', () => {
     expect(activeItem).toHaveClass('active');
   });
 
+  it('uses fallback icon for unknown items', () => {
+    const customItems = [
+      ...mockItems,
+      { id: 'unknown-id' as any, label: 'Unknown' },
+    ];
+    render(<MobileOverlay {...defaultProps} items={customItems} />);
+    expect(screen.getByText('Unknown')).toBeInTheDocument();
+  });
+
+  it('shows Admin View icon when in admin mode', () => {
+    const { container } = render(<MobileOverlay {...defaultProps} isAdmin={true} viewMode="admin" />);
+    // Smartphone icon
+    expect(container.querySelector('.lucide-smartphone')).toBeInTheDocument();
+  });
+
   it('shows Admin Login when not admin', () => {
     render(<MobileOverlay {...defaultProps} isAdmin={false} />);
-    expect(screen.getByText('Admin Login')).toBeInTheDocument();
+    expect(screen.getByText(appText.shell.navigation.items.adminLogin)).toBeInTheDocument();
   });
 
   it('shows Admin View and Logout when admin', () => {
     render(<MobileOverlay {...defaultProps} isAdmin={true} viewMode="public" />);
-    expect(screen.getByText('Admin View')).toBeInTheDocument();
-    expect(screen.getByText('Logout')).toBeInTheDocument();
+    expect(screen.getByText(appText.shell.navigation.items.adminView)).toBeInTheDocument();
+    expect(screen.getByText(appText.shell.navigation.items.logout)).toBeInTheDocument();
   });
 
   it('calls onLogin and onClose when Admin Login is clicked', () => {
     render(<MobileOverlay {...defaultProps} isAdmin={false} />);
-    fireEvent.click(screen.getByText('Admin Login'));
+    fireEvent.click(screen.getByText(appText.shell.navigation.items.adminLogin));
     expect(defaultProps.onLogin).toHaveBeenCalled();
     expect(defaultProps.onClose).toHaveBeenCalled();
   });
 
   it('calls onViewModeToggle and onClose when Admin View is clicked', () => {
     render(<MobileOverlay {...defaultProps} isAdmin={true} />);
-    fireEvent.click(screen.getByText('Admin View'));
+    fireEvent.click(screen.getByText(appText.shell.navigation.items.adminView));
     expect(defaultProps.onViewModeToggle).toHaveBeenCalled();
     expect(defaultProps.onClose).toHaveBeenCalled();
   });
 
   it('calls onLogout and onClose when Logout is clicked', () => {
     render(<MobileOverlay {...defaultProps} isAdmin={true} />);
-    fireEvent.click(screen.getByText('Logout'));
+    fireEvent.click(screen.getByText(appText.shell.navigation.items.logout));
     expect(defaultProps.onLogout).toHaveBeenCalled();
+    expect(defaultProps.onClose).toHaveBeenCalled();
+  });
+
+  it('calls onInstall and onClose when Install App is clicked', () => {
+    const onInstall = vi.fn();
+    render(<MobileOverlay {...defaultProps} showInstall={true} onInstall={onInstall} />);
+    fireEvent.click(screen.getByText(appText.shell.navigation.items.installApp));
+    expect(onInstall).toHaveBeenCalled();
     expect(defaultProps.onClose).toHaveBeenCalled();
   });
 });
