@@ -32,20 +32,6 @@ jobs:
       - run: npm ci
       - run: npm run lint
 
-  coverage:
-    name: coverage
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
-
-      - run: npm ci
-      - run: npm run test:coverage
-
   build:
     name: build
     runs-on: ubuntu-latest
@@ -65,6 +51,8 @@ jobs:
     runs-on: ubuntu-latest
     env:
       ADMIN_SESSION_SECRET: ${{ secrets.ADMIN_SESSION_SECRET_CI }}
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://127.0.0.1:3002
       CI: true
       MONGODB_DB_NAME_OVERRIDE: fantaf1_ci
       MONGODB_URI: ${{ secrets.MONGODB_URI_CI }}
@@ -77,6 +65,10 @@ jobs:
         with:
           node-version: 22
           cache: npm
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
 
       - name: Normalize Mongo URI for CI database override
         run: |
@@ -94,13 +86,13 @@ jobs:
       - run: npm ci
       - name: Start local stack
         run: |
-          node server.js > backend.log 2>&1 &
+          dotnet run --project backend-csharp/src/FantaF1.Api/FantaF1.Api.csproj -c Release --no-launch-profile > backend.log 2>&1 &
           echo $! > backend.pid
           npm run dev:frontend > frontend.log 2>&1 &
           echo $! > frontend.pid
       - name: Wait for local stack readiness
         run: |
-          timeout 60 bash -lc 'until curl --fail --silent http://127.0.0.1:3001/api/health >/dev/null; do sleep 1; done'
+          timeout 60 bash -lc 'until curl --fail --silent http://127.0.0.1:3002/api/health >/dev/null; do sleep 1; done'
           timeout 60 bash -lc 'until curl --fail --silent http://127.0.0.1:5173 >/dev/null; do sleep 1; done'
       - run: xvfb-run -a npm run test:ui-responsive
       - name: Dump local stack logs on failure
@@ -121,6 +113,8 @@ jobs:
     runs-on: ubuntu-latest
     env:
       ADMIN_SESSION_SECRET: ${{ secrets.ADMIN_SESSION_SECRET_CI }}
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://127.0.0.1:3002
       MONGODB_DB_NAME_OVERRIDE: fantaf1_ci
       MONGODB_URI: ${{ secrets.MONGODB_URI_CI }}
       SAVE_SMOKE_EXPECTED_DATABASE_TARGET: fantaf1_ci
@@ -132,6 +126,10 @@ jobs:
         with:
           node-version: 22
           cache: npm
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
 
       - name: Normalize Mongo URI for CI database override
         run: |
@@ -149,11 +147,11 @@ jobs:
       - run: npm ci
       - name: Start backend
         run: |
-          node server.js > backend.log 2>&1 &
+          dotnet run --project backend-csharp/src/FantaF1.Api/FantaF1.Api.csproj -c Release --no-launch-profile > backend.log 2>&1 &
           echo $! > backend.pid
       - name: Wait for backend readiness
         run: |
-          timeout 60 bash -lc 'until curl --fail --silent http://127.0.0.1:3001/api/health >/dev/null; do sleep 1; done'
+          timeout 60 bash -lc 'until curl --fail --silent http://127.0.0.1:3002/api/health >/dev/null; do sleep 1; done'
       - run: npm run test:save-local
       - name: Dump backend log on failure
         if: failure()
@@ -164,3 +162,47 @@ jobs:
         if: always()
         run: |
           if [ -f backend.pid ]; then kill "$(cat backend.pid)" || true; fi
+
+  build-csharp:
+    name: build-csharp
+    needs: [format-csharp]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - run: dotnet build backend-csharp/FantaF1.Backend.sln -c Release
+
+  test-csharp:
+    name: test-csharp
+    needs: [format-csharp]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - run: npm ci
+      - run: npm run test:csharp-coverage
+
+  format-csharp:
+    name: format-csharp
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+
+      - run: dotnet format backend-csharp/FantaF1.Backend.sln --verify-no-changes

@@ -769,10 +769,10 @@ describe('Mockup roadmap UI features', () => {
 
     const navigation = screen.getByRole('navigation', { name: /sezioni applicazione/i });
     expect(navigation).toBeInTheDocument();
-    
+
     const navList = navigation.querySelector('.section-nav-list');
     expect(navList).toBeInTheDocument();
-    
+
     const seasonAnalysisButton = within(navigation).getByRole('button', { name: /analisi stagione/i });
     fireEvent.click(seasonAnalysisButton);
 
@@ -804,7 +804,7 @@ describe('Mockup roadmap UI features', () => {
 
     setupFetch();
     const scrollIntoViewMock = vi.fn();
-    
+
     render(<App />);
 
     await waitFor(() => {

@@ -1,0 +1,8 @@
+{
+"track_id": "verify_workflow_20260314",
+"type": "feature",
+"status": "new",
+"created_at": "2026-03-14T12:00:00Z",
+"updated_at": "2026-03-14T12:00:00Z",
+"description": "Verifica e certificazione della copertura test al 100% e dell'integrità del workflow Conductor"
+}

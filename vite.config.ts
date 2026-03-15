@@ -7,7 +7,7 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'http://127.0.0.1:3001',
+        target: 'http://127.0.0.1:3002',
         changeOrigin: true,
       },
     },
@@ -15,10 +15,16 @@ export default defineConfig({
   test: {
     setupFiles: ['./tests/setup.ts'],
     globals: true,
+    env: {
+      MONGODB_DB_NAME_OVERRIDE: '',
+      SAVE_SMOKE_EXPECTED_DATABASE_TARGET: '',
+      FANTAF1_EXPECTED_DATABASE_TARGET: '',
+      VITE_APP_LOCAL_NAME: ''
+    },
     coverage: {
       provider: 'v8',
-      include: ['app.js', 'server.js', 'backend/**/*.js', 'src/**/*.ts', 'src/**/*.tsx'],
-      exclude: ['backend/config.js', 'backend/models.js', 'src/types.ts', 'src/vite-env.d.ts'],
+      include: ['src/**/*.ts', 'src/**/*.tsx', 'scripts/atlas-provisioning.mjs'],
+      exclude: ['src/types.ts', 'src/vite-env.d.ts'],
       thresholds: {
         lines: 100,
         functions: 100,

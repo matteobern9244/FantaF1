@@ -956,7 +956,21 @@ function App() {
       });
 
       if (!response.ok) {
-        setAdminLoginError(uiText.backend.errors.saveFailed);
+        let loginErrorMessage = uiText.backend.errors.saveFailed;
+
+        try {
+          const payload = await response.json() as { code?: string; error?: string };
+
+          if (payload.code === 'admin_auth_invalid') {
+            loginErrorMessage = uiText.backend.auth.invalidPassword;
+          } else if (typeof payload.error === 'string' && payload.error.trim()) {
+            loginErrorMessage = payload.error.trim();
+          }
+        } catch {
+          loginErrorMessage = uiText.backend.errors.saveFailed;
+        }
+
+        setAdminLoginError(loginErrorMessage);
         return;
       }
 

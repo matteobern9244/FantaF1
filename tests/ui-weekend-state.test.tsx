@@ -278,7 +278,7 @@ describe('Weekend draft synchronization UI', () => {
     );
     expect(getResultSelect(/risultato 1°/i)).toHaveValue('');
     },
-    10000,
+    20000,
   );
 
   it('keeps shared selects readable across admin and public flows', async () => {

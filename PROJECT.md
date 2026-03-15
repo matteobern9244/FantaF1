@@ -23,9 +23,11 @@ Backend:
 - retry logic for external calls
 
 Database collections:
-- `appdata`: game state and application data
+- `appdatas`: game state and application data
 - `drivers`: cached roster
 - `weekends`: cached calendar
+- `standingscaches`: cached driver and constructor standings
+- `admincredentials`: hashed admin credentials and authentication metadata
 
 Frontend and backend are tightly coupled.
 API contracts and score-related payload semantics must remain consistent.
@@ -34,7 +36,8 @@ API contracts and score-related payload semantics must remain consistent.
 
 ## 2. Core Domain Constraints
 
-- There are always exactly 3 players: Adriano, Fabio, Matteo.
+- There are always exactly 3 participant slots.
+- Participant names are runtime data persisted in the application state; the live roster may currently be Adriano, Fabio, and Matteo, but names are not hardcoded as a domain invariant.
 - Data entry is admin-controlled.
 - Predictions lock at official race start time.
 - Race results are fetched from official Formula 1 sources.
@@ -91,7 +94,8 @@ If two UI tabs display related score information, shared logic divergence must b
 On backend startup:
 - drivers must synchronize from the external source
 - calendar/weekends must synchronize from the official source
-- if sync fails, the application must fall back to cached database data
+- standings must synchronize from the external source
+- if a sync fails, the application must fall back to cached database data for that domain when available
 
 Synchronization failures must never prevent application startup.
 
@@ -107,6 +111,8 @@ Rules:
 - environment variables must not be hardcoded
 - secrets must not be committed
 - the targeted database/environment must always be explicitly identified when running locally
+- local mutating runners must never target shared databases such as `fantaf1` or `fantaf1_staging`
+- local C# runtime targets must use isolated databases (`fantaf1_local_dev`, `fantaf1_local_staging`) through explicit overrides
 - local fixes must not introduce production-only or local-only scoring divergence
 - `start_fantaf1.command` is the canonical local launcher: it must remain valid, executable, and aligned with the real mandatory startup flow, including preflight checks and final application boot
 
@@ -145,7 +151,8 @@ Do not trade correctness for micro-optimizations.
 - existing historical data must remain valid
 - API contract changes require explicit review
 - `CHANGELOG.md` is the canonical release history
-- every version, tag, or release must keep `CHANGELOG.md`, version files, and actual released state aligned
+- every version, tag, or release must keep `CHANGELOG.md`, `README.md`, `package.json`, `package-lock.json`, and actual released state strictly aligned
+- when increasing the application version, it is mandatory to coordinate the bump across all files (`package.json`, `CHANGELOG.md`, `README.md`, etc.), never updating only the changelog
 
 ---
 
