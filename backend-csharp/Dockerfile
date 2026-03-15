@@ -8,7 +8,6 @@ RUN npm ci
 
 # Copy frontend source and config
 COPY src/ ./src/
-COPY backend/ ./backend/
 COPY config/ ./config/
 COPY public/ ./public/
 COPY tsconfig*.json ./
