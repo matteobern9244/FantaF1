@@ -4,6 +4,20 @@ This file is the prompt-first navigation index for the Conductor workspace in th
 
 ## Active Tracks
 
+## fix_menu_focus_navigation_20260315 - Fix Menu Focus And Active Navigation
+
+- Status: `done`
+- Phase: `done`
+- Active task: Completed
+- Path: `conductor/tracks/fix_menu_focus_navigation_20260315`
+
+## fix_highlights_lookup_20260315 - Fix Highlights Lookup Availability
+
+- Status: `done`
+- Phase: `done`
+- Active task: Completed
+- Path: `conductor/tracks/fix_highlights_lookup_20260315`
+
 ## fix_local_startup_20260315 - Fix Local Startup
 
 - Status: `new`
@@ -17,6 +31,13 @@ This file is the prompt-first navigation index for the Conductor workspace in th
 - Phase: `done`
 - Active task: Completed
 - Path: `conductor/tracks/merge_develop_into_staging_release_20260315`
+
+## fix_multi_race_highlights_20260315 - Fix Multi Race Highlights
+
+- Status: `done`
+- Phase: `done`
+- Active task: Completed
+- Path: `conductor/tracks/fix_multi_race_highlights_20260315`
 
 ## Archived Tracks
 

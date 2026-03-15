@@ -21,7 +21,7 @@ function SeasonAnalysisPanel({
   const { seasonAnalysis } = appText.panels;
 
   return (
-    <section className="panel" id="season-analysis">
+    <section className="panel nav-section" id="season-analysis">
       <div className="section-title">
         <BarChart3 size={20} />
         <h2>{seasonAnalysis.title}</h2>

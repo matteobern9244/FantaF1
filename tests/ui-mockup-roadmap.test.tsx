@@ -8,14 +8,23 @@ import App from '../src/App';
 import { appText } from '../src/uiText';
 
 class MockIntersectionObserver {
+  static instances: MockIntersectionObserver[] = [];
   observe = vi.fn();
   unobserve = vi.fn();
   disconnect = vi.fn();
+  private readonly callback: IntersectionObserverCallback;
 
   constructor(
-    _callback: IntersectionObserverCallback,
+    callback: IntersectionObserverCallback,
     _options?: IntersectionObserverInit,
-  ) {}
+  ) {
+    this.callback = callback;
+    MockIntersectionObserver.instances.push(this);
+  }
+
+  trigger(entries: IntersectionObserverEntry[]) {
+    this.callback(entries, this as unknown as IntersectionObserver);
+  }
 }
 
 Object.defineProperty(window, 'matchMedia', {
@@ -318,6 +327,7 @@ function setupFetchWithOverrides({
 describe('Mockup roadmap UI features', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    MockIntersectionObserver.instances = [];
     vi.spyOn(window, 'alert').mockImplementation(() => {});
     window.history.replaceState({}, '', '/');
     mockMediaMatches({});
@@ -838,5 +848,84 @@ describe('Mockup roadmap UI features', () => {
     expect(document.body.style.overflow).toBe('');
     expect(document.body.style.touchAction).toBe('');
     expect(screen.getByRole('heading', { name: appText.panels.publicGuide.title })).toBeInTheDocument();
+  });
+
+  it('keeps the clicked results menu item active when the observer still sees predictions as more visible', async () => {
+    setupFetch();
+    const scrollIntoView = vi.fn();
+    Object.defineProperty(HTMLElement.prototype, 'scrollIntoView', {
+      configurable: true,
+      value: scrollIntoView,
+    });
+
+    render(<App />);
+
+    await waitFor(() => {
+      expect(screen.queryByTestId('pitstop-loader')).not.toBeInTheDocument();
+    });
+
+    const navigation = screen.getByRole('navigation', { name: appText.shell.navigation.ariaLabel });
+    const predictionsButton = within(navigation).getByRole('button', { name: appText.shell.navigation.items.predictions });
+    const resultsButton = within(navigation).getByRole('button', { name: appText.shell.navigation.items.results });
+
+    fireEvent.click(predictionsButton);
+    expect(resultsButton).not.toHaveClass('active');
+
+    fireEvent.click(resultsButton);
+    expect(resultsButton).toHaveClass('active');
+
+    const predictionsSection = document.getElementById('predictions-section');
+    const resultsSection = document.getElementById('results-section');
+    expect(predictionsSection).not.toBeNull();
+    expect(resultsSection).not.toBeNull();
+    expect(MockIntersectionObserver.instances).not.toHaveLength(0);
+
+    act(() => {
+      MockIntersectionObserver.instances[0]?.trigger([
+        {
+          target: predictionsSection as Element,
+          isIntersecting: true,
+          intersectionRatio: 0.9,
+        } as IntersectionObserverEntry,
+        {
+          target: resultsSection as Element,
+          isIntersecting: true,
+          intersectionRatio: 0.3,
+        } as IntersectionObserverEntry,
+      ]);
+    });
+
+    expect(resultsButton).toHaveClass('active');
+    expect(window.location.hash).toBe('#results-section');
+  });
+
+  it('navigates to history even when no archived races exist yet', async () => {
+    const scrollIntoView = vi.fn();
+    Object.defineProperty(HTMLElement.prototype, 'scrollIntoView', {
+      configurable: true,
+      value: scrollIntoView,
+    });
+
+    setupFetchWithOverrides({
+      appData: {
+        ...createAppData(),
+        history: [],
+      },
+    });
+
+    render(<App />);
+
+    await waitFor(() => {
+      expect(screen.queryByTestId('pitstop-loader')).not.toBeInTheDocument();
+    });
+
+    const navigation = screen.getByRole('navigation', { name: appText.shell.navigation.ariaLabel });
+    const historyButton = within(navigation).getByRole('button', { name: appText.shell.navigation.items.history });
+    fireEvent.click(historyButton);
+
+    expect(window.location.hash).toBe('#history-archive');
+    expect(scrollIntoView).toHaveBeenCalled();
+    expect(document.getElementById('history-archive')).not.toBeNull();
+    expect(historyButton).toHaveClass('active');
   });
 });

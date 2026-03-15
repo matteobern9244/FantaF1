@@ -36,7 +36,7 @@ html {
   scroll-padding-top: 150px;
 }
 
-section[id$='section'] {
+.nav-section {
   scroll-margin-top: 150px;
 }
 
@@ -1800,7 +1800,7 @@ select:disabled {
     scroll-padding-top: 176px;
   }
 
-  section[id$='section'] {
+  .nav-section {
     scroll-margin-top: 176px;
   }
 
@@ -2134,9 +2134,15 @@ select:disabled {
   padding: 12px;
 }
 
-.sidebar-item:hover {
+.sidebar-item:hover,
+.sidebar-item:focus-visible {
   background: var(--panel-soft);
   color: var(--ink);
+}
+
+.sidebar-item:focus-visible {
+  outline: 2px solid rgba(255, 184, 0, 0.7);
+  outline-offset: 2px;
 }
 
 .sidebar-item.active {
@@ -2256,6 +2262,11 @@ select:disabled {
   background: var(--sidebar-item-active-bg);
   border-color: var(--red);
   box-shadow: 0 0 20px rgba(225, 6, 0, 0.15);
+}
+
+.mobile-nav-item:focus-visible {
+  outline: 2px solid rgba(255, 184, 0, 0.7);
+  outline-offset: 2px;
 }
 
 .mobile-nav-label {

@@ -11,7 +11,7 @@ internal static class OfficialResultsReferenceData
     public const string HighlightsFeedUrl = "https://www.youtube.com/feeds/videos.xml?channel_id=UCMQ7Gx6v-pQy_gsRoMJYzOA";
     public const string HighlightsSearchBaseUrl = "https://www.youtube.com/results?search_query=";
     public const string HighlightsOEmbedBaseUrl = "https://www.youtube.com/oembed?format=json&url=";
-    public const string HighlightsPublisherLabel = "Sky Sport Italia F1";
+    public const string HighlightsPublisherLabel = "Sky Sport F1";
     public const int HighlightsLookupMissingTtlHours = 6;
 
     public static readonly string[] HighlightsPublisherKeywords =
@@ -60,12 +60,19 @@ internal static class OfficialResultsReferenceData
         new Dictionary<string, string[]>(StringComparer.OrdinalIgnoreCase)
         {
             ["emilia romagna"] = ["imola"],
+            ["china"] = ["Cina", "Shanghai"],
             ["great britain"] = ["silverstone"],
+            ["hungary"] = ["Ungheria", "Budapest", "Hungaroring"],
+            ["japan"] = ["Giappone", "Suzuka"],
+            ["netherlands"] = ["Olanda", "Zandvoort"],
+            ["belgium"] = ["Belgio", "Spa", "Spa Francorchamps"],
+            ["italy"] = ["Italia", "Monza"],
+            ["brazil"] = ["Brasile", "Interlagos", "Sao Paulo"],
             ["azerbaijan"] = ["baku"],
-            ["spain"] = ["barcelona"],
+            ["spain"] = ["Spagna", "Barcelona"],
             ["canada"] = ["montreal"],
             ["usa"] = ["austin"],
-            ["mexico"] = ["mexico city"],
+            ["mexico"] = ["Messico", "Mexico City"],
             ["las vegas"] = ["vegas"],
             ["abu dhabi"] = ["yas marina"],
         };

@@ -35,7 +35,7 @@ function PublicStandingsPanel({
   const hasStandings = driverStandings.length > 0 || constructorStandings.length > 0;
 
   return (
-    <section className="panel public-standings-panel" id="public-standings">
+    <section className="panel public-standings-panel nav-section" id="public-standings">
       <div className="panel-head">
         <div className="section-title">
           <Flag size={20} />

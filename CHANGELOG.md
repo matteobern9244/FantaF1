@@ -3,6 +3,9 @@
 Cronologia sintetica delle release documentate del progetto Fanta Formula 1.
 
 ## [Unreleased]
+- **Lookup Highlights Esteso a Tutte le Gare Concluse**: il resolver C# non si affida piu' a un solo seed inglese per la ricerca YouTube, ma prova anche alias/localizzazioni gara coerenti con il catalogo Sky Sport F1, cosi' gli highlights vengono risolti anche per weekend successivi quando disponibili.
+- **CTA Highlights Non Disponibile Riallineata**: il recap weekend usa ora il testo esatto `HIGHLIGHTS NON PRESENTI` quando il backend non restituisce `highlightsVideoUrl`, mantenendo invariato il comportamento del pulsante disabilitato su desktop e mobile.
+- **TDD Regressivo Multi-Gara sugli Highlights**: aggiunti test backend sul lookup di una gara successiva con naming localizzato e test frontend sulla seconda gara finita e sul fallback UI, mantenendo la coverage ufficiale al `100%`.
 
 ## [1.6.0] - 2026-03-15
 - **Rielaborazione Menu UI Adattivo (F1 Racing Theme)**: introdotta una nuova architettura di navigazione con sidebar fissa a sinistra per desktop (collassabile) e menu overlay a tutto schermo per mobile, garantendo un'esperienza immersiva e moderna.

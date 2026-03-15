@@ -4,8 +4,11 @@ This file is the compact summary view of Conductor tracks in this repository.
 
 ## Active Tracks
 
+- `fix_menu_focus_navigation_20260315` | Fix Menu Focus And Active Navigation | `done` | phase `done` | Completed | `conductor/tracks/fix_menu_focus_navigation_20260315`
+- `fix_highlights_lookup_20260315` | Fix Highlights Lookup Availability | `done` | phase `done` | Completed | `conductor/tracks/fix_highlights_lookup_20260315`
 - `fix_local_startup_20260315` | Fix Local Startup | `new` | phase `new` | No active task | `conductor/tracks/fix_local_startup_20260315`
 - `merge_develop_into_staging_release_20260315` | Merge Develop Into Staging Release | `done` | phase `done` | Completed | `conductor/tracks/merge_develop_into_staging_release_20260315`
+- `fix_multi_race_highlights_20260315` | Fix Multi Race Highlights | `done` | phase `done` | Completed | `conductor/tracks/fix_multi_race_highlights_20260315`
 
 ## Archived Tracks
 

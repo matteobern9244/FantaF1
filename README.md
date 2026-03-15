@@ -68,6 +68,7 @@ Il lock e' server-side:
 
 - I risultati ufficiali vengono recuperati tramite `GET /api/results/:meetingKey`.
 - Il backend espone `racePhase` (`open`, `live`, `finished`) separato dal race lock.
+- Per ogni weekend concluso il backend puo' restituire un `highlightsVideoUrl` specifico della gara selezionata, se disponibile nel catalogo Sky Sport F1.
 - La conferma risultati e' consentita solo quando il weekend e' `finished` e i risultati reali sono completi.
 - Punteggi configurati:
   - `5` punti primo corretto
@@ -111,6 +112,7 @@ Il lock e' server-side:
 - hero full-width pulita (controlli admin/public spostati nel menu)
 - stato admin/public coerente in tutte le superfici
 - track map coerente tra hero, recap e pannello risultati
+- CTA highlights coerente per ogni weekend selezionato; se il video non e' disponibile la label disabilitata e' `HIGHLIGHTS NON PRESENTI`
 
 ## Architettura
 
@@ -213,6 +215,7 @@ Ogni weekend puo' includere:
 - `raceStartTime`
 - `sessions`
 - `highlightsVideoUrl`
+  - URL highlights specifica del weekend, presente solo quando il lookup trova un video compatibile
 
 ## Database e migrazioni
 
@@ -507,9 +510,9 @@ Baseline verificata corrente sullo scope ufficiale frontend/repository:
 
 Baseline verificata corrente su `backend-csharp/src/`:
 
-- `2932 / 2932` lines
-- `1653 / 1653` branches
-- `489 / 489` methods
+- `2986 / 2986` lines
+- `1671 / 1671` branches
+- `494 / 494` methods
 - `70` file inclusi
 
 Le soglie repository restano a `100%` su statements, branches, functions e lines.

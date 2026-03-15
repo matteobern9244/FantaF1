@@ -222,6 +222,7 @@ function SessionIcon({ name, size = 14 }: { name: string; size?: number }) {
 
 /* v8 ignore start -- stateful UI shell is exercised through RTL and browser smoke tests */
 function App() {
+  const manualNavigationLockDurationMs = 900;
   const [users, setUsers] = useState<UserData[]>([]);
   const [history, setHistory] = useState<AppData['history']>([]);
   const [gpName, setGpName] = useState('');
@@ -269,6 +270,8 @@ function App() {
   const selectedMeetingKeyRef = useRef(selectedMeetingKey);
   const toastTimeoutRef = useRef<number | null>(null);
   const initialHashHandledRef = useRef(false);
+  const navigationLockTimeoutRef = useRef<number | null>(null);
+  const manualNavigationTargetRef = useRef<string | null>(null);
 
   // Derived state (declared before effects to avoid TS errors)
   const sortedDrivers = sortDriversBySurname(drivers, driversSource.sortLocale);
@@ -385,6 +388,16 @@ function App() {
       return;
     }
 
+    if (navigationLockTimeoutRef.current !== null) {
+      window.clearTimeout(navigationLockTimeoutRef.current);
+    }
+
+    manualNavigationTargetRef.current = sectionId;
+    navigationLockTimeoutRef.current = window.setTimeout(() => {
+      manualNavigationTargetRef.current = null;
+      navigationLockTimeoutRef.current = null;
+    }, manualNavigationLockDurationMs);
+
     window.history.replaceState({}, '', buildHashUrl(sectionId));
     targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
     setActiveSectionId(sectionId);
@@ -454,6 +467,10 @@ function App() {
     return () => {
       if (toastTimeoutRef.current !== null) {
         window.clearTimeout(toastTimeoutRef.current);
+      }
+
+      if (navigationLockTimeoutRef.current !== null) {
+        window.clearTimeout(navigationLockTimeoutRef.current);
       }
     };
   }, []);
@@ -635,6 +652,24 @@ function App() {
 
     const sectionObserver = new window.IntersectionObserver(
       (entries) => {
+        const manualNavigationTarget = manualNavigationTargetRef.current;
+        if (manualNavigationTarget) {
+          const targetEntry = entries.find(
+            (entry) => entry.isIntersecting && entry.target.id === manualNavigationTarget,
+          );
+
+          if (targetEntry?.target?.id) {
+            setActiveSectionId(targetEntry.target.id);
+            manualNavigationTargetRef.current = null;
+            if (navigationLockTimeoutRef.current !== null) {
+              window.clearTimeout(navigationLockTimeoutRef.current);
+              navigationLockTimeoutRef.current = null;
+            }
+          }
+
+          return;
+        }
+
         const visibleEntry = entries
           .filter((entry) => entry.isIntersecting)
           .sort((left, right) => right.intersectionRatio - left.intersectionRatio)[0];
@@ -1609,7 +1644,7 @@ function App() {
 
       <main className="dashboard-grid">
         <section className="content-column">
-          <section className="calendar-panel" id="calendar-section">
+          <section className="calendar-panel nav-section" id="calendar-section">
             <div className="section-title">
               <Flag size={20} />
               <h2>{uiText.headings.calendar}</h2>
@@ -1662,7 +1697,7 @@ function App() {
             )}
           </section>
 
-          <section className="panel" id="user-kpi-section">
+          <section className="panel nav-section" id="user-kpi-section">
             <div className="panel-head">
               <div className="section-title">
                 <BarChart3 size={20} />
@@ -1707,7 +1742,7 @@ function App() {
             )}
           </section>
 
-          <section className="panel analytics-panel" id="user-analytics-section">
+          <section className="panel analytics-panel nav-section" id="user-analytics-section">
             <div className="section-title">
               <BarChart3 size={20} />
               <h2>{uiText.headings.userAnalytics}</h2>
@@ -1810,7 +1845,7 @@ function App() {
           ) : null}
 
           {!isPublicView ? (
-          <section className="panel" id="predictions-section">
+          <section className="panel nav-section" id="predictions-section">
             <div className="panel-head">
               <div className="section-title">
                 <User size={20} />
@@ -1890,7 +1925,7 @@ function App() {
             </div>
           </section>
           ) : (
-            <section className="panel public-readonly-panel" id="predictions-section">
+            <section className="panel public-readonly-panel nav-section" id="predictions-section">
               <div className="section-title">
                 <User size={20} />
                 <h2>{uiText.headings.predictionEntry}</h2>
@@ -1924,7 +1959,7 @@ function App() {
           )}
 
           {!isPublicView ? (
-          <section className="panel accent-panel" id="results-section">
+          <section className="panel accent-panel nav-section" id="results-section">
             <div className="section-title">
               <ListChecks size={20} />
               <h2>{uiText.headings.results}</h2>
