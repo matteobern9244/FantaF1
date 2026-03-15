@@ -2,6 +2,10 @@
 
 Cronologia sintetica delle release documentate del progetto Fanta Formula 1.
 
+## [1.4.8] - 2026-03-15
+- **Fix Docker Staging Deploy**: spostato il `Dockerfile` nella root del progetto per risolvere definitivamente l'errore di build su Render (`COPY backend/ not found`) derivante da ambiguità nella risoluzione dei percorsi del contesto di build.
+- **Verifica Non-Regressione Locale**: confermata la completa integrità del launcher locale e delle viste responsive dopo la ristrutturazione dei file Docker.
+
 ## [1.4.7] - 2026-03-15
 - **Certificazione Baseline C#**: verificata la completa integrità del backend C# con 100% di copertura (linee, branch, metodi) e avvio positivo del servizio locale.
 - **Archiviazione Track Conductor**: completata e archiviata la track dedicata al fix del build Docker e al ripristino del tooling locale.

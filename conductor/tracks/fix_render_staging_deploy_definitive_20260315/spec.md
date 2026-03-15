@@ -12,6 +12,7 @@ The Docker build on Render (staging) continues to fail with a `COPY backend/: no
 - **100% Test Coverage:** Maintain full coverage for both Frontend and Backend.
 - **Production-Safe:** No impact on production data or existing business rules.
 - **Responsive-Ready:** Ensure no regressions in desktop or mobile views.
+- **Local Execution:** Zero regressions for local execution using the canonical launcher.
 
 ## Acceptance Criteria
 - Docker build on Render (staging) succeeds without errors.
