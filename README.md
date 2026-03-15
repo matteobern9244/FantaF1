@@ -6,7 +6,7 @@ L'applicazione e' pensata per un flusso amministrato: un admin seleziona il week
 
 ## Stato release e confronto con la produzione
 
-La versione attualmente in produzione e pubblicata e' `v1.4.4`. Il repository e' aggiornato alla versione `v1.4.9` in `package.json`, includendo l'integrazione del framework Conductor, la certificazione del workflow e il fix del build Docker.
+La versione attualmente in produzione e pubblicata e' `v1.4.4`. Il repository e' aggiornato alla versione `v1.5.0` in `package.json`, includendo l'integrazione del framework Conductor, la certificazione del workflow e il fix del build Docker.
 
 ### Baseline produzione `v1.4.4`
 

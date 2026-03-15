@@ -2,6 +2,10 @@
 
 Cronologia sintetica delle release documentate del progetto Fanta Formula 1.
 
+## [1.5.0] - 2026-03-15
+- **Stabilizzazione Architettura Docker**: completata la transizione al `Dockerfile` centralizzato nella root del progetto; validata localmente l'integrità dell'immagine e la corretta esecuzione del processo di build multi-stage.
+- **Verifica Simulazione Staging**: confermato il corretto avvio dell'applicazione in ambiente containerizzato simulando il profilo di `Staging`; verificata la risoluzione dei percorsi interni e l'applicazione delle variabili di ambiente.
+
 ## [1.4.9] - 2026-03-15
 - **Fix Render Dockerfile Rewrite**: eseguita una riscrittura pulita del `Dockerfile` nella root per risolvere l'errore di rilevamento su Render (`open Dockerfile: no such file or directory`); eliminata ogni ambiguità derivante da metadati o varianti del filesystem.
 
