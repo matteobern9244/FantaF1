@@ -76,8 +76,3 @@ Questo file tiene traccia di tutte le track principali del progetto. Ogni track 
 
 - [x] **Track: eliminare tutti i task effettuati e completi all'interno della folder conductor**
   *Link: [./tracks/archive_completed_tasks_20260314/](./tracks/archive_completed_tasks_20260314/)*
-
----
-
-- [x] **Track: Definitive fix for Render staging deploy error ('/backend' not found)**
-  *Link: [./tracks/fix_render_staging_deploy_definitive_20260315/](./tracks/fix_render_staging_deploy_definitive_20260315/)*
