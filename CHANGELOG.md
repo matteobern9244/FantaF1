@@ -2,6 +2,9 @@
 
 Cronologia sintetica delle release documentate del progetto Fanta Formula 1.
 
+## [1.4.9] - 2026-03-15
+- **Fix Render Dockerfile Rewrite**: eseguita una riscrittura pulita del `Dockerfile` nella root per risolvere l'errore di rilevamento su Render (`open Dockerfile: no such file or directory`); eliminata ogni ambiguità derivante da metadati o varianti del filesystem.
+
 ## [1.4.8] - 2026-03-15
 - **Fix Docker Staging Deploy**: spostato il `Dockerfile` nella root del progetto per risolvere definitivamente l'errore di build su Render (`COPY backend/ not found`) derivante da ambiguità nella risoluzione dei percorsi del contesto di build.
 - **Verifica Non-Regressione Locale**: confermata la completa integrità del launcher locale e delle viste responsive dopo la ristrutturazione dei file Docker.
