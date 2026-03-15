@@ -310,10 +310,12 @@ L'applicazione di questi standard garantisce un approccio "production-safe" e un
 ### Persistenza
 
 - MongoDB tramite `MongoDB.Driver`.
-- Il backend gestisce tre insiemi logici di dati:
-  - stato globale del gioco;
-  - cache roster piloti;
-  - cache calendario weekend.
+- Il backend gestisce questi insiemi persistiti:
+  - stato globale del gioco (`appdatas`);
+  - cache roster piloti (`drivers`);
+  - cache calendario weekend (`weekends`);
+  - cache classifiche piloti/costruttori (`standingscaches`);
+  - credenziali admin hashate e metadata di autenticazione (`admincredentials`).
 - Il frontend non usa `localStorage` per i dati core del gioco.
 
 ## Sorgenti esterne e sincronizzazione
@@ -338,6 +340,13 @@ L'applicazione di questi standard garantisce un approccio "production-safe" e un
   - `raceStartTime`;
   - lista sessioni con orari ISO.
 - Se il dettaglio di un singolo weekend fallisce, il backend mantiene comunque i dati base del calendario.
+
+### Classifiche reali
+
+- Fonte primaria: Formula1.com.
+- Il backend sincronizza classifiche piloti e costruttori in background e le persiste in MongoDB.
+- Se la cache classifiche e' vuota, la route `GET /api/standings` tenta un sync on-demand prima di fallire.
+- Se il sync fallisce ma la cache esiste gia', il backend continua a servire l'ultimo snapshot valido disponibile.
 
 ### Risultati gara
 
@@ -503,9 +512,9 @@ Ogni weekend puo' includere:
 - `PORT`
   - porta HTTP del backend;
   - in locale il default e' `3001`.
-- `NODE_ENV`
-  - controlla il targeting del database (`fantaf1_dev` in development, `fantaf1` in production) e il default `viewMode`;
-  - in development l'app apre in modalita' admin, in production in modalita' pubblica.
+- `ASPNETCORE_ENVIRONMENT`
+  - controlla il profilo runtime del backend C# (`Development`, `Staging`, `Production`);
+  - `Development` abilita il comportamento admin-open locale, mentre `Staging` e `Production` applicano l'autenticazione admin production-like.
 - `VITE_APP_LOCAL_NAME`
   - override del titolo visualizzato nell'hero del frontend;
   - se estende il titolo base `Fanta Formula 1`, la hero lo divide in due righe: base title sopra, suffisso sotto;
@@ -519,8 +528,9 @@ Il launcher locale carica:
 1. variabili di processo correnti;
 2. `.env`.
 
-In assenza di un database nel path della URI, l'ambiente locale punta sempre a `fantaf1_dev`.
-Se `MONGODB_URI` contiene gia' un database nel path, quel nome deve essere coerente con l'ambiente locale.
+Il resolver dei target locali C# forza il database atteso tramite `MONGODB_DB_NAME_OVERRIDE`.
+Per lo stato attuale del repository i target locali C# validati puntano a `fantaf1_staging`, sia in `Development` sia in `Staging` locale.
+Se `MONGODB_URI` contiene gia' un database nel path, gli script locali lo riscrivono sul target atteso del runtime selezionato.
 
 ## Avvio locale
 
@@ -532,9 +542,9 @@ Se `MONGODB_URI` contiene gia' un database nel path, quel nome deve essere coere
 - Google Chrome installato in `/Applications/Google Chrome.app` se si usa il launcher integrato.
 - Runtime locale canonico di default: `csharp-dev`.
 - Target locali supportati:
-  - `csharp-dev` -> host ASP.NET Core same-origin, database atteso `fantaf1_dev`
+  - `csharp-dev` -> frontend Vite + backend ASP.NET Core, environment `Development`, database atteso `fantaf1_staging`
   - `csharp-staging-local` -> host ASP.NET Core same-origin, environment `Staging` locale, database atteso `fantaf1_staging`
-- La `MONGODB_URI` locale deve essere presente e coerente con il target selezionato; gli script locali riscrivono il database target solo per i runtime C# verso `fantaf1_porting`.
+- La `MONGODB_URI` locale deve essere presente e coerente con il target selezionato; gli script locali riscrivono il database target dei runtime C# verso `fantaf1_staging`.
 
 ### Modalita' sviluppo separate
 
@@ -552,7 +562,7 @@ Il backend verifica in startup che `MONGODB_URI` sia allineata con l'environment
 
 Lo script integrato:
 
-- forza esplicitamente `NODE_ENV=development`;
+- forza il target locale canonico `csharp-dev` salvo override esplicito `FANTAF1_LOCAL_RUNTIME`;
 - usa l'host ASP.NET Core come default monitorato ed esclusivo per il backend;
 - esegue `npm run lint`, `npm run test`, `npm run build` e `npm run test:save-local`;
 - esegue uno smoke reale di lettura/scrittura sul target locale selezionato prima dell'avvio finale;
@@ -588,22 +598,24 @@ Lo script:
 
 - Build command: `npm install && npm run build`
 - Il repository forza l'installazione delle `devDependencies` anche durante la build tramite `.npmrc`, per garantire su Render la presenza della toolchain TypeScript/Vite e dei type package React necessari alla compilazione frontend.
-- Build command (Docker): definito nel `Dockerfile` del backend-csharp
+- Docker context: root del repository
+- Dockerfile path: `./Dockerfile`
 - Environment: Docker per Render.com
 
 ### Variabili da configurare
 
 - `MONGODB_URI` obbligatoria.
-- `MONGODB_URI` deve puntare a `.../fantaf1`.
+- `MONGODB_URI` deve puntare al database dell'ambiente target; per lo staging attuale deve puntare a `.../fantaf1_staging`.
 - `ADMIN_SESSION_SECRET` obbligatoria e privata.
-- `NODE_ENV=production` raccomandata per allineare cookie sicuri, DB target e modalita' iniziale.
-- `PORT` normalmente gestita dalla piattaforma.
+- `ASPNETCORE_ENVIRONMENT=Staging` per l'ambiente di staging attuale su Render.
+- `Frontend__BuildPath=./dist` per il serving same-origin dei file frontend pubblicati nell'immagine Docker.
+- `PORT=3001` coerente con il binding corrente dell'immagine staging Render.
 - `VITE_APP_LOCAL_NAME` opzionale se si vuole un titolo hero personalizzato anche in produzione.
 
 ### Comportamento in produzione
 
 - L'applicazione ASP.NET Core serve i file statici generati in `dist`.
-- In produzione il backend C# richiede che la configurazione risolva al database di produzione corretto.
+- In `Staging` e `Production` il backend C# richiede una sessione admin valida per i canali di salvataggio.
 - Dopo la connessione al database il server parte subito e sincronizza piloti e calendario in background, evitando di bloccare lo startup su sorgenti lente.
 
 ## Qualita' tecnica
@@ -632,8 +644,8 @@ Lo script:
   - `2096 / 2096` branches
   - `5176 / 5176` lines
 - Coverage ufficiale verificata corrente del backend C# sullo scope `backend-csharp/src/`:
-  - `2928 / 2928` lines
-  - `1649 / 1649` branches
+  - `2927 / 2927` lines
+  - `1647 / 1647` branches
   - `487 / 487` methods
   - `70` file inclusi nel riepilogo ufficiale
 - Scope coverage configurato:
@@ -657,7 +669,7 @@ Il controllo responsive verifica anche la presenza del menu corretto per breakpo
 Il comando esegue un preflight fail-fast sull'ambiente Playwright: se trova sessioni responsive residue (`ui-*`) o una CLI non reattiva, interrompe il run senza killare processi non creati da lui e riporta le istruzioni di bonifica manuale.
 Su errori di navigazione o shell UI bloccata raccoglie artefatti diagnostici in `output/playwright/ui-responsive/` (summary, stato pagina, tab-list, screenshot se disponibile, console e network log) per distinguere facilmente tra regressione UI, splash bloccata e sessione Playwright incoerente.
 Per il salvataggio locale e' disponibile `npm run test:save-local`, che per default usa `csharp-dev`, legge `/api/data`, re-invia lo stesso payload su `POST /api/data`, verifica environment/database target attesi e controlla che lo stato resti invariato dopo il round-trip. Lo stesso smoke puo' essere rieseguito in modo esplicito su `csharp-staging-local` con `SAVE_SMOKE_TARGET=...`, includendo login admin e riuso del cookie nel target production-like locale. Questo smoke test copre il canale di persistenza generica, non il salvataggio manuale dei pronostici su `POST /api/predictions`.
-Lo smoke di persistenza puo' essere eseguito sul database isolato di pipeline, mentre lo smoke di persistenza puo' essere eseguito sul database isolato di pipeline impostando `MONGODB_DB_NAME_OVERRIDE`, `SAVE_SMOKE_EXPECTED_ENVIRONMENT` e `SAVE_SMOKE_EXPECTED_DATABASE_TARGET` senza toccare `fantaf1_dev`, `fantaf1` o `fantaf1_porting`.
+Lo smoke di persistenza puo' essere eseguito sul database isolato di pipeline impostando `MONGODB_DB_NAME_OVERRIDE`, `SAVE_SMOKE_EXPECTED_ENVIRONMENT` e `SAVE_SMOKE_EXPECTED_DATABASE_TARGET` senza toccare `fantaf1_dev`, `fantaf1` o il dataset staging reale.
 Per il backend C# e' disponibile `npm run test:csharp-coverage`, comando ufficiale che esegue la raccolta coverlet sui test unit/integration/contract, filtra `obj/` e generated code, limita lo scope a `backend-csharp/src/` e scrive il riepilogo verificabile in `backend-csharp/TestResults/OfficialCoverage/Summary.txt` e `backend-csharp/TestResults/OfficialCoverage/summary.json`.
 L'ultimo riepilogo ufficiale verificato per il backend C# chiude a `100%` su linee, branch e metodi per tutti i `70` file inclusi nello scope `backend-csharp/src/`.
 Per una verifica browser production-like coerente con il guardrail sul database, il repository supporta anche l'avvio con `ASPNETCORE_ENVIRONMENT=Production MONGODB_DB_NAME_OVERRIDE=fantaf1_dev dotnet run --project backend-csharp/src/FantaF1.Api/FantaF1.Api.csproj`, mantenendo runtime `production` ma puntando in modo esplicito al database locale di sviluppo per smoke desktop/mobile della build servita dal backend C#.
@@ -673,7 +685,7 @@ Per una verifica browser production-like coerente con il guardrail sul database,
 
 ### Workflow previsti
 
-- `.github/workflows/pr-ci.yml`: esegue `lint`, `coverage`, `build`, `responsive-dev` e `smoke-ci-db` sulle Pull Request verso `main`.
+- `.github/workflows/pr-ci.yml`: esegue `lint`, `build`, `format-csharp`, `build-csharp`, `test-csharp`, `responsive-dev` e `smoke-ci-db` sulle Pull Request verso `main`.
 - `.github/workflows/pr-auto-merge.yml`: arma l'auto-merge `squash` per PR non draft verso `main` provenienti dallo stesso repository, senza bypassare la protezione del branch.
 - `.github/workflows/post-merge-health.yml`: esegue un controllo health opzionale dopo i push su `main`.
 
@@ -687,7 +699,7 @@ Per una verifica browser production-like coerente con il guardrail sul database,
 
 - push diretti bloccati;
 - merge consentito solo via Pull Request;
-- required status checks allineati ai job `lint`, `coverage`, `build`, `responsive-dev`, `smoke-ci-db`;
+- required status checks allineati ai job `lint`, `build`, `format-csharp`, `build-csharp`, `test-csharp`, `responsive-dev`, `smoke-ci-db`;
 - branch up-to-date richiesta prima del merge;
 - conversation resolution richiesta;
 - auto-merge attivo;

@@ -323,9 +323,9 @@ No version/tag/release task is complete if `CHANGELOG.md` is out of sync with th
 
 ### Persistent deploy trigger
 
-If the user writes exactly `deploya`, treat that as explicit authorization to run the full deployment workflow below without asking for confirmation and without changing the sequence:
+If the user writes exactly `deploya`, treat that as explicit authorization to run the full deployment workflow below without asking for confirmation and without changing the sequence. Before starting, also verify that `main` is already the branch that represents the current releasable stack. If `main` intentionally still points to a legacy or cutover-pending structure, stop immediately and report that `deploya` is not currently activatable.
 
-1. Before starting, verify the repository state. If there are unstaged files, stop immediately and do not proceed. If there are staged files, proceed with the workflow.
+1. Before starting, verify the repository state and the release target. If there are unstaged files, stop immediately and do not proceed. If `main` is not yet aligned with the stack that is intended to be released, stop immediately and do not proceed. If there are staged files and `main` is the correct release target, proceed with the workflow.
 2. Determine the correct next application version and bump it consistently across the repository wherever needed.
 3. Update `README.md` and `CHANGELOG.md` so they are coherent, accurate, and aligned with the latest changes, implementations, and fixes in the repository.
 4. Run the full test suite, if a test suite exists.

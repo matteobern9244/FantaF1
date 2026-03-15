@@ -1,29 +1,40 @@
-# Guida alla Migrazione Render.com (da Node.js a C# Docker)
+# Guida Render Staging C# Docker
 
-Per allineare l'ambiente di Render.com al nuovo stack basato su C# e Docker prima del merge su `main`, seguire questi passaggi:
+Questa guida descrive il deploy staging reale del branch C# corrente. Non implica che `main` sia gia' pronto al cutover: finche' `main` resta sulla struttura legacy, lo staging Render serve solo come ambiente di certificazione esterna del branch in test.
 
-## 1. Configurazione del Servizio Web (Staging/Produzione)
-Assicurarsi che il servizio su Render sia configurato per utilizzare Docker.
+## 1. Configurazione del servizio web
+
+Il servizio Render staging deve usare Docker con i percorsi reali del repository:
 
 - **Runtime:** Docker
-- **Docker Command:** (Lasciare vuoto se definito nel Dockerfile)
-- **Docker Context:** `backend-csharp` (o la root se il Dockerfile gestisce i percorsi relativi)
-- **Dockerfile Path:** `./backend-csharp/Dockerfile`
+- **Docker Context:** root del repository
+- **Dockerfile Path:** `./Dockerfile`
+- **Health check path:** `/api/health`
 
-## 2. Variabili d'Ambiente
-Verificare e aggiornare le seguenti variabili d'Ambiente su Render:
+Il `Dockerfile` root costruisce il frontend Vite, pubblica l'API ASP.NET Core e serve frontend + API dallo stesso origin.
 
-- `ASPNETCORE_ENVIRONMENT`: `Staging` (o `Production`)
-- `ConnectionStrings__MongoDb`: Assicurarsi che punti al database corretto (es. `fantaf1_staging`)
-- `JWT_SECRET`: (Se usato per l'autenticazione nel nuovo backend)
-- `ADMIN_PASSWORD`: (Se necessario per le credenziali admin)
-- `PORT`: `8080` (O la porta esposta dal container Docker)
+## 2. Variabili d'ambiente richieste
 
-## 3. Build e Deploy
-- Una volta completate le modifiche ai file CI/CD in questo branch, il push su Render dovrebbe innescare automaticamente la build Docker.
-- Monitorare i log di build per assicurarsi che il restore dei pacchetti NuGet e la pubblicazione avvengano correttamente.
+Per lo staging attuale le variabili corrette sono:
 
-## 4. Verifica Post-Deploy
-- Accedere all'URL del servizio di staging.
-- Verificare che il frontend carichi i dati chiamando le nuove API C#.
-- Controllare i log di Render per eventuali errori di connessione al database MongoDB.
+- `ASPNETCORE_ENVIRONMENT=Staging`
+- `ADMIN_SESSION_SECRET=<secret staging-only>`
+- `MONGODB_URI=<uri staging-only verso fantaf1_staging>`
+- `Frontend__BuildPath=./dist`
+- `PORT=3001`
+
+Non sono richiesti `ConnectionStrings__MongoDb`, `JWT_SECRET` o `ADMIN_PASSWORD` per il runtime C# attuale.
+
+## 3. Checklist di deploy
+
+Prima di considerare valido il deploy staging:
+
+1. Verificare che il build Docker usi il `Dockerfile` root senza path legacy.
+2. Verificare che l'health endpoint risponda su `/api/health`.
+3. Verificare `GET /api/session`, `POST /api/admin/session`, `POST /api/data` e `POST /api/predictions`.
+4. Verificare che il cookie admin venga emesso e riusato in `Staging`.
+5. Verificare desktop/mobile admin/public sul servizio staging.
+
+## 4. Nota sul cutover
+
+Lo staging Render e' il gate esterno della migrazione C# su `develop`. Il comando speciale `deploya` resta non attivabile finche' `main` non rappresenta davvero lo stack rilasciabile.

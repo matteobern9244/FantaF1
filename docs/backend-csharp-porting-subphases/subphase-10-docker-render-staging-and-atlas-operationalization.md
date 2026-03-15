@@ -4,20 +4,20 @@ Invocazione canonica: `Subphase 10`
 
 ## Scopo della subphase
 
-- Operazionalizzare `backend-csharp/Dockerfile`, Atlas `fantaf1_porting` e `fantaf1_staging`, e il deploy staging Render `FantaF1_staging`.
+- Operazionalizzare il `Dockerfile` root, Atlas `fantaf1_staging`, e il deploy staging Render `FantaF1_staging`.
 - Eseguire la checklist completa di validazione staging, incluso il browser gate esterno staging-only e la validazione di standings endpoint/cache/UI.
 
 ## Source of truth e runtime autorevole
 
-- Il runtime autorevole di produzione resta Node; lo staging esterno C# e' il primo ambiente di validazione reale del porting.
+- Il runtime autorevole del branch migrato e' C#; `main` resta fuori scope finche' non viene autorizzato il cutover finale.
 - Restano vincolanti `AGENTS.md`, `PROJECT.md`, `docs/backend-csharp-porting-plan.md` e tutte le sezioni-principio di `guide-porting-c#/AGENTS_migration_template.md`.
 - `FantaF1_staging` e `fantaf1_staging` sono i nomi autorevoli da usare; non sono ammessi alias concorrenti.
 
 ## In scope
 
-- `backend-csharp/Dockerfile`
+- `Dockerfile`
 - Build multi-stage con React + ASP.NET Core same-origin.
-- Provisioning Atlas di `fantaf1_porting` e `fantaf1_staging`.
+- Provisioning Atlas di `fantaf1_staging`.
 - Creazione/configurazione del servizio Render `FantaF1_staging`.
 - Checklist di validazione staging, compresi health, route migrate, standings, startup sync e browser gate esterno.
 
@@ -34,14 +34,14 @@ Invocazione canonica: `Subphase 10`
 
 ## File/layer toccati
 
-- `backend-csharp/Dockerfile`
+- `Dockerfile`
 - configurazione Render del servizio `FantaF1_staging`
 - documentazione/runbook Atlas del porting
 - eventuali asset di deploy strettamente necessari al servizio staging
 
 ## Contratti e invarianti da preservare
 
-- `fantaf1_porting` e `fantaf1_staging` sono gli unici database mutabili del porting.
+- `fantaf1_staging` e' il database mutabile del branch migrato e dello staging esterno attuale.
 - Nessun deploy staging puo' usare credenziali produzione o `fantaf1_dev`.
 - Il servizio staging deve servire React e API dallo stesso origin.
 - Il browser gate esterno di questo piano e' solo staging; nessun gate post-deploy produzione va anticipato qui.
@@ -60,11 +60,11 @@ Invocazione canonica: `Subphase 10`
 
 ## Piano di implementazione passo-passo
 
-1. Creare `backend-csharp/Dockerfile` multi-stage per build React, build/test/publish .NET e final image stateless.
-2. Provisionare `fantaf1_porting` e `fantaf1_staging` con collection compatibili e utenze least-privilege distinte.
-3. Creare/configurare il servizio Render `FantaF1_staging` puntato al branch `porting-backend-c#`.
-4. Configurare `ASPNETCORE_ENVIRONMENT=Staging`, URI staging-only e secret staging-only.
-5. Eseguire la checklist staging completa su route migrate, startup sync, browser desktop/mobile admin/public e rollback readiness.
+1. Usare il `Dockerfile` root multi-stage per build React, publish .NET e final image stateless same-origin.
+2. Provisionare `fantaf1_staging` con collection compatibili e utenze least-privilege dedicate.
+3. Configurare il servizio Render `FantaF1_staging` sul branch corrente di validazione C#.
+4. Configurare `ASPNETCORE_ENVIRONMENT=Staging`, `MONGODB_URI` staging-only, `ADMIN_SESSION_SECRET`, `Frontend__BuildPath=./dist` e `PORT=3001`.
+5. Eseguire la checklist staging completa su route migrate, startup sync, browser desktop/mobile admin/public e login/save admin.
 
 ## Test da aggiungere o aggiornare
 

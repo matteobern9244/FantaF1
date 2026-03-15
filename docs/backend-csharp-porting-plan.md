@@ -21,9 +21,9 @@ It includes:
 - the authoritative runtime and compatibility rules
 - the target architecture and environment matrix
 - the Atlas, Render, and CI/CD strategy to be followed later
-- the branch-isolation rule that all porting changes remain on `porting-backend-c#` until the user personally certifies the full migrated application
+- the branch-isolation rule that all porting changes remain on the current certification branch until the user personally certifies the full migrated application
 
-No runtime cutover, no legacy backend removal, and no future-stack branch workflow creation are part of this macro-phase.
+No runtime cutover on `main` and no legacy backend removal are part of this macro-phase. The current branch may validate the C# stack locally and on staging, but final release governance remains deferred until `Subphase 11`.
 
 ## Scope imminente
 
@@ -32,11 +32,11 @@ This second macro-phase is the actual backend migration and verification phase.
 It includes:
 
 - route-by-route C# implementation using TDD and parity checks
-- parameterization of shared verification scripts so porting work never falls back to `fantaf1_dev`
+- parameterization of shared verification scripts so porting work never falls back to an implicit legacy local DB target
 - Docker and Render staging validation
-- future-stack branch workflow creation when the real C# assets exist
-- update of `start_fantaf1.command` so it remains the canonical launcher after cutover
-- removal of the legacy Node backend files only after parity, staging validation, browser validation on staging, rollback readiness, and explicit user certification
+- future-stack branch workflow creation only after `main` is ready for the real cutover
+- update of `start_fantaf1.command` so it remains the canonical launcher on the migrated branch
+- removal of the legacy Node backend files only after parity, staging validation, browser validation on staging, rollback readiness, explicit user certification, and cutover approval for `main`
 
 ## Subphase execution index
 
@@ -57,9 +57,9 @@ The ledger below is the canonical persistent checkpoint for the temporal executi
 | `Subphase 6A` | `completed` | `GET /api/standings` is parity-green in C# for cache-first reads, official-source parsing, cache compatibility with `standingscaches`, reusable standings sync capability, fallback to cache on invalid source or fetch failures, and the canonical `main` delta assimilation matrix. | Wait for explicit user authorization before starting `Subphase 7`. |
 | `Subphase 7` | `completed` | `GET /api/results/:meetingKey` is parity-green in C# for flat Node-compatible payloads, `racePhase`, sprint-vs-qualifying bonus sourcing, process-local cache TTL, highlights lookup `found`/`missing` behavior, fallback to persisted highlights on lookup failures, Node-compatible `500 { error, details }`, and legacy `weekends` highlights lookup persistence while Node remains authoritative. | Wait for explicit user authorization before starting `Subphase 8`. |
 | `Subphase 8` | `completed` | C# bootstrap host, Mongo-backed admin seed, non-blocking background sync for drivers/calendar/standings, cache fallback, same-origin React static hosting, SPA fallback, and local `Development`/`Staging` host smokes are verified while Node remains the authoritative runtime. | Wait for explicit user authorization before starting `Subphase 9`. |
-| `Subphase 9` | `completed` | `start_fantaf1.command` remains the canonical monitored launcher with explicit `node-dev` default and opt-in C# runtime selection, while `scripts/save-local-check.mjs` and `scripts/ui-responsive-check.mjs` are parameterized for `node-dev`, `csharp-dev`, and local production-like `csharp-staging-local` against `fantaf1_porting` without any implicit `fantaf1_dev` fallback. | Wait for explicit user authorization before starting `Subphase 10`. |
-| `Subphase 10` | `pending` | Not started yet in the canonical ledger. | Wait for `Subphase 9` completion. |
-| `Subphase 11` | `pending` | Not started yet in the canonical ledger. | Wait for `Subphase 10` completion. |
+| `Subphase 9` | `completed` | `start_fantaf1.command` now defaults to `csharp-dev`, while `scripts/save-local-check.mjs` and `scripts/ui-responsive-check.mjs` are parameterized for `csharp-dev` and local production-like `csharp-staging-local` against `fantaf1_staging` without any implicit `fantaf1_dev` fallback. | Keep launcher and shared verification scripts aligned with the migrated branch. |
+| `Subphase 10` | `completed` | Docker same-origin hosting is operationalized through the root `Dockerfile`; Render staging uses `ASPNETCORE_ENVIRONMENT=Staging`, `MONGODB_URI` pointing to `fantaf1_staging`, `ADMIN_SESSION_SECRET`, `Frontend__BuildPath=./dist`, and `PORT=3001`. | Keep staging validation green while `main` remains legacy. |
+| `Subphase 11` | `pending` | Final cutover governance remains open because `main` intentionally still points to the legacy structure and the user has not yet certified the C# stack for merge/release. | Wait for explicit user certification and `main` cutover authorization. |
 
 For avoidance of doubt, the closure gate for `Subphase 2` is limited to the C# solution scope plus the Node baseline browser check in `Development`. The reusable local `production-like` browser gate remains owned by `Subphase 9` and must not block `Subphase 2` closure.
 
@@ -162,11 +162,7 @@ This matrix is mandatory after the real `git merge --no-ff main` on `porting-bac
 
 ### 1.1 Authoritative runtime today
 
-Until an explicit cutover is approved after staging validation, the authoritative runtime path is the existing Node.js backend in:
-
-- `backend/`
-- `app.js`
-- `server.js`
+Until an explicit cutover is approved on `main`, the authoritative runtime path for the migrated branch is the ASP.NET Core backend under `backend-csharp/`, validated locally and on Render staging. The legacy Node backend remains only the protected release baseline for `main` governance until `Subphase 11` is completed.
 
 The React frontend remains authoritative and must stay behaviorally unchanged during the backend port.
 
@@ -174,7 +170,7 @@ The React frontend remains authoritative and must stay behaviorally unchanged du
 
 - Production database remains `fantaf1`.
 - Existing development database `fantaf1_dev` remains a protected legacy baseline and must not be modified by porting work.
-- The mutable working database for the C# port is `fantaf1_porting`.
+- The mutable working database for the current C# branch and staging validation is `fantaf1_staging`.
 - The first external validation environment is Render staging.
 - The authoritative future staging service name is `FantaF1_staging`.
 - The authoritative future staging database is `fantaf1_staging`.
@@ -369,8 +365,8 @@ These abstractions exist to preserve DI, testability, and parity-oriented archit
 | Context | Runtime authority | Environment mode | Database target | Mutations allowed | Notes |
 | --- | --- | --- | --- | --- | --- |
 | Legacy local Node baseline | Node | `development` | `fantaf1_dev` | No for porting work | Read-only baseline for contract reference when needed |
-| Local C# porting | C# | `Development` | `fantaf1_porting` | Yes | Main mutable local environment for the new backend |
-| Local production-like C# smoke | C# | `Staging` | `fantaf1_porting` | Yes | Used to validate prod-like auth/cookie behavior without touching staging |
+| Local C# porting | C# | `Development` | `fantaf1_staging` | Yes | Main mutable local environment for the migrated backend |
+| Local production-like C# smoke | C# | `Staging` | `fantaf1_staging` | Yes | Used to validate prod-like auth/cookie behavior against the current staging dataset |
 | CI | Node and C# | isolated CI env | dedicated CI DB | Yes | Must never point to `fantaf1`, `fantaf1_dev`, `fantaf1_porting`, or `fantaf1_staging` |
 | Render staging | C# | `Staging` | `fantaf1_staging` | Yes | First external validation target |
 | Production | Node until cutover, then C# | `production` or `Production` | `fantaf1` | Only after explicit approval | Must remain untouched during porting |
@@ -397,9 +393,8 @@ C# target uses:
 
 ### 4.2 Environment behavior rules
 
-- `Development` maps to admin-open behavior and must target `fantaf1_porting`
+- `Development` maps to admin-open behavior and must target `fantaf1_staging` for the current migrated branch
 - `Staging` maps to production-like auth behavior and must target `fantaf1_staging` externally
-- `Staging` may target `fantaf1_porting` only for local production-like smoke before staging deploy
 - `Production` maps to production-like auth behavior and must target `fantaf1`
 
 ## 5. Migration strategy
@@ -630,7 +625,7 @@ When the first end-to-end C# slice is runnable:
 2. Create a Docker web service named `FantaF1_staging`.
 3. Point the service to branch `porting-backend-c#`.
 4. Use the repository root as build context.
-5. Use `backend-csharp/Dockerfile` as Dockerfile path.
+5. Use `./Dockerfile` as Dockerfile path.
 6. Configure health check path `/api/health`.
 7. Set environment variables:
    - `ASPNETCORE_ENVIRONMENT=Staging`

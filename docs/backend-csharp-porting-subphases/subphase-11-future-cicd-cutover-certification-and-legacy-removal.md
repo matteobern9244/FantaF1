@@ -9,13 +9,13 @@ Invocazione canonica: `Subphase 11`
 
 ## Source of truth e runtime autorevole
 
-- Il runtime autorevole resta Node fino a quando tutte le condizioni di cutover non sono soddisfatte e l'utente non certifica esplicitamente il porting sul branch `porting-backend-c#`.
+- Il runtime autorevole del branch migrato e' gia' C#; `main` resta invece il branch legacy protetto fino a certificazione utente e autorizzazione esplicita al cutover.
 - Restano vincolanti `AGENTS.md`, `PROJECT.md`, `docs/backend-csharp-porting-plan.md` e tutte le sezioni-principio di `guide-porting-c#/AGENTS_migration_template.md`.
 - La rimozione di `backend/`, `app.js`, `server.js` e dei path legacy e' consentita solo in questa subphase e solo come ultima operazione del porting.
 
 ## In scope
 
-- Workflow GitHub Actions futuri e branch-specific per `porting-backend-c#`.
+- Governance del cutover dei workflow GitHub Actions verso un futuro `main` C#.
 - Gating CI/CD del futuro stack C#.
 - Criteri formali di cutover e rollback readiness.
 - Certificazione utente del porting.
@@ -62,9 +62,9 @@ Invocazione canonica: `Subphase 11`
 
 ## Contratti e invarianti da preservare
 
-- I workflow correnti di `main` restano invariati finche' il futuro stack C# non e' reale e completo.
+- I workflow correnti di `main` restano invariati finche' `main` non diventa il reale target di rilascio dello stack C#.
 - La CI del porting deve usare database dedicati e mai `fantaf1`, `fantaf1_dev`, `fantaf1_porting` o `fantaf1_staging`.
-- Il cutover puo' iniziare solo dopo parity totale, coverage 100%, browser locali verdi, browser staging verdi e certificazione utente.
+- Il cutover puo' iniziare solo dopo parity totale, coverage 100%, browser locali verdi, browser staging verdi, certificazione utente e decisione esplicita di allineare `main`.
 - La rimozione del backend legacy avviene solo dopo che il backend C# e' gia' l'implementazione verificata e certificata.
 - `remove only after C# becomes the verified runtime`: il legacy removal puo' iniziare solo quando:
   - `Subphase 1`-`Subphase 10` completate e verdi.
@@ -96,7 +96,8 @@ Invocazione canonica: `Subphase 11`
 2. Configurare restore/build/test/coverage C#, build Docker, check React e health staging senza toccare i workflow di `main`.
 3. Verificare i criteri di cutover: parity totale, coverage 100%, browser locali verdi, browser staging verdi, launcher canonico aggiornato, workflow futuri verdi e rollback readiness.
 4. Ottenere certificazione utente esplicita sul branch `porting-backend-c#`.
-5. Solo a questo punto applicare l'inventario legacy: rimuovere `backend/`, `app.js`, `server.js`, migrare launcher/script/workflow/documentazione che puntano ancora a Node e conservare frontend/tooling necessari, con diff minimale e senza bridge permanenti.
+5. Solo a questo punto allineare `main`, i workflow e il comando `deploya` al runtime C# definitivo.
+6. Solo dopo l'allineamento di `main` applicare l'inventario legacy: rimuovere `backend/`, `app.js`, `server.js`, migrare launcher/script/workflow/documentazione che puntano ancora a Node e conservare frontend/tooling necessari, con diff minimale e senza bridge permanenti.
 
 ## Test da aggiungere o aggiornare
 

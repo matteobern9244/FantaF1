@@ -18,154 +18,82 @@ public sealed class PortingDocumentationConsistencyTests
     }
 
     [Fact]
-    public void Subphase_two_doc_keeps_the_production_like_browser_gate_out_of_scope()
+    public void Canonical_docs_align_the_current_branch_with_the_csharp_runtime_and_keep_main_cutover_pending()
     {
-        var subphaseTwoPlan = ReadRepositoryFile(
+        var canonicalPlan = ReadRepositoryFile("docs", "backend-csharp-porting-plan.md");
+        var subphaseElevenPlan = ReadRepositoryFile(
             "docs",
             "backend-csharp-porting-subphases",
-            "subphase-02-backend-csharp-solution-and-shared-abstractions.md");
+            "subphase-11-future-cicd-cutover-certification-and-legacy-removal.md");
 
+        Assert.Contains("| `Subphase 10` | `completed` |", canonicalPlan, StringComparison.Ordinal);
+        Assert.Contains("| `Subphase 11` | `pending` |", canonicalPlan, StringComparison.Ordinal);
         Assert.Contains(
-            "- Desktop admin/public in sviluppo: `npm run test:ui-responsive` contro il runtime Node baseline resta obbligatorio.",
-            subphaseTwoPlan,
+            "the authoritative runtime path for the migrated branch is the ASP.NET Core backend under `backend-csharp/`",
+            canonicalPlan,
             StringComparison.Ordinal);
         Assert.Contains(
-            "- Produzione-like locale: non applicabile come gate di chiusura di questa subphase; il riuso condiviso del responsive check resta demandato a `Subphase 9`.",
-            subphaseTwoPlan,
+            "`main` resta invece il branch legacy protetto fino a certificazione utente e autorizzazione esplicita al cutover",
+            subphaseElevenPlan,
             StringComparison.Ordinal);
     }
 
     [Fact]
-    public void Canonical_plan_keeps_production_like_browser_gates_owned_by_subphase_nine_and_marks_subphase_seven_completed()
+    public void Render_docs_reference_the_root_dockerfile_and_current_staging_environment_variables()
     {
-        var canonicalPlan = ReadRepositoryFile("docs", "backend-csharp-porting-plan.md");
-        var subphaseFourPlan = ReadRepositoryFile(
+        var readme = ReadRepositoryFile("README.md");
+        var renderGuide = ReadRepositoryFile("docs", "render-migration-guide.md");
+        var subphaseTenPlan = ReadRepositoryFile(
             "docs",
             "backend-csharp-porting-subphases",
-            "subphase-04-session-and-admin-auth-parity.md");
+            "subphase-10-docker-render-staging-and-atlas-operationalization.md");
 
-        Assert.Contains(
-            "For avoidance of doubt, the closure gate for `Subphase 2` is limited to the C# solution scope plus the Node baseline browser check in `Development`. The reusable local `production-like` browser gate remains owned by `Subphase 9` and must not block `Subphase 2` closure.",
-            canonicalPlan,
-            StringComparison.Ordinal);
-        Assert.Contains("| `Subphase 3` | `completed` |", canonicalPlan, StringComparison.Ordinal);
-        Assert.Contains("| `Subphase 4` | `completed` |", canonicalPlan, StringComparison.Ordinal);
-        Assert.Contains("| `Subphase 5` | `completed` |", canonicalPlan, StringComparison.Ordinal);
-        Assert.Contains("| `Subphase 6` | `completed` |", canonicalPlan, StringComparison.Ordinal);
-        Assert.Contains("| `Subphase 6A` | `completed` |", canonicalPlan, StringComparison.Ordinal);
-        Assert.Contains("| `Subphase 7` | `completed` |", canonicalPlan, StringComparison.Ordinal);
-        Assert.Contains("Wait for explicit user authorization before starting `Subphase 8`.", canonicalPlan, StringComparison.Ordinal);
-        Assert.Contains(
-            "| Canonical launcher and shared verification scripts, including local development and production-like browser gate reuse, and the ban on implicit `fantaf1_dev` fallback | `Subphase 9` |",
-            canonicalPlan,
-            StringComparison.Ordinal);
-        Assert.Contains(
-            "- Desktop admin/public in sviluppo: `npm run test:ui-responsive` contro il runtime Node baseline resta obbligatorio.",
-            subphaseFourPlan,
-            StringComparison.Ordinal);
-        Assert.Contains(
-            "- Produzione-like locale: il browser gate riusabile non blocca la chiusura di questa subphase; la semantica auth/cookie production-like va verificata con integration e contract tests HTTP, mentre il gate browser condiviso resta demandato a `Subphase 9`.",
-            subphaseFourPlan,
-            StringComparison.Ordinal);
+        Assert.Contains("Dockerfile path: `./Dockerfile`", readme, StringComparison.Ordinal);
+        Assert.Contains("`./Dockerfile`", renderGuide, StringComparison.Ordinal);
+        Assert.Contains("`Frontend__BuildPath=./dist`", renderGuide, StringComparison.Ordinal);
+        Assert.Contains("`PORT=3001`", renderGuide, StringComparison.Ordinal);
+        Assert.Contains("`Dockerfile` root", subphaseTenPlan, StringComparison.Ordinal);
+        Assert.DoesNotContain("backend-csharp/Dockerfile", renderGuide, StringComparison.Ordinal);
+        Assert.DoesNotContain("backend-csharp/Dockerfile", subphaseTenPlan, StringComparison.Ordinal);
     }
 
     [Fact]
-    public void Canonical_plan_and_subphase_five_doc_record_the_read_route_slice_as_completed_before_subphase_seven()
+    public void Project_and_readme_align_with_current_persistence_and_participant_runtime_rules()
     {
-        var canonicalPlan = ReadRepositoryFile("docs", "backend-csharp-porting-plan.md");
-        var subphaseFivePlan = ReadRepositoryFile(
-            "docs",
-            "backend-csharp-porting-subphases",
-            "subphase-05-read-routes-data-drivers-calendar.md");
+        var project = ReadRepositoryFile("PROJECT.md");
+        var readme = ReadRepositoryFile("README.md");
 
-        Assert.Contains(
-            "| `Subphase 5` | `completed` |",
-            canonicalPlan,
-            StringComparison.Ordinal);
-        Assert.Contains(
-            "| `Subphase 6` | `completed` |",
-            canonicalPlan,
-            StringComparison.Ordinal);
-        Assert.Contains(
-            "| `Subphase 6A` | `completed` |",
-            canonicalPlan,
-            StringComparison.Ordinal);
-        Assert.Contains(
-            "| `Subphase 7` | `completed` |",
-            canonicalPlan,
-            StringComparison.Ordinal);
-        Assert.Contains(
-            "- `GET /api/data`",
-            subphaseFivePlan,
-            StringComparison.Ordinal);
-        Assert.Contains(
-            "- `GET /api/drivers`",
-            subphaseFivePlan,
-            StringComparison.Ordinal);
-        Assert.Contains(
-            "- `GET /api/calendar`",
-            subphaseFivePlan,
-            StringComparison.Ordinal);
-        Assert.Contains(
-            "- `GET /api/standings`, demandata a `Subphase 6A`.",
-            subphaseFivePlan,
-            StringComparison.Ordinal);
+        Assert.Contains("`appdatas`", project, StringComparison.Ordinal);
+        Assert.Contains("`standingscaches`", project, StringComparison.Ordinal);
+        Assert.Contains("`admincredentials`", project, StringComparison.Ordinal);
+        Assert.DoesNotContain("There are always exactly 3 players: Adriano, Fabio, Matteo.", project, StringComparison.Ordinal);
+        Assert.Contains("There are always exactly 3 participant slots.", project, StringComparison.Ordinal);
+        Assert.Contains("Participant names are runtime data persisted in the application state;", project, StringComparison.Ordinal);
+        Assert.Contains("- standings must synchronize from the external source", project, StringComparison.Ordinal);
+        Assert.Contains("stato globale del gioco (`appdatas`)", readme, StringComparison.Ordinal);
+        Assert.Contains("cache classifiche piloti/costruttori (`standingscaches`)", readme, StringComparison.Ordinal);
+        Assert.Contains("credenziali admin hashate e metadata di autenticazione (`admincredentials`)", readme, StringComparison.Ordinal);
+        Assert.Contains("Se il sync fallisce ma la cache esiste gia', il backend continua a servire l'ultimo snapshot valido disponibile.", readme, StringComparison.Ordinal);
     }
 
     [Fact]
-    public void Canonical_plan_records_subphase_six_a_and_the_main_delta_assimilation_matrix()
+    public void Readme_and_agents_align_on_current_ci_jobs_and_deploya_cutover_guard()
     {
-        var canonicalPlan = ReadRepositoryFile("docs", "backend-csharp-porting-plan.md");
-        var subphaseSixAPlan = ReadRepositoryFile(
-            "docs",
-            "backend-csharp-porting-subphases",
-            "subphase-06a-main-delta-assimilation-and-standings-parity.md");
+        var readme = ReadRepositoryFile("README.md");
+        var agents = ReadRepositoryFile("AGENTS.md");
 
-        Assert.Contains("| `Subphase 6A` | `completed` |", canonicalPlan, StringComparison.Ordinal);
         Assert.Contains(
-            "| `Subphase 6A` | [`docs/backend-csharp-porting-subphases/subphase-06a-main-delta-assimilation-and-standings-parity.md`",
-            canonicalPlan,
+            "`lint`, `build`, `format-csharp`, `build-csharp`, `test-csharp`, `responsive-dev` e `smoke-ci-db`",
+            readme,
             StringComparison.Ordinal);
         Assert.Contains(
-            "Wait for explicit user authorization before starting `Subphase 7`.",
-            canonicalPlan,
+            "If `main` intentionally still points to a legacy or cutover-pending structure, stop immediately and report that `deploya` is not currently activatable.",
+            agents,
             StringComparison.Ordinal);
         Assert.Contains(
-            "| Results route `GET /api/results/:meetingKey`, including `racePhase`, highlights and fallback behavior | `Subphase 7` |",
-            canonicalPlan,
+            "If there are staged files and `main` is the correct release target, proceed with the workflow.",
+            agents,
             StringComparison.Ordinal);
-        Assert.Contains(
-            "| Standings route `GET /api/standings`, standings cache, official-source parsing, and reusable standings sync capability | `Subphase 6A` |",
-            canonicalPlan,
-            StringComparison.Ordinal);
-        Assert.Contains("### Delta assimilation matrix (`2c53c157..main`)", canonicalPlan, StringComparison.Ordinal);
-        Assert.Contains("| File | Delta type | Merge status | C# porting impact | Subphase owner | Validation evidence |", canonicalPlan, StringComparison.Ordinal);
-        Assert.Contains("| `backend/standings.js` | `feature` | `merged` | New backend baseline to port with parity in C#. | `Subphase 6A` |", canonicalPlan, StringComparison.Ordinal);
-        Assert.Contains("| `src/App.tsx` | `fix+feature` | `merged` | Consumes `/api/standings` and the new navigation baseline that later browser gates must preserve. | `Subphase 9` |", canonicalPlan, StringComparison.Ordinal);
-        Assert.Contains("| `scripts/ui-responsive/state-validation.mjs` | `fix` | `merged` | Shared browser validation baseline to be parameterized for the migrated stack. | `Subphase 9` |", canonicalPlan, StringComparison.Ordinal);
-        Assert.Contains("| `tests/standings.test.js` | `test` | `merged` | Legacy parity reference for C# standings parser and sync behavior. | `Subphase 6A` |", canonicalPlan, StringComparison.Ordinal);
-        Assert.Contains("Invocazione canonica: `Subphase 6A`", subphaseSixAPlan, StringComparison.Ordinal);
-        Assert.Contains("- Portare in C# `GET /api/standings`.", subphaseSixAPlan, StringComparison.Ordinal);
-        Assert.Contains("- Portare in C# la capability riusabile di sync standings con fallback a cache.", subphaseSixAPlan, StringComparison.Ordinal);
-        Assert.Contains("`npm run test:csharp-coverage`", canonicalPlan, StringComparison.Ordinal);
-        Assert.Contains("`npm run test:csharp-coverage`", subphaseSixAPlan, StringComparison.Ordinal);
-    }
-
-    [Fact]
-    public void Canonical_plan_and_subphase_seven_doc_record_the_results_route_slice_as_completed()
-    {
-        var canonicalPlan = ReadRepositoryFile("docs", "backend-csharp-porting-plan.md");
-        var subphaseSevenPlan = ReadRepositoryFile(
-            "docs",
-            "backend-csharp-porting-subphases",
-            "subphase-07-results-route-race-phase-and-highlights.md");
-
-        Assert.Contains("| `Subphase 7` | `completed` |", canonicalPlan, StringComparison.Ordinal);
-        Assert.Contains("Invocazione canonica: `Subphase 7`", subphaseSevenPlan, StringComparison.Ordinal);
-        Assert.Contains("## Stato verificato di chiusura", subphaseSevenPlan, StringComparison.Ordinal);
-        Assert.Contains("- `GET /api/results/:meetingKey` e' portata in C# con payload flat Node-compatible.", subphaseSevenPlan, StringComparison.Ordinal);
-        Assert.Contains("- `npm run test:ui-responsive`", subphaseSevenPlan, StringComparison.Ordinal);
-        Assert.Contains("il browser gate riusabile resta formalmente demandato a `Subphase 9`", subphaseSevenPlan, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -191,25 +119,11 @@ public sealed class PortingDocumentationConsistencyTests
     [Fact]
     public void Subphase_eleven_doc_makes_legacy_removal_inventory_and_verified_runtime_rules_explicit()
     {
-        var canonicalPlan = ReadRepositoryFile("docs", "backend-csharp-porting-plan.md");
         var subphaseElevenPlan = ReadRepositoryFile(
             "docs",
             "backend-csharp-porting-subphases",
             "subphase-11-future-cicd-cutover-certification-and-legacy-removal.md");
 
-        Assert.Contains(
-            "| `Subphase 11` | [`docs/backend-csharp-porting-subphases/subphase-11-future-cicd-cutover-certification-and-legacy-removal.md`",
-            canonicalPlan,
-            StringComparison.Ordinal);
-        Assert.DoesNotContain("| `Subphase 12` |", canonicalPlan, StringComparison.Ordinal);
-        Assert.Contains(
-            "Only after those criteria are green does the C# stack become the verified runtime for legacy removal.",
-            canonicalPlan,
-            StringComparison.Ordinal);
-        Assert.Contains(
-            "use an explicit remove/migrate/keep inventory and a minimal diff with no permanent bridges.",
-            canonicalPlan,
-            StringComparison.Ordinal);
         Assert.Contains("## Inventario esplicito dei path legacy", subphaseElevenPlan, StringComparison.Ordinal);
         Assert.Contains("- Da rimuovere:", subphaseElevenPlan, StringComparison.Ordinal);
         Assert.Contains("- Da migrare o aggiornare:", subphaseElevenPlan, StringComparison.Ordinal);
@@ -217,25 +131,8 @@ public sealed class PortingDocumentationConsistencyTests
         Assert.Contains("`backend/`", subphaseElevenPlan, StringComparison.Ordinal);
         Assert.Contains("`app.js`", subphaseElevenPlan, StringComparison.Ordinal);
         Assert.Contains("`server.js`", subphaseElevenPlan, StringComparison.Ordinal);
-        Assert.Contains("`backend/standings.js`", subphaseElevenPlan, StringComparison.Ordinal);
-        Assert.Contains("`start_fantaf1.command`", subphaseElevenPlan, StringComparison.Ordinal);
-        Assert.Contains("`src/`", subphaseElevenPlan, StringComparison.Ordinal);
-        Assert.Contains("`public/`", subphaseElevenPlan, StringComparison.Ordinal);
-        Assert.Contains("`vite.config.ts`", subphaseElevenPlan, StringComparison.Ordinal);
         Assert.Contains("remove only after C# becomes the verified runtime", subphaseElevenPlan, StringComparison.Ordinal);
         Assert.Contains("diff minimale e senza bridge permanenti", subphaseElevenPlan, StringComparison.Ordinal);
-        Assert.Contains(
-            "- non spostare il backend Node in cartelle `legacy/`, `archive/` o simili;",
-            subphaseElevenPlan,
-            StringComparison.Ordinal);
-        Assert.Contains(
-            "- non lasciare stub `app.js`/`server.js`;",
-            subphaseElevenPlan,
-            StringComparison.Ordinal);
-        Assert.Contains(
-            "- non mantenere proxy, shim o wrapper che inoltrano al runtime C# solo per \"compatibilita' storica\" interna al repository;",
-            subphaseElevenPlan,
-            StringComparison.Ordinal);
     }
 
     [Fact]
@@ -304,6 +201,10 @@ public sealed class PortingDocumentationConsistencyTests
             "**100% statements (5176 / 5176)**, **100% functions (408 / 408)**, **100% branches (2096 / 2096)**, and **100% lines (5176 / 5176)**",
             agents,
             StringComparison.Ordinal);
+        Assert.Contains("`2927 / 2927` lines", readme, StringComparison.Ordinal);
+        Assert.Contains("`1647 / 1647` branches", readme, StringComparison.Ordinal);
+        Assert.Contains("**100% line coverage (2927 / 2927)**", agents, StringComparison.Ordinal);
+        Assert.Contains("**100% branch coverage (1647 / 1647)**", agents, StringComparison.Ordinal);
     }
 
     [Fact]
