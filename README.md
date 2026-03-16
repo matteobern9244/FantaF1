@@ -7,7 +7,7 @@ Applicazione full-stack privata per gestire un Fanta Formula 1 con frontend Reac
 - Il backend autorevole del repository e' C# sotto [backend-csharp/](/Users/matteobernardini/code/FantaF1/backend-csharp).
 - Il runtime locale, Docker, staging Render e CI/CD sono allineati al backend C#.
 - Il branch `staging` e' il branch di certificazione corrente.
-- La release candidata corrente del branch `staging` e' `1.6.0`.
+- La release candidata corrente del branch `staging` e' `1.6.1`.
 - `main` resta il target di rilascio protetto e va aggiornato solo dopo cutover esplicito.
 - La documentazione operativa canonica del repository vive in questo file; la cronologia di rilascio vive in [CHANGELOG.md](/Users/matteobernardini/code/FantaF1/CHANGELOG.md).
 
