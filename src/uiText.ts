@@ -24,9 +24,32 @@ const appText = {
       openButton: uiText.buttons.openSections,
       closeButton: uiText.buttons.closeSections,
       ariaLabel: uiText.labels.sectionNavigation,
-      items: uiText.navigation,
+      currentSection: uiText.navigation.currentSection,
+      items: {
+        ...uiText.navigation,
+        installApp: uiText.buttons.installApp,
+        publicView: uiText.buttons.publicView,
+        adminView: uiText.buttons.adminView,
+        adminLogin: uiText.headings.adminAccess,
+        logout: uiText.buttons.logout,
+        expandSidebar: uiText.buttons.openSections,
+        collapseSidebar: uiText.buttons.closeSections,
+        savePredictions: uiText.buttons.savePredictions,
+        confirmResults: uiText.buttons.confirmResults,
+        editRace: uiText.buttons.editRace,
+      },
     },
   },
+  headings: uiText.headings,
+  labels: uiText.labels,
+  placeholders: uiText.placeholders,
+  rules: uiText.rules,
+  history: uiText.history,
+  status: uiText.status,
+  installDialog: uiText.installDialog,
+  calendar: uiText.calendar,
+  alerts: uiText.alerts,
+  tooltips: uiText.tooltips,
   panels: {
     publicGuide: {
       title: uiText.panels.publicGuide.title,
@@ -77,6 +100,31 @@ const appText = {
       winnerLabel: uiText.panels.seasonAnalysis.winnerLabel,
       swingLabel: uiText.panels.seasonAnalysis.swingLabel,
       decisivePickLabel: uiText.panels.seasonAnalysis.decisivePickLabel,
+      swingGap: (gap: number) =>
+        formatUiText(uiText.panels.seasonAnalysis.swingGapTemplate, { gap }),
+      swingNoInseguitori: uiText.panels.seasonAnalysis.swingNoInseguitori,
+      narratives: {
+        charge: {
+          title: uiText.panels.seasonAnalysis.narratives.charge.title,
+          description: (userName: string) =>
+            formatUiText(uiText.panels.seasonAnalysis.narratives.charge.description, { userName }),
+        },
+        consistency: {
+          title: uiText.panels.seasonAnalysis.narratives.consistency.title,
+          description: (userName: string) =>
+            formatUiText(uiText.panels.seasonAnalysis.narratives.consistency.description, { userName }),
+        },
+        sprint: {
+          title: uiText.panels.seasonAnalysis.narratives.sprint.title,
+          description: (userName: string) =>
+            formatUiText(uiText.panels.seasonAnalysis.narratives.sprint.description, { userName }),
+        },
+        precision: {
+          title: uiText.panels.seasonAnalysis.narratives.precision.title,
+          description: (userName: string) =>
+            formatUiText(uiText.panels.seasonAnalysis.narratives.precision.description, { userName }),
+        },
+      },
     },
     historyArchive: {
       title: uiText.panels.historyArchive.title,

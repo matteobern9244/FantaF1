@@ -5,16 +5,26 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import React from 'react';
 import App from '../src/App';
+import { appText } from '../src/uiText';
 
 class MockIntersectionObserver {
+  static instances: MockIntersectionObserver[] = [];
   observe = vi.fn();
   unobserve = vi.fn();
   disconnect = vi.fn();
+  private readonly callback: IntersectionObserverCallback;
 
   constructor(
-    _callback: IntersectionObserverCallback,
+    callback: IntersectionObserverCallback,
     _options?: IntersectionObserverInit,
-  ) {}
+  ) {
+    this.callback = callback;
+    MockIntersectionObserver.instances.push(this);
+  }
+
+  trigger(entries: IntersectionObserverEntry[]) {
+    this.callback(entries, this as unknown as IntersectionObserver);
+  }
 }
 
 Object.defineProperty(window, 'matchMedia', {
@@ -317,6 +327,7 @@ function setupFetchWithOverrides({
 describe('Mockup roadmap UI features', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    MockIntersectionObserver.instances = [];
     vi.spyOn(window, 'alert').mockImplementation(() => {});
     window.history.replaceState({}, '', '/');
     mockMediaMatches({});
@@ -346,21 +357,21 @@ describe('Mockup roadmap UI features', () => {
       expect(screen.queryByTestId('pitstop-loader')).not.toBeInTheDocument();
     });
 
-    expect(screen.queryByText(/regole del gioco/i)).not.toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /modalita' admin/i })).toHaveAttribute(
+    expect(screen.queryByText(appText.panels.publicGuide.title)).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: appText.shell.navigation.items.publicView })).toHaveAttribute(
       'aria-pressed',
       'true',
     );
-    expect(screen.getByRole('button', { name: /salva dati inseriti/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: appText.shell.navigation.items.savePredictions })).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('button', { name: /vista pubblica/i }));
+    fireEvent.click(screen.getByRole('button', { name: appText.shell.navigation.items.publicView }));
 
-    expect(screen.queryByRole('button', { name: /salva dati inseriti/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: appText.shell.navigation.items.savePredictions })).not.toBeInTheDocument();
     expect(
-      screen.queryByRole('button', { name: /conferma risultati e assegna i punti/i }),
+      screen.queryByRole('button', { name: appText.shell.navigation.items.confirmResults }),
     ).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /modifica/i })).not.toBeInTheDocument();
-    expect(screen.getByText(/solo gli admin possono modificare i pronostici/i)).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: appText.shell.navigation.items.editRace })).not.toBeInTheDocument();
+    expect(screen.getByText(appText.history.publicReadonly)).toBeInTheDocument();
   });
 
   it('renders KPI and deep-dive analytics for the selected user', async () => {
@@ -372,7 +383,7 @@ describe('Mockup roadmap UI features', () => {
       expect(screen.queryByTestId('pitstop-loader')).not.toBeInTheDocument();
     });
 
-    expect(screen.getByRole('heading', { name: /user kpi dashboard/i })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: appText.headings.userKpi })).toBeInTheDocument();
     const kpiPanel = screen.getByTestId('user-kpi-dashboard');
     const kpiCards = within(kpiPanel).getAllByRole('article');
     expect(within(kpiCards[0]).getByText('9')).toBeInTheDocument();
@@ -383,7 +394,7 @@ describe('Mockup roadmap UI features', () => {
       true,
     );
 
-    const analyticsPanel = screen.getByRole('heading', { name: /deep-dive kpi dashboard/i }).closest('section');
+    const analyticsPanel = screen.getByRole('heading', { name: appText.headings.userAnalytics }).closest('section');
     expect(analyticsPanel).not.toBeNull();
     expect(within(analyticsPanel as HTMLElement).getByText(/hamilton lewis/i)).toBeInTheDocument();
     expect(within(analyticsPanel as HTMLElement).getAllByText(/gran premio di gran bretagna/i).length).toBeGreaterThan(0);
@@ -404,52 +415,52 @@ describe('Mockup roadmap UI features', () => {
       expect(screen.queryByTestId('pitstop-loader')).not.toBeInTheDocument();
     });
 
-    expect(screen.getByRole('heading', { name: /analisi stagione/i })).toBeInTheDocument();
-    expect(screen.getByText(/chi tiene il passo del leader/i)).toBeInTheDocument();
-    expect(screen.getByText(/recap ultimo gp/i)).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: appText.panels.seasonAnalysis.title })).toBeInTheDocument();
+    expect(screen.getByText(appText.panels.seasonAnalysis.narratives.charge.title)).toBeInTheDocument();
+    expect(screen.getByText(appText.panels.seasonAnalysis.latestGpTitle)).toBeInTheDocument();
 
     // La mappa nel recap deve essere quella di Silverstone (history[0] nel mock), non Monza (selectedRace)
-    const recapSection = screen.getByText(/recap ultimo gp/i).closest('.analytics-subpanel');
+    const recapSection = screen.getByText(appText.panels.seasonAnalysis.latestGpTitle).closest('.analytics-subpanel');
     const recapImage = within(recapSection as HTMLElement).getByRole('img');
     expect(recapImage).toHaveAttribute('src', '/images/tracks/silverstone.png');
     expect(recapImage).toHaveAttribute('alt', 'Silverstone');
 
-    const seasonPanel = screen.getByRole('heading', { name: /analisi stagione/i }).closest('section');
+    const seasonPanel = screen.getByRole('heading', { name: appText.panels.seasonAnalysis.title }).closest('section');
     expect(seasonPanel).not.toBeNull();
     expect((seasonPanel as HTMLElement).querySelectorAll('.analytics-card.interactive-surface').length).toBeGreaterThan(0);
     expect((seasonPanel as HTMLElement).querySelectorAll('.analytics-subpanel.interactive-surface').length).toBeGreaterThan(0);
     expect((seasonPanel as HTMLElement).querySelectorAll('.season-comparison-row.interactive-surface').length).toBeGreaterThan(0);
 
-    const weekendPulseHeroCard = screen.getByText(/countdown lock/i).closest('section');
+    const weekendPulseHeroCard = screen.getByText(appText.panels.weekendPulseHero.countdownLabel).closest('section');
     expect(weekendPulseHeroCard).not.toBeNull();
     expect(weekendPulseHeroCard).toHaveClass('interactive-surface');
 
-    const weekendPulsePanel = screen.getByRole('heading', { name: /weekend pulse/i }).closest('section');
+    const weekendPulsePanel = screen.getByRole('heading', { name: appText.panels.weekendLive.title }).closest('section');
     expect(weekendPulsePanel).not.toBeNull();
     expect((weekendPulsePanel as HTMLElement).querySelectorAll('.analytics-card.interactive-surface').length).toBeGreaterThan(0);
 
-    fireEvent.click(screen.getByRole('button', { name: /vista pubblica/i }));
+    fireEvent.click(screen.getByRole('button', { name: appText.shell.navigation.items.publicView }));
 
-    expect(screen.getByRole('heading', { name: /come funziona/i })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: /classifica piloti/i })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: /classifica scuderia/i })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: appText.panels.publicGuide.title })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: appText.panels.publicStandings.driversTitle })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: appText.panels.publicStandings.constructorsTitle })).toBeInTheDocument();
     expect(screen.getByAltText('McLaren logo')).toBeInTheDocument();
     expect(document.querySelector('.standings-team-marker')).toBeNull();
     expect(document.querySelector('.public-standings-grid.public-standings-grid-compact')).not.toBeNull();
     expect(document.querySelectorAll('.standings-subpanel.standings-subpanel-compact')).toHaveLength(2);
-    expect(screen.queryByRole('button', { name: /copia link vista corrente/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: appText.status.shareLinkCopied || /copia link vista corrente/i })).not.toBeInTheDocument();
     expect(
       screen.getAllByRole('article').some((card) => card.classList.contains('interactive-surface')),
     ).toBe(true);
 
-    fireEvent.change(screen.getByLabelText(/filtra per giocatore/i), {
+    fireEvent.change(screen.getByLabelText(appText.panels.historyArchive.userFilterLabel), {
       target: { value: 'Marco' },
     });
-    expect(screen.getByText(/1 gran premi mostrati/i)).toBeInTheDocument();
+    expect(screen.getByText(appText.panels.historyArchive.shownCount(1))).toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('button', { name: /dettaglio gran premio di gran bretagna/i }));
-    expect(screen.getByText(/pronostici dettagliati/i)).toBeInTheDocument();
-    expect(screen.getByText(/podio reale/i)).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: appText.panels.historyArchive.detailButton('Gran Premio di Gran Bretagna') }));
+    expect(screen.getByText(appText.panels.historyArchive.detailTitle)).toBeInTheDocument();
+    expect(screen.getByText(appText.panels.historyArchive.actualPodiumTitle)).toBeInTheDocument();
     expect(screen.getByAltText('Lewis Hamilton')).toBeInTheDocument();
     expect(screen.getAllByText(/marco/i).length).toBeGreaterThan(0);
     expect(document.querySelectorAll('.history-card.interactive-surface').length).toBeGreaterThan(0);
@@ -513,19 +524,19 @@ describe('Mockup roadmap UI features', () => {
 
     expect(screen.getByRole('img', { name: 'Monza' })).toHaveAttribute('src', australiaMapUrl);
 
-    fireEvent.click(screen.getByRole('button', { name: /vista pubblica/i }));
+    fireEvent.click(screen.getByRole('button', { name: appText.shell.navigation.items.publicView }));
 
     await waitFor(() => {
       // 1 nella hero (Monza) e 1 nel recap (Silverstone - ma nel test calendar Silverstone non ha australiaMapUrl)
       expect(screen.getAllByRole('img', { name: 'Monza' })).toHaveLength(1);
     });
-    expect(screen.queryByRole('button', { name: /conferma risultati e assegna i punti/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: appText.shell.navigation.items.confirmResults })).not.toBeInTheDocument();
 
-    const navigation = screen.getByRole('navigation', { name: /sezioni applicazione/i });
-    expect(within(navigation).getByRole('button', { name: /come funziona/i })).toBeInTheDocument();
-    expect(within(navigation).queryByRole('button', { name: /risultati del weekend/i })).not.toBeInTheDocument();
+    const navigation = screen.getByRole('navigation', { name: appText.shell.navigation.ariaLabel });
+    expect(within(navigation).getByRole('button', { name: appText.shell.navigation.items.publicGuide })).toBeInTheDocument();
+    expect(within(navigation).queryByRole('button', { name: appText.shell.navigation.items.results })).not.toBeInTheDocument();
 
-    fireEvent.change(screen.getByLabelText(/weekend selezionato/i), {
+    fireEvent.change(screen.getByLabelText(appText.labels.selectedRace), {
       target: { value: 'race-2' },
     });
 
@@ -536,7 +547,7 @@ describe('Mockup roadmap UI features', () => {
     });
     expect(screen.getAllByRole('img', { name: 'China' }).every((image) => image.getAttribute('src') === chinaMapUrl)).toBe(true);
 
-    fireEvent.click(within(navigation).getByRole('button', { name: /analisi stagione/i }));
+    fireEvent.click(within(navigation).getByRole('button', { name: appText.shell.navigation.items.seasonAnalysis }));
     expect(window.location.hash).toBe('#season-analysis');
   });
 
@@ -559,10 +570,10 @@ describe('Mockup roadmap UI features', () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByRole('button', { name: /installa app/i })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: appText.shell.navigation.items.installApp })).toBeInTheDocument();
     });
 
-    fireEvent.click(screen.getByRole('button', { name: /installa app/i }));
+    fireEvent.click(screen.getByRole('button', { name: appText.shell.navigation.items.installApp }));
 
     await waitFor(() => {
       expect(prompt).toHaveBeenCalled();
@@ -582,13 +593,13 @@ describe('Mockup roadmap UI features', () => {
       expect(screen.queryByTestId('pitstop-loader')).not.toBeInTheDocument();
     });
 
-    const installButton = screen.getByRole('button', { name: /installa/i });
+    const installButton = screen.getByRole('button', { name: appText.shell.navigation.items.installApp || /installa/i });
     expect(installButton).toBeInTheDocument();
 
     fireEvent.click(installButton);
 
     expect(screen.getByRole('dialog')).toBeInTheDocument();
-    expect(screen.getByText(/aggiungi fantaf1 alla home/i)).toBeInTheDocument();
+    expect(screen.getByText(new RegExp(appText.installDialog.title, 'i'))).toBeInTheDocument();
     expect(screen.getAllByText(/condividi/i).length).toBeGreaterThan(0);
   });
 
@@ -609,12 +620,12 @@ describe('Mockup roadmap UI features', () => {
       expect(screen.queryByTestId('pitstop-loader')).not.toBeInTheDocument();
     });
 
-    const installButton = screen.getByRole('button', { name: /installa/i });
+    const installButton = screen.getByRole('button', { name: appText.shell.navigation.items.installApp || /installa/i });
     expect(installButton).toBeInTheDocument();
 
     fireEvent.click(installButton);
 
-    expect(screen.getByRole('status')).toHaveTextContent(/gia' installata/i);
+    expect(screen.getByRole('status')).toHaveTextContent(new RegExp(appText.status.pwaAlreadyInstalled, 'i'));
   });
 
   it('keeps the install CTA visible on unsupported browsers and shows an explicit fallback message', async () => {
@@ -630,19 +641,19 @@ describe('Mockup roadmap UI features', () => {
       expect(screen.queryByTestId('pitstop-loader')).not.toBeInTheDocument();
     });
 
-    const installButton = screen.getByRole('button', { name: /installa/i });
+    const installButton = screen.getByRole('button', { name: appText.shell.navigation.items.installApp || /installa/i });
     expect(installButton).toBeInTheDocument();
 
     fireEvent.click(installButton);
 
-    expect(screen.getByRole('status')).toHaveTextContent(/non disponibile/i);
+    expect(screen.getByRole('status')).toHaveTextContent(new RegExp(appText.status.pwaInstallUnavailable, 'i'));
   });
 
   it('hydrates the shared public url state from query params and preserves the requested public filters', async () => {
-    const scrollIntoView = vi.fn();
-    Object.defineProperty(HTMLElement.prototype, 'scrollIntoView', {
+    const scrollTo = vi.fn();
+    Object.defineProperty(window, 'scrollTo', {
       configurable: true,
-      value: scrollIntoView,
+      value: scrollTo,
     });
 
     const appData = createAppData();
@@ -696,15 +707,15 @@ describe('Mockup roadmap UI features', () => {
     });
 
     await waitFor(() => {
-      expect(screen.getByRole('heading', { name: /come funziona/i })).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: appText.panels.publicGuide.title })).toBeInTheDocument();
     });
 
-    expect(screen.queryByRole('button', { name: /salva dati inseriti/i })).not.toBeInTheDocument();
-    expect(screen.getByLabelText(/filtra per giocatore/i)).toHaveValue('Marco');
-    expect(screen.getByLabelText(/cerca gp/i)).toHaveValue('Gran');
+    expect(screen.queryByRole('button', { name: appText.shell.navigation.items.savePredictions })).not.toBeInTheDocument();
+    expect(screen.getByLabelText(appText.panels.historyArchive.userFilterLabel)).toHaveValue('Marco');
+    expect(screen.getByLabelText(appText.panels.historyArchive.searchLabel)).toHaveValue('Gran');
     expect(screen.getByDisplayValue(/2\.\s+Chinese Grand Prix 2099/i)).toBeInTheDocument();
-    expect(screen.getByText(/1 gran premi mostrati/i)).toBeInTheDocument();
-    expect(scrollIntoView).toHaveBeenCalled();
+    expect(screen.getByText(appText.panels.historyArchive.shownCount(1))).toBeInTheDocument();
+    expect(scrollTo).toHaveBeenCalled();
 
     expect(window.location.search).toContain('meeting=race-2');
     expect(window.location.search).toContain('view=public');
@@ -725,10 +736,9 @@ describe('Mockup roadmap UI features', () => {
       expect(screen.queryByTestId('pitstop-loader')).not.toBeInTheDocument();
     });
 
-    expect(screen.getByRole('button', { name: /vista pubblica/i })).toHaveAttribute('aria-pressed', 'true');
-    expect(screen.getByRole('button', { name: /modalita' admin/i })).toHaveAttribute('aria-pressed', 'false');
-    expect(screen.queryByRole('button', { name: /salva dati inseriti/i })).not.toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: /come funziona/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: appText.shell.navigation.items.adminLogin })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: appText.shell.navigation.items.savePredictions })).not.toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: appText.panels.publicGuide.title })).toBeInTheDocument();
   });
 
   it('renders desktop section navigation with admin-only and public-only entries', async () => {
@@ -740,20 +750,109 @@ describe('Mockup roadmap UI features', () => {
       expect(screen.queryByTestId('pitstop-loader')).not.toBeInTheDocument();
     });
 
-    const navigation = screen.getByRole('navigation', { name: /sezioni applicazione/i });
-    expect(within(navigation).getByRole('button', { name: /calendario stagione/i })).toBeInTheDocument();
-    expect(within(navigation).getByRole('button', { name: /risultati del weekend/i })).toBeInTheDocument();
-    expect(within(navigation).queryByRole('button', { name: /come funziona/i })).not.toBeInTheDocument();
-    expect(within(navigation).queryByRole('button', { name: /classifiche reali/i })).not.toBeInTheDocument();
+    const navigation = screen.getByRole('navigation', { name: appText.shell.navigation.ariaLabel });
+    expect(within(navigation).getByRole('button', { name: appText.shell.navigation.items.calendar })).toBeInTheDocument();
+    expect(within(navigation).getByRole('button', { name: appText.shell.navigation.items.results })).toBeInTheDocument();
+    expect(within(navigation).queryByRole('button', { name: appText.shell.navigation.items.publicGuide })).not.toBeInTheDocument();
+    expect(within(navigation).queryByRole('button', { name: appText.shell.navigation.items.publicStandings })).not.toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('button', { name: /vista pubblica/i }));
+    fireEvent.click(screen.getByRole('button', { name: appText.shell.navigation.items.publicView }));
 
-    expect(within(navigation).getByRole('button', { name: /come funziona/i })).toBeInTheDocument();
-    expect(within(navigation).getByRole('button', { name: /classifiche reali/i })).toBeInTheDocument();
-    expect(within(navigation).queryByRole('button', { name: /risultati del weekend/i })).not.toBeInTheDocument();
+    expect(within(navigation).getByRole('button', { name: appText.shell.navigation.items.publicGuide })).toBeInTheDocument();
+    expect(within(navigation).getByRole('button', { name: appText.shell.navigation.items.publicStandings })).toBeInTheDocument();
+    expect(within(navigation).queryByRole('button', { name: appText.shell.navigation.items.results })).not.toBeInTheDocument();
   });
 
   it('renders navigation directly in the header and updates the hash on navigation', async () => {
+    setupFetch();
+    const scrollTo = vi.fn();
+    Object.defineProperty(window, 'scrollTo', {
+      configurable: true,
+      value: scrollTo,
+    });
+
+    render(<App />);
+
+    await waitFor(() => {
+      expect(screen.queryByTestId('pitstop-loader')).not.toBeInTheDocument();
+    });
+
+    const navigation = screen.getByRole('navigation', { name: appText.shell.navigation.ariaLabel });
+    expect(navigation).toBeInTheDocument();
+    expect(navigation).toHaveClass('section-nav-list');
+
+    const seasonAnalysisButton = within(navigation).getByRole('button', { name: appText.shell.navigation.items.seasonAnalysis });
+    fireEvent.click(seasonAnalysisButton);
+
+    expect(window.location.hash).toBe('#season-analysis');
+    expect(scrollTo).toHaveBeenCalled();
+  });
+
+  it('renders the install button in the navigation menu', async () => {
+    setupFetch();
+    render(<App />);
+
+    await waitFor(() => {
+      expect(screen.queryByTestId('pitstop-loader')).not.toBeInTheDocument();
+    });
+
+    const installButton = screen.getByRole('button', { name: appText.shell.navigation.items.installApp || /installa/i });
+    expect(installButton).toBeInTheDocument();
+  });
+
+  it('collapses the desktop sidebar and updates the app shell layout class', async () => {
+    setupFetch();
+    const { container } = render(<App />);
+
+    await waitFor(() => {
+      expect(screen.queryByTestId('pitstop-loader')).not.toBeInTheDocument();
+    });
+
+    const appShell = container.querySelector('.app-shell');
+    const sidebar = container.querySelector('.app-sidebar');
+    expect(appShell).not.toBeNull();
+    expect(sidebar).not.toBeNull();
+    expect(appShell).not.toHaveClass('app-shell-sidebar-collapsed');
+
+    fireEvent.click(within(sidebar as HTMLElement).getByLabelText(appText.shell.navigation.items.collapseSidebar));
+    expect(appShell).toHaveClass('app-shell-sidebar-collapsed');
+
+    fireEvent.click(within(sidebar as HTMLElement).getByLabelText(appText.shell.navigation.items.expandSidebar));
+    expect(appShell).not.toHaveClass('app-shell-sidebar-collapsed');
+  });
+
+  it('opens the mobile menu with the localized trigger, locks scroll, and closes after switching view', async () => {
+    setupFetch();
+    mockMediaMatches({ '(max-width: 767px)': true });
+
+    render(<App />);
+
+    await waitFor(() => {
+      expect(screen.queryByTestId('pitstop-loader')).not.toBeInTheDocument();
+    });
+
+    const mobileTrigger = screen.getByRole('button', { name: appText.shell.navigation.openButton });
+    fireEvent.click(mobileTrigger);
+
+    const overlay = document.querySelector('.mobile-nav-overlay');
+    expect(overlay).not.toBeNull();
+    expect(document.body.style.overflow).toBe('hidden');
+    expect(document.body.style.touchAction).toBe('none');
+    expect(within(overlay as HTMLElement).getByText(appText.shell.navigation.currentSection)).toBeInTheDocument();
+    expect(within(overlay as HTMLElement).getAllByText(appText.shell.navigation.items.calendar)).toHaveLength(2);
+
+    fireEvent.click(within(overlay as HTMLElement).getByRole('button', { name: appText.shell.navigation.items.publicView }));
+
+    await waitFor(() => {
+      expect(document.querySelector('.mobile-nav-overlay')).toBeNull();
+    });
+
+    expect(document.body.style.overflow).toBe('');
+    expect(document.body.style.touchAction).toBe('');
+    expect(screen.getByRole('heading', { name: appText.panels.publicGuide.title })).toBeInTheDocument();
+  });
+
+  it('keeps the clicked results menu item active when the observer still sees predictions as more visible', async () => {
     setupFetch();
     const scrollIntoView = vi.fn();
     Object.defineProperty(HTMLElement.prototype, 'scrollIntoView', {
@@ -767,72 +866,184 @@ describe('Mockup roadmap UI features', () => {
       expect(screen.queryByTestId('pitstop-loader')).not.toBeInTheDocument();
     });
 
-    const navigation = screen.getByRole('navigation', { name: /sezioni applicazione/i });
-    expect(navigation).toBeInTheDocument();
+    const navigation = screen.getByRole('navigation', { name: appText.shell.navigation.ariaLabel });
+    const predictionsButton = within(navigation).getByRole('button', { name: appText.shell.navigation.items.predictions });
+    const resultsButton = within(navigation).getByRole('button', { name: appText.shell.navigation.items.results });
 
-    const navList = navigation.querySelector('.section-nav-list');
-    expect(navList).toBeInTheDocument();
+    fireEvent.click(predictionsButton);
+    expect(resultsButton).not.toHaveClass('active');
 
-    const seasonAnalysisButton = within(navigation).getByRole('button', { name: /analisi stagione/i });
-    fireEvent.click(seasonAnalysisButton);
+    fireEvent.click(resultsButton);
+    expect(resultsButton).toHaveClass('active');
 
-    expect(window.location.hash).toBe('#season-analysis');
-    expect(scrollIntoView).toHaveBeenCalled();
+    const predictionsSection = document.getElementById('predictions-section');
+    const resultsSection = document.getElementById('results-section');
+    expect(predictionsSection).not.toBeNull();
+    expect(resultsSection).not.toBeNull();
+    expect(MockIntersectionObserver.instances).not.toHaveLength(0);
+
+    act(() => {
+      MockIntersectionObserver.instances[0]?.trigger([
+        {
+          target: predictionsSection as Element,
+          isIntersecting: true,
+          intersectionRatio: 0.9,
+        } as IntersectionObserverEntry,
+        {
+          target: resultsSection as Element,
+          isIntersecting: true,
+          intersectionRatio: 0.3,
+        } as IntersectionObserverEntry,
+      ]);
+    });
+
+    expect(resultsButton).toHaveClass('active');
+    expect(window.location.hash).toBe('#results-section');
   });
 
-  it('renders the install button as the last item in the navigation list', async () => {
+  it('keeps the clicked third menu item active when the previous section remains more visible', async () => {
     setupFetch();
-    render(<App />);
-
-    await waitFor(() => {
-      expect(screen.queryByTestId('pitstop-loader')).not.toBeInTheDocument();
-    });
-
-    const navList = screen.getByRole('navigation', { name: /sezioni applicazione/i }).querySelector('.section-nav-list');
-    const buttons = within(navList as HTMLElement).getAllByRole('button');
-    const lastButton = buttons[buttons.length - 1];
-
-    expect(lastButton).toHaveTextContent(/installa applicazione/i);
-  });
-
-  it('shows the back-to-top button when the hero panel is scrolled out of view and scrolls back to the navigation element', async () => {
-    const originalObserver = window.IntersectionObserver;
-    Object.defineProperty(window, 'IntersectionObserver', {
-      writable: true,
-      value: undefined,
-    });
-
-    setupFetch();
-    const scrollIntoViewMock = vi.fn();
-
-    render(<App />);
-
-    await waitFor(() => {
-      expect(screen.queryByTestId('pitstop-loader')).not.toBeInTheDocument();
-    });
-
-    const navigation = screen.getByRole('navigation', { name: /sezioni applicazione/i });
-    Object.defineProperty(navigation, 'scrollIntoView', {
+    const scrollTo = vi.fn();
+    Object.defineProperty(window, 'scrollTo', {
       configurable: true,
-      value: scrollIntoViewMock,
+      value: scrollTo,
     });
 
-    expect(screen.queryByRole('button', { name: /torna al menu/i })).not.toBeInTheDocument();
+    render(<App />);
 
-    await act(async () => {
-      Object.defineProperty(window, 'scrollY', { value: 500, configurable: true });
-      window.dispatchEvent(new Event('scroll'));
+    await waitFor(() => {
+      expect(screen.queryByTestId('pitstop-loader')).not.toBeInTheDocument();
     });
 
-    const backToTopButton = screen.getByRole('button', { name: /torna al menu/i });
-    expect(backToTopButton).toBeInTheDocument();
+    const navigation = screen.getByRole('navigation', { name: appText.shell.navigation.ariaLabel });
+    const secondButton = within(navigation).getByRole('button', { name: appText.shell.navigation.items.userKpi });
+    const thirdButton = within(navigation).getByRole('button', { name: appText.shell.navigation.items.userAnalytics });
 
-    fireEvent.click(backToTopButton);
-    expect(scrollIntoViewMock).toHaveBeenCalledWith({ behavior: 'smooth' });
+    fireEvent.click(secondButton);
+    expect(secondButton).toHaveClass('active');
 
-    Object.defineProperty(window, 'IntersectionObserver', {
+    fireEvent.click(thirdButton);
+    expect(thirdButton).toHaveClass('active');
+
+    const secondSection = document.getElementById('user-kpi-section');
+    const thirdSection = document.getElementById('user-analytics-section');
+    expect(secondSection).not.toBeNull();
+    expect(thirdSection).not.toBeNull();
+    expect(MockIntersectionObserver.instances).not.toHaveLength(0);
+
+    act(() => {
+      MockIntersectionObserver.instances[0]?.trigger([
+        {
+          target: thirdSection as Element,
+          isIntersecting: true,
+          intersectionRatio: 0.25,
+          boundingClientRect: { top: 150 } as DOMRectReadOnly,
+        } as IntersectionObserverEntry,
+      ]);
+    });
+
+    act(() => {
+      MockIntersectionObserver.instances[0]?.trigger([
+        {
+          target: secondSection as Element,
+          isIntersecting: true,
+          intersectionRatio: 0.95,
+          boundingClientRect: { top: 20 } as DOMRectReadOnly,
+        } as IntersectionObserverEntry,
+        {
+          target: thirdSection as Element,
+          isIntersecting: true,
+          intersectionRatio: 0.35,
+          boundingClientRect: { top: 150 } as DOMRectReadOnly,
+        } as IntersectionObserverEntry,
+      ]);
+    });
+
+    expect(thirdButton).toHaveClass('active');
+    expect(thirdButton).toHaveAttribute('aria-current', 'page');
+    expect(window.location.hash).toBe('#user-analytics-section');
+    expect(scrollTo).toHaveBeenCalled();
+  });
+
+  it('aligns the mobile third menu item to the navigation anchor and keeps it active after reopening the overlay', async () => {
+    setupFetch();
+    mockMediaMatches({ '(max-width: 900px)': true });
+    const scrollTo = vi.fn();
+    Object.defineProperty(window, 'scrollTo', {
+      configurable: true,
+      value: scrollTo,
+    });
+    Object.defineProperty(window, 'scrollY', {
+      configurable: true,
+      value: 320,
       writable: true,
-      value: originalObserver,
     });
+
+    render(<App />);
+
+    await waitFor(() => {
+      expect(screen.queryByTestId('pitstop-loader')).not.toBeInTheDocument();
+    });
+
+    const thirdSection = document.getElementById('user-analytics-section');
+    expect(thirdSection).not.toBeNull();
+    Object.defineProperty(thirdSection as HTMLElement, 'getBoundingClientRect', {
+      configurable: true,
+      value: () => ({ top: 580 }),
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: appText.shell.navigation.openButton }));
+    const overlay = document.querySelector('.mobile-nav-overlay');
+    expect(overlay).not.toBeNull();
+    expect(within(overlay as HTMLElement).getByText(appText.shell.navigation.currentSection)).toBeInTheDocument();
+
+    const thirdButton = within(overlay as HTMLElement).getByRole('button', {
+      name: appText.shell.navigation.items.userAnalytics,
+    });
+    fireEvent.click(thirdButton);
+
+    expect(scrollTo).toHaveBeenCalledWith({ top: 724, behavior: 'smooth' });
+    expect(window.location.hash).toBe('#user-analytics-section');
+
+    fireEvent.click(screen.getByRole('button', { name: appText.shell.navigation.openButton }));
+    const reopenedOverlay = document.querySelector('.mobile-nav-overlay');
+    expect(reopenedOverlay).not.toBeNull();
+    const reopenedThirdButton = within(reopenedOverlay as HTMLElement).getByRole('button', {
+      name: appText.shell.navigation.items.userAnalytics,
+    });
+
+    expect(within(reopenedOverlay as HTMLElement).getByText(appText.shell.navigation.currentSection)).toBeInTheDocument();
+    expect(reopenedThirdButton).toHaveClass('active');
+    expect(reopenedThirdButton).toHaveAttribute('aria-current', 'page');
+  });
+
+  it('navigates to history even when no archived races exist yet', async () => {
+    const scrollTo = vi.fn();
+    Object.defineProperty(window, 'scrollTo', {
+      configurable: true,
+      value: scrollTo,
+    });
+
+    setupFetchWithOverrides({
+      appData: {
+        ...createAppData(),
+        history: [],
+      },
+    });
+
+    render(<App />);
+
+    await waitFor(() => {
+      expect(screen.queryByTestId('pitstop-loader')).not.toBeInTheDocument();
+    });
+
+    const navigation = screen.getByRole('navigation', { name: appText.shell.navigation.ariaLabel });
+    const historyButton = within(navigation).getByRole('button', { name: appText.shell.navigation.items.history });
+    fireEvent.click(historyButton);
+
+    expect(window.location.hash).toBe('#history-archive');
+    expect(scrollTo).toHaveBeenCalled();
+    expect(document.getElementById('history-archive')).not.toBeNull();
+    expect(historyButton).toHaveClass('active');
   });
 });

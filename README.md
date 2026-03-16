@@ -6,10 +6,16 @@ Applicazione full-stack privata per gestire un Fanta Formula 1 con frontend Reac
 
 - Il backend autorevole del repository e' C# sotto [backend-csharp/](/Users/matteobernardini/code/FantaF1/backend-csharp).
 - Il runtime locale, Docker, staging Render e CI/CD sono allineati al backend C#.
-- Il branch `develop` e' il branch di certificazione corrente.
-- La release candidata corrente del branch `develop` e' `1.5.2`.
+- Il branch `staging` e' il branch di certificazione corrente.
+- La release candidata corrente del branch `staging` e' `1.6.1`.
 - `main` resta il target di rilascio protetto e va aggiornato solo dopo cutover esplicito.
 - La documentazione operativa canonica del repository vive in questo file; la cronologia di rilascio vive in [CHANGELOG.md](/Users/matteobernardini/code/FantaF1/CHANGELOG.md).
+
+## Stato workspace Conductor
+
+- Il workspace live di Conductor mantiene le track correnti sotto [conductor/tracks](/Users/matteobernardini/code/FantaF1/conductor/tracks), mentre lo storico verificato resta archiviato sotto [conductor/archive](/Users/matteobernardini/code/FantaF1/conductor/archive).
+- I documenti di piano legacy rimasti in precedenza nel root di `conductor/` sono stati spostati in [conductor/archive/_root-plans](/Users/matteobernardini/code/FantaF1/conductor/archive/_root-plans) e non fanno parte della navigazione live della skill.
+- Il report operativo sul fix di compatibilita' della skill installata vive in [conductor/conductor-skill-operational-feedback.md](/Users/matteobernardini/code/FantaF1/conductor/conductor-skill-operational-feedback.md).
 
 ## Superfici runtime
 
@@ -17,6 +23,12 @@ Applicazione full-stack privata per gestire un Fanta Formula 1 con frontend Reac
 - Produzione live: [fantaf1-47vy.onrender.com](https://fantaf1-47vy.onrender.com)
 
 Lo staging deve rimanere allineato alla produzione a livello di funzionalita'. Differenze di branding, testo o layout sono tollerabili solo se non introducono divergenze funzionali.
+
+## Governance Branch
+
+- `staging` e' il branch candidato di certificazione e il branch sorgente atteso per l'ambiente Render di staging.
+- `main` resta il branch protetto di release e il target finale del flusso di deploy.
+- Il rename operativo da `develop` a `staging` richiede anche il riallineamento fuori repo della configurazione Render, delle branch protection e di eventuali automazioni GitHub/Render che puntavano al vecchio nome branch.
 
 ## Panoramica funzionale
 
@@ -56,6 +68,7 @@ Il lock e' server-side:
 
 - I risultati ufficiali vengono recuperati tramite `GET /api/results/:meetingKey`.
 - Il backend espone `racePhase` (`open`, `live`, `finished`) separato dal race lock.
+- Per ogni weekend concluso il backend puo' restituire un `highlightsVideoUrl` specifico della gara selezionata, se disponibile nel catalogo Sky Sport F1.
 - La conferma risultati e' consentita solo quando il weekend e' `finished` e i risultati reali sono completi.
 - Punteggi configurati:
   - `5` punti primo corretto
@@ -92,11 +105,16 @@ Il lock e' server-side:
 
 ### UI
 
-- shell responsive desktop/mobile
-- navigazione sticky desktop e drawer mobile `Sezioni`
-- hero full-width
+- shell responsive desktop/mobile (F1 Racing Theme)
+- sidebar adattiva desktop (collassabile) e menu mobile overlay a tutto schermo
+- hardening della navigation shell: collapse desktop agganciato allo stato reale della shell, trigger mobile localizzato e scroll lock del body mentre l'overlay e' aperto
+- overlay mobile rifinito per leggibilita' e orientamento: label delle voci in font `Formula1` a `20px`, card piu' alte, contenuto centrato e wrapping meno aggressivo per evitare label schiacciate sui viewport stretti
+- riepilogo sticky della sezione corrente nel menu mobile per mantenere piu' intuitiva la navigazione quando l'utente scrolla o riapre l'overlay
+- branding MenuLogo integrato con accenti hi-contrast
+- hero full-width pulita (controlli admin/public spostati nel menu)
 - stato admin/public coerente in tutte le superfici
 - track map coerente tra hero, recap e pannello risultati
+- CTA highlights coerente per ogni weekend selezionato; se il video non e' disponibile la label disabilitata e' `HIGHLIGHTS NON PRESENTI`
 
 ## Architettura
 
@@ -199,6 +217,7 @@ Ogni weekend puo' includere:
 - `raceStartTime`
 - `sessions`
 - `highlightsVideoUrl`
+  - URL highlights specifica del weekend, presente solo quando il lookup trova un video compatibile
 
 ## Database e migrazioni
 
@@ -486,16 +505,16 @@ I workflow aggiuntivi `gemini-*` restano validi come automazioni repository-side
 
 Baseline verificata corrente sullo scope ufficiale frontend/repository:
 
-- `5176 / 5176` statements
-- `408 / 408` functions
-- `2096 / 2096` branches
-- `5176 / 5176` lines
+- `5212 / 5212` statements
+- `412 / 412` functions
+- `2114 / 2114` branches
+- `5212 / 5212` lines
 
 Baseline verificata corrente su `backend-csharp/src/`:
 
-- `2932 / 2932` lines
-- `1653 / 1653` branches
-- `489 / 489` methods
+- `2986 / 2986` lines
+- `1671 / 1671` branches
+- `494 / 494` methods
 - `70` file inclusi
 
 Le soglie repository restano a `100%` su statements, branches, functions e lines.

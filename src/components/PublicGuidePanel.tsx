@@ -5,7 +5,7 @@ function PublicGuidePanel() {
   const { publicGuide } = appText.panels;
 
   return (
-    <section className="panel" id="public-guide">
+    <section className="panel nav-section" id="public-guide">
       <div className="section-title">
         <ShieldCheck size={20} />
         <h2>{publicGuide.title}</h2>

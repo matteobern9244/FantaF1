@@ -172,6 +172,85 @@ public sealed class ResultsInfrastructureTests
     }
 
     [Fact]
+    public async Task Highlights_lookup_service_uses_localized_alias_queries_for_later_finished_races()
+    {
+        var requestedUris = new List<string>();
+        var handler = new RecordingHttpMessageHandler(request =>
+        {
+            var requestUri = request.RequestUri!.AbsoluteUri;
+            requestedUris.Add(requestUri);
+
+            if (requestUri.Contains("/feeds/videos.xml?channel_id=", StringComparison.Ordinal))
+            {
+                return new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = new StringContent("""<?xml version="1.0" encoding="UTF-8"?><feed xmlns:yt="http://www.youtube.com/xml/schemas/2015" xmlns="http://www.w3.org/2005/Atom"></feed>"""),
+                };
+            }
+
+            if (requestUri.Contains("/@skysportf1/search?query=China%202026%20highlights%20Sky%20Sport%20F1", StringComparison.Ordinal))
+            {
+                return new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = new StringContent("""{"contents":[]}"""),
+                };
+            }
+
+            if (requestUri.Contains("/@skysportf1/search?query=Cina%202026%20highlights%20Sky%20Sport%20F1", StringComparison.Ordinal))
+            {
+                return new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = new StringContent(
+                        """{"contents":[{"videoRenderer":{"videoId":"china-search-video","title":{"simpleText":"F1, GP della Cina, gli highlights della gara 2026"},"ownerText":{"simpleText":"Sky Sport F1"},"navigationEndpoint":{"watchEndpoint":{"videoId":"china-search-video"}}}}]}"""),
+                };
+            }
+
+            if (requestUri.Contains("/oembed?", StringComparison.Ordinal))
+            {
+                return new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = new StringContent(
+                        """
+                        {
+                          "title": "F1, GP della Cina, gli highlights della gara 2026",
+                          "author_name": "Sky Sport F1",
+                          "author_url": "https://www.youtube.com/@skysportf1"
+                        }
+                        """),
+                };
+            }
+
+            return new HttpResponseMessage(HttpStatusCode.NotFound);
+        });
+        using var httpClient = new HttpClient(handler);
+        var service = new RaceHighlightsLookupService(httpClient, new StubClock(new DateTimeOffset(2026, 03, 22, 18, 00, 00, TimeSpan.Zero)));
+
+        var result = await service.ResolveAsync(
+            CreateWeekend() with
+            {
+                MeetingName = "China",
+                GrandPrixTitle = "FORMULA 1 CHINESE GRAND PRIX 2026",
+                RoundNumber = 2,
+                DateRangeLabel = "20 - 22 MAR",
+                DetailUrl = "https://www.formula1.com/en/racing/2026/china",
+                StartDate = "2026-03-20",
+                EndDate = "2026-03-22",
+                RaceStartTime = "2026-03-22T07:00:00Z",
+            },
+            CancellationToken.None);
+
+        Assert.Equal("https://www.youtube.com/watch?v=china-search-video", result.HighlightsVideoUrl);
+        Assert.Equal("found", result.HighlightsLookupStatus);
+        Assert.Equal("channel-search", result.HighlightsLookupSource);
+        Assert.Contains(
+            "https://www.youtube.com/@skysportf1/search?query=China%202026%20highlights%20Sky%20Sport%20F1",
+            requestedUris);
+        Assert.Contains(
+            "https://www.youtube.com/@skysportf1/search?query=Cina%202026%20highlights%20Sky%20Sport%20F1",
+            requestedUris);
+    }
+
+    [Fact]
     public async Task Highlights_lookup_service_returns_missing_when_no_valid_candidate_is_found()
     {
         var handler = new RecordingHttpMessageHandler(request =>
@@ -1509,7 +1588,138 @@ public sealed class ResultsInfrastructureTests
             "BuildSearchQuery",
             race);
 
-        Assert.Equal("highlights Sky Sport Italia F1", query);
+        Assert.Equal("highlights Sky Sport F1", query);
+    }
+
+    [Fact]
+    public void Highlights_lookup_service_private_build_search_queries_falls_back_to_default_query_when_all_seeds_are_empty()
+    {
+        var race = new WeekendDocument(
+            "",
+            null!,
+            null!,
+            1,
+            "01 - 03 MAR",
+            null!,
+            null,
+            null,
+            false,
+            "2026-03-01",
+            "2026-03-01",
+            "2026-03-01T14:00:00Z",
+            [],
+            "",
+            "",
+            "",
+            "");
+
+        var queries = InvokePrivateStaticMethod<IReadOnlyList<string>>(
+            typeof(RaceHighlightsLookupService),
+            "BuildSearchQueries",
+            race);
+
+        var query = Assert.Single(queries);
+        Assert.Equal("highlights Sky Sport F1", query);
+    }
+
+    [Fact]
+    public void Highlights_lookup_service_private_build_search_query_prefers_compact_meeting_seed_and_live_publisher_label()
+    {
+        var race = CreateWeekend();
+
+        var query = InvokePrivateStaticMethod<string>(
+            typeof(RaceHighlightsLookupService),
+            "BuildSearchQuery",
+            race);
+
+        Assert.Equal("Australia 2026 highlights Sky Sport F1", query);
+    }
+
+    [Fact]
+    public void Highlights_lookup_service_private_build_search_query_falls_back_to_detail_slug_when_meeting_name_is_missing()
+    {
+        var race = CreateWeekend() with
+        {
+            MeetingName = null,
+            DetailUrl = "https://www.formula1.com/en/racing/2026/china",
+        };
+
+        var query = InvokePrivateStaticMethod<string>(
+            typeof(RaceHighlightsLookupService),
+            "BuildSearchQuery",
+            race);
+
+        Assert.Equal("china 2026 highlights Sky Sport F1", query);
+    }
+
+    [Fact]
+    public void Highlights_lookup_service_private_build_search_query_falls_back_to_grand_prix_title_when_other_seeds_are_empty()
+    {
+        var race = CreateWeekend() with
+        {
+            MeetingName = null,
+            DetailUrl = null,
+            MeetingKey = string.Empty,
+            GrandPrixTitle = "FORMULA 1 AUSTRALIAN GRAND PRIX 2026",
+        };
+
+        var query = InvokePrivateStaticMethod<string>(
+            typeof(RaceHighlightsLookupService),
+            "BuildSearchQuery",
+            race);
+
+        Assert.Equal("FORMULA 1 AUSTRALIAN GRAND PRIX 2026 2026 highlights Sky Sport F1", query);
+    }
+
+    [Fact]
+    public void Highlights_lookup_service_private_build_search_queries_include_localized_aliases_without_duplicate_identical_seeds()
+    {
+        var race = CreateWeekend() with
+        {
+            MeetingName = "China",
+            MeetingKey = "china",
+            DetailUrl = "https://www.formula1.com/en/racing/2026/china",
+            GrandPrixTitle = "FORMULA 1 CHINESE GRAND PRIX 2026",
+        };
+
+        var queries = InvokePrivateStaticMethod<IReadOnlyList<string>>(
+            typeof(RaceHighlightsLookupService),
+            "BuildSearchQueries",
+            race);
+
+        Assert.Contains("China 2026 highlights Sky Sport F1", queries);
+        Assert.Contains("china 2026 highlights Sky Sport F1", queries);
+        Assert.Contains("Cina 2026 highlights Sky Sport F1", queries);
+        Assert.Single(queries, query => string.Equals(query, "china 2026 highlights Sky Sport F1", StringComparison.Ordinal));
+    }
+
+    [Fact]
+    public async Task Highlights_lookup_service_uses_compact_channel_search_query_for_live_sky_sport_f1_catalog()
+    {
+        var requestedUris = new List<string>();
+        var handler = new RecordingHttpMessageHandler(request =>
+        {
+            requestedUris.Add(request.RequestUri!.AbsoluteUri);
+
+            if (request.RequestUri!.AbsoluteUri.Contains("/feeds/videos.xml?channel_id=", StringComparison.Ordinal))
+            {
+                return new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = new StringContent("""<?xml version="1.0" encoding="UTF-8"?><feed xmlns:yt="http://www.youtube.com/xml/schemas/2015" xmlns="http://www.w3.org/2005/Atom"></feed>"""),
+                };
+            }
+
+            return new HttpResponseMessage(HttpStatusCode.NotFound);
+        });
+        using var httpClient = new HttpClient(handler);
+        var service = new RaceHighlightsLookupService(httpClient, new StubClock(new DateTimeOffset(2026, 03, 01, 18, 00, 00, TimeSpan.Zero)));
+
+        var result = await service.ResolveAsync(CreateWeekend(), CancellationToken.None);
+
+        Assert.Equal("missing", result.HighlightsLookupStatus);
+        Assert.Contains(
+            "https://www.youtube.com/@skysportf1/search?query=Australia%202026%20highlights%20Sky%20Sport%20F1",
+            requestedUris);
     }
 
     private static WeekendDocument CreateWeekend()

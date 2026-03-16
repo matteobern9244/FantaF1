@@ -1,0 +1,14 @@
+{
+  "id": "verify_docker_dotnet10_20260314",
+  "slug": "verify-docker-dotnet10-20260314",
+  "title": "verify docker dotnet10 20260314",
+  "status": "archived",
+  "phase": "archived",
+  "createdAt": "2026-03-14T00:00:00Z",
+  "updatedAt": "2026-03-15T18:20:50Z",
+  "archivedAt": "2026-03-15T18:20:50Z",
+  "path": "conductor/archive/verify_docker_dotnet10_20260314",
+  "relatedTrackIds": [],
+  "activeTask": "Archived",
+  "directory": "verify_docker_dotnet10_20260314"
+}

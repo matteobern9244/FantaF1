@@ -25,7 +25,7 @@ function WeekendLivePanel({
   const { weekendLive } = appText.panels;
 
   return (
-    <section className="panel" id="weekend-live">
+    <section className="panel nav-section" id="weekend-live">
       <div className="section-title">
         <Gauge size={20} />
         <h2>{weekendLive.title}</h2>

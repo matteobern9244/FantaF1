@@ -2,7 +2,43 @@
 
 Cronologia sintetica delle release documentate del progetto Fanta Formula 1.
 
+## [Unreleased]
+
+## [1.6.1] - 2026-03-16
+
+- **Menu Hamburger Rifinito per Mobile**: l'overlay mobile mantiene il font `Formula1` sulle voci di navigazione, con dimensione finale portata a `20px` per una leggibilita' piu' netta senza tornare al font `Formula1Wide`.
+- **Label Mobile Più Chiare e Centrate**: le voci del menu mobile mantengono card piu' ariose, contenuto centrato e wrapping meno aggressivo, cosi' il testo resta piu' leggibile e non appare schiacciato sui viewport stretti.
+- **Affordance della Sezione Corrente Migliorata su Mobile**: il menu overlay espone un riepilogo sticky della sezione attiva e conserva una navigazione piu' intuitiva durante lo scroll, riallineando l'esperienza mobile alla chiarezza gia' presente nella sidebar desktop.
+- **TDD Regressivo su Overlay Mobile e Roadmap Navigation**: estesi i test UI per coprire il riepilogo della sezione corrente, i fallback di rendering del menu mobile e la persistenza dell'orientamento utente dopo riapertura e navigazione tra le sezioni.
+- **TDD Statico sui Nuovi Vincoli Tipografici del Menu Mobile**: aggiunto un test CSS dedicato per bloccare altezza minima, centratura del contenuto e uso di `Formula1` sulle label dell'overlay mobile, evitando regressioni future sul layout.
+- **Lookup Highlights Esteso a Tutte le Gare Concluse**: il resolver C# non si affida piu' a un solo seed inglese per la ricerca YouTube, ma prova anche alias/localizzazioni gara coerenti con il catalogo Sky Sport F1, cosi' gli highlights vengono risolti anche per weekend successivi quando disponibili.
+- **Ripristino Ambiente di Sviluppo Locale**: identificata e risolta la causa del blocco all'avvio del launcher locale `./start_fantaf1.command`, garantendo il corretto avvio coordinato di Backend (.NET 10) e Frontend (Vite) con validazione pre-volo completa.
+- **CTA Highlights Non Disponibile Riallineata**: il recap weekend usa ora il testo esatto `HIGHLIGHTS NON PRESENTI` quando il backend non restituisce `highlightsVideoUrl`, mantenendo invariato il comportamento del pulsante disabilitato su desktop e mobile.
+- **TDD Regressivo Multi-Gara sugli Highlights**: aggiunti test backend sul lookup di una gara successiva con naming localizzato e test frontend sulla seconda gara finita e sul fallback UI, mantenendo la coverage ufficiale al `100%`.
+
+## [1.6.0] - 2026-03-15
+
+- **Rielaborazione Menu UI Adattivo (F1 Racing Theme)**: introdotta una nuova architettura di navigazione con sidebar fissa a sinistra per desktop (collassabile) e menu overlay a tutto schermo per mobile, garantendo un'esperienza immersiva e moderna.
+- **Visual Design Immersivo**: implementato il nuovo branding "F1 Racing Theme" con background scuri, pattern carbon-fiber, accenti rosso F1 hi-contrast e un nuovo componente `MenuLogo` stilizzato con ombre e inclinazioni racing.
+- **Consolidamento Controlli Utente e Admin**: i pulsanti "Modalità Admin", "Vista Pubblica", "Logout" e "Installa Applicazione" sono stati rimossi dall'header principale e integrati organicamente nel footer del menu di navigazione, pulendo drasticamente la visuale della hero.
+- **Rimozione Componenti Ridondanti**: eliminato il pulsante floating "Torna al menu" e la relativa logica di scroll, resi obsoleti dalla nuova navigazione fissa sempre accessibile.
+- **Zero Regressioni e Troncamento Testi**: risolti i problemi di troncamento dei testi nelle voci di menu tramite layout flessibile; garantita la piena cliccabilità e funzionalità di ogni voce di navigazione su tutti i breakpoint.
+- **TDD e Validazione Totale**: aggiunti 18 nuovi unit test per i componenti `Sidebar` e `MobileOverlay`; aggiornata l'intera suite di roadmap test (13 test) e la diagnostica `ui-responsive` per riflettere i nuovi selettori DOM, mantenendo la copertura al 100% su tutto il perimetro modificato.
+- **Hardening Menu UI Senza Flicker**: il layout desktop collassato usa ora uno stato reale della shell invece del vecchio selettore sibling non valido; le transizioni del menu sono state ristrette alle sole proprietà animate per ridurre micro-jank e flicker visivo.
+- **Overlay Mobile Più Solido e Accessibile**: il trigger mobile usa ora la label centralizzata del sistema testo UI e l'apertura dell'overlay blocca esplicitamente lo scroll della pagina, evitando salti del contenuto sottostante durante la navigazione.
+- **Wiring Reale dei Pulsanti del Menu Blindato**: estesi i test runtime per coprire apertura/chiusura overlay, cambio vista admin/public, collapse della sidebar desktop e i controlli footer del menu nella shell reale dell'applicazione.
+- **Track Conductor del Menu Formalmente Chiusa**: la track `ui_menu_rework_20260315` documenta ora in modo coerente feature consegnata, hardening post-merge, verifica eseguita e archiviazione completa.
+- **Governance Branch Rinominata da `develop` a `staging`**: la documentazione canonica del repository e il trigger operativo `deploya` trattano ora `staging` come branch di certificazione corrente e come sorgente della Pull Request verso `main`, eliminando il contratto operativo precedente basato su `develop`.
+- **Runbook di Riallineamento Esterno per il Rename Branch**: il repository documenta ora esplicitamente che il rename richiede anche l'aggiornamento del branch sorgente di Render staging e delle eventuali branch protection o automazioni GitHub esterne ancora puntate a `develop`.
+- **Riallineamento Completo del Workspace Conductor**: i track storici verificati restano archiviati sotto `conductor/archive/`, i root plans legacy sono stati spostati in `conductor/archive/_root-plans/` e gli indici `conductor/index.md` e `conductor/tracks.md` sono stati rigenerati in coerenza con lo stato reale del workspace.
+- **Hardening della Skill Conductor sul Flusso Archive**: la skill installata normalizza ora il pre-archive dei track, aggiorna in modo minimo `review.md` e `verify.md` durante la chiusura amministrativa e supporta l'archiviazione coerente dei track legacy/non-`done` nel repository reale.
+- **Archiviazione dei Root Plans Legacy di Conductor**: i documenti di piano rimasti nel root di `conductor/` (`fix-mappa`, `fix-scroll-jank`, `feature-standings`, `enforce-commit-docs-rule`, `subphase-11-plan`) sono stati spostati in `conductor/archive/_root-plans/`, lasciando nel root solo i file operativi ancora vivi del workspace.
+- **Test di Compatibilita' Conductor Estesi**: [tests/conductor-skill-compatibility.test.js](/Users/matteobernardini/code/FantaF1/tests/conductor-skill-compatibility.test.js) copre ora anche l'archiviazione massiva dei track attivi e la verifica che i root plans legacy non restino piu' nel root di `conductor/`.
+- **Merge di Release `develop` -> `staging` e Bump Minor**: il delta verificato di `develop` e' stato promosso in `staging` con merge esplicito di release e riallineamento versione a `1.6.0` su `package.json`, `package-lock.json`, `README.md` e `CHANGELOG.md`.
+- **Track Conductor di Release Chiusa**: aggiunta e chiusa la track `merge_develop_into_staging_release_20260315` per documentare merge, validazioni, bump versione e allineamento dei documenti canonici.
+
 ## [1.5.2] - 2026-03-15
+
 - **Fix Operativo del Trigger `deploya`**: [AGENTS.md](/Users/matteobernardini/code/FantaF1/AGENTS.md) distingue ora in modo piu' preciso il preflight del trigger persistente e il caso di cutover intenzionale `develop -> main`, evitando falsi stop quando `main` e' ancora sul vecchio stack per scelta di governance pre-merge.
 - **Coerenza Test Documentali sul Flusso di Release**: i controlli di consistenza in [backend-csharp/tests/FantaF1.Tests.Unit/PortingDocumentationConsistencyTests.cs](/Users/matteobernardini/code/FantaF1/backend-csharp/tests/FantaF1.Tests.Unit/PortingDocumentationConsistencyTests.cs) sono stati riallineati ai guardrail aggiornati del workflow di deploy, mantenendo invariata la safety net del branch C#.
 - **PR CI Riallineata al Profilo `Development` per i Gate Locali**: il workflow [.github/workflows/pr-ci.yml](/Users/matteobernardini/code/FantaF1/.github/workflows/pr-ci.yml) esporta ora `ASPNETCORE_ENVIRONMENT=Development` nei job che avviano il backend locale contro `fantaf1_ci`, evitando il crash del bootstrap C# che rifiutava un database CI in profilo `production`.
@@ -12,6 +48,7 @@ Cronologia sintetica delle release documentate del progetto Fanta Formula 1.
 - **Bump Versione Patch per il Cutover su `main`**: aggiornati `package.json`, `package-lock.json`, `README.md` e `CHANGELOG.md` per pubblicare su `main` il delta successivo al tag `v1.5.1`, senza riutilizzare una versione gia' taggata.
 
 ## [1.5.1] - 2026-03-15
+
 - **Fix Propagazione `VITE_APP_LOCAL_NAME` nel Docker Build**: il `Dockerfile` passa ora esplicitamente `VITE_APP_LOCAL_NAME` allo stage frontend `vite build`, cosi' gli override configurati su Render entrano davvero nel bundle statico invece di essere ignorati sul deploy staging/production-like.
 - **Contratto Documentale su `VITE_APP_LOCAL_NAME` Esplicitato**: `README.md` chiarisce ora che `VITE_APP_LOCAL_NAME` e' una build env del frontend Vite, non una runtime env del backend C#, e che ogni modifica su Render richiede rebuild/redeploy del servizio per diventare visibile.
 - **Bump Versione Patch e Riallineamento Release**: aggiornati `package.json`, `package-lock.json`, `README.md` e `CHANGELOG.md` per pubblicare il branch `develop` con una release patch coerente con il change set finale di hardening, cleanup documentale e guardrail operativi del porting C#.
@@ -28,17 +65,21 @@ Cronologia sintetica delle release documentate del progetto Fanta Formula 1.
 - **Riallineamento Documentale del Branch C#**: aggiornati `README.md`, `AGENTS.md`, [PROJECT.md](/Users/matteobernardini/code/FantaF1/PROJECT.md) e i guardrail documentali per riflettere il `Dockerfile` root, le variabili Render correnti, i job CI/CD reali, il default launcher `csharp-dev`, l'uso operativo di `fantaf1_staging` e il fatto che il cutover verso `main` resti soggetto a certificazione finale.
 
 ## [1.4.9] - 2026-03-15
+
 - **Fix Render Dockerfile Rewrite**: eseguita una riscrittura pulita del `Dockerfile` nella root per risolvere l'errore di rilevamento su Render (`open Dockerfile: no such file or directory`); eliminata ogni ambiguità derivante da metadati o varianti del filesystem.
 
 ## [1.4.8] - 2026-03-15
+
 - **Fix Docker Staging Deploy**: spostato il `Dockerfile` nella root del progetto per risolvere definitivamente l'errore di build su Render (`COPY backend/ not found`) derivante da ambiguità nella risoluzione dei percorsi del contesto di build.
 - **Verifica Non-Regressione Locale**: confermata la completa integrità del launcher locale e delle viste responsive dopo la ristrutturazione dei file Docker.
 
 ## [1.4.7] - 2026-03-15
+
 - **Certificazione Baseline C#**: verificata la completa integrità del backend C# con 100% di copertura (linee, branch, metodi) e avvio positivo del servizio locale.
 - **Archiviazione Track Conductor**: completata e archiviata la track dedicata al fix del build Docker e al ripristino del tooling locale.
 
 ## [1.4.6] - 2026-03-15
+
 - **Fix Docker Build Error**: rimosso il comando `COPY backend/` obsoleto dal `Dockerfile` di `backend-csharp`, risolvendo il fallimento del build su Render ambiente staging dopo la rimozione del backend Node.js.
 - **Ripristino Tooling MongoDB Locale**: riaggiunto `mongoose` alle `devDependencies` per ripristinare il funzionamento degli script di setup e provisioning locale (`atlas-provisioning.mjs`, `local-admin-credential.mjs`) e dei relativi test unitari.
 - **Rimozione Script Legacy Obsoleti**: eliminato `scripts/remove-weekend-boost.mjs` e il relativo comando `npm run migrate:remove-weekend-boost`, in quanto dipendevano da path e modelli del backend Node.js rimosso.

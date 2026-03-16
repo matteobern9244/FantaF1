@@ -1,9 +1,0 @@
-{
-  "id": "verify_after_clean_20260314",
-  "title": "Verify Build and Tests after git clean -fdx",
-  "status": "completed",
-  "priority": "high",
-  "type": "verification",
-  "created_at": "2026-03-14",
-  "updated_at": "2026-03-14"
-}

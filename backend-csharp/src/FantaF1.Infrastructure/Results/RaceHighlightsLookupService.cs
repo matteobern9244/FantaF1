@@ -53,25 +53,25 @@ public sealed class RaceHighlightsLookupService : IRaceHighlightsLookupService
             return _lookupPolicy.BuildLookupResult(now, feedCandidate.VideoUrl, "found", "feed");
         }
 
-        var channelSearchCandidates = await LoadMarkupCandidatesAsync(
-            $"{OfficialResultsReferenceData.HighlightsChannelSearchBaseUrl}{Uri.EscapeDataString(BuildSearchQuery(race))}",
+        var channelSearchCandidate = await ResolveMarkupSearchCandidateAsync(
+            race,
+            OfficialResultsReferenceData.HighlightsChannelSearchBaseUrl,
             "channel-search",
             "Sky Sport F1",
             $"https://www.youtube.com/{OfficialResultsReferenceData.HighlightsChannelHandle}",
             cancellationToken);
-        var channelSearchCandidate = await ValidateCandidatesInOrderAsync(channelSearchCandidates, race, cancellationToken);
         if (channelSearchCandidate is not null)
         {
             return _lookupPolicy.BuildLookupResult(now, channelSearchCandidate.VideoUrl, "found", "channel-search");
         }
 
-        var globalSearchCandidates = await LoadMarkupCandidatesAsync(
-            $"{OfficialResultsReferenceData.HighlightsSearchBaseUrl}{Uri.EscapeDataString(BuildSearchQuery(race))}",
+        var globalSearchCandidate = await ResolveMarkupSearchCandidateAsync(
+            race,
+            OfficialResultsReferenceData.HighlightsSearchBaseUrl,
             "global-search",
             string.Empty,
             string.Empty,
             cancellationToken);
-        var globalSearchCandidate = await ValidateCandidatesInOrderAsync(globalSearchCandidates, race, cancellationToken);
         if (globalSearchCandidate is not null)
         {
             return _lookupPolicy.BuildLookupResult(now, globalSearchCandidate.VideoUrl, "found", "global-search");
@@ -127,6 +127,32 @@ public sealed class RaceHighlightsLookupService : IRaceHighlightsLookupService
         foreach (var candidate in SortCandidates(candidates, race))
         {
             var validatedCandidate = await ValidateCandidateAsync(candidate, race, cancellationToken);
+            if (validatedCandidate is not null)
+            {
+                return validatedCandidate;
+            }
+        }
+
+        return null;
+    }
+
+    private async Task<HighlightsCandidate?> ResolveMarkupSearchCandidateAsync(
+        WeekendDocument race,
+        string baseUrl,
+        string source,
+        string defaultAuthorName,
+        string defaultAuthorUrl,
+        CancellationToken cancellationToken)
+    {
+        foreach (var query in BuildSearchQueries(race))
+        {
+            var candidates = await LoadMarkupCandidatesAsync(
+                $"{baseUrl}{Uri.EscapeDataString(query)}",
+                source,
+                defaultAuthorName,
+                defaultAuthorUrl,
+                cancellationToken);
+            var validatedCandidate = await ValidateCandidatesInOrderAsync(candidates, race, cancellationToken);
             if (validatedCandidate is not null)
             {
                 return validatedCandidate;
@@ -352,9 +378,75 @@ public sealed class RaceHighlightsLookupService : IRaceHighlightsLookupService
 
     private static string BuildSearchQuery(WeekendDocument race)
     {
-        var titleSeed = NormalizeText(race.GrandPrixTitle ?? race.MeetingName ?? race.MeetingKey);
+        var titleSeed = BuildSearchTitleSeed(race);
         var seasonYear = string.IsNullOrWhiteSpace(titleSeed) ? string.Empty : DeriveSeasonYear(race);
         return NormalizeText($"{titleSeed} {seasonYear} highlights {OfficialResultsReferenceData.HighlightsPublisherLabel}");
+    }
+
+    private static string BuildSearchTitleSeed(WeekendDocument race)
+    {
+        return BuildSearchTitleSeeds(race).FirstOrDefault() ?? string.Empty;
+    }
+
+    private static IReadOnlyList<string> BuildSearchQueries(WeekendDocument race)
+    {
+        var queries = BuildSearchTitleSeeds(race)
+            .Select(titleSeed =>
+            {
+                var seasonYear = DeriveSeasonYear(race);
+                return NormalizeText($"{titleSeed} {seasonYear} highlights {OfficialResultsReferenceData.HighlightsPublisherLabel}");
+            })
+            .Distinct(StringComparer.Ordinal)
+            .ToArray();
+
+        return queries.Length > 0
+            ? queries
+            : [BuildSearchQuery(race)];
+    }
+
+    private static IReadOnlyList<string> BuildSearchTitleSeeds(WeekendDocument race)
+    {
+        var seeds = new List<string>();
+        var seenSeeds = new HashSet<string>(StringComparer.Ordinal);
+        var candidates = new[]
+        {
+            race.MeetingName,
+            race.DetailUrl?.Split('/').LastOrDefault(),
+            race.MeetingKey,
+            race.GrandPrixTitle,
+        };
+
+        foreach (var candidate in candidates)
+        {
+            var normalizedCandidate = NormalizeText(candidate);
+            if (!string.IsNullOrWhiteSpace(normalizedCandidate))
+            {
+                AddSeed(normalizedCandidate);
+
+                var lookupCandidate = NormalizeLookupText(normalizedCandidate);
+                foreach (var entry in OfficialResultsReferenceData.HighlightsRaceAliases)
+                {
+                    if (lookupCandidate.Contains(NormalizeLookupText(entry.Key), StringComparison.Ordinal))
+                    {
+                        foreach (var alias in entry.Value)
+                        {
+                            AddSeed(alias);
+                        }
+                    }
+                }
+            }
+        }
+
+        return seeds;
+
+        void AddSeed(string? value)
+        {
+            var normalizedValue = NormalizeText(value);
+            if (seenSeeds.Add(normalizedValue))
+            {
+                seeds.Add(normalizedValue);
+            }
+        }
     }
 
     private static string DeriveSeasonYear(WeekendDocument race)

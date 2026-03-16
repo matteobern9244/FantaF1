@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
 import {
-  ArrowUp,
   CalendarDays,
   Flag,
   ListChecks,
@@ -13,11 +12,10 @@ import {
   Zap,
   FastForward,
   Gauge,
-  Smartphone,
   BarChart3,
   LockKeyhole,
   Download,
-  LogOut,
+  Menu,
 } from 'lucide-react';
 import './App.css';
 import {
@@ -94,6 +92,8 @@ import PublicStandingsPanel from './components/PublicStandingsPanel';
 import SeasonAnalysisPanel from './components/SeasonAnalysisPanel';
 import WeekendLivePanel from './components/WeekendLivePanel';
 import WeekendPulseHeroCard from './components/WeekendPulseHeroCard';
+import Sidebar from './components/Sidebar';
+import MobileOverlay from './components/MobileOverlay';
 import { appText } from './uiText';
 import {
   getWeekendPredictionState,
@@ -147,6 +147,16 @@ interface ToastState {
 function buildHashUrl(hash: string) {
   const normalizedHash = hash.trim().replace(/^#/, '');
   return `${window.location.pathname}${window.location.search}#${normalizedHash}`;
+}
+
+function getNavigationAnchorOffset() {
+  return window.matchMedia('(max-width: 900px)').matches ? 176 : 150;
+}
+
+function scrollSectionIntoView(targetElement: HTMLElement, behavior: ScrollBehavior = 'smooth') {
+  const anchorOffset = getNavigationAnchorOffset();
+  const targetTop = Math.max(0, window.scrollY + targetElement.getBoundingClientRect().top - anchorOffset);
+  window.scrollTo({ top: targetTop, behavior });
 }
 
 function isStandaloneInstallContext() {
@@ -223,6 +233,7 @@ function SessionIcon({ name, size = 14 }: { name: string; size?: number }) {
 
 /* v8 ignore start -- stateful UI shell is exercised through RTL and browser smoke tests */
 function App() {
+  const manualNavigationLockDurationMs = 900;
   const [users, setUsers] = useState<UserData[]>([]);
   const [history, setHistory] = useState<AppData['history']>([]);
   const [gpName, setGpName] = useState('');
@@ -255,7 +266,8 @@ function App() {
   const [toast, setToast] = useState<ToastState | null>(null);
   const [installPromptEvent, setInstallPromptEvent] = useState<DeferredInstallPromptEvent | null>(null);
   const [isAppInstalled, setIsAppInstalled] = useState(() => isStandaloneInstallContext());
-  const [isMobileViewport, setIsMobileViewport] = useState(() => window.matchMedia('(max-width: 767px)').matches);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
   const [showInstallInstructions, setShowInstallInstructions] = useState(false);
   const [showAdminLogin, setShowAdminLogin] = useState(false);
   const [adminPassword, setAdminPassword] = useState('');
@@ -266,10 +278,11 @@ function App() {
   const [selectedRacePhase, setSelectedRacePhase] = useState<RacePhase>('open');
   const [selectedRaceHighlightsVideoUrl, setSelectedRaceHighlightsVideoUrl] = useState('');
   const [activeSectionId, setActiveSectionId] = useState('');
-  const [showBackToTop, setShowBackToTop] = useState(false);
   const selectedMeetingKeyRef = useRef(selectedMeetingKey);
   const toastTimeoutRef = useRef<number | null>(null);
   const initialHashHandledRef = useRef(false);
+  const navigationLockTimeoutRef = useRef<number | null>(null);
+  const manualNavigationTargetRef = useRef<string | null>(null);
 
   // Derived state (declared before effects to avoid TS errors)
   const sortedDrivers = sortDriversBySurname(drivers, driversSource.sortLocale);
@@ -386,9 +399,35 @@ function App() {
       return;
     }
 
+    if (navigationLockTimeoutRef.current !== null) {
+      window.clearTimeout(navigationLockTimeoutRef.current);
+    }
+
+    manualNavigationTargetRef.current = sectionId;
+    navigationLockTimeoutRef.current = window.setTimeout(() => {
+      manualNavigationTargetRef.current = null;
+      navigationLockTimeoutRef.current = null;
+    }, manualNavigationLockDurationMs);
+
     window.history.replaceState({}, '', buildHashUrl(sectionId));
-    targetElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    scrollSectionIntoView(targetElement);
     setActiveSectionId(sectionId);
+  }
+
+  function handleOpenMobileNav() {
+    setIsMobileNavOpen(true);
+  }
+
+  function handleCloseMobileNav() {
+    setIsMobileNavOpen(false);
+  }
+
+  function handleOpenAdminLogin() {
+    setShowAdminLogin(true);
+  }
+
+  function handleToggleViewMode() {
+    setViewMode((currentViewMode) => (currentViewMode === 'public' ? 'admin' : 'public'));
   }
 
   useEffect(() => {
@@ -398,25 +437,17 @@ function App() {
   }, [selectedInsightsUser, users]);
 
   useEffect(() => {
-    const mobileViewportQuery = window.matchMedia('(max-width: 767px)');
     const standaloneModeQuery = window.matchMedia('(display-mode: standalone)');
-
-    function handleMobileViewportChange(event: MediaQueryListEvent) {
-      setIsMobileViewport(event.matches);
-    }
 
     function handleStandaloneChange(event: MediaQueryListEvent) {
       setIsAppInstalled(event.matches || (navigator as NavigatorWithStandalone).standalone === true);
     }
 
-    setIsMobileViewport(mobileViewportQuery.matches);
     setIsAppInstalled(standaloneModeQuery.matches || (navigator as NavigatorWithStandalone).standalone === true);
 
-    mobileViewportQuery.addEventListener('change', handleMobileViewportChange);
     standaloneModeQuery.addEventListener('change', handleStandaloneChange);
 
     return () => {
-      mobileViewportQuery.removeEventListener('change', handleMobileViewportChange);
       standaloneModeQuery.removeEventListener('change', handleStandaloneChange);
     };
   }, []);
@@ -448,43 +479,27 @@ function App() {
       if (toastTimeoutRef.current !== null) {
         window.clearTimeout(toastTimeoutRef.current);
       }
+
+      if (navigationLockTimeoutRef.current !== null) {
+        window.clearTimeout(navigationLockTimeoutRef.current);
+      }
     };
   }, []);
 
   useEffect(() => {
-    // viewMode effect placeholder
-  }, [viewMode]);
+    const previousOverflow = document.body.style.overflow;
+    const previousTouchAction = document.body.style.touchAction;
 
-  useEffect(() => {
-    // isMobileViewport effect placeholder
-  }, [isMobileViewport]);
-
-  useEffect(() => {
-    const heroPanel = document.querySelector('header.hero-panel');
-
-    if (typeof window.IntersectionObserver === 'function' && heroPanel) {
-      const observer = new window.IntersectionObserver(
-        ([entry]) => {
-          setShowBackToTop(!entry.isIntersecting);
-        },
-        { threshold: 0 }
-      );
-
-      observer.observe(heroPanel);
-
-      return () => {
-        observer.disconnect();
-      };
-    } else {
-      // Fallback
-      function handleScroll() {
-        setShowBackToTop(window.scrollY > 400);
-      }
-
-      window.addEventListener('scroll', handleScroll);
-      return () => window.removeEventListener('scroll', handleScroll);
+    if (isMobileNavOpen) {
+      document.body.style.overflow = 'hidden';
+      document.body.style.touchAction = 'none';
     }
-  }, []);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.body.style.touchAction = previousTouchAction;
+    };
+  }, [isMobileNavOpen]);
 
   useEffect(() => {
     let isCancelled = false;
@@ -617,7 +632,7 @@ function App() {
       return;
     }
 
-    targetElement.scrollIntoView();
+    scrollSectionIntoView(targetElement, 'auto');
     setActiveSectionId(targetId);
     initialHashHandledRef.current = true;
   }, [loading, viewMode]);
@@ -648,9 +663,41 @@ function App() {
 
     const sectionObserver = new window.IntersectionObserver(
       (entries) => {
+        const manualNavigationTarget = manualNavigationTargetRef.current;
+        if (manualNavigationTarget) {
+          const targetEntry = entries.find(
+            (entry) => entry.isIntersecting && entry.target.id === manualNavigationTarget,
+          );
+
+          if (targetEntry?.target?.id) {
+            setActiveSectionId(targetEntry.target.id);
+            manualNavigationTargetRef.current = null;
+            if (navigationLockTimeoutRef.current !== null) {
+              window.clearTimeout(navigationLockTimeoutRef.current);
+              navigationLockTimeoutRef.current = null;
+            }
+          }
+
+          return;
+        }
+
         const visibleEntry = entries
           .filter((entry) => entry.isIntersecting)
-          .sort((left, right) => right.intersectionRatio - left.intersectionRatio)[0];
+          .sort((left, right) => {
+            const navigationAnchorOffset = getNavigationAnchorOffset();
+            const leftDistance = Math.abs(left.boundingClientRect.top - navigationAnchorOffset);
+            const rightDistance = Math.abs(right.boundingClientRect.top - navigationAnchorOffset);
+
+            if (leftDistance !== rightDistance) {
+              return leftDistance - rightDistance;
+            }
+
+            if (left.intersectionRatio !== right.intersectionRatio) {
+              return right.intersectionRatio - left.intersectionRatio;
+            }
+
+            return left.boundingClientRect.top - right.boundingClientRect.top;
+          })[0];
 
         if (visibleEntry?.target?.id) {
           setActiveSectionId(visibleEntry.target.id);
@@ -1278,15 +1325,6 @@ function App() {
     }
   }
 
-  function renderInstallButton() {
-    return (
-      <button className="secondary-button install-button" onClick={handleInstallApp} type="button">
-        <Download size={16} />
-        {uiText.buttons.installApp}
-      </button>
-    );
-  }
-
   function getExpandedHistoryKey(record: AppData['history'][number], index: number) {
     return `${record.gpName}-${record.date}-${index}`;
   }
@@ -1413,7 +1451,46 @@ function App() {
 
   /* v8 ignore next -- layout is exercised end-to-end via RTL and browser smoke tests */
   return (
-    <div className="app-shell">
+    <div className={`app-shell ${isSidebarCollapsed ? 'app-shell-sidebar-collapsed' : ''}`.trim()}>
+      <Sidebar
+        items={sectionNavigationItems}
+        activeId={activeSectionId}
+        onItemClick={navigateToSection}
+        isAdmin={sessionState.isAdmin}
+        viewMode={viewMode}
+        onViewModeToggle={handleToggleViewMode}
+        onLogout={handleAdminLogout}
+        onLogin={handleOpenAdminLogin}
+        onCollapseChange={setIsSidebarCollapsed}
+        onInstall={handleInstallApp}
+        showInstall={true}
+      />
+
+      {isMobileNavOpen && (
+        <MobileOverlay
+          items={sectionNavigationItems}
+          activeId={activeSectionId}
+          onItemClick={navigateToSection}
+          isAdmin={sessionState.isAdmin}
+          viewMode={viewMode}
+          onViewModeToggle={handleToggleViewMode}
+          onLogout={handleAdminLogout}
+          onLogin={handleOpenAdminLogin}
+          onClose={handleCloseMobileNav}
+          onInstall={handleInstallApp}
+          showInstall={true}
+        />
+      )}
+
+      <button
+        className="mobile-menu-trigger"
+        onClick={handleOpenMobileNav}
+        aria-label={appText.shell.navigation.openButton}
+        type="button"
+      >
+        <Menu size={24} />
+      </button>
+
       <header
         className="hero-panel"
       >
@@ -1438,41 +1515,6 @@ function App() {
               </span>
             ))}
           </div>
-          <div className="hero-controls">
-            <div className="view-mode-toggle" aria-label={uiText.labels.viewMode} role="group">
-              <button
-                className={`secondary-button toggle-button ${!isPublicView ? 'active' : ''}`.trim()}
-                onClick={() => {
-                  if (sessionState.isAdmin) {
-                    setViewMode('admin');
-                    return;
-                  }
-
-                  setShowAdminLogin(true);
-                }}
-                type="button"
-                aria-pressed={!isPublicView}
-              >
-                <LockKeyhole size={16} />
-                {uiText.buttons.adminView}
-              </button>
-              <button
-                className={`secondary-button toggle-button ${isPublicView ? 'active' : ''}`.trim()}
-                onClick={() => setViewMode('public')}
-                type="button"
-                aria-pressed={isPublicView}
-              >
-                <Smartphone size={16} />
-                {uiText.buttons.publicView}
-              </button>
-            </div>
-            {sessionState.isAdmin ? (
-              <button className="secondary-button install-button" onClick={handleAdminLogout} type="button">
-                <LogOut size={16} />
-                {uiText.buttons.logout}
-              </button>
-            ) : null}
-          </div>
         </div>
         <div className="hero-brand">
           <AppLogo />
@@ -1485,23 +1527,6 @@ function App() {
           </h1>
           <p className="subtitle">{currentYear}</p>
         </div>
-
-        <nav aria-label={appText.shell.navigation.ariaLabel} className="section-nav">
-          <div className="section-nav-list">
-            {sectionNavigationItems.map((item) => (
-              <button
-                key={item.id}
-                aria-pressed={activeSectionId === item.id}
-                className={`secondary-button section-nav-button ${activeSectionId === item.id ? 'active' : ''}`.trim()}
-                onClick={() => navigateToSection(item.id)}
-                type="button"
-              >
-                {item.label}
-              </button>
-            ))}
-            {renderInstallButton()}
-          </div>
-        </nav>
 
         <div className="hero-summary-grid">
           <section className="hero-card next-race-card interactive-surface">
@@ -1644,7 +1669,7 @@ function App() {
 
       <main className="dashboard-grid">
         <section className="content-column">
-          <section className="calendar-panel" id="calendar-section">
+          <section className="calendar-panel nav-section" id="calendar-section">
             <div className="section-title">
               <Flag size={20} />
               <h2>{uiText.headings.calendar}</h2>
@@ -1697,7 +1722,7 @@ function App() {
             )}
           </section>
 
-          <section className="panel" id="user-kpi-section">
+          <section className="panel nav-section" id="user-kpi-section">
             <div className="panel-head">
               <div className="section-title">
                 <BarChart3 size={20} />
@@ -1742,7 +1767,7 @@ function App() {
             )}
           </section>
 
-          <section className="panel analytics-panel" id="user-analytics-section">
+          <section className="panel analytics-panel nav-section" id="user-analytics-section">
             <div className="section-title">
               <BarChart3 size={20} />
               <h2>{uiText.headings.userAnalytics}</h2>
@@ -1845,7 +1870,7 @@ function App() {
           ) : null}
 
           {!isPublicView ? (
-          <section className="panel" id="predictions-section">
+          <section className="panel nav-section" id="predictions-section">
             <div className="panel-head">
               <div className="section-title">
                 <User size={20} />
@@ -1925,7 +1950,7 @@ function App() {
             </div>
           </section>
           ) : (
-            <section className="panel public-readonly-panel" id="predictions-section">
+            <section className="panel public-readonly-panel nav-section" id="predictions-section">
               <div className="section-title">
                 <User size={20} />
                 <h2>{uiText.headings.predictionEntry}</h2>
@@ -1959,7 +1984,7 @@ function App() {
           )}
 
           {!isPublicView ? (
-          <section className="panel accent-panel" id="results-section">
+          <section className="panel accent-panel nav-section" id="results-section">
             <div className="section-title">
               <ListChecks size={20} />
               <h2>{uiText.headings.results}</h2>
@@ -2121,20 +2146,6 @@ function App() {
         <div className={`toast-shell toast-${toast.tone}`} role="status" aria-live="polite">
           {toast.message}
         </div>
-      ) : null}
-
-      {showBackToTop ? (
-        <button
-          aria-label="Torna al menu"
-          className="secondary-button back-to-top"
-          onClick={() => {
-            const navElement = document.querySelector('.section-nav');
-            navElement?.scrollIntoView({ behavior: 'smooth' });
-          }}
-          type="button"
-        >
-          <ArrowUp size={20} />
-        </button>
       ) : null}
 
       <footer className="app-footer">

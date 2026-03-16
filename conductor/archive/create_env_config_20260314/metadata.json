@@ -1,0 +1,17 @@
+{
+  "id": "create_env_config_20260314",
+  "slug": "creazione-e-configurazione-file-env-locale",
+  "title": "Creazione e configurazione file .env locale",
+  "status": "archived",
+  "phase": "archived",
+  "createdAt": "2026-03-14T12:00:00Z",
+  "updatedAt": "2026-03-15T18:20:50Z",
+  "archivedAt": "2026-03-15T18:20:50Z",
+  "path": "conductor/archive/create_env_config_20260314",
+  "relatedTrackIds": [],
+  "activeTask": "Archived",
+  "description": "Ripristino del file .env partendo da .env.example con valori predefiniti per l'ambiente di sviluppo locale.",
+  "created_at": "2026-03-14T12:00:00Z",
+  "updated_at": "2026-03-14T12:00:00Z",
+  "directory": "create_env_config_20260314"
+}

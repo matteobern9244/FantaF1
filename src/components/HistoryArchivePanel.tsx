@@ -71,7 +71,7 @@ function HistoryArchivePanel({
   const { historyArchive } = appText.panels;
 
   return (
-    <section className="panel">
+    <section className="panel nav-section" id="history-archive">
       <div className="section-title">
         <Trophy size={20} />
         <h2>{historyArchive.title}</h2>
@@ -107,7 +107,7 @@ function HistoryArchivePanel({
       {filteredHistoryEntries.length === 0 ? (
         <p className="empty-copy">{historyEmptyLabel}</p>
       ) : (
-        <div className="history-stack" id="history-archive">
+        <div className="history-stack">
           {filteredHistoryEntries.map(({ record, index }) => {
             const historyKey = getHistoryKey(record, index);
             const isExpanded = expandedHistoryKey === historyKey;

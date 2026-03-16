@@ -38,9 +38,10 @@ public sealed class PortingDocumentationConsistencyTests
         Assert.Contains("`README.md` is the canonical operational document", agents, StringComparison.Ordinal);
         Assert.Contains("`CHANGELOG.md` is the canonical release and audit history.", agents, StringComparison.Ordinal);
         Assert.Contains(
-            "Before starting, also verify that `main` is already the branch that represents the current releasable stack and that the current working branch is `develop`.",
+            "Before starting, also verify that `main` is already the branch that represents the current releasable stack and that the current working branch is `staging`.",
             agents,
             StringComparison.Ordinal);
+        Assert.Contains("Il branch `staging` e' il branch di certificazione corrente.", readme, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -125,20 +126,20 @@ public sealed class PortingDocumentationConsistencyTests
         var readme = ReadRepositoryFile("README.md");
         var agents = ReadRepositoryFile("AGENTS.md");
 
-        Assert.Contains("`5176 / 5176` statements", readme, StringComparison.Ordinal);
-        Assert.Contains("`408 / 408` functions", readme, StringComparison.Ordinal);
-        Assert.Contains("`2096 / 2096` branches", readme, StringComparison.Ordinal);
-        Assert.Contains("`5176 / 5176` lines", readme, StringComparison.Ordinal);
+        Assert.Contains("`5212 / 5212` statements", readme, StringComparison.Ordinal);
+        Assert.Contains("`412 / 412` functions", readme, StringComparison.Ordinal);
+        Assert.Contains("`2114 / 2114` branches", readme, StringComparison.Ordinal);
+        Assert.Contains("`5212 / 5212` lines", readme, StringComparison.Ordinal);
         Assert.Contains(
-            "**100% statements (5176 / 5176)**, **100% functions (408 / 408)**, **100% branches (2096 / 2096)**, and **100% lines (5176 / 5176)**",
+            "**100% statements (5212 / 5212)**, **100% functions (412 / 412)**, **100% branches (2114 / 2114)**, and **100% lines (5212 / 5212)**",
             agents,
             StringComparison.Ordinal);
-        Assert.Contains("`2932 / 2932` lines", readme, StringComparison.Ordinal);
-        Assert.Contains("`1653 / 1653` branches", readme, StringComparison.Ordinal);
-        Assert.Contains("`489 / 489` methods", readme, StringComparison.Ordinal);
-        Assert.Contains("**100% line coverage (2932 / 2932)**", agents, StringComparison.Ordinal);
-        Assert.Contains("**100% branch coverage (1653 / 1653)**", agents, StringComparison.Ordinal);
-        Assert.Contains("**100% method coverage (489 / 489)**", agents, StringComparison.Ordinal);
+        Assert.Contains("`2986 / 2986` lines", readme, StringComparison.Ordinal);
+        Assert.Contains("`1671 / 1671` branches", readme, StringComparison.Ordinal);
+        Assert.Contains("`494 / 494` methods", readme, StringComparison.Ordinal);
+        Assert.Contains("**100% line coverage (2986 / 2986)**", agents, StringComparison.Ordinal);
+        Assert.Contains("**100% branch coverage (1671 / 1671)**", agents, StringComparison.Ordinal);
+        Assert.Contains("**100% method coverage (494 / 494)**", agents, StringComparison.Ordinal);
     }
 
     [Fact]

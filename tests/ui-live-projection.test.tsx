@@ -290,6 +290,41 @@ describe('Live projection UI', () => {
     expect(highlightsButton).toBeEnabled();
   });
 
+  it('shows the highlights CTA for a second finished race when that weekend has its own video', async () => {
+    mockAppFetches({
+      resultsByMeetingKey: {
+        'race-1': {
+          racePhase: 'finished',
+          results: { first: 'nor', second: 'ver', third: 'lec', pole: 'pia' },
+          highlightsVideoUrl: 'https://www.youtube.com/watch?v=skyf1-first-race',
+        },
+        'race-2': {
+          racePhase: 'finished',
+          results: { first: 'ham', second: 'nor', third: 'lec', pole: 'ver' },
+          highlightsVideoUrl: 'https://www.youtube.com/watch?v=skyf1-second-race',
+        },
+      },
+    });
+
+    render(<App />);
+
+    await screen.findByRole('button', { name: /guarda highlights/i }, { timeout: 5000 });
+
+    fireEvent.change(document.getElementById('meeting-selector') as HTMLSelectElement, {
+      target: { value: 'race-2' },
+    });
+
+    await waitFor(() => {
+      expect(
+        within(getSelectedRaceHeroCard() as HTMLElement).getByRole('button', { name: /guarda highlights/i }),
+      ).toBeEnabled();
+    });
+
+    expect(
+      within(getSelectedRaceHeroCard() as HTMLElement).getByText('Chinese Grand Prix 2099'),
+    ).toBeInTheDocument();
+  });
+
   it('shows the official grand prix title in the selected race recap when the race is finished', async () => {
     mockAppFetches({
       resultsByMeetingKey: {
@@ -366,7 +401,7 @@ describe('Live projection UI', () => {
     render(<App />);
 
     const disabledButton = await screen.findByRole('button', {
-      name: /video highlights ancora non disponibile/i,
+      name: /highlights non presenti/i,
     }, { timeout: 5000 });
 
     expect(disabledButton).toBeDisabled();
@@ -385,7 +420,7 @@ describe('Live projection UI', () => {
     render(<App />);
 
     const disabledButton = await screen.findByRole('button', {
-      name: /video highlights ancora non disponibile/i,
+      name: /highlights non presenti/i,
     }, { timeout: 5000 });
 
     expect(disabledButton).toBeDisabled();
@@ -405,7 +440,7 @@ describe('Live projection UI', () => {
     render(<App />);
 
     const disabledButton = await screen.findByRole('button', {
-      name: /video highlights ancora non disponibile/i,
+      name: /highlights non presenti/i,
     }, { timeout: 5000 });
 
     expect(disabledButton).toBeDisabled();
