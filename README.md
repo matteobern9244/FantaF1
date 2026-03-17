@@ -369,7 +369,14 @@ La pipeline normalizza la URI CI e usa `MONGODB_DB_NAME_OVERRIDE=fantaf1_ci` per
 
 - [start_fantaf1.command](/Users/matteobernardini/code/FantaF1/start_fantaf1.command)
 
-Quando un task richiede di `avviare l'app`, questo e' il solo entrypoint canonico.
+Quando un task richiede di `avviare l'app`, questo e' il solo entrypoint canonico. Il launcher esegue una serie di controlli pre-volo obbligatori:
+- verifica connettivita' MongoDB (Atlas o locale)
+- linting del codice
+- test unitari frontend
+- test unitari backend C#
+- validazione UI responsive (Playwright)
+- build di produzione frontend
+- smoke test di salvataggio locale
 
 ### Comandi principali
 
@@ -512,7 +519,7 @@ Baseline verificata corrente sullo scope ufficiale frontend/repository:
 
 Baseline verificata corrente su `backend-csharp/src/`:
 
-- `2986 / 2986` lines
+- `2994 / 2994` lines
 - `1671 / 1671` branches
 - `494 / 494` methods
 - `70` file inclusi

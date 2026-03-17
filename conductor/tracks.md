@@ -12,6 +12,7 @@ This file is the compact summary view of Conductor tracks in this repository.
 - `merge_develop_into_staging_release_20260315` | Merge Develop Into Staging Release | `done` | phase `done` | Completed | `conductor/tracks/merge_develop_into_staging_release_20260315`
 - `restaylyng_menu_mobile_20260316` | Mobile Menu Restyling | `new` | phase `new` | No active task | `conductor/tracks/restaylyng-menu-mobile`
 - `track-001` | Fix Mobile Menu Readability And Scroll Affordance | `done` | phase `done` | Completed | `conductor/tracks/track-001-fix-mobile-menu-readability-and-scroll-affordance`
+- `fix_startup_command_20260317` | Execute test cycles and fix startup script | `done` | phase `done` | Completed | `conductor/tracks/fix_startup_command_20260317`
 
 ## Archived Tracks
 
@@ -29,6 +30,7 @@ This file is the compact summary view of Conductor tracks in this repository.
 - `fix_local_backend_startup_failure_20260314` | Fix fallimento avvio backend locale durante preflight | `archived` | phase `archived` | Archived | `conductor/archive/fix_local_backend_startup_failure_20260314`
 - `fix_render_dockerfile_not_found_20260315` | Fix Render Dockerfile not found error by clean rewrite and verification. | `archived` | phase `archived` | Archived | `conductor/archive/fix_render_dockerfile_not_found_20260315`
 - `fix_render_staging_deploy_definitive_20260315` | Definitive fix for Render staging deploy error: '/backend' not found. | `archived` | phase `archived` | Archived | `conductor/archive/fix_render_staging_deploy_definitive_20260315`
+- `investigate_highlights_algorithm_20260317` | Investigation plan for the "HIGHLIGHTS" algorithm | `archived` | phase `archived` | Archived | `conductor/archive/investigate_highlights_algorithm_20260317`
 - `integrate_dotnet_format_20260314` | Integrazione dotnet format nel workflow C# e CI/CD | `archived` | phase `archived` | Archived | `conductor/archive/integrate_dotnet_format_20260314`
 - `porting_csharp_phase_10_20260314` | Docker Render Staging and Atlas Operationalization (Phase 10) for C# Backend Port | `archived` | phase `archived` | Archived | `conductor/archive/porting_csharp_phase_10_20260314`
 - `restore_prod_to_staging_20260314` | Restore production database dump to staging for testing | `archived` | phase `archived` | Archived | `conductor/archive/restore_prod_to_staging_20260314`

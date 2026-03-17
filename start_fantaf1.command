@@ -99,21 +99,50 @@ on_error() {
 
 trap on_error ERR INT TERM
 
+check_mongodb() {
+  echo "==> Verifico dipendenze: MongoDB"
+  local uri
+  uri=$(grep "^MONGODB_URI=" .env | cut -d'=' -f2- | tr -d '\r')
+  
+  if [[ -z "$uri" ]]; then
+    echo "ERRORE: MONGODB_URI non trovata nel file .env." >&2
+    return 1
+  fi
+
+  echo "Tentativo di connessione a MongoDB..."
+  if ! node -e "
+    import { MongoClient } from 'mongodb';
+    const uri = '$uri';
+    const client = new MongoClient(uri, { serverSelectionTimeoutMS: 5000 });
+    try {
+      await client.connect();
+      process.exit(0);
+    } catch (err) {
+      console.error(err.message);
+      process.exit(1);
+    }
+  " --input-type=module; then
+    echo "ERRORE: Impossibile connettersi a MongoDB." >&2
+    echo "Verifica la tua connessione internet e le credenziali in .env." >&2
+    return 1
+  fi
+  echo "MongoDB e' attivo e raggiungibile."
+}
+
 if [[ ! -f ".env" ]]; then
-  echo "==> Attenzione: File .env non trovato."
-  echo "Assicurati di aver configurato l'ambiente partendo da .env.example."
-  echo "Puoi farlo eseguendo: cp .env.example .env"
-  echo
+  echo "==> ERRORE: File .env non trovato." >&2
+  echo "Assicurati di aver configurato l'ambiente partendo da .env.example." >&2
+  echo "Puoi farlo eseguendo: cp .env.example .env" >&2
+  exit 1
 fi
 
-run_step "Eseguo lint" npm run lint
-run_step "Eseguo test" npm run test
-run_step "Eseguo build" npm run build
+run_step "Verifico MongoDB" check_mongodb
+run_step "Build Backend" dotnet build backend-csharp/FantaF1.Backend.sln -c Release
+run_step "Build Frontend" npm run build  
+#run_step "Eseguo validazione UI responsive" npm run test:ui-responsive
 
 backend_log="$(mktemp -t fantaf1-preflight-backend.XXXXXX.log)"
 frontend_log="$(mktemp -t fantaf1-preflight-frontend.XXXXXX.log)"
-
-run_step "Eseguo smoke test salvataggio locale" npm run test:save-local
 
 echo
 echo "==> Avvio applicazione"

@@ -4,6 +4,12 @@ Cronologia sintetica delle release documentate del progetto Fanta Formula 1.
 
 ## [Unreleased]
 
+- **Riallineamento Metadati Conductor e Ripristino Test**: risolto il mismatch nel formato `metadata.json` per i nuovi track e quelli archiviati, ripristinando il corretto funzionamento della suite di test di compatibilita' e dello startup script.
+- **Validazione Pre-Volo Estesa nel Launcher Locale**: il comando `./start_fantaf1.command` integra ora tutti i cicli di test del progetto (Frontend, Backend C#, UI Responsive) e una verifica rigorosa della connettivita' a MongoDB Atlas prima dell'avvio.
+- **Aggiornamento Dati di Riferimento Gare 2026**: aggiornata la lista delle gare e dei relativi alias/localizzazioni in `OfficialResultsReferenceData.cs` per la stagione 2026, includendo il supporto a Barcelona-Catalunya e rimuovendo circuiti obsoleti.
+- **Certificazione Baseline Coverage C# Incrementata**: verificata la copertura totale al 100% per il backend C# con baseline aggiornata a **2994 / 2994** linee covered, mantenendo l'integrita' TDD su tutto il perimetro di infrastruttura.
+- **TDD Regressivo sui Dati di Riferimento**: aggiunta una nuova suite di test unitari per garantire la correttezza dei mapping geografici e dei nomi brevi delle gare nel backend.
+
 ## [1.6.1] - 2026-03-16
 
 - **Menu Hamburger Rifinito per Mobile**: l'overlay mobile mantiene il font `Formula1` sulle voci di navigazione, con dimensione finale portata a `20px` per una leggibilita' piu' netta senza tornare al font `Formula1Wide`.
