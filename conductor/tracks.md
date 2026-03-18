@@ -4,15 +4,16 @@ This file is the compact summary view of Conductor tracks in this repository.
 
 ## Active Tracks
 
-- `streamline_core_docs_20260318` | Streamline core documentation (GEMINI.md & AGENTS.md) | `completed` | phase `completed` | Modularization of GEMINI.md into Skills and sub-docs completed. | `conductor/tracks/streamline_core_docs_20260318`
-- `stabilize_highlights_persistence_20260318` | Persistenza Definitiva
-  Highlights Per Gara | `completed` | phase `completed` | Implementation,
-  coverage, responsive verification, and production-like preview checks
-  completed without commit or push. |
-  `conductor/tracks/stabilize_highlights_persistence_20260318`
+No active tracks currently registered.
 
 ## Archived Tracks
 
+- `streamline_core_docs_20260318` | Streamline core documentation (GEMINI.md &
+  AGENTS.md) | `archived` | phase `archived` | Archived |
+  `conductor/archive/streamline_core_docs_20260318`
+- `stabilize_highlights_persistence_20260318` | Persistenza Definitiva
+  Highlights Per Gara | `archived` | phase `archived` | Archived |
+  `conductor/archive/stabilize_highlights_persistence_20260318`
 - `achieve_100_coverage_20260314` | Certificazione Copertura Test 100%
   (Frontend, Node, C#) | `archived` | phase `archived` | Archived |
   `conductor/archive/achieve_100_coverage_20260314`

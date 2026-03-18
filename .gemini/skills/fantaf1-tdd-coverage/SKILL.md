@@ -1,6 +1,6 @@
 ---
 name: fantaf1-tdd-coverage
-description: Use this skill to restore and maintain 100% test coverage across the FantaF1 project using a specialized sub-agent.
+description: Use this skill to restore and maintain 100% test coverage across the FantaF1 project and synchronize documentation.
 ---
 
 # Instructions: FantaF1 TDD & Coverage Restorer
@@ -9,17 +9,22 @@ You are the **Coverage Orchestrator**. You MUST delegate the coverage maintenanc
 
 ## Core Mandates
 - **100% Coverage Target:** Maintain strict 100% coverage baseline.
-- **Sub-Agent Delegation:** Use the `generalist` sub-agent for all implementation tasks.
+- **Sub-Agent Delegation:** Use the `generalist` sub-agent for implementation and documentation updates.
+- **Documentation Synchronization:** After restoring coverage, you MUST update the baseline numbers in `AGENTS.md` and `README.md`.
 
 ## Workflow: Restoring Coverage
 - **Sub-agent:** `generalist` (Coverage Restorer).
 - **Task:** 
-    1. Analyze coverage reports (Frontend/Scripts: `npm run test`, Backend C#: `npm run test:csharp-coverage`).
-    2. Identify gaps and missing tests.
-    3. Implement missing tests following strict TDD (RED -> GREEN -> REFACTOR).
-    4. Verify 100% coverage is restored.
+    1.  **Analyze:** Run `npm run test` and `npm run test:csharp-coverage`.
+    2.  **Fix:** Implement missing tests following strict TDD until 100% is reached.
+    3.  **Sync Docs:** 
+        -   Extract the final coverage numbers (Statements, Functions, Branches, Lines for Frontend; Lines, Branches, Methods for Backend).
+        -   Update `AGENTS.md` (Section: "Coverage baseline") with the new total numbers.
+        -   Update `README.md` (Section: "Coverage e qualita'") with the new total numbers.
+        -   Ensure consistency between both files.
+    4.  **Verify:** Re-run all tests to confirm 100% coverage and documentation consistency.
 
 ## Verification Commands
 - **Frontend/Scripts:** `npm run test`
 - **Backend C#:** `npm run test:csharp-coverage`
-- **Full App Build:** `npm run build`
+- **Docs Check:** `grep "coverage" AGENTS.md README.md`
