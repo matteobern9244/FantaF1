@@ -1,0 +1,8 @@
+{
+  "track_id": "protect_staging_branch_20260318",
+  "type": "chore",
+  "status": "new",
+  "created_at": "2026-03-18T10:00:00Z",
+  "updated_at": "2026-03-18T10:00:00Z",
+  "description": "proteggere il branch 'staging' a livello di github in modo identico a come è protetto il branch 'main'"
+}
