@@ -2,9 +2,12 @@
 
 ## Problem Summary
 
-- Gli highlights sono gia' persistiti per gara tramite `meetingKey` nei documenti `weekends`.
-- Il sync calendario C# ricostruisce la collezione `weekends` e puo' sovrascrivere un `found` gia' persistito con un nuovo `missing`.
-- Questo produce divergenze tra locale e staging a parita' di versione quando bootstrap e lookup esterni avvengono in momenti diversi.
+- Gli highlights sono gia' persistiti per gara tramite `meetingKey` nei
+  documenti `weekends`.
+- Il sync calendario C# ricostruisce la collezione `weekends` e puo'
+  sovrascrivere un `found` gia' persistito con un nuovo `missing`.
+- Questo produce divergenze tra locale e staging a parita' di versione quando
+  bootstrap e lookup esterni avvengono in momenti diversi.
 
 ## In Scope
 
@@ -12,7 +15,8 @@
   - persistenza highlights per gara nei documenti `weekends`
   - merge policy anti-downgrade durante `OfficialCalendarSyncService.SyncAsync`
   - allineamento del clock del sync calendario a `IClock`
-- Test backend regressivi su persistenza `found`, `missing`, eccezioni e gating temporale
+- Test backend regressivi su persistenza `found`, `missing`, eccezioni e gating
+  temporale
 - Verifiche UI/browser anti-regressione gia' esistenti sui CTA highlights
 - Artifact Conductor per tracciare lavoro, verifiche e decisioni
 
@@ -25,7 +29,11 @@
 
 ## Success Criteria
 
-- Un `highlightsVideoUrl` gia' trovato per una gara non viene piu' perso da un sync successivo che restituisce `missing` o che fallisce.
-- Un nuovo lookup `found` continua ad aggiornare correttamente la gara corrispondente.
-- Il sync calendario usa il clock iniettato e non legge il tempo globale in modo diretto.
-- Le validazioni repository richieste restano verdi e la coverage ufficiale rimane al 100%.
+- Un `highlightsVideoUrl` gia' trovato per una gara non viene piu' perso da un
+  sync successivo che restituisce `missing` o che fallisce.
+- Un nuovo lookup `found` continua ad aggiornare correttamente la gara
+  corrispondente.
+- Il sync calendario usa il clock iniettato e non legge il tempo globale in modo
+  diretto.
+- Le validazioni repository richieste restano verdi e la coverage ufficiale
+  rimane al 100%.

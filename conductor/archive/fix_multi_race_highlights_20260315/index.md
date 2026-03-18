@@ -4,5 +4,5 @@
 - Title: `Fix Multi Race Highlights`
 - Status: `in_progress`
 - Phase: `implementation`
-- Active task: `Fix highlights lookup for all finished races and align the unavailable CTA copy.`
-
+- Active task:
+  `Fix highlights lookup for all finished races and align the unavailable CTA copy.`

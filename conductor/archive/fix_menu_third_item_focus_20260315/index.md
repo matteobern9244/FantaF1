@@ -4,5 +4,5 @@
 - Title: `Fix Menu Third Item Focus`
 - Status: `in_progress`
 - Phase: `implementation`
-- Active task: `Fix active highlight/focus on the third menu item and reduce mobile menu font size.`
-
+- Active task:
+  `Fix active highlight/focus on the third menu item and reduce mobile menu font size.`

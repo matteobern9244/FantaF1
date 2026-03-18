@@ -4,443 +4,1507 @@ Cronologia sintetica delle release documentate del progetto Fanta Formula 1.
 
 ## [Unreleased]
 
-- **Refactoring Architetturale dei Repository Backend**: introdotta la classe base generica `MongoRepository<TEntity, TId>` e l'interfaccia `IRepository<TEntity, TId>` in Application layer; tutti i repository di lettura (`AppData`, `Drivers`, `Standings`, `Weekends`) ora ereditano dalla base comune, standardizzando le operazioni CRUD e la gestione dei mapper legacy.
-- **Risoluzione Violazioni Dependency Injection**: rimosse tutte le istanziazioni dirette con `new` nei costruttori dei servizi e dei repository; `RaceHighlightsLookupPolicy` e `MongoLegacyWriteDocumentMapper` sono ora iniettati tramite costruttore e registrati correttamente nel container DI di ASP.NET Core.
-- **Integrazione Obbligatoria Conductor Compliance Audit**: la skill `conductor-compliance-audit` e' stata integrata permanentemente nel workflow operativo in `conductor/workflow.md`, garantendo una verifica sistematica di TDD, DI e pattern architetturali prima di ogni finalizzazione.
-- **Aggiornamento Suite di Test Backend**: aggiornati tutti gli stub, mock e spy nei test di unità e integrazione C# per riflettere le nuove firme dei costruttori e le implementazioni delle interfacce repository, mantenendo la stabilità della suite dopo il refactoring.
-- **Persistenza Definitiva Highlights Per Gara**: il sync calendario C# preserva ora gli highlights gia' trovati nel documento `weekends` della gara, mantenendo l'associazione stabile per `meetingKey` e impedendo che un successivo lookup `missing` o un errore transitorio cancellino un `highlightsVideoUrl` gia' valido.
-- **Clock Unificato nel Sync Calendario**: il path autorevole C# usa ora `IClock` anche nella decisione di lookup highlights durante il bootstrap, eliminando l'accesso diretto a `DateTimeOffset.UtcNow` e riducendo le ambiguita' temporali tra locale e staging.
-- **TDD Regressivo sulla Persistenza Highlights**: aggiunti test backend dedicati alla preservazione di un `found` gia' persistito in caso di `missing`, eccezione di lookup, aggiornamento con nuovo `found` e gating tramite clock iniettato, mantenendo la coverage ufficiale del backend al `100%`.
-- **Simulazione Staging Locale Verificata**: confermata la tenuta del fix anche nel target same-origin `csharp-staging-local` su database isolato `fantaf1_local_staging`, con smoke save e controllo responsive eseguiti localmente senza deploy su Render staging.
-- **Baseline Coverage C# Riallineata**: verificata e documentata la nuova baseline ufficiale di `backend-csharp/src/` a **3052 / 3052** linee, **1721 / 1721** branch e **502 / 502** metodi coperti.
-- **Riallineamento Metadati Conductor e Ripristino Test**: risolto il mismatch nel formato `metadata.json` per i nuovi track e quelli archiviati, ripristinando il corretto funzionamento della suite di test di compatibilita' e dello startup script.
-- **Validazione Pre-Volo Estesa nel Launcher Locale**: il comando `./start_fantaf1.command` integra ora tutti i cicli di test del progetto (Frontend, Backend C#, UI Responsive) e una verifica rigorosa della connettivita' a MongoDB Atlas prima dell'avvio.
-- **Aggiornamento Dati di Riferimento Gare 2026**: aggiornata la lista delle gare e dei relativi alias/localizzazioni in `OfficialResultsReferenceData.cs` per la stagione 2026, includendo il supporto a Barcelona-Catalunya e rimuovendo circuiti obsoleti.
-- **Certificazione Coverage C# Mantenuta al 100%**: i cicli TDD e i fix infrastrutturali dell'area backend continuano a mantenere la copertura totale del perimetro ufficiale, con baseline riallineata ai valori piu' recenti documentati sopra.
-- **TDD Regressivo sui Dati di Riferimento**: aggiunta una nuova suite di test unitari per garantire la correttezza dei mapping geografici e dei nomi brevi delle gare nel backend.
+- **Refactoring Architetturale dei Repository Backend**: introdotta la classe
+  base generica `MongoRepository<TEntity, TId>` e l'interfaccia
+  `IRepository<TEntity, TId>` in Application layer; tutti i repository di
+  lettura (`AppData`, `Drivers`, `Standings`, `Weekends`) ora ereditano dalla
+  base comune, standardizzando le operazioni CRUD e la gestione dei mapper
+  legacy.
+- **Risoluzione Violazioni Dependency Injection**: rimosse tutte le
+  istanziazioni dirette con `new` nei costruttori dei servizi e dei repository;
+  `RaceHighlightsLookupPolicy` e `MongoLegacyWriteDocumentMapper` sono ora
+  iniettati tramite costruttore e registrati correttamente nel container DI di
+  ASP.NET Core.
+- **Integrazione Obbligatoria Conductor Compliance Audit**: la skill
+  `conductor-compliance-audit` e' stata integrata permanentemente nel workflow
+  operativo in `conductor/workflow.md`, garantendo una verifica sistematica di
+  TDD, DI e pattern architetturali prima di ogni finalizzazione.
+- **Aggiornamento Suite di Test Backend**: aggiornati tutti gli stub, mock e spy
+  nei test di unità e integrazione C# per riflettere le nuove firme dei
+  costruttori e le implementazioni delle interfacce repository, mantenendo la
+  stabilità della suite dopo il refactoring.
+- **Persistenza Definitiva Highlights Per Gara**: il sync calendario C# preserva
+  ora gli highlights gia' trovati nel documento `weekends` della gara,
+  mantenendo l'associazione stabile per `meetingKey` e impedendo che un
+  successivo lookup `missing` o un errore transitorio cancellino un
+  `highlightsVideoUrl` gia' valido.
+- **Clock Unificato nel Sync Calendario**: il path autorevole C# usa ora
+  `IClock` anche nella decisione di lookup highlights durante il bootstrap,
+  eliminando l'accesso diretto a `DateTimeOffset.UtcNow` e riducendo le
+  ambiguita' temporali tra locale e staging.
+- **TDD Regressivo sulla Persistenza Highlights**: aggiunti test backend
+  dedicati alla preservazione di un `found` gia' persistito in caso di
+  `missing`, eccezione di lookup, aggiornamento con nuovo `found` e gating
+  tramite clock iniettato, mantenendo la coverage ufficiale del backend al
+  `100%`.
+- **Simulazione Staging Locale Verificata**: confermata la tenuta del fix anche
+  nel target same-origin `csharp-staging-local` su database isolato
+  `fantaf1_local_staging`, con smoke save e controllo responsive eseguiti
+  localmente senza deploy su Render staging.
+- **Baseline Coverage C# Riallineata**: verificata e documentata la nuova
+  baseline ufficiale di `backend-csharp/src/` a **3052 / 3052** linee, **1721 /
+  1721** branch e **502 / 502** metodi coperti.
+- **Riallineamento Metadati Conductor e Ripristino Test**: risolto il mismatch
+  nel formato `metadata.json` per i nuovi track e quelli archiviati,
+  ripristinando il corretto funzionamento della suite di test di compatibilita'
+  e dello startup script.
+- **Validazione Pre-Volo Estesa nel Launcher Locale**: il comando
+  `./start_fantaf1.command` integra ora tutti i cicli di test del progetto
+  (Frontend, Backend C#, UI Responsive) e una verifica rigorosa della
+  connettivita' a MongoDB Atlas prima dell'avvio.
+- **Aggiornamento Dati di Riferimento Gare 2026**: aggiornata la lista delle
+  gare e dei relativi alias/localizzazioni in `OfficialResultsReferenceData.cs`
+  per la stagione 2026, includendo il supporto a Barcelona-Catalunya e
+  rimuovendo circuiti obsoleti.
+- **Certificazione Coverage C# Mantenuta al 100%**: i cicli TDD e i fix
+  infrastrutturali dell'area backend continuano a mantenere la copertura totale
+  del perimetro ufficiale, con baseline riallineata ai valori piu' recenti
+  documentati sopra.
+- **TDD Regressivo sui Dati di Riferimento**: aggiunta una nuova suite di test
+  unitari per garantire la correttezza dei mapping geografici e dei nomi brevi
+  delle gare nel backend.
 
 ## [1.6.1] - 2026-03-16
 
-- **Menu Hamburger Rifinito per Mobile**: l'overlay mobile mantiene il font `Formula1` sulle voci di navigazione, con dimensione finale portata a `20px` per una leggibilita' piu' netta senza tornare al font `Formula1Wide`.
-- **Label Mobile Più Chiare e Centrate**: le voci del menu mobile mantengono card piu' ariose, contenuto centrato e wrapping meno aggressivo, cosi' il testo resta piu' leggibile e non appare schiacciato sui viewport stretti.
-- **Affordance della Sezione Corrente Migliorata su Mobile**: il menu overlay espone un riepilogo sticky della sezione attiva e conserva una navigazione piu' intuitiva durante lo scroll, riallineando l'esperienza mobile alla chiarezza gia' presente nella sidebar desktop.
-- **TDD Regressivo su Overlay Mobile e Roadmap Navigation**: estesi i test UI per coprire il riepilogo della sezione corrente, i fallback di rendering del menu mobile e la persistenza dell'orientamento utente dopo riapertura e navigazione tra le sezioni.
-- **TDD Statico sui Nuovi Vincoli Tipografici del Menu Mobile**: aggiunto un test CSS dedicato per bloccare altezza minima, centratura del contenuto e uso di `Formula1` sulle label dell'overlay mobile, evitando regressioni future sul layout.
-- **Lookup Highlights Esteso a Tutte le Gare Concluse**: il resolver C# non si affida piu' a un solo seed inglese per la ricerca YouTube, ma prova anche alias/localizzazioni gara coerenti con il catalogo Sky Sport F1, cosi' gli highlights vengono risolti anche per weekend successivi quando disponibili.
-- **Ripristino Ambiente di Sviluppo Locale**: identificata e risolta la causa del blocco all'avvio del launcher locale `./start_fantaf1.command`, garantendo il corretto avvio coordinato di Backend (.NET 10) e Frontend (Vite) con validazione pre-volo completa.
-- **CTA Highlights Non Disponibile Riallineata**: il recap weekend usa ora il testo esatto `HIGHLIGHTS NON PRESENTI` quando il backend non restituisce `highlightsVideoUrl`, mantenendo invariato il comportamento del pulsante disabilitato su desktop e mobile.
-- **TDD Regressivo Multi-Gara sugli Highlights**: aggiunti test backend sul lookup di una gara successiva con naming localizzato e test frontend sulla seconda gara finita e sul fallback UI, mantenendo la coverage ufficiale al `100%`.
+- **Menu Hamburger Rifinito per Mobile**: l'overlay mobile mantiene il font
+  `Formula1` sulle voci di navigazione, con dimensione finale portata a `20px`
+  per una leggibilita' piu' netta senza tornare al font `Formula1Wide`.
+- **Label Mobile Più Chiare e Centrate**: le voci del menu mobile mantengono
+  card piu' ariose, contenuto centrato e wrapping meno aggressivo, cosi' il
+  testo resta piu' leggibile e non appare schiacciato sui viewport stretti.
+- **Affordance della Sezione Corrente Migliorata su Mobile**: il menu overlay
+  espone un riepilogo sticky della sezione attiva e conserva una navigazione
+  piu' intuitiva durante lo scroll, riallineando l'esperienza mobile alla
+  chiarezza gia' presente nella sidebar desktop.
+- **TDD Regressivo su Overlay Mobile e Roadmap Navigation**: estesi i test UI
+  per coprire il riepilogo della sezione corrente, i fallback di rendering del
+  menu mobile e la persistenza dell'orientamento utente dopo riapertura e
+  navigazione tra le sezioni.
+- **TDD Statico sui Nuovi Vincoli Tipografici del Menu Mobile**: aggiunto un
+  test CSS dedicato per bloccare altezza minima, centratura del contenuto e uso
+  di `Formula1` sulle label dell'overlay mobile, evitando regressioni future sul
+  layout.
+- **Lookup Highlights Esteso a Tutte le Gare Concluse**: il resolver C# non si
+  affida piu' a un solo seed inglese per la ricerca YouTube, ma prova anche
+  alias/localizzazioni gara coerenti con il catalogo Sky Sport F1, cosi' gli
+  highlights vengono risolti anche per weekend successivi quando disponibili.
+- **Ripristino Ambiente di Sviluppo Locale**: identificata e risolta la causa
+  del blocco all'avvio del launcher locale `./start_fantaf1.command`, garantendo
+  il corretto avvio coordinato di Backend (.NET 10) e Frontend (Vite) con
+  validazione pre-volo completa.
+- **CTA Highlights Non Disponibile Riallineata**: il recap weekend usa ora il
+  testo esatto `HIGHLIGHTS NON PRESENTI` quando il backend non restituisce
+  `highlightsVideoUrl`, mantenendo invariato il comportamento del pulsante
+  disabilitato su desktop e mobile.
+- **TDD Regressivo Multi-Gara sugli Highlights**: aggiunti test backend sul
+  lookup di una gara successiva con naming localizzato e test frontend sulla
+  seconda gara finita e sul fallback UI, mantenendo la coverage ufficiale al
+  `100%`.
 
 ## [1.6.0] - 2026-03-15
 
-- **Rielaborazione Menu UI Adattivo (F1 Racing Theme)**: introdotta una nuova architettura di navigazione con sidebar fissa a sinistra per desktop (collassabile) e menu overlay a tutto schermo per mobile, garantendo un'esperienza immersiva e moderna.
-- **Visual Design Immersivo**: implementato il nuovo branding "F1 Racing Theme" con background scuri, pattern carbon-fiber, accenti rosso F1 hi-contrast e un nuovo componente `MenuLogo` stilizzato con ombre e inclinazioni racing.
-- **Consolidamento Controlli Utente e Admin**: i pulsanti "Modalità Admin", "Vista Pubblica", "Logout" e "Installa Applicazione" sono stati rimossi dall'header principale e integrati organicamente nel footer del menu di navigazione, pulendo drasticamente la visuale della hero.
-- **Rimozione Componenti Ridondanti**: eliminato il pulsante floating "Torna al menu" e la relativa logica di scroll, resi obsoleti dalla nuova navigazione fissa sempre accessibile.
-- **Zero Regressioni e Troncamento Testi**: risolti i problemi di troncamento dei testi nelle voci di menu tramite layout flessibile; garantita la piena cliccabilità e funzionalità di ogni voce di navigazione su tutti i breakpoint.
-- **TDD e Validazione Totale**: aggiunti 18 nuovi unit test per i componenti `Sidebar` e `MobileOverlay`; aggiornata l'intera suite di roadmap test (13 test) e la diagnostica `ui-responsive` per riflettere i nuovi selettori DOM, mantenendo la copertura al 100% su tutto il perimetro modificato.
-- **Hardening Menu UI Senza Flicker**: il layout desktop collassato usa ora uno stato reale della shell invece del vecchio selettore sibling non valido; le transizioni del menu sono state ristrette alle sole proprietà animate per ridurre micro-jank e flicker visivo.
-- **Overlay Mobile Più Solido e Accessibile**: il trigger mobile usa ora la label centralizzata del sistema testo UI e l'apertura dell'overlay blocca esplicitamente lo scroll della pagina, evitando salti del contenuto sottostante durante la navigazione.
-- **Wiring Reale dei Pulsanti del Menu Blindato**: estesi i test runtime per coprire apertura/chiusura overlay, cambio vista admin/public, collapse della sidebar desktop e i controlli footer del menu nella shell reale dell'applicazione.
-- **Track Conductor del Menu Formalmente Chiusa**: la track `ui_menu_rework_20260315` documenta ora in modo coerente feature consegnata, hardening post-merge, verifica eseguita e archiviazione completa.
-- **Governance Branch Rinominata da `develop` a `staging`**: la documentazione canonica del repository e il trigger operativo `deploya` trattano ora `staging` come branch di certificazione corrente e come sorgente della Pull Request verso `main`, eliminando il contratto operativo precedente basato su `develop`.
-- **Runbook di Riallineamento Esterno per il Rename Branch**: il repository documenta ora esplicitamente che il rename richiede anche l'aggiornamento del branch sorgente di Render staging e delle eventuali branch protection o automazioni GitHub esterne ancora puntate a `develop`.
-- **Riallineamento Completo del Workspace Conductor**: i track storici verificati restano archiviati sotto `conductor/archive/`, i root plans legacy sono stati spostati in `conductor/archive/_root-plans/` e gli indici `conductor/index.md` e `conductor/tracks.md` sono stati rigenerati in coerenza con lo stato reale del workspace.
-- **Hardening della Skill Conductor sul Flusso Archive**: la skill installata normalizza ora il pre-archive dei track, aggiorna in modo minimo `review.md` e `verify.md` durante la chiusura amministrativa e supporta l'archiviazione coerente dei track legacy/non-`done` nel repository reale.
-- **Archiviazione dei Root Plans Legacy di Conductor**: i documenti di piano rimasti nel root di `conductor/` (`fix-mappa`, `fix-scroll-jank`, `feature-standings`, `enforce-commit-docs-rule`, `subphase-11-plan`) sono stati spostati in `conductor/archive/_root-plans/`, lasciando nel root solo i file operativi ancora vivi del workspace.
-- **Test di Compatibilita' Conductor Estesi**: [tests/conductor-skill-compatibility.test.js](/Users/matteobernardini/code/FantaF1/tests/conductor-skill-compatibility.test.js) copre ora anche l'archiviazione massiva dei track attivi e la verifica che i root plans legacy non restino piu' nel root di `conductor/`.
-- **Merge di Release `develop` -> `staging` e Bump Minor**: il delta verificato di `develop` e' stato promosso in `staging` con merge esplicito di release e riallineamento versione a `1.6.0` su `package.json`, `package-lock.json`, `README.md` e `CHANGELOG.md`.
-- **Track Conductor di Release Chiusa**: aggiunta e chiusa la track `merge_develop_into_staging_release_20260315` per documentare merge, validazioni, bump versione e allineamento dei documenti canonici.
+- **Rielaborazione Menu UI Adattivo (F1 Racing Theme)**: introdotta una nuova
+  architettura di navigazione con sidebar fissa a sinistra per desktop
+  (collassabile) e menu overlay a tutto schermo per mobile, garantendo
+  un'esperienza immersiva e moderna.
+- **Visual Design Immersivo**: implementato il nuovo branding "F1 Racing Theme"
+  con background scuri, pattern carbon-fiber, accenti rosso F1 hi-contrast e un
+  nuovo componente `MenuLogo` stilizzato con ombre e inclinazioni racing.
+- **Consolidamento Controlli Utente e Admin**: i pulsanti "Modalità Admin",
+  "Vista Pubblica", "Logout" e "Installa Applicazione" sono stati rimossi
+  dall'header principale e integrati organicamente nel footer del menu di
+  navigazione, pulendo drasticamente la visuale della hero.
+- **Rimozione Componenti Ridondanti**: eliminato il pulsante floating "Torna al
+  menu" e la relativa logica di scroll, resi obsoleti dalla nuova navigazione
+  fissa sempre accessibile.
+- **Zero Regressioni e Troncamento Testi**: risolti i problemi di troncamento
+  dei testi nelle voci di menu tramite layout flessibile; garantita la piena
+  cliccabilità e funzionalità di ogni voce di navigazione su tutti i breakpoint.
+- **TDD e Validazione Totale**: aggiunti 18 nuovi unit test per i componenti
+  `Sidebar` e `MobileOverlay`; aggiornata l'intera suite di roadmap test (13
+  test) e la diagnostica `ui-responsive` per riflettere i nuovi selettori DOM,
+  mantenendo la copertura al 100% su tutto il perimetro modificato.
+- **Hardening Menu UI Senza Flicker**: il layout desktop collassato usa ora uno
+  stato reale della shell invece del vecchio selettore sibling non valido; le
+  transizioni del menu sono state ristrette alle sole proprietà animate per
+  ridurre micro-jank e flicker visivo.
+- **Overlay Mobile Più Solido e Accessibile**: il trigger mobile usa ora la
+  label centralizzata del sistema testo UI e l'apertura dell'overlay blocca
+  esplicitamente lo scroll della pagina, evitando salti del contenuto
+  sottostante durante la navigazione.
+- **Wiring Reale dei Pulsanti del Menu Blindato**: estesi i test runtime per
+  coprire apertura/chiusura overlay, cambio vista admin/public, collapse della
+  sidebar desktop e i controlli footer del menu nella shell reale
+  dell'applicazione.
+- **Track Conductor del Menu Formalmente Chiusa**: la track
+  `ui_menu_rework_20260315` documenta ora in modo coerente feature consegnata,
+  hardening post-merge, verifica eseguita e archiviazione completa.
+- **Governance Branch Rinominata da `develop` a `staging`**: la documentazione
+  canonica del repository e il trigger operativo `deploya` trattano ora
+  `staging` come branch di certificazione corrente e come sorgente della Pull
+  Request verso `main`, eliminando il contratto operativo precedente basato su
+  `develop`.
+- **Runbook di Riallineamento Esterno per il Rename Branch**: il repository
+  documenta ora esplicitamente che il rename richiede anche l'aggiornamento del
+  branch sorgente di Render staging e delle eventuali branch protection o
+  automazioni GitHub esterne ancora puntate a `develop`.
+- **Riallineamento Completo del Workspace Conductor**: i track storici
+  verificati restano archiviati sotto `conductor/archive/`, i root plans legacy
+  sono stati spostati in `conductor/archive/_root-plans/` e gli indici
+  `conductor/index.md` e `conductor/tracks.md` sono stati rigenerati in coerenza
+  con lo stato reale del workspace.
+- **Hardening della Skill Conductor sul Flusso Archive**: la skill installata
+  normalizza ora il pre-archive dei track, aggiorna in modo minimo `review.md` e
+  `verify.md` durante la chiusura amministrativa e supporta l'archiviazione
+  coerente dei track legacy/non-`done` nel repository reale.
+- **Archiviazione dei Root Plans Legacy di Conductor**: i documenti di piano
+  rimasti nel root di `conductor/` (`fix-mappa`, `fix-scroll-jank`,
+  `feature-standings`, `enforce-commit-docs-rule`, `subphase-11-plan`) sono
+  stati spostati in `conductor/archive/_root-plans/`, lasciando nel root solo i
+  file operativi ancora vivi del workspace.
+- **Test di Compatibilita' Conductor Estesi**:
+  [tests/conductor-skill-compatibility.test.js](/Users/matteobernardini/code/FantaF1/tests/conductor-skill-compatibility.test.js)
+  copre ora anche l'archiviazione massiva dei track attivi e la verifica che i
+  root plans legacy non restino piu' nel root di `conductor/`.
+- **Merge di Release `develop` -> `staging` e Bump Minor**: il delta verificato
+  di `develop` e' stato promosso in `staging` con merge esplicito di release e
+  riallineamento versione a `1.6.0` su `package.json`, `package-lock.json`,
+  `README.md` e `CHANGELOG.md`.
+- **Track Conductor di Release Chiusa**: aggiunta e chiusa la track
+  `merge_develop_into_staging_release_20260315` per documentare merge,
+  validazioni, bump versione e allineamento dei documenti canonici.
 
 ## [1.5.2] - 2026-03-15
 
-- **Fix Operativo del Trigger `deploya`**: [AGENTS.md](/Users/matteobernardini/code/FantaF1/AGENTS.md) distingue ora in modo piu' preciso il preflight del trigger persistente e il caso di cutover intenzionale `develop -> main`, evitando falsi stop quando `main` e' ancora sul vecchio stack per scelta di governance pre-merge.
-- **Coerenza Test Documentali sul Flusso di Release**: i controlli di consistenza in [backend-csharp/tests/FantaF1.Tests.Unit/PortingDocumentationConsistencyTests.cs](/Users/matteobernardini/code/FantaF1/backend-csharp/tests/FantaF1.Tests.Unit/PortingDocumentationConsistencyTests.cs) sono stati riallineati ai guardrail aggiornati del workflow di deploy, mantenendo invariata la safety net del branch C#.
-- **PR CI Riallineata al Profilo `Development` per i Gate Locali**: il workflow [.github/workflows/pr-ci.yml](/Users/matteobernardini/code/FantaF1/.github/workflows/pr-ci.yml) esporta ora `ASPNETCORE_ENVIRONMENT=Development` nei job che avviano il backend locale contro `fantaf1_ci`, evitando il crash del bootstrap C# che rifiutava un database CI in profilo `production`.
-- **Port Binding CI Allineato ai Probe Locali su `3002`**: gli stessi job `responsive-dev` e `smoke-ci-db` impostano ora anche `ASPNETCORE_URLS=http://127.0.0.1:3002`, cosi' il runtime ASP.NET Core ascolta davvero sulla porta attesa dai check di readiness invece di partire sul default `localhost:5000`.
-- **Integration Test C# Reso Ermetico in CI**: [backend-csharp/tests/FantaF1.Tests.Integration/BootstrapHostTests.cs](/Users/matteobernardini/code/FantaF1/backend-csharp/tests/FantaF1.Tests.Integration/BootstrapHostTests.cs) crea ora un frontend build temporaneo dedicato invece di dipendere da `dist/` gia' presente nel workspace, eliminando il falso negativo sulla route `/` nel job `test-csharp`.
-- **Pulizia GitHub CI/CD dai Workflow e Command `gemini-*`**: rimossi i file `gemini-*` sotto [.github/workflows](/Users/matteobernardini/code/FantaF1/.github/workflows) e [.github/commands](/Users/matteobernardini/code/FantaF1/.github/commands), eliminando dalla PR i gate esterni non piu' desiderati e lasciando attivi solo i workflow repository-core (`pr-ci`, `pr-auto-merge`, `post-merge-health`).
-- **Bump Versione Patch per il Cutover su `main`**: aggiornati `package.json`, `package-lock.json`, `README.md` e `CHANGELOG.md` per pubblicare su `main` il delta successivo al tag `v1.5.1`, senza riutilizzare una versione gia' taggata.
+- **Fix Operativo del Trigger `deploya`**:
+  [AGENTS.md](/Users/matteobernardini/code/FantaF1/AGENTS.md) distingue ora in
+  modo piu' preciso il preflight del trigger persistente e il caso di cutover
+  intenzionale `develop -> main`, evitando falsi stop quando `main` e' ancora
+  sul vecchio stack per scelta di governance pre-merge.
+- **Coerenza Test Documentali sul Flusso di Release**: i controlli di
+  consistenza in
+  [backend-csharp/tests/FantaF1.Tests.Unit/PortingDocumentationConsistencyTests.cs](/Users/matteobernardini/code/FantaF1/backend-csharp/tests/FantaF1.Tests.Unit/PortingDocumentationConsistencyTests.cs)
+  sono stati riallineati ai guardrail aggiornati del workflow di deploy,
+  mantenendo invariata la safety net del branch C#.
+- **PR CI Riallineata al Profilo `Development` per i Gate Locali**: il workflow
+  [.github/workflows/pr-ci.yml](/Users/matteobernardini/code/FantaF1/.github/workflows/pr-ci.yml)
+  esporta ora `ASPNETCORE_ENVIRONMENT=Development` nei job che avviano il
+  backend locale contro `fantaf1_ci`, evitando il crash del bootstrap C# che
+  rifiutava un database CI in profilo `production`.
+- **Port Binding CI Allineato ai Probe Locali su `3002`**: gli stessi job
+  `responsive-dev` e `smoke-ci-db` impostano ora anche
+  `ASPNETCORE_URLS=http://127.0.0.1:3002`, cosi' il runtime ASP.NET Core ascolta
+  davvero sulla porta attesa dai check di readiness invece di partire sul
+  default `localhost:5000`.
+- **Integration Test C# Reso Ermetico in CI**:
+  [backend-csharp/tests/FantaF1.Tests.Integration/BootstrapHostTests.cs](/Users/matteobernardini/code/FantaF1/backend-csharp/tests/FantaF1.Tests.Integration/BootstrapHostTests.cs)
+  crea ora un frontend build temporaneo dedicato invece di dipendere da `dist/`
+  gia' presente nel workspace, eliminando il falso negativo sulla route `/` nel
+  job `test-csharp`.
+- **Pulizia GitHub CI/CD dai Workflow e Command `gemini-*`**: rimossi i file
+  `gemini-*` sotto
+  [.github/workflows](/Users/matteobernardini/code/FantaF1/.github/workflows) e
+  [.github/commands](/Users/matteobernardini/code/FantaF1/.github/commands),
+  eliminando dalla PR i gate esterni non piu' desiderati e lasciando attivi solo
+  i workflow repository-core (`pr-ci`, `pr-auto-merge`, `post-merge-health`).
+- **Bump Versione Patch per il Cutover su `main`**: aggiornati `package.json`,
+  `package-lock.json`, `README.md` e `CHANGELOG.md` per pubblicare su `main` il
+  delta successivo al tag `v1.5.1`, senza riutilizzare una versione gia'
+  taggata.
 
 ## [1.5.1] - 2026-03-15
 
-- **Fix Propagazione `VITE_APP_LOCAL_NAME` nel Docker Build**: il `Dockerfile` passa ora esplicitamente `VITE_APP_LOCAL_NAME` allo stage frontend `vite build`, cosi' gli override configurati su Render entrano davvero nel bundle statico invece di essere ignorati sul deploy staging/production-like.
-- **Contratto Documentale su `VITE_APP_LOCAL_NAME` Esplicitato**: `README.md` chiarisce ora che `VITE_APP_LOCAL_NAME` e' una build env del frontend Vite, non una runtime env del backend C#, e che ogni modifica su Render richiede rebuild/redeploy del servizio per diventare visibile.
-- **Bump Versione Patch e Riallineamento Release**: aggiornati `package.json`, `package-lock.json`, `README.md` e `CHANGELOG.md` per pubblicare il branch `develop` con una release patch coerente con il change set finale di hardening, cleanup documentale e guardrail operativi del porting C#.
-- **Runbook Ufficiale di Cutover Render Produzione**: `README.md` ora descrive in modo decision-complete le env obbligatorie/vietate per staging e produzione su Render e la procedura passo-passo per switchare il servizio live dal setup Node legacy al runtime Docker/C# dopo il merge su `main`.
-- **Documentazione Canonica Consolidata**: [README.md](/Users/matteobernardini/code/FantaF1/README.md), [CHANGELOG.md](/Users/matteobernardini/code/FantaF1/CHANGELOG.md), [PROJECT.md](/Users/matteobernardini/code/FantaF1/PROJECT.md) e [AGENTS.md](/Users/matteobernardini/code/FantaF1/AGENTS.md) sono stati riallineati per diventare l'unica fonte operativa e di governance del repository; la documentazione di porting C# sotto `docs/` e `guide-porting-c#/` e' stata rimossa dal repository attivo.
-- **Audit Finale Database Pre-Cutover**: verificato in sola lettura che `fantaf1` e `fantaf1_staging` sono allineati sulle collection principali, sugli indici e sulla shape dei documenti campionati (`appdatas`, `drivers`, `weekends`, `standingscaches`, `admincredentials`); alla data del controllo non emerge alcuna migrazione obbligatoria da eseguire sui database live.
-- **Matrice Ambiente Render e Locale Esplicitata**: il `README` documenta ora in modo esplicito e dettagliato tutte le variabili realmente necessarie per locale, GitHub Actions, staging Render e produzione Render, inclusi i casi che non devono mai essere impostati (`MONGODB_DB_NAME_OVERRIDE` e seed admin locali sui deploy Render).
-- **Workflow CI/CD Riverificati Localmente**: tutti i file YAML in `.github/workflows/` sono stati riparsati localmente con esito valido; i job reali del workflow PR (`lint`, `build`, `format-csharp`, `build-csharp`, `test-csharp`, `responsive-dev`, `smoke-ci-db`) restano coerenti con gli script del repository e con il runtime C#.
-- **Dotnet Format Formalizzato Come Gate Reale**: confermata e mantenuta l'adozione di `dotnet format` tramite `npm run format:csharp` e `npm run format:csharp:check`, con allineamento esplicito tra repository, README e pipeline PR.
-- **Safety Rail sui Runner Locali Mutanti**: `test:save-local`, `test:ui-responsive` e il launcher locale C# usano ora database isolati (`fantaf1_local_dev`, `fantaf1_local_staging`) e falliscono esplicitamente se qualcuno prova a puntarli a `fantaf1` o `fantaf1_staging`, evitando nuove mutazioni involontarie del dataset di staging.
-- **Stabilizzazione Architettura Docker**: completata la transizione al `Dockerfile` centralizzato nella root del progetto; validata localmente l'integrità dell'immagine e la corretta esecuzione del processo di build multi-stage.
-- **Verifica Simulazione Staging**: confermato il corretto avvio dell'applicazione in ambiente containerizzato simulando il profilo di `Staging`; verificata la risoluzione dei percorsi interni e l'applicazione delle variabili di ambiente.
-- **Fix Login Admin su Staging Production-Like**: il frontend non maschera piu' il `401 admin_auth_invalid` come errore generico di salvataggio; in caso di password admin errata mostra ora il messaggio corretto `Invalid password`, preservando invariato il masking dei save error in produzione.
-- **Riallineamento Documentale del Branch C#**: aggiornati `README.md`, `AGENTS.md`, [PROJECT.md](/Users/matteobernardini/code/FantaF1/PROJECT.md) e i guardrail documentali per riflettere il `Dockerfile` root, le variabili Render correnti, i job CI/CD reali, il default launcher `csharp-dev`, l'uso operativo di `fantaf1_staging` e il fatto che il cutover verso `main` resti soggetto a certificazione finale.
+- **Fix Propagazione `VITE_APP_LOCAL_NAME` nel Docker Build**: il `Dockerfile`
+  passa ora esplicitamente `VITE_APP_LOCAL_NAME` allo stage frontend
+  `vite build`, cosi' gli override configurati su Render entrano davvero nel
+  bundle statico invece di essere ignorati sul deploy staging/production-like.
+- **Contratto Documentale su `VITE_APP_LOCAL_NAME` Esplicitato**: `README.md`
+  chiarisce ora che `VITE_APP_LOCAL_NAME` e' una build env del frontend Vite,
+  non una runtime env del backend C#, e che ogni modifica su Render richiede
+  rebuild/redeploy del servizio per diventare visibile.
+- **Bump Versione Patch e Riallineamento Release**: aggiornati `package.json`,
+  `package-lock.json`, `README.md` e `CHANGELOG.md` per pubblicare il branch
+  `develop` con una release patch coerente con il change set finale di
+  hardening, cleanup documentale e guardrail operativi del porting C#.
+- **Runbook Ufficiale di Cutover Render Produzione**: `README.md` ora descrive
+  in modo decision-complete le env obbligatorie/vietate per staging e produzione
+  su Render e la procedura passo-passo per switchare il servizio live dal setup
+  Node legacy al runtime Docker/C# dopo il merge su `main`.
+- **Documentazione Canonica Consolidata**:
+  [README.md](/Users/matteobernardini/code/FantaF1/README.md),
+  [CHANGELOG.md](/Users/matteobernardini/code/FantaF1/CHANGELOG.md),
+  [PROJECT.md](/Users/matteobernardini/code/FantaF1/PROJECT.md) e
+  [AGENTS.md](/Users/matteobernardini/code/FantaF1/AGENTS.md) sono stati
+  riallineati per diventare l'unica fonte operativa e di governance del
+  repository; la documentazione di porting C# sotto `docs/` e
+  `guide-porting-c#/` e' stata rimossa dal repository attivo.
+- **Audit Finale Database Pre-Cutover**: verificato in sola lettura che
+  `fantaf1` e `fantaf1_staging` sono allineati sulle collection principali,
+  sugli indici e sulla shape dei documenti campionati (`appdatas`, `drivers`,
+  `weekends`, `standingscaches`, `admincredentials`); alla data del controllo
+  non emerge alcuna migrazione obbligatoria da eseguire sui database live.
+- **Matrice Ambiente Render e Locale Esplicitata**: il `README` documenta ora in
+  modo esplicito e dettagliato tutte le variabili realmente necessarie per
+  locale, GitHub Actions, staging Render e produzione Render, inclusi i casi che
+  non devono mai essere impostati (`MONGODB_DB_NAME_OVERRIDE` e seed admin
+  locali sui deploy Render).
+- **Workflow CI/CD Riverificati Localmente**: tutti i file YAML in
+  `.github/workflows/` sono stati riparsati localmente con esito valido; i job
+  reali del workflow PR (`lint`, `build`, `format-csharp`, `build-csharp`,
+  `test-csharp`, `responsive-dev`, `smoke-ci-db`) restano coerenti con gli
+  script del repository e con il runtime C#.
+- **Dotnet Format Formalizzato Come Gate Reale**: confermata e mantenuta
+  l'adozione di `dotnet format` tramite `npm run format:csharp` e
+  `npm run format:csharp:check`, con allineamento esplicito tra repository,
+  README e pipeline PR.
+- **Safety Rail sui Runner Locali Mutanti**: `test:save-local`,
+  `test:ui-responsive` e il launcher locale C# usano ora database isolati
+  (`fantaf1_local_dev`, `fantaf1_local_staging`) e falliscono esplicitamente se
+  qualcuno prova a puntarli a `fantaf1` o `fantaf1_staging`, evitando nuove
+  mutazioni involontarie del dataset di staging.
+- **Stabilizzazione Architettura Docker**: completata la transizione al
+  `Dockerfile` centralizzato nella root del progetto; validata localmente
+  l'integrità dell'immagine e la corretta esecuzione del processo di build
+  multi-stage.
+- **Verifica Simulazione Staging**: confermato il corretto avvio
+  dell'applicazione in ambiente containerizzato simulando il profilo di
+  `Staging`; verificata la risoluzione dei percorsi interni e l'applicazione
+  delle variabili di ambiente.
+- **Fix Login Admin su Staging Production-Like**: il frontend non maschera piu'
+  il `401 admin_auth_invalid` come errore generico di salvataggio; in caso di
+  password admin errata mostra ora il messaggio corretto `Invalid password`,
+  preservando invariato il masking dei save error in produzione.
+- **Riallineamento Documentale del Branch C#**: aggiornati `README.md`,
+  `AGENTS.md`, [PROJECT.md](/Users/matteobernardini/code/FantaF1/PROJECT.md) e i
+  guardrail documentali per riflettere il `Dockerfile` root, le variabili Render
+  correnti, i job CI/CD reali, il default launcher `csharp-dev`, l'uso operativo
+  di `fantaf1_staging` e il fatto che il cutover verso `main` resti soggetto a
+  certificazione finale.
 
 ## [1.4.9] - 2026-03-15
 
-- **Fix Render Dockerfile Rewrite**: eseguita una riscrittura pulita del `Dockerfile` nella root per risolvere l'errore di rilevamento su Render (`open Dockerfile: no such file or directory`); eliminata ogni ambiguità derivante da metadati o varianti del filesystem.
+- **Fix Render Dockerfile Rewrite**: eseguita una riscrittura pulita del
+  `Dockerfile` nella root per risolvere l'errore di rilevamento su Render
+  (`open Dockerfile: no such file or directory`); eliminata ogni ambiguità
+  derivante da metadati o varianti del filesystem.
 
 ## [1.4.8] - 2026-03-15
 
-- **Fix Docker Staging Deploy**: spostato il `Dockerfile` nella root del progetto per risolvere definitivamente l'errore di build su Render (`COPY backend/ not found`) derivante da ambiguità nella risoluzione dei percorsi del contesto di build.
-- **Verifica Non-Regressione Locale**: confermata la completa integrità del launcher locale e delle viste responsive dopo la ristrutturazione dei file Docker.
+- **Fix Docker Staging Deploy**: spostato il `Dockerfile` nella root del
+  progetto per risolvere definitivamente l'errore di build su Render
+  (`COPY backend/ not found`) derivante da ambiguità nella risoluzione dei
+  percorsi del contesto di build.
+- **Verifica Non-Regressione Locale**: confermata la completa integrità del
+  launcher locale e delle viste responsive dopo la ristrutturazione dei file
+  Docker.
 
 ## [1.4.7] - 2026-03-15
 
-- **Certificazione Baseline C#**: verificata la completa integrità del backend C# con 100% di copertura (linee, branch, metodi) e avvio positivo del servizio locale.
-- **Archiviazione Track Conductor**: completata e archiviata la track dedicata al fix del build Docker e al ripristino del tooling locale.
+- **Certificazione Baseline C#**: verificata la completa integrità del backend
+  C# con 100% di copertura (linee, branch, metodi) e avvio positivo del servizio
+  locale.
+- **Archiviazione Track Conductor**: completata e archiviata la track dedicata
+  al fix del build Docker e al ripristino del tooling locale.
 
 ## [1.4.6] - 2026-03-15
 
-- **Fix Docker Build Error**: rimosso il comando `COPY backend/` obsoleto dal `Dockerfile` di `backend-csharp`, risolvendo il fallimento del build su Render ambiente staging dopo la rimozione del backend Node.js.
-- **Ripristino Tooling MongoDB Locale**: riaggiunto `mongoose` alle `devDependencies` per ripristinare il funzionamento degli script di setup e provisioning locale (`atlas-provisioning.mjs`, `local-admin-credential.mjs`) e dei relativi test unitari.
-- **Rimozione Script Legacy Obsoleti**: eliminato `scripts/remove-weekend-boost.mjs` e il relativo comando `npm run migrate:remove-weekend-boost`, in quanto dipendevano da path e modelli del backend Node.js rimosso.
+- **Fix Docker Build Error**: rimosso il comando `COPY backend/` obsoleto dal
+  `Dockerfile` di `backend-csharp`, risolvendo il fallimento del build su Render
+  ambiente staging dopo la rimozione del backend Node.js.
+- **Ripristino Tooling MongoDB Locale**: riaggiunto `mongoose` alle
+  `devDependencies` per ripristinare il funzionamento degli script di setup e
+  provisioning locale (`atlas-provisioning.mjs`, `local-admin-credential.mjs`) e
+  dei relativi test unitari.
+- **Rimozione Script Legacy Obsoleti**: eliminato
+  `scripts/remove-weekend-boost.mjs` e il relativo comando
+  `npm run migrate:remove-weekend-boost`, in quanto dipendevano da path e
+  modelli del backend Node.js rimosso.
 
 ## [1.4.5] - 2026-03-14
 
-- **Certificazione Copertura Test 100% (Frontend, Node, C#)**: raggiunto il traguardo della copertura totale (statements, branches, functions, lines) su tutti gli stack tecnologici del repository; rifattorizzato il caricamento di `dotenv` tramite `backend/config-loader.js` per garantire l'isolamento dell'ambiente di test senza inquinamento delle variabili locali; aggiornata la baseline ufficiale a **5176 lines** (Node/Frontend) e **2928 lines** (C#).
-- **Analisi e Pulizia Database MongoDB Atlas**: completata una revisione strutturale dei database presenti sul cluster Atlas; identificati ed eliminati i database obsoleti (`mongodbVSCodePlaygroundDB`, `fantaf1_porting_audit_subphase15`) per ottimizzare le risorse, mantenendo l'integrità di produzione, staging, sviluppo locale e CI/CD.
-- **Fix di Qualità e Consistenza Documentale**: risolto un errore di linting (`no-unused-vars`) in `config-loader.js` che bloccava l'avvio del launcher; aggiornati i test di consistenza C# (`PortingDocumentationConsistencyTests.cs`) per riflettere i nuovi numeri di baseline della copertura test, garantendo l'allineamento tra codice e documentazione.
-- **Integrazione `dotnet format` nel Workflow C# e CI/CD**: aggiunti script `format:csharp` e `format:csharp:check` in `package.json` per automatizzare la formattazione della solution C#; introdotto un nuovo job `format-csharp` nella pipeline GitHub Actions (`pr-ci.yml`) che esegue la verifica con `--verify-no-changes` prima della build, garantendo la coerenza stilistica del codice.
-- **Robustezza del Launcher Locale e Controllo Ambiente**: aggiunto un controllo preventivo in `./start_fantaf1.command` per verificare l'esistenza del file `.env`, fornendo istruzioni chiare per la configurazione iniziale tramite `.env.example`; lo smoke test di salvataggio (`scripts/save-local-check.mjs`) ora valida la presenza di `MONGODB_URI` prima dello startup e monitora il processo backend per rilevare crash immediati, eliminando i timeout inutili di 45 secondi in caso di errori di boot.
-- **Isolamento Totale dell'Ambiente di Test (Vitest)**: implementata una protezione globale basata su `!process.env.VITEST` in `app.js`, `server.js` e negli script di preflight; il caricamento automatico di `dotenv` viene ora saltato durante l'esecuzione dei test unitari, garantendo che la suite di validazione operi in un ambiente puro e non venga inquinata da variabili d'ambiente locali destinate allo sviluppo o allo staging.
-- **Supporto Trasparente a MongoDB Atlas Staging in Locale**: ottimizzata la configurazione per permettere l'avvio dell'applicazione collegata al database di staging su Atlas senza rompere la suite di test; tramite l'uso di `SAVE_SMOKE_EXPECTED_DATABASE_TARGET` e l'isolamento di `dotenv`, l'app può ora essere lanciata contro dati reali di staging mentre i test unitari continuano a validare correttamente contro il target di sviluppo predefinito `fantaf1_dev`; corretto inoltre un bug in `runSaveSmoke` che causava la perdita degli override di configurazione durante la risoluzione dinamica del target.
-- **Vincolo Mandatorio di Aggiornamento Documentazione Pre-Commit**: introdotta una nuova regola rigorosa in `GEMINI.md`, `AGENTS.md` e `CLAUDE.md` che impone la modifica di `README.md` (se necessario) e `CHANGELOG.md` prima di ogni operazione di commit e push, garantendo che la documentazione rifletta sempre le modifiche, i fix e le nuove implementazioni effettuate.
-- **Integrazione Framework Conductor per lo Sviluppo Spec-Driven**: introdotta la directory `conductor/` con definizioni di prodotto, linee guida UX, stack tecnologico e workflow operativo; rimosso `conductor/` dal `.gitignore` per garantirne il tracciamento ufficiale nel repository.
-- **Certificazione Workflow e Salute Repository**: completata la track Conductor dedicata alla validazione del nuovo workflow; confermata la copertura test al `100%` per lo stack Node/React e l'integrità del launcher canonico e delle viste responsive.
-- **Audit Anti-Regressione del Porting C# (Fase 1-9)**: completata la track Conductor dedicata alla verifica delle fasi di migrazione esistenti; confermata la parità API (Contract tests 100%), la corretta sincronizzazione in background (Fase 8) e la parametrizzazione sicura degli strumenti di verifica (Fase 9).
-- **Risoluzione Impedimenti Ambientali C# per la Certificazione**: validata la build e i test unitari C# in ambiente .NET 8.0 tramite downgrade temporaneo e patch di compatibilità per il resolver database, garantendo la stabilità del codice migrato prima del ripristino allo stato originale (.NET 10.0).
-- **Tool Locale di Ripristino Rapido per Google Chrome**: aggiunto `clean_google_chrome.command` per chiudere in modo mirato i processi Chrome di automazione rimasti aperti (`playwright_chromiumdev_profile-*`, `chrome-devtools-mcp`) e rilanciare l'app grafica da `/Applications/Google Chrome.app` senza toccare il launcher locale principale.
-- **Subphase 9 Formalmente Chiusa**: il ledger canonico marca ora `Subphase 9` come `completed`; `start_fantaf1.command` resta il launcher locale monitorato con default esplicito `node-dev`, mentre `scripts/save-local-check.mjs` e `scripts/ui-responsive-check.mjs` verificano davvero `node-dev`, `csharp-dev` e `csharp-staging-local` senza fallback impliciti a `fantaf1_dev`.
-- **Target Locali Condivisi e Seed Admin Deterministico per i Gate Riutilizzabili**: introdotti un resolver unico dei runtime locali e un bootstrap admin derivato a runtime per il target production-like locale, cosi' smoke save e browser gate possono autenticarsi su `csharp-staging-local` contro `fantaf1_porting` senza password plaintext versionate.
-- **Browser Gate e Smoke Save Parametrizzati su Tutti i Runtime Locali**: rieseguiti con esito verde `npm run test:save-local`, `SAVE_SMOKE_TARGET=csharp-dev npm run test:save-local`, `SAVE_SMOKE_TARGET=csharp-staging-local npm run test:save-local`, `UI_RESPONSIVE_TARGET=node-dev npm run test:ui-responsive`, `UI_RESPONSIVE_TARGET=csharp-dev npm run test:ui-responsive` e `UI_RESPONSIVE_TARGET=csharp-staging-local npm run test:ui-responsive`, mantenendo invariata la baseline ufficiale di coverage al `100%` per Node/React e backend C#.
-- **Subphase 8 Formalmente Chiusa**: il ledger canonico marca ora `Subphase 8` come `completed`; il backend ASP.NET Core integra bootstrap host, seed admin Mongo-backed, sync non bloccante per drivers/calendar/standings, fallback a cache e static hosting same-origin del build React.
-- **Same-Origin Host C# Riallineato Sulla Root Frontend**: il runtime ASP.NET Core serve ora `index.html` su `GET /` quando il build React e' disponibile, mantiene il bootstrap plain-text su `/bootstrap-ready` e conserva le route `/api/*` sullo stesso origin senza cambiare i contratti pubblici.
-- **Coverage C# Ufficiale Aggiornata Alla Slice Integrata di Subphase 8**: `npm run test:csharp-coverage` chiude ora a `2927 / 2927` linee, `1647 / 1647` branch e `487 / 487` metodi, tutti al `100%`, su `70` file inclusi sotto `backend-csharp/src/`.
-- **Gate Report Formale per l'Avvio di Subphase 8**: aggiunto [docs/backend-csharp-subphase-01-07-gate-report.md](/Users/matteobernardini/code/FantaF1/docs/backend-csharp-subphase-01-07-gate-report.md) con audit documentale e tecnico delle `Subphase 1`-`7`, matrice di chiusura, riepilogo delle validazioni eseguite e verdetto esplicito `GO Subphase 8`.
-- **Warning Nullable dei Test C# Azzerati**: i progetti `backend-csharp/tests` non emettono piu' warning nullable in `dotnet build backend-csharp/FantaF1.Backend.sln -c Release`; gli assert e gli helper di test esplicitano ora le invarianti di non-null senza suppression globali, senza modifiche ai contratti pubblici o al runtime produttivo.
-- **Coverage C# Ufficiale Preservata al 100% Dopo il Cleanup Nullable**: i fix sui test mantengono `npm run test:csharp-coverage` al `100%` su linee, branch e metodi per tutti i `64` file inclusi sotto `backend-csharp/src`, con parity e comportamento applicativo invariati.
-- **Subphase 7 Formalmente Blindata con Coverage C# Ufficiale al 100%**: la slice `GET /api/results/:meetingKey` resta `completed` nel ledger canonico e ora chiude anche il report ufficiale `npm run test:csharp-coverage` al `100%` su linee, branch e metodi per tutti i `64` file inclusi sotto `backend-csharp/src/`, senza modifiche al comportamento pubblico della route risultati.
-- **TDD Mirato sul Resolver Highlights C# della Results Route**: [backend-csharp/tests/FantaF1.Tests.Unit/ResultsInfrastructureTests.cs](/Users/matteobernardini/code/FantaF1/backend-csharp/tests/FantaF1.Tests.Unit/ResultsInfrastructureTests.cs) copre ora in modo esplicito i rami residui di `RaceHighlightsLookupService` su fallback feed/channel/global search, `oEmbed` invalido, eccezioni transport, parser JSON incompleti, alias gara, fallback `EndDate` e query highlights con seed vuoto, mantenendo parity Node/C# su `racePhase`, `highlightsVideoUrl`, TTL `missing` e `500 { error, details }`.
-- **Audit Finale della Coverage Repository Confermato**: rieseguiti con esito verde `npm run test`, `dotnet test backend-csharp/FantaF1.Backend.sln -c Release`, `npm run test:csharp-coverage`, `npm run test:coverage`, `npm run lint`, `npm run build` e `npm run test:ui-responsive`, con baseline Node/React invariata a `5167 / 5167` statements, `407 / 407` functions, `2093 / 2093` branches e `5167 / 5167` lines.
-- **Merge di `main` Assimilato nel Branch di Porting C#**: il branch `porting-backend-c#` incorpora ora integralmente il delta `main` fino a `aa9bfd494e222304eaca4d050350221a81e4746e`, inclusi standings pubbliche, fix UI/navigation/mobile, sync standings nel bootstrap Node, shared verification scripts aggiornati e relativo baseline di test/frontend.
-- **Subphase 6A Formalmente Chiusa**: il backend ASP.NET Core espone ora `GET /api/standings` con parity su cache-first read, sync capability riusabile, parser standings ufficiali, fallback sicuro a cache, payload arricchito (`driverId`, `avatarUrl`, `color`, `logoUrl`, `updatedAt`) e ledger canonico riallineato con `Subphase 7` mantenuta come prossima slice autorizzabile.
-- **Coverage C# Ufficiale Resa Ripetibile e Dimostrabile**: introdotto `npm run test:csharp-coverage` come source of truth per lo scope applicativo `backend-csharp/src`, con esclusione esplicita di `obj/` e generated code, report aggregato in `backend-csharp/TestResults/OfficialCoverage/` e verifiche documentali che impediscono derive future sul comando o sul ledger di porting.
-- **Subphase 6 del Porting C# Formalmente Chiusa**: il backend ASP.NET Core espone ora `POST /api/data` e `POST /api/predictions` con parity rispetto al runtime Node su roster validation, prediction completeness, race lock, payload di errore con `requestId`, persistenza legacy `appdatas` e admin guard production-like; il ledger canonico marca `Subphase 6` come `completed` e mantiene `Subphase 7` in `pending`.
-- **Audit Finale e Guardrail Documentali Riallineati per la Slice Write**: i test C# coprono controller, save orchestration, validator di roster/completeness/race lock, repository write Mongo e contratti shared della Subphase 6, mentre il test di consistenza documentale segue ora lo stato reale del piano canonico.
-- **CLAUDE Repository Prompt Ridotto al Solo Comportamento Specifico**: [CLAUDE.md](/Users/matteobernardini/code/FantaF1/CLAUDE.md) rimanda ora in modo esplicito a `AGENTS.md` e `PROJECT.md` come fonti autorevoli, mantenendo solo i vincoli davvero repository-specifici per i task Claude.
-- **Subphase 11 Rafforzata per il Legacy Removal Finale**: la documentazione canonica del porting C# esplicita ora un inventario `remove/migrate/keep` dei path legacy, la regola `remove only after C# becomes the verified runtime`, il vincolo di `diff minimale e senza bridge permanenti` e i gate browser `Development`, `production-like` locale e `Staging` da chiudere prima della rimozione finale del backend Node.
-- **Guardrail Repo-Wide Aggiunti per la Rimozione del Backend Node**: nuovi test documentali e di coerenza repository in C# bloccano derive future su ownership della `Subphase 11`, inventario dei path legacy, assenza di una `Subphase 12` concorrente e presenza residua di `backend/`, `app.js`, `server.js` o wiring finale `node server.js` una volta che il ledger canonico segnera' `Subphase 11` come `completed`.
-- **Subphase 5 del Porting C# Formalmente Chiusa**: il backend ASP.NET Core espone ora `GET /api/data`, `GET /api/drivers` e `GET /api/calendar` con parity rispetto al runtime Node su payload HTTP, sorting, sanitizzazione dell'app data, compatibilita' con le collection legacy `appdatas`, `drivers`, `weekends` e fallback read-only osservabili, mentre il ledger canonico marca `Subphase 5` come `completed` e mantiene `Subphase 6` in `pending`.
-- **Read Stack C# Esteso con Repository Mongo e Servizi Applicativi Dedicati**: introdotti repository read-only basati su `MongoDB.Driver`, servizi applicativi per data/drivers/calendar, modelli di dominio per le read routes, controller separati, wiring DI aggiornato e mapping esplicito della shape Mongo legacy senza anticipare write routes, results route o bootstrap completo delle subphase successive.
-- **TDD e Audit Completo su Subphase 1-5**: aggiunti ed estesi test unit, integration, contract e document consistency per blindare parity environment/health, session/auth, read routes, ownership del browser gate `production-like` e coerenza del piano canonico; il report C# merged resta al `100%` su linee, branch e metodi.
-- **Baseline Coverage Node/React Riallineata ai Conteggi Verificati Correnti**: `README.md` e `AGENTS.md` riportano ora la baseline ufficiale verificata a `4777 / 4777` statements, `388 / 388` functions, `1984 / 1984` branches e `4777 / 4777` lines, con un nuovo guard-rail documentale C# che blocca futuri disallineamenti tra documentazione e coverage reale.
-- **Subphase 4 del Porting C# Formalmente Chiusa**: il backend ASP.NET Core espone ora `GET /api/session`, `POST /api/admin/session` e `DELETE /api/admin/session` con parity su `defaultViewMode`, `Set-Cookie`, TTL, differenze `Development` vs ambienti production-like e ledger canonico riallineato con `Subphase 4` marcata `completed` e `Subphase 5` ancora `pending`.
-- **Credenziale Admin C# Riallineata a Seed Hash-Only Node-Compatible**: il seam temporaneo del porting non usa piu' alcuna password plaintext versionata; la verifica admin C# usa ora `scrypt` compatibile con Node su `passwordSalt` e `passwordHash`, con test dedicati e rule repo-wide in `AGENTS.md` che vieta password in chiaro in codice, test, fixture e documentazione.
-- **Guardrail Documentali e di Test Aggiornati per la Slice Auth**: la documentazione di `Subphase 4` esplicita ora che il browser gate `production-like` riusabile resta ownership di `Subphase 9`, mentre test Node e C# usano input password generati a runtime senza literal versionati e mantengono la baseline ufficiale di coverage al `100%`.
-- **Subphase 3 del Porting C# Formalmente Chiusa**: il backend ASP.NET Core espone ora `GET /api/health` con payload wire-compatible (`status`, `year`, `dbState`, `environment`, `databaseTarget`), resolver environment/database per `Development`, `Staging` e `Production`, smoke locale `Staging` verificato e ledger canonico riallineato con `Subphase 3` marcata `completed` e `Subphase 4` ancora `pending`.
-- **Parity Health C# Blindata con Contratti e Test Dedicati**: aggiunti test unit, integration e contract-specific per il resolver environment/database, l'inventario route `/` + `/api/health`, la serializzazione camelCase del payload health e il rifiuto esplicito di target non ammessi o mismatch tra `MONGODB_URI` e database risolto.
-- **Teardown del Browser Gate Responsive Stabilizzato**: `npm run test:ui-responsive` non fallisce piu' quando `playwright-cli close` va in timeout ma la sessione risulta gia' chiusa; il cleanup ora ritenta `close`, distingue gli exit code reali dalle chiusure benigne e segnala errore solo se la sessione resta aperta o la chiusura non e' verificabile.
-- **TDD Esteso Sul Tooling Playwright CLI**: la suite `tests/ui-responsive-playwright-cli.test.js` copre ora timeout di `close`, retry di cleanup, fallimenti CLI con status non-zero, fallback diagnostici, parsing error e artefatti mancanti, mantenendo verde il gate responsive reale e la coverage V8 ufficiale del repository al `100%`.
-- **Principi del Template di Migrazione Resi Espliciti in AGENTS**: [AGENTS.md](/Users/matteobernardini/code/FantaF1/AGENTS.md) integra ora in modo esplicito i principi di `guide-porting-c#/AGENTS_migration_template.md` su behavior preservation, incremental migration, strangler seams, business logic isolation, SOLID/DI, parity-first verification, data safety, no silent fallbacks, test deterministici e disciplina documentale, mantenendo la struttura esistente senza duplicare sezioni normative.
-- **Guardrail Documentali C# Rafforzati Sul Porting**: [backend-csharp/tests/FantaF1.Tests.Unit/PortingDocumentationConsistencyTests.cs](/Users/matteobernardini/code/FantaF1/backend-csharp/tests/FantaF1.Tests.Unit/PortingDocumentationConsistencyTests.cs) verifica ora in modo deterministico che `AGENTS.md` continui a contenere i principi obbligatori del template di migrazione, oltre ai controlli gia' presenti su piano canonico e ownership dei browser gate.
-- **Subphase 2 del Porting C# Formalmente Chiusa**: il ledger canonico in [docs/backend-csharp-porting-plan.md](/Users/matteobernardini/code/FantaF1/docs/backend-csharp-porting-plan.md) marca ora `Subphase 2` come `completed` e mantiene `Subphase 3` in `pending`, dopo una validazione completa sul solo scope reale della subphase.
-- **Host C# Riallineato a Controller-Based Bootstrap**: il bootstrap ASP.NET Core del backend C# usa ora `AddControllers` e `MapControllers`, con root `/` servita dal nuovo `PortingBootstrapController` plain-text al posto dell'estensione Minimal API precedente, senza introdurre route migrate aggiuntive.
-- **Gate Canonici di Chiusura Subphase 2 Riallineati**: [subphase-02-backend-csharp-solution-and-shared-abstractions.md](/Users/matteobernardini/code/FantaF1/docs/backend-csharp-porting-subphases/subphase-02-backend-csharp-solution-and-shared-abstractions.md) esplicita ora che il solo browser gate bloccante per la chiusura e' `npm run test:ui-responsive` sul baseline Node in `development`, mentre il gate locale `production-like` resta ownership di `Subphase 9`.
-- **Guardrail Documentali del Porting Rafforzati**: aggiunti test documentali C# per impedire il ritorno del riferimento alla guida canonica mancante, per bloccare derive sui criteri di chiusura di `Subphase 2` e per preservare l'ownership di `Subphase 9` sugli shared verification scripts e sui browser gate riusabili.
-- **Bootstrap Reale della Subphase 2 del Porting C#**: introdotta la solution `backend-csharp/FantaF1.Backend.sln` con i layer `Api`, `Application`, `Domain`, `Infrastructure`, tre progetti test dedicati, le astrazioni condivise del piano canonico, wiring DI minimo e bootstrap ASP.NET Core compilabile senza ancora migrare route pubbliche `/api/*`.
-- **Gate di Coverage Riallineato Dopo la Stabilizzazione del Test UI Flaky**: il test `opens the YouTube highlights outside the app when the CTA is clicked` in `tests/ui-live-projection.test.tsx` usa ora una sincronizzazione robusta coerente con i test limitrofi, cosi' `npm run test:coverage` torna verde con `414 / 414` test passati e `100%` su statements, branches, functions e lines.
-- **Ledger Canonico dello Stato di Porting**: [docs/backend-csharp-porting-plan.md](/Users/matteobernardini/code/FantaF1/docs/backend-csharp-porting-plan.md) include ora `Current execution ledger` come checkpoint persistente del programma di porting, con `Subphase 1` e `Subphase 2` marcate `completed` e `Subphase 3` mantenuta come prossima azione autorizzabile.
-- **Piano Canonico C# Scomposto in 11 Subfasi Deterministiche**: il piano [docs/backend-csharp-porting-plan.md](/Users/matteobernardini/code/FantaF1/docs/backend-csharp-porting-plan.md) ora include un indice esecutivo ordinato che mappa in modo uno-a-uno `Subphase 1` ... `Subphase 11` ai nuovi documenti sotto `docs/backend-csharp-porting-subphases/`, mantenendo il file canonico come unica source of truth.
-- **Nuovo Set Documentale di Subfase per il Porting Backend**: aggiunti 11 documenti in italiano con nomi file ASCII, struttura obbligatoria uniforme, ownership esclusivo per ogni area del porting, richiami espliciti ai principi di `AGENTS_migration_template.md`, coverage `100% totale`, gate browser/responsive e confini operativi senza decisioni aperte.
-- **Governance del Porting Rafforzata Senza Impatto Runtime**: i nuovi documenti formalizzano branch isolation su `porting-backend-c#`, divieto di usare `fantaf1` e `fantaf1_dev`, staging `FantaF1_staging`, target `fantaf1_porting` e il vincolo che workflow futuri e legacy removal compaiano solo nella `Subphase 11`, senza introdurre alcun cambiamento a API pubbliche, payload, cookie o business logic.
-- **Subphase 1 Materializzata nel Piano Canonico**: la `Requirement ownership matrix` vive ora in [docs/backend-csharp-porting-plan.md](/Users/matteobernardini/code/FantaF1/docs/backend-csharp-porting-plan.md) come artefatto canonico della `Subphase 1`, mentre [subphase-01-foundation-and-safety-rails.md](/Users/matteobernardini/code/FantaF1/docs/backend-csharp-porting-subphases/subphase-01-foundation-and-safety-rails.md) rimanda esplicitamente a quella matrice per chiudere il congelamento dei safety rails senza creare una seconda source of truth.
+- **Certificazione Copertura Test 100% (Frontend, Node, C#)**: raggiunto il
+  traguardo della copertura totale (statements, branches, functions, lines) su
+  tutti gli stack tecnologici del repository; rifattorizzato il caricamento di
+  `dotenv` tramite `backend/config-loader.js` per garantire l'isolamento
+  dell'ambiente di test senza inquinamento delle variabili locali; aggiornata la
+  baseline ufficiale a **5176 lines** (Node/Frontend) e **2928 lines** (C#).
+- **Analisi e Pulizia Database MongoDB Atlas**: completata una revisione
+  strutturale dei database presenti sul cluster Atlas; identificati ed eliminati
+  i database obsoleti (`mongodbVSCodePlaygroundDB`,
+  `fantaf1_porting_audit_subphase15`) per ottimizzare le risorse, mantenendo
+  l'integrità di produzione, staging, sviluppo locale e CI/CD.
+- **Fix di Qualità e Consistenza Documentale**: risolto un errore di linting
+  (`no-unused-vars`) in `config-loader.js` che bloccava l'avvio del launcher;
+  aggiornati i test di consistenza C#
+  (`PortingDocumentationConsistencyTests.cs`) per riflettere i nuovi numeri di
+  baseline della copertura test, garantendo l'allineamento tra codice e
+  documentazione.
+- **Integrazione `dotnet format` nel Workflow C# e CI/CD**: aggiunti script
+  `format:csharp` e `format:csharp:check` in `package.json` per automatizzare la
+  formattazione della solution C#; introdotto un nuovo job `format-csharp` nella
+  pipeline GitHub Actions (`pr-ci.yml`) che esegue la verifica con
+  `--verify-no-changes` prima della build, garantendo la coerenza stilistica del
+  codice.
+- **Robustezza del Launcher Locale e Controllo Ambiente**: aggiunto un controllo
+  preventivo in `./start_fantaf1.command` per verificare l'esistenza del file
+  `.env`, fornendo istruzioni chiare per la configurazione iniziale tramite
+  `.env.example`; lo smoke test di salvataggio (`scripts/save-local-check.mjs`)
+  ora valida la presenza di `MONGODB_URI` prima dello startup e monitora il
+  processo backend per rilevare crash immediati, eliminando i timeout inutili di
+  45 secondi in caso di errori di boot.
+- **Isolamento Totale dell'Ambiente di Test (Vitest)**: implementata una
+  protezione globale basata su `!process.env.VITEST` in `app.js`, `server.js` e
+  negli script di preflight; il caricamento automatico di `dotenv` viene ora
+  saltato durante l'esecuzione dei test unitari, garantendo che la suite di
+  validazione operi in un ambiente puro e non venga inquinata da variabili
+  d'ambiente locali destinate allo sviluppo o allo staging.
+- **Supporto Trasparente a MongoDB Atlas Staging in Locale**: ottimizzata la
+  configurazione per permettere l'avvio dell'applicazione collegata al database
+  di staging su Atlas senza rompere la suite di test; tramite l'uso di
+  `SAVE_SMOKE_EXPECTED_DATABASE_TARGET` e l'isolamento di `dotenv`, l'app può
+  ora essere lanciata contro dati reali di staging mentre i test unitari
+  continuano a validare correttamente contro il target di sviluppo predefinito
+  `fantaf1_dev`; corretto inoltre un bug in `runSaveSmoke` che causava la
+  perdita degli override di configurazione durante la risoluzione dinamica del
+  target.
+- **Vincolo Mandatorio di Aggiornamento Documentazione Pre-Commit**: introdotta
+  una nuova regola rigorosa in `GEMINI.md`, `AGENTS.md` e `CLAUDE.md` che impone
+  la modifica di `README.md` (se necessario) e `CHANGELOG.md` prima di ogni
+  operazione di commit e push, garantendo che la documentazione rifletta sempre
+  le modifiche, i fix e le nuove implementazioni effettuate.
+- **Integrazione Framework Conductor per lo Sviluppo Spec-Driven**: introdotta
+  la directory `conductor/` con definizioni di prodotto, linee guida UX, stack
+  tecnologico e workflow operativo; rimosso `conductor/` dal `.gitignore` per
+  garantirne il tracciamento ufficiale nel repository.
+- **Certificazione Workflow e Salute Repository**: completata la track Conductor
+  dedicata alla validazione del nuovo workflow; confermata la copertura test al
+  `100%` per lo stack Node/React e l'integrità del launcher canonico e delle
+  viste responsive.
+- **Audit Anti-Regressione del Porting C# (Fase 1-9)**: completata la track
+  Conductor dedicata alla verifica delle fasi di migrazione esistenti;
+  confermata la parità API (Contract tests 100%), la corretta sincronizzazione
+  in background (Fase 8) e la parametrizzazione sicura degli strumenti di
+  verifica (Fase 9).
+- **Risoluzione Impedimenti Ambientali C# per la Certificazione**: validata la
+  build e i test unitari C# in ambiente .NET 8.0 tramite downgrade temporaneo e
+  patch di compatibilità per il resolver database, garantendo la stabilità del
+  codice migrato prima del ripristino allo stato originale (.NET 10.0).
+- **Tool Locale di Ripristino Rapido per Google Chrome**: aggiunto
+  `clean_google_chrome.command` per chiudere in modo mirato i processi Chrome di
+  automazione rimasti aperti (`playwright_chromiumdev_profile-*`,
+  `chrome-devtools-mcp`) e rilanciare l'app grafica da
+  `/Applications/Google Chrome.app` senza toccare il launcher locale principale.
+- **Subphase 9 Formalmente Chiusa**: il ledger canonico marca ora `Subphase 9`
+  come `completed`; `start_fantaf1.command` resta il launcher locale monitorato
+  con default esplicito `node-dev`, mentre `scripts/save-local-check.mjs` e
+  `scripts/ui-responsive-check.mjs` verificano davvero `node-dev`, `csharp-dev`
+  e `csharp-staging-local` senza fallback impliciti a `fantaf1_dev`.
+- **Target Locali Condivisi e Seed Admin Deterministico per i Gate
+  Riutilizzabili**: introdotti un resolver unico dei runtime locali e un
+  bootstrap admin derivato a runtime per il target production-like locale, cosi'
+  smoke save e browser gate possono autenticarsi su `csharp-staging-local`
+  contro `fantaf1_porting` senza password plaintext versionate.
+- **Browser Gate e Smoke Save Parametrizzati su Tutti i Runtime Locali**:
+  rieseguiti con esito verde `npm run test:save-local`,
+  `SAVE_SMOKE_TARGET=csharp-dev npm run test:save-local`,
+  `SAVE_SMOKE_TARGET=csharp-staging-local npm run test:save-local`,
+  `UI_RESPONSIVE_TARGET=node-dev npm run test:ui-responsive`,
+  `UI_RESPONSIVE_TARGET=csharp-dev npm run test:ui-responsive` e
+  `UI_RESPONSIVE_TARGET=csharp-staging-local npm run test:ui-responsive`,
+  mantenendo invariata la baseline ufficiale di coverage al `100%` per
+  Node/React e backend C#.
+- **Subphase 8 Formalmente Chiusa**: il ledger canonico marca ora `Subphase 8`
+  come `completed`; il backend ASP.NET Core integra bootstrap host, seed admin
+  Mongo-backed, sync non bloccante per drivers/calendar/standings, fallback a
+  cache e static hosting same-origin del build React.
+- **Same-Origin Host C# Riallineato Sulla Root Frontend**: il runtime ASP.NET
+  Core serve ora `index.html` su `GET /` quando il build React e' disponibile,
+  mantiene il bootstrap plain-text su `/bootstrap-ready` e conserva le route
+  `/api/*` sullo stesso origin senza cambiare i contratti pubblici.
+- **Coverage C# Ufficiale Aggiornata Alla Slice Integrata di Subphase 8**:
+  `npm run test:csharp-coverage` chiude ora a `2927 / 2927` linee, `1647 / 1647`
+  branch e `487 / 487` metodi, tutti al `100%`, su `70` file inclusi sotto
+  `backend-csharp/src/`.
+- **Gate Report Formale per l'Avvio di Subphase 8**: aggiunto
+  [docs/backend-csharp-subphase-01-07-gate-report.md](/Users/matteobernardini/code/FantaF1/docs/backend-csharp-subphase-01-07-gate-report.md)
+  con audit documentale e tecnico delle `Subphase 1`-`7`, matrice di chiusura,
+  riepilogo delle validazioni eseguite e verdetto esplicito `GO Subphase 8`.
+- **Warning Nullable dei Test C# Azzerati**: i progetti `backend-csharp/tests`
+  non emettono piu' warning nullable in
+  `dotnet build backend-csharp/FantaF1.Backend.sln -c Release`; gli assert e gli
+  helper di test esplicitano ora le invarianti di non-null senza suppression
+  globali, senza modifiche ai contratti pubblici o al runtime produttivo.
+- **Coverage C# Ufficiale Preservata al 100% Dopo il Cleanup Nullable**: i fix
+  sui test mantengono `npm run test:csharp-coverage` al `100%` su linee, branch
+  e metodi per tutti i `64` file inclusi sotto `backend-csharp/src`, con parity
+  e comportamento applicativo invariati.
+- **Subphase 7 Formalmente Blindata con Coverage C# Ufficiale al 100%**: la
+  slice `GET /api/results/:meetingKey` resta `completed` nel ledger canonico e
+  ora chiude anche il report ufficiale `npm run test:csharp-coverage` al `100%`
+  su linee, branch e metodi per tutti i `64` file inclusi sotto
+  `backend-csharp/src/`, senza modifiche al comportamento pubblico della route
+  risultati.
+- **TDD Mirato sul Resolver Highlights C# della Results Route**:
+  [backend-csharp/tests/FantaF1.Tests.Unit/ResultsInfrastructureTests.cs](/Users/matteobernardini/code/FantaF1/backend-csharp/tests/FantaF1.Tests.Unit/ResultsInfrastructureTests.cs)
+  copre ora in modo esplicito i rami residui di `RaceHighlightsLookupService` su
+  fallback feed/channel/global search, `oEmbed` invalido, eccezioni transport,
+  parser JSON incompleti, alias gara, fallback `EndDate` e query highlights con
+  seed vuoto, mantenendo parity Node/C# su `racePhase`, `highlightsVideoUrl`,
+  TTL `missing` e `500 { error, details }`.
+- **Audit Finale della Coverage Repository Confermato**: rieseguiti con esito
+  verde `npm run test`,
+  `dotnet test backend-csharp/FantaF1.Backend.sln -c Release`,
+  `npm run test:csharp-coverage`, `npm run test:coverage`, `npm run lint`,
+  `npm run build` e `npm run test:ui-responsive`, con baseline Node/React
+  invariata a `5167 / 5167` statements, `407 / 407` functions, `2093 / 2093`
+  branches e `5167 / 5167` lines.
+- **Merge di `main` Assimilato nel Branch di Porting C#**: il branch
+  `porting-backend-c#` incorpora ora integralmente il delta `main` fino a
+  `aa9bfd494e222304eaca4d050350221a81e4746e`, inclusi standings pubbliche, fix
+  UI/navigation/mobile, sync standings nel bootstrap Node, shared verification
+  scripts aggiornati e relativo baseline di test/frontend.
+- **Subphase 6A Formalmente Chiusa**: il backend ASP.NET Core espone ora
+  `GET /api/standings` con parity su cache-first read, sync capability
+  riusabile, parser standings ufficiali, fallback sicuro a cache, payload
+  arricchito (`driverId`, `avatarUrl`, `color`, `logoUrl`, `updatedAt`) e ledger
+  canonico riallineato con `Subphase 7` mantenuta come prossima slice
+  autorizzabile.
+- **Coverage C# Ufficiale Resa Ripetibile e Dimostrabile**: introdotto
+  `npm run test:csharp-coverage` come source of truth per lo scope applicativo
+  `backend-csharp/src`, con esclusione esplicita di `obj/` e generated code,
+  report aggregato in `backend-csharp/TestResults/OfficialCoverage/` e verifiche
+  documentali che impediscono derive future sul comando o sul ledger di porting.
+- **Subphase 6 del Porting C# Formalmente Chiusa**: il backend ASP.NET Core
+  espone ora `POST /api/data` e `POST /api/predictions` con parity rispetto al
+  runtime Node su roster validation, prediction completeness, race lock, payload
+  di errore con `requestId`, persistenza legacy `appdatas` e admin guard
+  production-like; il ledger canonico marca `Subphase 6` come `completed` e
+  mantiene `Subphase 7` in `pending`.
+- **Audit Finale e Guardrail Documentali Riallineati per la Slice Write**: i
+  test C# coprono controller, save orchestration, validator di
+  roster/completeness/race lock, repository write Mongo e contratti shared della
+  Subphase 6, mentre il test di consistenza documentale segue ora lo stato reale
+  del piano canonico.
+- **CLAUDE Repository Prompt Ridotto al Solo Comportamento Specifico**:
+  [CLAUDE.md](/Users/matteobernardini/code/FantaF1/CLAUDE.md) rimanda ora in
+  modo esplicito a `AGENTS.md` e `PROJECT.md` come fonti autorevoli, mantenendo
+  solo i vincoli davvero repository-specifici per i task Claude.
+- **Subphase 11 Rafforzata per il Legacy Removal Finale**: la documentazione
+  canonica del porting C# esplicita ora un inventario `remove/migrate/keep` dei
+  path legacy, la regola `remove only after C# becomes the verified runtime`, il
+  vincolo di `diff minimale e senza bridge permanenti` e i gate browser
+  `Development`, `production-like` locale e `Staging` da chiudere prima della
+  rimozione finale del backend Node.
+- **Guardrail Repo-Wide Aggiunti per la Rimozione del Backend Node**: nuovi test
+  documentali e di coerenza repository in C# bloccano derive future su ownership
+  della `Subphase 11`, inventario dei path legacy, assenza di una `Subphase 12`
+  concorrente e presenza residua di `backend/`, `app.js`, `server.js` o wiring
+  finale `node server.js` una volta che il ledger canonico segnera'
+  `Subphase 11` come `completed`.
+- **Subphase 5 del Porting C# Formalmente Chiusa**: il backend ASP.NET Core
+  espone ora `GET /api/data`, `GET /api/drivers` e `GET /api/calendar` con
+  parity rispetto al runtime Node su payload HTTP, sorting, sanitizzazione
+  dell'app data, compatibilita' con le collection legacy `appdatas`, `drivers`,
+  `weekends` e fallback read-only osservabili, mentre il ledger canonico marca
+  `Subphase 5` come `completed` e mantiene `Subphase 6` in `pending`.
+- **Read Stack C# Esteso con Repository Mongo e Servizi Applicativi Dedicati**:
+  introdotti repository read-only basati su `MongoDB.Driver`, servizi
+  applicativi per data/drivers/calendar, modelli di dominio per le read routes,
+  controller separati, wiring DI aggiornato e mapping esplicito della shape
+  Mongo legacy senza anticipare write routes, results route o bootstrap completo
+  delle subphase successive.
+- **TDD e Audit Completo su Subphase 1-5**: aggiunti ed estesi test unit,
+  integration, contract e document consistency per blindare parity
+  environment/health, session/auth, read routes, ownership del browser gate
+  `production-like` e coerenza del piano canonico; il report C# merged resta al
+  `100%` su linee, branch e metodi.
+- **Baseline Coverage Node/React Riallineata ai Conteggi Verificati Correnti**:
+  `README.md` e `AGENTS.md` riportano ora la baseline ufficiale verificata a
+  `4777 / 4777` statements, `388 / 388` functions, `1984 / 1984` branches e
+  `4777 / 4777` lines, con un nuovo guard-rail documentale C# che blocca futuri
+  disallineamenti tra documentazione e coverage reale.
+- **Subphase 4 del Porting C# Formalmente Chiusa**: il backend ASP.NET Core
+  espone ora `GET /api/session`, `POST /api/admin/session` e
+  `DELETE /api/admin/session` con parity su `defaultViewMode`, `Set-Cookie`,
+  TTL, differenze `Development` vs ambienti production-like e ledger canonico
+  riallineato con `Subphase 4` marcata `completed` e `Subphase 5` ancora
+  `pending`.
+- **Credenziale Admin C# Riallineata a Seed Hash-Only Node-Compatible**: il seam
+  temporaneo del porting non usa piu' alcuna password plaintext versionata; la
+  verifica admin C# usa ora `scrypt` compatibile con Node su `passwordSalt` e
+  `passwordHash`, con test dedicati e rule repo-wide in `AGENTS.md` che vieta
+  password in chiaro in codice, test, fixture e documentazione.
+- **Guardrail Documentali e di Test Aggiornati per la Slice Auth**: la
+  documentazione di `Subphase 4` esplicita ora che il browser gate
+  `production-like` riusabile resta ownership di `Subphase 9`, mentre test Node
+  e C# usano input password generati a runtime senza literal versionati e
+  mantengono la baseline ufficiale di coverage al `100%`.
+- **Subphase 3 del Porting C# Formalmente Chiusa**: il backend ASP.NET Core
+  espone ora `GET /api/health` con payload wire-compatible (`status`, `year`,
+  `dbState`, `environment`, `databaseTarget`), resolver environment/database per
+  `Development`, `Staging` e `Production`, smoke locale `Staging` verificato e
+  ledger canonico riallineato con `Subphase 3` marcata `completed` e
+  `Subphase 4` ancora `pending`.
+- **Parity Health C# Blindata con Contratti e Test Dedicati**: aggiunti test
+  unit, integration e contract-specific per il resolver environment/database,
+  l'inventario route `/` + `/api/health`, la serializzazione camelCase del
+  payload health e il rifiuto esplicito di target non ammessi o mismatch tra
+  `MONGODB_URI` e database risolto.
+- **Teardown del Browser Gate Responsive Stabilizzato**:
+  `npm run test:ui-responsive` non fallisce piu' quando `playwright-cli close`
+  va in timeout ma la sessione risulta gia' chiusa; il cleanup ora ritenta
+  `close`, distingue gli exit code reali dalle chiusure benigne e segnala errore
+  solo se la sessione resta aperta o la chiusura non e' verificabile.
+- **TDD Esteso Sul Tooling Playwright CLI**: la suite
+  `tests/ui-responsive-playwright-cli.test.js` copre ora timeout di `close`,
+  retry di cleanup, fallimenti CLI con status non-zero, fallback diagnostici,
+  parsing error e artefatti mancanti, mantenendo verde il gate responsive reale
+  e la coverage V8 ufficiale del repository al `100%`.
+- **Principi del Template di Migrazione Resi Espliciti in AGENTS**:
+  [AGENTS.md](/Users/matteobernardini/code/FantaF1/AGENTS.md) integra ora in
+  modo esplicito i principi di `guide-porting-c#/AGENTS_migration_template.md`
+  su behavior preservation, incremental migration, strangler seams, business
+  logic isolation, SOLID/DI, parity-first verification, data safety, no silent
+  fallbacks, test deterministici e disciplina documentale, mantenendo la
+  struttura esistente senza duplicare sezioni normative.
+- **Guardrail Documentali C# Rafforzati Sul Porting**:
+  [backend-csharp/tests/FantaF1.Tests.Unit/PortingDocumentationConsistencyTests.cs](/Users/matteobernardini/code/FantaF1/backend-csharp/tests/FantaF1.Tests.Unit/PortingDocumentationConsistencyTests.cs)
+  verifica ora in modo deterministico che `AGENTS.md` continui a contenere i
+  principi obbligatori del template di migrazione, oltre ai controlli gia'
+  presenti su piano canonico e ownership dei browser gate.
+- **Subphase 2 del Porting C# Formalmente Chiusa**: il ledger canonico in
+  [docs/backend-csharp-porting-plan.md](/Users/matteobernardini/code/FantaF1/docs/backend-csharp-porting-plan.md)
+  marca ora `Subphase 2` come `completed` e mantiene `Subphase 3` in `pending`,
+  dopo una validazione completa sul solo scope reale della subphase.
+- **Host C# Riallineato a Controller-Based Bootstrap**: il bootstrap ASP.NET
+  Core del backend C# usa ora `AddControllers` e `MapControllers`, con root `/`
+  servita dal nuovo `PortingBootstrapController` plain-text al posto
+  dell'estensione Minimal API precedente, senza introdurre route migrate
+  aggiuntive.
+- **Gate Canonici di Chiusura Subphase 2 Riallineati**:
+  [subphase-02-backend-csharp-solution-and-shared-abstractions.md](/Users/matteobernardini/code/FantaF1/docs/backend-csharp-porting-subphases/subphase-02-backend-csharp-solution-and-shared-abstractions.md)
+  esplicita ora che il solo browser gate bloccante per la chiusura e'
+  `npm run test:ui-responsive` sul baseline Node in `development`, mentre il
+  gate locale `production-like` resta ownership di `Subphase 9`.
+- **Guardrail Documentali del Porting Rafforzati**: aggiunti test documentali C#
+  per impedire il ritorno del riferimento alla guida canonica mancante, per
+  bloccare derive sui criteri di chiusura di `Subphase 2` e per preservare
+  l'ownership di `Subphase 9` sugli shared verification scripts e sui browser
+  gate riusabili.
+- **Bootstrap Reale della Subphase 2 del Porting C#**: introdotta la solution
+  `backend-csharp/FantaF1.Backend.sln` con i layer `Api`, `Application`,
+  `Domain`, `Infrastructure`, tre progetti test dedicati, le astrazioni
+  condivise del piano canonico, wiring DI minimo e bootstrap ASP.NET Core
+  compilabile senza ancora migrare route pubbliche `/api/*`.
+- **Gate di Coverage Riallineato Dopo la Stabilizzazione del Test UI Flaky**: il
+  test `opens the YouTube highlights outside the app when the CTA is clicked` in
+  `tests/ui-live-projection.test.tsx` usa ora una sincronizzazione robusta
+  coerente con i test limitrofi, cosi' `npm run test:coverage` torna verde con
+  `414 / 414` test passati e `100%` su statements, branches, functions e lines.
+- **Ledger Canonico dello Stato di Porting**:
+  [docs/backend-csharp-porting-plan.md](/Users/matteobernardini/code/FantaF1/docs/backend-csharp-porting-plan.md)
+  include ora `Current execution ledger` come checkpoint persistente del
+  programma di porting, con `Subphase 1` e `Subphase 2` marcate `completed` e
+  `Subphase 3` mantenuta come prossima azione autorizzabile.
+- **Piano Canonico C# Scomposto in 11 Subfasi Deterministiche**: il piano
+  [docs/backend-csharp-porting-plan.md](/Users/matteobernardini/code/FantaF1/docs/backend-csharp-porting-plan.md)
+  ora include un indice esecutivo ordinato che mappa in modo uno-a-uno
+  `Subphase 1` ... `Subphase 11` ai nuovi documenti sotto
+  `docs/backend-csharp-porting-subphases/`, mantenendo il file canonico come
+  unica source of truth.
+- **Nuovo Set Documentale di Subfase per il Porting Backend**: aggiunti 11
+  documenti in italiano con nomi file ASCII, struttura obbligatoria uniforme,
+  ownership esclusivo per ogni area del porting, richiami espliciti ai principi
+  di `AGENTS_migration_template.md`, coverage `100% totale`, gate
+  browser/responsive e confini operativi senza decisioni aperte.
+- **Governance del Porting Rafforzata Senza Impatto Runtime**: i nuovi documenti
+  formalizzano branch isolation su `porting-backend-c#`, divieto di usare
+  `fantaf1` e `fantaf1_dev`, staging `FantaF1_staging`, target `fantaf1_porting`
+  e il vincolo che workflow futuri e legacy removal compaiano solo nella
+  `Subphase 11`, senza introdurre alcun cambiamento a API pubbliche, payload,
+  cookie o business logic.
+- **Subphase 1 Materializzata nel Piano Canonico**: la
+  `Requirement ownership matrix` vive ora in
+  [docs/backend-csharp-porting-plan.md](/Users/matteobernardini/code/FantaF1/docs/backend-csharp-porting-plan.md)
+  come artefatto canonico della `Subphase 1`, mentre
+  [subphase-01-foundation-and-safety-rails.md](/Users/matteobernardini/code/FantaF1/docs/backend-csharp-porting-subphases/subphase-01-foundation-and-safety-rails.md)
+  rimanda esplicitamente a quella matrice per chiudere il congelamento dei
+  safety rails senza creare una seconda source of truth.
 
 ## v1.4.6
 
-- **Migrazione Finale a C# (Node.js Sunset)**: Completata la migrazione al backend C#, eliminando definitivamente il backend Node.js (express, mongoose, file server.js, app.js, cartella backend/).
-- **Docker & Render.com**: Il backend autoritativo è ora il servizio C# / .NET 10 ospitato su Docker per Render.com.
-- **Copertura Test**: Tutti i test passano con successo e la test coverage per il codice C# è confermata al 100%.
+- **Migrazione Finale a C# (Node.js Sunset)**: Completata la migrazione al
+  backend C#, eliminando definitivamente il backend Node.js (express, mongoose,
+  file server.js, app.js, cartella backend/).
+- **Docker & Render.com**: Il backend autoritativo è ora il servizio C# / .NET
+  10 ospitato su Docker per Render.com.
+- **Copertura Test**: Tutti i test passano con successo e la test coverage per
+  il codice C# è confermata al 100%.
 
-- **Setup .NET 10 SDK (arm64)**: installato e configurato l'SDK ufficiale Microsoft .NET 10 nativo per Apple Silicon, risolvendo il blocco di sistema operativo (`killed`) e garantendo la piena compatibilità con i file di progetto `net10.0`.
-- **Integrazione CI/CD per C#**: aggiornato il workflow `.github/workflows/pr-ci.yml` con l'aggiunta dei job `build-csharp` e `test-csharp` basati su .NET 10, estendendo la validazione automatica anche al nuovo backend durante le Pull Request verso `main`.
-- **Isolamento Test C#**: modificato lo script `scripts/verify-csharp-coverage.mjs` per pulire le variabili d'ambiente locali (`MONGODB_URI`, `NODE_ENV`) prima dell'esecuzione dei test di integrazione, garantendo il corretto caricamento dei profili di test senza interferenze.
-- **Hotfix Linting**: corretta una dichiarazione inutilizzata in `scripts/atlas-provisioning.mjs`, mantenendo il repository conforme agli standard di qualità ESLint e alle policy di zero regressione.
-- **Validazione Full-Stack Certificata**: confermata la stabilità dell'intero ecosistema con build passanti per C# e React, e copertura test al 100% su entrambi gli stack (Node/V8 e C#/Coverlet).
-- **Integrazione Conductor**: introdotta la directory `conductor/` come unica source of truth per specifiche di prodotto, linee guida, tech stack e workflow operativo.
-- **Certificazione Workflow**: completata la validazione dell'integrità del repository con copertura test al 100%, launcher canonico verificato e controlli responsive passanti.
-- **Audit Anti-Regressione Porting C#**: certificata l'integrità del porting C# fino alla Fase 9, confermando parità API, sincronizzazione background e parametri di sicurezza degli strumenti di verifica.
-- **Ristrutturazione Navigazione (da v1.4.4)**: menu integrato nell'header, navigazione fluida mobile nativa, ottimizzazione performance con `IntersectionObserver` e fix mappa circuito storica.
+- **Setup .NET 10 SDK (arm64)**: installato e configurato l'SDK ufficiale
+  Microsoft .NET 10 nativo per Apple Silicon, risolvendo il blocco di sistema
+  operativo (`killed`) e garantendo la piena compatibilità con i file di
+  progetto `net10.0`.
+- **Integrazione CI/CD per C#**: aggiornato il workflow
+  `.github/workflows/pr-ci.yml` con l'aggiunta dei job `build-csharp` e
+  `test-csharp` basati su .NET 10, estendendo la validazione automatica anche al
+  nuovo backend durante le Pull Request verso `main`.
+- **Isolamento Test C#**: modificato lo script
+  `scripts/verify-csharp-coverage.mjs` per pulire le variabili d'ambiente locali
+  (`MONGODB_URI`, `NODE_ENV`) prima dell'esecuzione dei test di integrazione,
+  garantendo il corretto caricamento dei profili di test senza interferenze.
+- **Hotfix Linting**: corretta una dichiarazione inutilizzata in
+  `scripts/atlas-provisioning.mjs`, mantenendo il repository conforme agli
+  standard di qualità ESLint e alle policy di zero regressione.
+- **Validazione Full-Stack Certificata**: confermata la stabilità dell'intero
+  ecosistema con build passanti per C# e React, e copertura test al 100% su
+  entrambi gli stack (Node/V8 e C#/Coverlet).
+- **Integrazione Conductor**: introdotta la directory `conductor/` come unica
+  source of truth per specifiche di prodotto, linee guida, tech stack e workflow
+  operativo.
+- **Certificazione Workflow**: completata la validazione dell'integrità del
+  repository con copertura test al 100%, launcher canonico verificato e
+  controlli responsive passanti.
+- **Audit Anti-Regressione Porting C#**: certificata l'integrità del porting C#
+  fino alla Fase 9, confermando parità API, sincronizzazione background e
+  parametri di sicurezza degli strumenti di verifica.
+- **Ristrutturazione Navigazione (da v1.4.4)**: menu integrato nell'header,
+  navigazione fluida mobile nativa, ottimizzazione performance con
+  `IntersectionObserver` e fix mappa circuito storica.
 
 ## v1.4.4 (2026-03-13)
 
-- **Titolo Hero Sempre Bianco e Coerente su Windows**: il titolo principale dell'app nella hero non usa piu' il gradiente testuale con `background-clip`; ora renderizza sempre bianco pieno con lo stesso glow esistente, eliminando il caso Windows in cui il testo appariva grigio.
-- **Classifica Piloti con Volto Più Leggibile**: la vista pubblica applica ora anche in `Classifica piloti` la stessa promozione hi-res e lo stesso crop volto già introdotti nel podio dello `Storico gare`, evitando l'upscaling degli avatar Formula1 a bassa risoluzione e rendendo le foto pilota più nitide.
-- **Classifica Scuderia Riallineata con Logo e Colore Team**: ogni riga costruttori mostra ora il logo ufficiale della scuderia accanto al nome, il nome squadra usa direttamente il colore della scuderia già presente nel dato e la vecchia lineetta colorata è stata rimossa per eliminare lo sfalsamento visivo della card.
-- **Card `Classifica Scuderia` Compattata**: il pannello costruttori mantiene il layout a due colonne ma non viene più stirato in altezza per eguagliare la colonna piloti; il contenuto resta ancorato in alto e lo spazio vuoto verticale interno è stato rimosso senza cambiare ordine, dati o resa responsive a colonna singola.
-- **Payload Standings Arricchito e Config Team Centralizzata**: il contratto di `constructorStandings` espone ora anche `logoUrl`, derivato da una mappa centralizzata team -> asset ufficiale, mantenendo invariati sync, cache standings, endpoint read-only e fallback sicuri.
-- **Coverage Repository Aggiornata al Nuovo Perimetro**: con l'estensione del fix avatar alle standings pubbliche e il nuovo rendering costruttori, la baseline coverage verificata ufficiale è ora `5167 / 5167` statements, `407 / 407` functions, `2093 / 2093` branches e `5167 / 5167` lines.
-- **Podio Storico Più Leggibile e Coerente con la UI**: nelle card di `Storico gare` il podio reale usa ora avatar pilota più grandi e leggibili con crop orientato al volto, rank `P1/P2/P3` con font più chiaro e dimensione aumentata, data della gara sempre su una riga separata sotto il titolo e schede podio con lo stesso effetto hover/focus già presente sulle altre superfici interattive dell'app.
-- **Warning Mongoose su Standings Cache Eliminato**: `backend/storage.js` usa ora `returnDocument: 'after'` al posto dell'opzione legacy `new: true` in `findOneAndUpdate` per la cache classifiche, rimuovendo il warning di deprecazione in avvio senza cambiare persistenza, payload o comportamento runtime.
-- **TDD e Verifica Launcher Sul Fix Mongoose**: estesi i test storage per validare esplicitamente il nuovo option object della standings cache; rieseguiti `npm run test -- tests/storage-standings.test.js`, `npm run test`, `npm run lint`, `npm run build`, `npm run test:coverage` e `./start_fantaf1.command`, con coverage mantenuta al `100%` e assenza del warning nel log di startup.
-- **Classifiche Reali Solo in Vista Pubblica**: aggiunte `Classifica piloti` e `Classifica scuderia` con dati reali sincronizzati da fonte ufficiale tramite nuovo endpoint backend read-only, cache persistita e fallback sicuro in caso di sorgente remota non disponibile.
-- **Hero Pubblica Riallineata alla Nuova Gerarchia**: rimossa la card `Regole del gioco`, eliminato il pulsante `Copia link vista corrente`, centrati i riquadri di `Weekend pulse` e ridimensionata/centrata la card della gara selezionata per recuperare spazio senza regressioni desktop/mobile.
-- **Guida Pubblica e Storico Gare Ridisegnati**: la sezione `Come funziona > Punti gara` usa ora una resa grafica `Race strip`, mentre `Storico gare` sostituisce `Risultato reale` con un podio visuale che mostra foto pilota, fallback grafico coerente e nome reale del pilota nel formato naturale sotto l'immagine.
-- **Navigation e Layout Responsive Estesi**: introdotta una nuova sezione pubblica per le classifiche reali nella navigation di sezione mantenendo separazione netta `public`/`admin`, full-width layout coerente con la UI esistente e assenza di regressioni su browser desktop e mobile.
-- **Backend Standings Dedicato con TDD Completo**: aggiunti `backend/standings.js`, persistenza `StandingsCache`, sync startup non bloccante, parser HTML robusti per piloti e costruttori, normalizzazione nomi/team e test dedicati su parsing, cache fallback ed endpoint API.
-- **Coverage Repository Riallineata al Nuovo Perimetro**: dopo l'introduzione delle standings reali e del restyling UI, la coverage V8 ufficiale verificata del repository e' stata riportata e mantenuta al `100%` con baseline aggiornata a `5167 / 5167` statements, `407 / 407` functions, `2093 / 2093` branches e `5167 / 5167` lines.
-- **Validazione Completa della Release Applicata**: eseguiti con esito verde `npm run test`, `npm run lint`, `npm run build`, `npm run test:ui-responsive` e `npm run test:coverage` sullo stato finale della repository.
-- **Ristrutturazione Navigazione e UX**: il menu di sezione e' stato spostato all'interno dell'header, direttamente sotto il titolo della stagione, migliorando la gerarchia visiva e l'accessibilità immediata.
-- **Menu Mobile User-Friendly**: rimossa la classe `.panel` dalla navigazione per una perfetta integrazione trasparente nella hero; introdotto un gradiente di mascheramento laterale per segnalare visivamente la possibilità di scorrimento orizzontale.
-- **Ottimizzazione Performance Scroll**: eliminata la latenza ("jank") durante lo scroll su dispositivi mobili sostituendo l'event listener sincrono di React con un `IntersectionObserver` mirato; disabilitato inoltre il `backdrop-filter: blur` sui pannelli in vista mobile per garantire i 60fps su background complessi.
-- **Fix Regressione Dropdown Mobile**: ripristinato il comportamento nativo delle dropdown su dispositivi mobili per risolvere il bug di posizionamento errato delle opzioni riscontrato su Chrome (emulazione mobile).
-- **Fix Mappa Circuito Storico**: il riquadro `Recap ultimo GP` ora visualizza correttamente la mappa della gara conclusa recuperandola dal calendario, indipendentemente dal weekend selezionato globalmente nell'app.
-- **Navigazione Fluida Mobile e Risoluzione Bug**: eliminato l'hamburger menu (Drawer) in favore di una barra a scorrimento orizzontale nativa su dispositivi mobili, risolvendo il bug di visibilità e garantendo che tutte le opzioni siano sempre visibili.
-- **Pulsante PWA Integrato nel Flusso**: la CTA `INSTALLA APPLICAZIONE` e' stata integrata come ultima voce della lista di navigazione, garantendo un layout pulito e coerente su tutte le risoluzioni.
-- **Shortcut "Torna al menu" Raffinata**: la freccia flottante per risalire la pagina ancora ora lo scroll direttamente alla barra di navigazione nell'header, ottimizzando il passaggio tra le sezioni senza dover tornare a inizio pagina.
-- **TDD e Validazione Totale**: aggiornati i test UI e gli script di controllo responsive per coprire la nuova struttura del menu e il comportamento della shortcut di scroll; verificata la coverage totale al 100% e superati tutti i 415 test.
+- **Titolo Hero Sempre Bianco e Coerente su Windows**: il titolo principale
+  dell'app nella hero non usa piu' il gradiente testuale con `background-clip`;
+  ora renderizza sempre bianco pieno con lo stesso glow esistente, eliminando il
+  caso Windows in cui il testo appariva grigio.
+- **Classifica Piloti con Volto Più Leggibile**: la vista pubblica applica ora
+  anche in `Classifica piloti` la stessa promozione hi-res e lo stesso crop
+  volto già introdotti nel podio dello `Storico gare`, evitando l'upscaling
+  degli avatar Formula1 a bassa risoluzione e rendendo le foto pilota più
+  nitide.
+- **Classifica Scuderia Riallineata con Logo e Colore Team**: ogni riga
+  costruttori mostra ora il logo ufficiale della scuderia accanto al nome, il
+  nome squadra usa direttamente il colore della scuderia già presente nel dato e
+  la vecchia lineetta colorata è stata rimossa per eliminare lo sfalsamento
+  visivo della card.
+- **Card `Classifica Scuderia` Compattata**: il pannello costruttori mantiene il
+  layout a due colonne ma non viene più stirato in altezza per eguagliare la
+  colonna piloti; il contenuto resta ancorato in alto e lo spazio vuoto
+  verticale interno è stato rimosso senza cambiare ordine, dati o resa
+  responsive a colonna singola.
+- **Payload Standings Arricchito e Config Team Centralizzata**: il contratto di
+  `constructorStandings` espone ora anche `logoUrl`, derivato da una mappa
+  centralizzata team -> asset ufficiale, mantenendo invariati sync, cache
+  standings, endpoint read-only e fallback sicuri.
+- **Coverage Repository Aggiornata al Nuovo Perimetro**: con l'estensione del
+  fix avatar alle standings pubbliche e il nuovo rendering costruttori, la
+  baseline coverage verificata ufficiale è ora `5167 / 5167` statements,
+  `407 / 407` functions, `2093 / 2093` branches e `5167 / 5167` lines.
+- **Podio Storico Più Leggibile e Coerente con la UI**: nelle card di
+  `Storico gare` il podio reale usa ora avatar pilota più grandi e leggibili con
+  crop orientato al volto, rank `P1/P2/P3` con font più chiaro e dimensione
+  aumentata, data della gara sempre su una riga separata sotto il titolo e
+  schede podio con lo stesso effetto hover/focus già presente sulle altre
+  superfici interattive dell'app.
+- **Warning Mongoose su Standings Cache Eliminato**: `backend/storage.js` usa
+  ora `returnDocument: 'after'` al posto dell'opzione legacy `new: true` in
+  `findOneAndUpdate` per la cache classifiche, rimuovendo il warning di
+  deprecazione in avvio senza cambiare persistenza, payload o comportamento
+  runtime.
+- **TDD e Verifica Launcher Sul Fix Mongoose**: estesi i test storage per
+  validare esplicitamente il nuovo option object della standings cache;
+  rieseguiti `npm run test -- tests/storage-standings.test.js`, `npm run test`,
+  `npm run lint`, `npm run build`, `npm run test:coverage` e
+  `./start_fantaf1.command`, con coverage mantenuta al `100%` e assenza del
+  warning nel log di startup.
+- **Classifiche Reali Solo in Vista Pubblica**: aggiunte `Classifica piloti` e
+  `Classifica scuderia` con dati reali sincronizzati da fonte ufficiale tramite
+  nuovo endpoint backend read-only, cache persistita e fallback sicuro in caso
+  di sorgente remota non disponibile.
+- **Hero Pubblica Riallineata alla Nuova Gerarchia**: rimossa la card
+  `Regole del gioco`, eliminato il pulsante `Copia link vista corrente`,
+  centrati i riquadri di `Weekend pulse` e ridimensionata/centrata la card della
+  gara selezionata per recuperare spazio senza regressioni desktop/mobile.
+- **Guida Pubblica e Storico Gare Ridisegnati**: la sezione
+  `Come funziona > Punti gara` usa ora una resa grafica `Race strip`, mentre
+  `Storico gare` sostituisce `Risultato reale` con un podio visuale che mostra
+  foto pilota, fallback grafico coerente e nome reale del pilota nel formato
+  naturale sotto l'immagine.
+- **Navigation e Layout Responsive Estesi**: introdotta una nuova sezione
+  pubblica per le classifiche reali nella navigation di sezione mantenendo
+  separazione netta `public`/`admin`, full-width layout coerente con la UI
+  esistente e assenza di regressioni su browser desktop e mobile.
+- **Backend Standings Dedicato con TDD Completo**: aggiunti
+  `backend/standings.js`, persistenza `StandingsCache`, sync startup non
+  bloccante, parser HTML robusti per piloti e costruttori, normalizzazione
+  nomi/team e test dedicati su parsing, cache fallback ed endpoint API.
+- **Coverage Repository Riallineata al Nuovo Perimetro**: dopo l'introduzione
+  delle standings reali e del restyling UI, la coverage V8 ufficiale verificata
+  del repository e' stata riportata e mantenuta al `100%` con baseline
+  aggiornata a `5167 / 5167` statements, `407 / 407` functions, `2093 / 2093`
+  branches e `5167 / 5167` lines.
+- **Validazione Completa della Release Applicata**: eseguiti con esito verde
+  `npm run test`, `npm run lint`, `npm run build`, `npm run test:ui-responsive`
+  e `npm run test:coverage` sullo stato finale della repository.
+- **Ristrutturazione Navigazione e UX**: il menu di sezione e' stato spostato
+  all'interno dell'header, direttamente sotto il titolo della stagione,
+  migliorando la gerarchia visiva e l'accessibilità immediata.
+- **Menu Mobile User-Friendly**: rimossa la classe `.panel` dalla navigazione
+  per una perfetta integrazione trasparente nella hero; introdotto un gradiente
+  di mascheramento laterale per segnalare visivamente la possibilità di
+  scorrimento orizzontale.
+- **Ottimizzazione Performance Scroll**: eliminata la latenza ("jank") durante
+  lo scroll su dispositivi mobili sostituendo l'event listener sincrono di React
+  con un `IntersectionObserver` mirato; disabilitato inoltre il
+  `backdrop-filter: blur` sui pannelli in vista mobile per garantire i 60fps su
+  background complessi.
+- **Fix Regressione Dropdown Mobile**: ripristinato il comportamento nativo
+  delle dropdown su dispositivi mobili per risolvere il bug di posizionamento
+  errato delle opzioni riscontrato su Chrome (emulazione mobile).
+- **Fix Mappa Circuito Storico**: il riquadro `Recap ultimo GP` ora visualizza
+  correttamente la mappa della gara conclusa recuperandola dal calendario,
+  indipendentemente dal weekend selezionato globalmente nell'app.
+- **Navigazione Fluida Mobile e Risoluzione Bug**: eliminato l'hamburger menu
+  (Drawer) in favore di una barra a scorrimento orizzontale nativa su
+  dispositivi mobili, risolvendo il bug di visibilità e garantendo che tutte le
+  opzioni siano sempre visibili.
+- **Pulsante PWA Integrato nel Flusso**: la CTA `INSTALLA APPLICAZIONE` e' stata
+  integrata come ultima voce della lista di navigazione, garantendo un layout
+  pulito e coerente su tutte le risoluzioni.
+- **Shortcut "Torna al menu" Raffinata**: la freccia flottante per risalire la
+  pagina ancora ora lo scroll direttamente alla barra di navigazione
+  nell'header, ottimizzando il passaggio tra le sezioni senza dover tornare a
+  inizio pagina.
+- **TDD e Validazione Totale**: aggiornati i test UI e gli script di controllo
+  responsive per coprire la nuova struttura del menu e il comportamento della
+  shortcut di scroll; verificata la coverage totale al 100% e superati tutti i
+  415 test.
 
 ## v1.4.1
 
-- **Hero Ripulita e Sfondo Gara Piu' Luminoso**: rimosso il blur dal contenitore del titolo nell'header hero e introdotto un layer dedicato per lo sfondo del weekend selezionato con luminosita' aumentata, mantenendo invariato il cambio dinamico dell'immagine in base alla gara attiva.
-- **Navigation Shell Sempre Disponibile e Shortcut Rimossa**: il menu di sezione resta ora sempre visibile durante lo scroll sia su desktop sia su mobile, mentre la scorciatoia `Torna al menu` e il relativo floating control sono stati rimossi dal runtime senza alterare hash navigation, drawer mobile o comportamento admin/public.
-- **CTA Installazione Sempre Visibile**: `INSTALLA APPLICAZIONE` e' ora sempre presente nei browser desktop e mobile; il click continua ad aprire il prompt nativo quando disponibile, il dialog guidato su iOS Safari e un feedback esplicito quando l'app e' gia' installata o il browser non supporta l'installazione.
-- **Documentazione e Tooling Riallineati Alla Nuova UX**: README, copy centralizzato e controlli responsive descrivono ora la navigation shell persistente e la CTA installazione sempre visibile, mantenendo il repository coerente con lo stato reale della UI e con la baseline coverage verificata a `4780 / 4780` statements, `393 / 393` functions, `1999 / 1999` branches e `4780 / 4780` lines.
-- **Track Map Ripristinata Anche in Vista Pubblica**: la mappa del circuito del weekend selezionato e' tornata visibile non solo nella sezione admin `Risultati del weekend`, ma anche nella vista pubblica dentro il recap hero del weekend e nel pannello `Recap ultimo GP`, mantenendo la coerenza con il `selectedRace` corrente senza toccare la logica del nuovo menu di sezione.
-- **TDD Regressivo su Mappa Pubblica e Navigation Shell**: aggiunti test UI mirati per coprire la presenza della track map in vista pubblica, l'aggiornamento al cambio weekend e la tenuta della navigation shell desktop/admin-public; la coverage V8 verificata del repository e' stata riallineata a `4780 / 4780` statements, `393 / 393` functions, `1999 / 1999` branches e `4780 / 4780` lines.
-- **Validazione Release Completa v1.4.1**: rieseguiti `npm run test`, `npm run lint`, `npm run build`, `npm run test:ui-responsive`, `npm run test:save-local` e `npm run test:coverage`, tutti con esito verde sullo stato finale della release.
+- **Hero Ripulita e Sfondo Gara Piu' Luminoso**: rimosso il blur dal contenitore
+  del titolo nell'header hero e introdotto un layer dedicato per lo sfondo del
+  weekend selezionato con luminosita' aumentata, mantenendo invariato il cambio
+  dinamico dell'immagine in base alla gara attiva.
+- **Navigation Shell Sempre Disponibile e Shortcut Rimossa**: il menu di sezione
+  resta ora sempre visibile durante lo scroll sia su desktop sia su mobile,
+  mentre la scorciatoia `Torna al menu` e il relativo floating control sono
+  stati rimossi dal runtime senza alterare hash navigation, drawer mobile o
+  comportamento admin/public.
+- **CTA Installazione Sempre Visibile**: `INSTALLA APPLICAZIONE` e' ora sempre
+  presente nei browser desktop e mobile; il click continua ad aprire il prompt
+  nativo quando disponibile, il dialog guidato su iOS Safari e un feedback
+  esplicito quando l'app e' gia' installata o il browser non supporta
+  l'installazione.
+- **Documentazione e Tooling Riallineati Alla Nuova UX**: README, copy
+  centralizzato e controlli responsive descrivono ora la navigation shell
+  persistente e la CTA installazione sempre visibile, mantenendo il repository
+  coerente con lo stato reale della UI e con la baseline coverage verificata a
+  `4780 / 4780` statements, `393 / 393` functions, `1999 / 1999` branches e
+  `4780 / 4780` lines.
+- **Track Map Ripristinata Anche in Vista Pubblica**: la mappa del circuito del
+  weekend selezionato e' tornata visibile non solo nella sezione admin
+  `Risultati del weekend`, ma anche nella vista pubblica dentro il recap hero
+  del weekend e nel pannello `Recap ultimo GP`, mantenendo la coerenza con il
+  `selectedRace` corrente senza toccare la logica del nuovo menu di sezione.
+- **TDD Regressivo su Mappa Pubblica e Navigation Shell**: aggiunti test UI
+  mirati per coprire la presenza della track map in vista pubblica,
+  l'aggiornamento al cambio weekend e la tenuta della navigation shell
+  desktop/admin-public; la coverage V8 verificata del repository e' stata
+  riallineata a `4780 / 4780` statements, `393 / 393` functions, `1999 / 1999`
+  branches e `4780 / 4780` lines.
+- **Validazione Release Completa v1.4.1**: rieseguiti `npm run test`,
+  `npm run lint`, `npm run build`, `npm run test:ui-responsive`,
+  `npm run test:save-local` e `npm run test:coverage`, tutti con esito verde
+  sullo stato finale della release.
 
 ## v1.4.0
 
-- **Ancoraggio Destro Corretto per "Torna al menu"**: il floating control `Torna al menu` usa ora un wrapper fixed esplicitamente ancorato a destra con allineamento del bottone sul bordo destro reale; il tooltip si apre a sinistra senza spostare otticamente il target, preservando font `Formula1`, hash navigation, chiusura del drawer mobile e compatibilita' desktop/mobile anche nella build servita da Express.
-- **Launcher Locale Alleggerito Sul Preflight Responsive**: `start_fantaf1.command` non esegue piu' `npm run test:ui-responsive` nel flusso monitorato di avvio; il launcher mantiene lint, test, build e smoke `test:save-local`, mentre il controllo browser responsive resta un comando esplicito separato da lanciare solo quando rilevante per la task.
-- **Menu Navigazionale Responsive di Sezione Senza Regressioni Visuali**: introdotta una navigazione di sezione coerente con font e visual language esistenti; su desktop la nav e' sticky sotto l'header, mentre su mobile un trigger `Sezioni` apre un drawer laterale sinistro non invasivo, con voci filtrate per vista `admin`/`public`, chiusura su overlay o `Esc`, focus restore e compatibilita' PWA invariata.
-- **Deep Link di Sezione e Stato URL Preservato**: ogni sezione principale della single-page app espone ora un `id` stabile; il frontend aggiorna l'`hash` via `history.replaceState` e usa `IntersectionObserver` per evidenziare la sezione attiva senza perdere `meeting`, `view`, `historyUser` e `historySearch` gia' presenti nell'URL condivisibile.
-- **TDD Regressivo Sul Nuovo Menu Responsive**: estesi i test RTL della shell per coprire rendering desktop, drawer mobile, voci condizionali `admin`/`public`, aggiornamento dell'`hash`, chiusura del drawer e interazione con `IntersectionObserver`; estesi anche i controlli Playwright-like di `ui-responsive` per i nuovi selettori del menu.
-- **Tooling Responsive Esteso ai Nuovi Pattern di Navigazione**: `scripts/ui-responsive/` valida ora la presenza delle sezioni principali, la nav desktop sotto l'header, il trigger mobile `Sezioni`, il drawer laterale sinistro e l'integrita' della CTA `INSTALLA APPLICAZIONE` accanto al nuovo menu, su mobile, tablet e desktop.
-- **Scorciatoia Contestuale "Torna al Menu"**: aggiunto un controllo floating dedicato per risalire rapidamente verso la parte alta della pagina con il menu nuovamente visibile; il pulsante compare solo fuori dall'area iniziale, usa una freccia `ArrowUp`, aggiorna coerentemente l'hash della prima sezione e chiude il drawer mobile se aperto.
-- **Tooltip e Tipografia Allineati al Visual Language**: il controllo `Torna al menu` espone ora un tooltip esplicito con copy centralizzato, icona visibile e font `Formula1` coerente sia sul pulsante sia sul tooltip, con verifiche automatiche dedicate anche nei controlli responsive reali.
-- **Coverage Repository Riallineata Dopo la Navigation Shell**: con i nuovi rami desktop/mobile, `admin`/`public`, drawer aperto/chiuso e hash navigation, la coverage V8 ufficiale e' stata riportata e mantenuta al `100%` con baseline verificata aggiornata a `4766 / 4766` statements, `386 / 386` functions, `1968 / 1968` branches e `4766 / 4766` lines.
-- **Smoke Browser Production-Like Completato**: oltre a `lint`, `test`, `test:coverage`, `build`, `test:ui-responsive` e `test:save-local`, e' stata eseguita anche una verifica browser reale in assetto `production` usando `NODE_ENV=production MONGODB_DB_NAME_OVERRIDE=fantaf1_dev npm start`, confermando nav desktop, trigger mobile `Sezioni` e drawer della build servita da Express senza cambiare target dati runtime.
-- **Refactor OOP End-to-End su Calendar, Persistence, Scoring, Analytics e Runtime**: completata una conversione operativa a oggetti di dominio e service/facade object sui bounded context ancora fortemente procedurali, mantenendo invariati endpoint REST, shape dei payload persistiti, semantica di `meetingKey`, rendering UI e flussi admin/public.
-- **Wave 1, Calendar/Results Backend Estratta in Service OO**: `backend/calendar.js` delega ora il recupero risultati a `RaceResultsService` e `RaceResultsCache` in `backend/race-results-service.js`, isolando cache TTL, derivazione URL ufficiali, parsing classifica, parsing pole/sprint, risoluzione `racePhase`, lookup highlights best-effort e persistenza del risultato del lookup.
-- **Wave 1, Facade Frontend per Risultati Ufficiali**: il frontend non gestisce piu' inline il fetch e la normalizzazione della response dei risultati gara; `src/utils/resultsApi.ts` centralizza `fetchOfficialResults` e `normalizeOfficialResultsResponse`, mentre `src/App.tsx` consuma il facade mantenendo invariata la UX del live projection e del recap weekend.
-- **Wave 1, TDD Regressivo sui Results Service**: aggiunti test dedicati ai nuovi oggetti OO backend e client per bloccare regressioni su cache, fallback, parsing risultati ufficiali e compatibilita' della response lato frontend, preservando il contratto della API `GET /api/results/:meetingKey`.
-- **Wave 2, Persistence Backend Rifattorizzata in Oggetti Espliciti**: introdotto `backend/app-data-service.js` con `ParticipantRosterPolicy`, `WeekendSelectionService`, `AppDataSanitizer` e `AppDataRepository`; `backend/storage.js` e' stato ridotto a facade compatibile che delega creazione default, sanitizzazione, lettura e scrittura dell'`AppData` senza alterare la persistenza MongoDB esistente.
-- **Wave 2, Weekend State Frontend Centralizzato**: introdotto `src/utils/weekendStateService.ts` per assemblare lo stato del weekend selezionato, idratare gli utenti del weekend corrente, costruire il payload persistito e gestire il fallback coerente del `selectedMeetingKey`; `src/App.tsx` e' stato alleggerito dalla logica di wiring non visuale.
-- **Wave 2, Invarianti Roster e Selected Weekend Consolidati**: la normalizzazione dei tre partecipanti, il recupero del GP selezionato, il fallback al weekend successivo, la sincronizzazione tra `users`, `raceResults` e `weekendStateByMeetingKey` e la sanitizzazione dei documenti persistiti ora vivono in un punto unico testabile, evitando duplicazioni e drift tra frontend e backend.
-- **Wave 2, TDD Regressivo su App Data e Weekend State**: aggiunte suite dedicate su `AppDataSanitizer`, `AppDataRepository`, assembler frontend del weekend state e facade storage per coprire hydration, payload di persistenza, fallback calendario vuoto e coerenza del selected weekend.
-- **Wave 3, Scoring Trasformato in Oggetti di Dominio**: `src/utils/game.ts` delega ora a `PredictionScoringService`, `PredictionValidationService` e `RaceHistoryService` in `src/utils/gameService.ts`, separando normalizzazione prediction, calcolo punti, live totals, merge campi mancanti, ricostruzione utenti da storico e creazione dei record gara.
-- **Wave 3, Analytics Estratte in Builder OO**: `src/utils/analytics.ts` delega a `UserAnalyticsBuilder` e `SeasonAnalyticsBuilder` in `src/utils/analyticsService.ts`, centralizzando KPI utente, trend, cumulative trend, hit rate per campo, consistency index, confronto stagionale, narrative della stagione e recap gara.
-- **Wave 3, TDD Regressivo su Scoring e Analytics**: introdotti test dedicati sui nuovi service object per blindare punteggi reali/proiettati, ranking live, ricostruzione storico utenti, analytics stagione/utente e stabilita' del recap con output invariato rispetto al comportamento precedente.
-- **Wave 4-5, Save Route Backend Portata in Service Object**: `app.js` utilizza ora `SaveRequestService` in `backend/app-route-service.js` per concentrare session check admin, verifica database con `verifyMongoDatabaseName`, validazione roster, blocco gara (`race_locked`), controllo pronostici completi, classificazione errori e costruzione delle response JSON di errore/successo.
-- **Wave 4-5, Bootstrap Server OO e Wiring Runtime Snellito**: `server.js` delega a `DatabaseConnectionService`, `BackgroundSyncService` e `ServerBootstrapService` in `backend/server-bootstrap-service.js`, separando connessione Mongo, verifica nome database, bootstrap credenziali admin, sync iniziale drivers/calendario e startup del listener Express.
-- **Wave 4-5, App Shell Alleggerita Senza Regressioni UI**: `src/App.tsx` mantiene il wiring della UI ma sposta fuori il fetch risultati, l'idratazione del weekend selezionato e la costruzione del payload da salvare, riducendo l'orchestrazione monolitica senza toccare visual language, testi centralizzati, flussi admin/public o comportamento mobile/desktop.
-- **Facade Legacy Mantenute per Backward Compatibility**: i moduli pubblici esistenti `backend/calendar.js`, `backend/storage.js`, `src/utils/game.ts` e `src/utils/analytics.ts` continuano a esporre le stesse API del repository, ma sono ora facciate sottili sopra implementazioni OO piu' granulari e facili da testare.
-- **Suite TDD Estesa per il Refactor OOP Completo**: aggiunti `tests/results-service.test.js`, `tests/results-client.test.ts`, `tests/app-data-service.test.js`, `tests/weekend-state-service.test.ts`, `tests/game-service.test.ts`, `tests/analytics-service.test.ts`, `tests/app-route-service.test.js` e `tests/server-bootstrap-service.test.js`; aggiornata inoltre `tests/storage.test.js` per coprire la facade di default app data.
-- **Coverage Repository Riallineata al Nuovo Perimetro OOP**: dopo l'introduzione dei nuovi moduli e delle nuove suite, la coverage V8 verificata sull'intero scope ufficiale e' stata riportata e mantenuta al `100%`; la baseline storica descritta in questa wave e' stata poi ulteriormente aggiornata nelle implementazioni successive della stessa release fino ai valori correnti documentati sopra.
-- **Validazione Finale Completa del Refactor**: rieseguiti `npm run lint`, `npm run test`, `npm run test:coverage`, `npm run build`, `npm run test:ui-responsive` e `npm run test:save-local`, tutti con esito verde, a conferma dell'assenza di regressioni funzionali, di build, di responsive layout e di persistenza locale.
-- **Launcher Locale Canonico Confermato e Verificato**: `start_fantaf1.command` e' stato controllato come entrypoint monitorato del repository, confermando il preflight con lint, test, build, startup temporaneo backend/frontend, `test:ui-responsive`, `test:save-local`, cleanup processi e handoff finale a `scripts/dev-launcher.mjs`; verificata anche la sintassi shell del launcher.
-- **Workflow CI/CD Confermati Allineati al Repository Reale**: i workflow `.github/workflows/pr-ci.yml`, `.github/workflows/pr-auto-merge.yml` e `.github/workflows/post-merge-health.yml` sono stati riverificati rispetto agli script e ai check reali del repository, risultando coerenti con lint, coverage, build, responsive-dev, smoke database CI e healthcheck post-merge.
-- **Risultati Ufficiali Preservati Anche con Highlights KO**: il sync calendario separa ora l'arricchimento detail dal lookup highlights best-effort, conservando `meetingKey` numerico, `grandPrixTitle` e metadati ufficiali anche quando il lookup video fallisce; il fetch `GET /api/results/:meetingKey` continua cosi' a risolvere le URL Formula 1 corrette per i weekend conclusi.
-- **TDD Regressivo su Sync Calendario e Results API**: aggiunti test backend dedicati al caso `detail ok + highlights fail` e al recupero dei risultati ufficiali dopo il termine gara con highlights indisponibili, mantenendo la coverage V8 al `100%`.
-- **Regole Repository su Launcher Locale e CI/CD**: `AGENTS.md` e `PROJECT.md` formalizzano `start_fantaf1.command` come launcher locale canonico monitorato, impongono la chiusura dei processi app/Playwright su failure di startup, richiedono la coerenza continua dei workflow GitHub Actions con il repository e vietano esplicitamente ogni push diretto su `main`.
-- **Recap Gara Finita con Titolo GP Corretto**: il parser calendario ignora ora badge Formula 1 come `Chequered Flag` e frammenti di classifica quando risolve `meetingName`; inoltre il recap del weekend concluso mostra il `grandPrixTitle` completo invece del nome breve, con test regressivi backend/UI e coverage V8 mantenuta al `100%`.
-- **Workflow Post-Merge Health Corretto**: il job GitHub Actions `post-merge-health` usa ora `RENDER_HEALTHCHECK_URL` come variabile `env` a livello job per pilotare le condizioni `if:` in modo compatibile con GitHub Actions, eliminando l'errore di validazione del workflow su push e mantenendo invariato il controllo `curl` verso Render.
-- **Hardening Highlights Multi-Source con Anno Stagione Dinamico**: il resolver YouTube Sky Sport F1 usa ora una pipeline OO dedicata con `feed`, `channel search`, `channel videos`, `continuation` e fallback globale, includendo l'anno della stagione della gara nella query e nel ranking per evitare match cross-season.
-- **Refactor OO dell'Area Highlights**: introdotto il modulo `backend/highlights.js` con oggetti espliciti per query building, ranking candidati, validation service, lookup policy e source strategy, mantenendo invariato il contratto pubblico `highlightsVideoUrl` verso frontend e API risultati.
-- **Verifiche Development e Production-Like Preview**: confermati il target `fantaf1_dev` in locale, la compatibilita' della build frontend in preview production-like e la tenuta responsive del CTA highlights su admin/public, desktop/mobile; migliorato inoltre il wrapping del pulsante nel recap del weekend selezionato.
-- **TDD Regressivo e Coverage Repository Ripristinata**: aggiunti test dedicati al modulo OO highlights, al matching con anno dinamico, alle strategy multi-source e alla stabilita' del CTA UI, riportando la coverage V8 ufficiale al `100%` su statements, branches, functions e lines.
-- **Policy Repository OO e Baseline Coverage Aggiornate**: `AGENTS.md` privilegia ora esplicitamente l'orientamento object-oriented quando migliora orchestrazione e separazione delle responsabilita'; aggiornata anche la baseline coverage verificata del repository a `4185 / 4185` statements, `318 / 318` functions, `1817 / 1817` branches e `4185 / 4185` lines.
-- **Highlights Sky Sport Italia F1 nel Recap Weekend**: il riepilogo della gara selezionata mostra ora il pulsante `Guarda Highlights` quando il backend ha risolto un video YouTube di Sky Sport Italia F1 per un weekend concluso; in assenza del video il CTA resta visibile ma disabilitato con lo stato `Video Highlights ancora non disponibile`.
-- **Lookup Highlights Automatico con Fallback Sicuro**: il backend arricchisce il calendario con `highlightsVideoUrl` sia in sync startup sia on-demand tramite sorgente pubblica YouTube, senza bloccare avvio, sync calendario o fetch risultati ufficiali in caso di assenza video o fetch esterno fallito.
-- **TDD Regressivo su Highlights e Responsive Hero Recap**: aggiunti test backend, API, UI e controlli responsive dedicati per coprire lookup, persistenza best-effort, apertura esterna del video e tenuta layout del nuovo CTA su mobile e desktop, mantenendo coverage V8 al `100%`.
-- **Pipeline CI/CD Pre-Merge su Main**: introdotti i workflow GitHub `pr-ci`, `pr-auto-merge` e `post-merge-health`, con check stabili `lint`, `coverage`, `build`, `responsive-dev` e `smoke-ci-db` per bloccare il merge su `main` finche' la PR non risulta completamente verde.
-- **Protezione Branch Main e Auto-Merge GitHub**: formalizzato il flusso protetto verso `main` con auto-merge via Pull Request, required checks dedicati e documentazione repository allineata al deploy post-merge su Render.
-- **CI MongoDB Isolata e Smoke Parametrico**: introdotto l'override centralizzato `MONGODB_DB_NAME_OVERRIDE` e reso parametrico lo smoke di persistenza per eseguire i controlli CI su un database dedicato senza toccare `fantaf1_dev` o `fantaf1`.
-- **Regola `deploya` Riallineata al Flusso PR-Protetto**: `AGENTS.md` richiede ora che il deploy passi da branch push, apertura/aggiornamento PR verso `main`, attivazione dell'auto-merge e prosecuzione con tag/release solo dopo il merge completato da GitHub.
-- **Validator Responsive Corretto per Vista Pubblica**: il tooling `ui-responsive` distingue ora i controlli comuni da quelli admin-only, evitando falsi positivi nella vista pubblica readonly e mantenendo obbligatorie le `select` editabili nella vista admin.
-- **TDD Regressivo Sul Validator Responsive e CI**: estesi i test su risoluzione database, smoke parametrico, export server-side e validazione responsive admin/public, mantenendo il baseline coverage V8 al `100%` su statements, branches, functions e lines.
+- **Ancoraggio Destro Corretto per "Torna al menu"**: il floating control
+  `Torna al menu` usa ora un wrapper fixed esplicitamente ancorato a destra con
+  allineamento del bottone sul bordo destro reale; il tooltip si apre a sinistra
+  senza spostare otticamente il target, preservando font `Formula1`, hash
+  navigation, chiusura del drawer mobile e compatibilita' desktop/mobile anche
+  nella build servita da Express.
+- **Launcher Locale Alleggerito Sul Preflight Responsive**:
+  `start_fantaf1.command` non esegue piu' `npm run test:ui-responsive` nel
+  flusso monitorato di avvio; il launcher mantiene lint, test, build e smoke
+  `test:save-local`, mentre il controllo browser responsive resta un comando
+  esplicito separato da lanciare solo quando rilevante per la task.
+- **Menu Navigazionale Responsive di Sezione Senza Regressioni Visuali**:
+  introdotta una navigazione di sezione coerente con font e visual language
+  esistenti; su desktop la nav e' sticky sotto l'header, mentre su mobile un
+  trigger `Sezioni` apre un drawer laterale sinistro non invasivo, con voci
+  filtrate per vista `admin`/`public`, chiusura su overlay o `Esc`, focus
+  restore e compatibilita' PWA invariata.
+- **Deep Link di Sezione e Stato URL Preservato**: ogni sezione principale della
+  single-page app espone ora un `id` stabile; il frontend aggiorna l'`hash` via
+  `history.replaceState` e usa `IntersectionObserver` per evidenziare la sezione
+  attiva senza perdere `meeting`, `view`, `historyUser` e `historySearch` gia'
+  presenti nell'URL condivisibile.
+- **TDD Regressivo Sul Nuovo Menu Responsive**: estesi i test RTL della shell
+  per coprire rendering desktop, drawer mobile, voci condizionali
+  `admin`/`public`, aggiornamento dell'`hash`, chiusura del drawer e interazione
+  con `IntersectionObserver`; estesi anche i controlli Playwright-like di
+  `ui-responsive` per i nuovi selettori del menu.
+- **Tooling Responsive Esteso ai Nuovi Pattern di Navigazione**:
+  `scripts/ui-responsive/` valida ora la presenza delle sezioni principali, la
+  nav desktop sotto l'header, il trigger mobile `Sezioni`, il drawer laterale
+  sinistro e l'integrita' della CTA `INSTALLA APPLICAZIONE` accanto al nuovo
+  menu, su mobile, tablet e desktop.
+- **Scorciatoia Contestuale "Torna al Menu"**: aggiunto un controllo floating
+  dedicato per risalire rapidamente verso la parte alta della pagina con il menu
+  nuovamente visibile; il pulsante compare solo fuori dall'area iniziale, usa
+  una freccia `ArrowUp`, aggiorna coerentemente l'hash della prima sezione e
+  chiude il drawer mobile se aperto.
+- **Tooltip e Tipografia Allineati al Visual Language**: il controllo
+  `Torna al menu` espone ora un tooltip esplicito con copy centralizzato, icona
+  visibile e font `Formula1` coerente sia sul pulsante sia sul tooltip, con
+  verifiche automatiche dedicate anche nei controlli responsive reali.
+- **Coverage Repository Riallineata Dopo la Navigation Shell**: con i nuovi rami
+  desktop/mobile, `admin`/`public`, drawer aperto/chiuso e hash navigation, la
+  coverage V8 ufficiale e' stata riportata e mantenuta al `100%` con baseline
+  verificata aggiornata a `4766 / 4766` statements, `386 / 386` functions,
+  `1968 / 1968` branches e `4766 / 4766` lines.
+- **Smoke Browser Production-Like Completato**: oltre a `lint`, `test`,
+  `test:coverage`, `build`, `test:ui-responsive` e `test:save-local`, e' stata
+  eseguita anche una verifica browser reale in assetto `production` usando
+  `NODE_ENV=production MONGODB_DB_NAME_OVERRIDE=fantaf1_dev npm start`,
+  confermando nav desktop, trigger mobile `Sezioni` e drawer della build servita
+  da Express senza cambiare target dati runtime.
+- **Refactor OOP End-to-End su Calendar, Persistence, Scoring, Analytics e
+  Runtime**: completata una conversione operativa a oggetti di dominio e
+  service/facade object sui bounded context ancora fortemente procedurali,
+  mantenendo invariati endpoint REST, shape dei payload persistiti, semantica di
+  `meetingKey`, rendering UI e flussi admin/public.
+- **Wave 1, Calendar/Results Backend Estratta in Service OO**:
+  `backend/calendar.js` delega ora il recupero risultati a `RaceResultsService`
+  e `RaceResultsCache` in `backend/race-results-service.js`, isolando cache TTL,
+  derivazione URL ufficiali, parsing classifica, parsing pole/sprint,
+  risoluzione `racePhase`, lookup highlights best-effort e persistenza del
+  risultato del lookup.
+- **Wave 1, Facade Frontend per Risultati Ufficiali**: il frontend non gestisce
+  piu' inline il fetch e la normalizzazione della response dei risultati gara;
+  `src/utils/resultsApi.ts` centralizza `fetchOfficialResults` e
+  `normalizeOfficialResultsResponse`, mentre `src/App.tsx` consuma il facade
+  mantenendo invariata la UX del live projection e del recap weekend.
+- **Wave 1, TDD Regressivo sui Results Service**: aggiunti test dedicati ai
+  nuovi oggetti OO backend e client per bloccare regressioni su cache, fallback,
+  parsing risultati ufficiali e compatibilita' della response lato frontend,
+  preservando il contratto della API `GET /api/results/:meetingKey`.
+- **Wave 2, Persistence Backend Rifattorizzata in Oggetti Espliciti**:
+  introdotto `backend/app-data-service.js` con `ParticipantRosterPolicy`,
+  `WeekendSelectionService`, `AppDataSanitizer` e `AppDataRepository`;
+  `backend/storage.js` e' stato ridotto a facade compatibile che delega
+  creazione default, sanitizzazione, lettura e scrittura dell'`AppData` senza
+  alterare la persistenza MongoDB esistente.
+- **Wave 2, Weekend State Frontend Centralizzato**: introdotto
+  `src/utils/weekendStateService.ts` per assemblare lo stato del weekend
+  selezionato, idratare gli utenti del weekend corrente, costruire il payload
+  persistito e gestire il fallback coerente del `selectedMeetingKey`;
+  `src/App.tsx` e' stato alleggerito dalla logica di wiring non visuale.
+- **Wave 2, Invarianti Roster e Selected Weekend Consolidati**: la
+  normalizzazione dei tre partecipanti, il recupero del GP selezionato, il
+  fallback al weekend successivo, la sincronizzazione tra `users`, `raceResults`
+  e `weekendStateByMeetingKey` e la sanitizzazione dei documenti persistiti ora
+  vivono in un punto unico testabile, evitando duplicazioni e drift tra frontend
+  e backend.
+- **Wave 2, TDD Regressivo su App Data e Weekend State**: aggiunte suite
+  dedicate su `AppDataSanitizer`, `AppDataRepository`, assembler frontend del
+  weekend state e facade storage per coprire hydration, payload di persistenza,
+  fallback calendario vuoto e coerenza del selected weekend.
+- **Wave 3, Scoring Trasformato in Oggetti di Dominio**: `src/utils/game.ts`
+  delega ora a `PredictionScoringService`, `PredictionValidationService` e
+  `RaceHistoryService` in `src/utils/gameService.ts`, separando normalizzazione
+  prediction, calcolo punti, live totals, merge campi mancanti, ricostruzione
+  utenti da storico e creazione dei record gara.
+- **Wave 3, Analytics Estratte in Builder OO**: `src/utils/analytics.ts` delega
+  a `UserAnalyticsBuilder` e `SeasonAnalyticsBuilder` in
+  `src/utils/analyticsService.ts`, centralizzando KPI utente, trend, cumulative
+  trend, hit rate per campo, consistency index, confronto stagionale, narrative
+  della stagione e recap gara.
+- **Wave 3, TDD Regressivo su Scoring e Analytics**: introdotti test dedicati
+  sui nuovi service object per blindare punteggi reali/proiettati, ranking live,
+  ricostruzione storico utenti, analytics stagione/utente e stabilita' del recap
+  con output invariato rispetto al comportamento precedente.
+- **Wave 4-5, Save Route Backend Portata in Service Object**: `app.js` utilizza
+  ora `SaveRequestService` in `backend/app-route-service.js` per concentrare
+  session check admin, verifica database con `verifyMongoDatabaseName`,
+  validazione roster, blocco gara (`race_locked`), controllo pronostici
+  completi, classificazione errori e costruzione delle response JSON di
+  errore/successo.
+- **Wave 4-5, Bootstrap Server OO e Wiring Runtime Snellito**: `server.js`
+  delega a `DatabaseConnectionService`, `BackgroundSyncService` e
+  `ServerBootstrapService` in `backend/server-bootstrap-service.js`, separando
+  connessione Mongo, verifica nome database, bootstrap credenziali admin, sync
+  iniziale drivers/calendario e startup del listener Express.
+- **Wave 4-5, App Shell Alleggerita Senza Regressioni UI**: `src/App.tsx`
+  mantiene il wiring della UI ma sposta fuori il fetch risultati, l'idratazione
+  del weekend selezionato e la costruzione del payload da salvare, riducendo
+  l'orchestrazione monolitica senza toccare visual language, testi
+  centralizzati, flussi admin/public o comportamento mobile/desktop.
+- **Facade Legacy Mantenute per Backward Compatibility**: i moduli pubblici
+  esistenti `backend/calendar.js`, `backend/storage.js`, `src/utils/game.ts` e
+  `src/utils/analytics.ts` continuano a esporre le stesse API del repository, ma
+  sono ora facciate sottili sopra implementazioni OO piu' granulari e facili da
+  testare.
+- **Suite TDD Estesa per il Refactor OOP Completo**: aggiunti
+  `tests/results-service.test.js`, `tests/results-client.test.ts`,
+  `tests/app-data-service.test.js`, `tests/weekend-state-service.test.ts`,
+  `tests/game-service.test.ts`, `tests/analytics-service.test.ts`,
+  `tests/app-route-service.test.js` e `tests/server-bootstrap-service.test.js`;
+  aggiornata inoltre `tests/storage.test.js` per coprire la facade di default
+  app data.
+- **Coverage Repository Riallineata al Nuovo Perimetro OOP**: dopo
+  l'introduzione dei nuovi moduli e delle nuove suite, la coverage V8 verificata
+  sull'intero scope ufficiale e' stata riportata e mantenuta al `100%`; la
+  baseline storica descritta in questa wave e' stata poi ulteriormente
+  aggiornata nelle implementazioni successive della stessa release fino ai
+  valori correnti documentati sopra.
+- **Validazione Finale Completa del Refactor**: rieseguiti `npm run lint`,
+  `npm run test`, `npm run test:coverage`, `npm run build`,
+  `npm run test:ui-responsive` e `npm run test:save-local`, tutti con esito
+  verde, a conferma dell'assenza di regressioni funzionali, di build, di
+  responsive layout e di persistenza locale.
+- **Launcher Locale Canonico Confermato e Verificato**: `start_fantaf1.command`
+  e' stato controllato come entrypoint monitorato del repository, confermando il
+  preflight con lint, test, build, startup temporaneo backend/frontend,
+  `test:ui-responsive`, `test:save-local`, cleanup processi e handoff finale a
+  `scripts/dev-launcher.mjs`; verificata anche la sintassi shell del launcher.
+- **Workflow CI/CD Confermati Allineati al Repository Reale**: i workflow
+  `.github/workflows/pr-ci.yml`, `.github/workflows/pr-auto-merge.yml` e
+  `.github/workflows/post-merge-health.yml` sono stati riverificati rispetto
+  agli script e ai check reali del repository, risultando coerenti con lint,
+  coverage, build, responsive-dev, smoke database CI e healthcheck post-merge.
+- **Risultati Ufficiali Preservati Anche con Highlights KO**: il sync calendario
+  separa ora l'arricchimento detail dal lookup highlights best-effort,
+  conservando `meetingKey` numerico, `grandPrixTitle` e metadati ufficiali anche
+  quando il lookup video fallisce; il fetch `GET /api/results/:meetingKey`
+  continua cosi' a risolvere le URL Formula 1 corrette per i weekend conclusi.
+- **TDD Regressivo su Sync Calendario e Results API**: aggiunti test backend
+  dedicati al caso `detail ok + highlights fail` e al recupero dei risultati
+  ufficiali dopo il termine gara con highlights indisponibili, mantenendo la
+  coverage V8 al `100%`.
+- **Regole Repository su Launcher Locale e CI/CD**: `AGENTS.md` e `PROJECT.md`
+  formalizzano `start_fantaf1.command` come launcher locale canonico monitorato,
+  impongono la chiusura dei processi app/Playwright su failure di startup,
+  richiedono la coerenza continua dei workflow GitHub Actions con il repository
+  e vietano esplicitamente ogni push diretto su `main`.
+- **Recap Gara Finita con Titolo GP Corretto**: il parser calendario ignora ora
+  badge Formula 1 come `Chequered Flag` e frammenti di classifica quando risolve
+  `meetingName`; inoltre il recap del weekend concluso mostra il
+  `grandPrixTitle` completo invece del nome breve, con test regressivi
+  backend/UI e coverage V8 mantenuta al `100%`.
+- **Workflow Post-Merge Health Corretto**: il job GitHub Actions
+  `post-merge-health` usa ora `RENDER_HEALTHCHECK_URL` come variabile `env` a
+  livello job per pilotare le condizioni `if:` in modo compatibile con GitHub
+  Actions, eliminando l'errore di validazione del workflow su push e mantenendo
+  invariato il controllo `curl` verso Render.
+- **Hardening Highlights Multi-Source con Anno Stagione Dinamico**: il resolver
+  YouTube Sky Sport F1 usa ora una pipeline OO dedicata con `feed`,
+  `channel search`, `channel videos`, `continuation` e fallback globale,
+  includendo l'anno della stagione della gara nella query e nel ranking per
+  evitare match cross-season.
+- **Refactor OO dell'Area Highlights**: introdotto il modulo
+  `backend/highlights.js` con oggetti espliciti per query building, ranking
+  candidati, validation service, lookup policy e source strategy, mantenendo
+  invariato il contratto pubblico `highlightsVideoUrl` verso frontend e API
+  risultati.
+- **Verifiche Development e Production-Like Preview**: confermati il target
+  `fantaf1_dev` in locale, la compatibilita' della build frontend in preview
+  production-like e la tenuta responsive del CTA highlights su admin/public,
+  desktop/mobile; migliorato inoltre il wrapping del pulsante nel recap del
+  weekend selezionato.
+- **TDD Regressivo e Coverage Repository Ripristinata**: aggiunti test dedicati
+  al modulo OO highlights, al matching con anno dinamico, alle strategy
+  multi-source e alla stabilita' del CTA UI, riportando la coverage V8 ufficiale
+  al `100%` su statements, branches, functions e lines.
+- **Policy Repository OO e Baseline Coverage Aggiornate**: `AGENTS.md`
+  privilegia ora esplicitamente l'orientamento object-oriented quando migliora
+  orchestrazione e separazione delle responsabilita'; aggiornata anche la
+  baseline coverage verificata del repository a `4185 / 4185` statements,
+  `318 / 318` functions, `1817 / 1817` branches e `4185 / 4185` lines.
+- **Highlights Sky Sport Italia F1 nel Recap Weekend**: il riepilogo della gara
+  selezionata mostra ora il pulsante `Guarda Highlights` quando il backend ha
+  risolto un video YouTube di Sky Sport Italia F1 per un weekend concluso; in
+  assenza del video il CTA resta visibile ma disabilitato con lo stato
+  `Video Highlights ancora non disponibile`.
+- **Lookup Highlights Automatico con Fallback Sicuro**: il backend arricchisce
+  il calendario con `highlightsVideoUrl` sia in sync startup sia on-demand
+  tramite sorgente pubblica YouTube, senza bloccare avvio, sync calendario o
+  fetch risultati ufficiali in caso di assenza video o fetch esterno fallito.
+- **TDD Regressivo su Highlights e Responsive Hero Recap**: aggiunti test
+  backend, API, UI e controlli responsive dedicati per coprire lookup,
+  persistenza best-effort, apertura esterna del video e tenuta layout del nuovo
+  CTA su mobile e desktop, mantenendo coverage V8 al `100%`.
+- **Pipeline CI/CD Pre-Merge su Main**: introdotti i workflow GitHub `pr-ci`,
+  `pr-auto-merge` e `post-merge-health`, con check stabili `lint`, `coverage`,
+  `build`, `responsive-dev` e `smoke-ci-db` per bloccare il merge su `main`
+  finche' la PR non risulta completamente verde.
+- **Protezione Branch Main e Auto-Merge GitHub**: formalizzato il flusso
+  protetto verso `main` con auto-merge via Pull Request, required checks
+  dedicati e documentazione repository allineata al deploy post-merge su Render.
+- **CI MongoDB Isolata e Smoke Parametrico**: introdotto l'override
+  centralizzato `MONGODB_DB_NAME_OVERRIDE` e reso parametrico lo smoke di
+  persistenza per eseguire i controlli CI su un database dedicato senza toccare
+  `fantaf1_dev` o `fantaf1`.
+- **Regola `deploya` Riallineata al Flusso PR-Protetto**: `AGENTS.md` richiede
+  ora che il deploy passi da branch push, apertura/aggiornamento PR verso
+  `main`, attivazione dell'auto-merge e prosecuzione con tag/release solo dopo
+  il merge completato da GitHub.
+- **Validator Responsive Corretto per Vista Pubblica**: il tooling
+  `ui-responsive` distingue ora i controlli comuni da quelli admin-only,
+  evitando falsi positivi nella vista pubblica readonly e mantenendo
+  obbligatorie le `select` editabili nella vista admin.
+- **TDD Regressivo Sul Validator Responsive e CI**: estesi i test su risoluzione
+  database, smoke parametrico, export server-side e validazione responsive
+  admin/public, mantenendo il baseline coverage V8 al `100%` su statements,
+  branches, functions e lines.
 
-- **Dropdown Windows Resi Leggibili**: i `select` condivisi usano ora token dedicati, fondo opaco, `color-scheme: dark` e regole esplicite per `option`/`optgroup`, evitando testo invisibile o contrasto instabile nei menu nativi su Windows e PWA standalone.
-- **Controlli Responsive Estesi ai Form Control**: il tooling `ui-responsive` ispeziona ora anche i dropdown chiave della UI e fallisce quando rileva testo o sfondi trasparenti sui `select` condivisi.
-- **TDD Regressivo sui Dropdown Cross-Platform**: aggiunti test UI e validazioni dedicate per coprire la presenza dei dropdown nelle viste admin/public e impedire regressioni di stile sui controlli nativi.
-- **Installazione PWA Mobile Riallineata**: la CTA `INSTALLA APPLICAZIONE` e' ora gestita in modo contestuale sulla shell frontend e compare in vista mobile solo quando l'app non risulta gia' installata o aperta in modalita' standalone.
-- **Prompt Nativo e Flusso Guidato iOS Distinti**: sui browser che espongono `beforeinstallprompt` il pulsante usa il prompt nativo di installazione, mentre su `iPhone` e `iPad` con `Safari` apre un dialog guidato con i passaggi `Condividi -> Aggiungi a Home`, evitando percorsi morti sui browser mobile non supportati.
-- **Detection Installazione Centralizzata e Sicura**: il frontend usa ora una risoluzione esplicita e testata di `display-mode: standalone`, `navigator.standalone`, viewport mobile e compatibilita' iOS Safari, azzerando la CTA anche dopo l'evento `appinstalled` senza toccare backend, persistence o logica punteggi.
-- **Copy PWA e Dialog Mobile Centralizzati**: label `INSTALLA APPLICAZIONE`, messaggi toast e contenuti del dialog iOS sono stati spostati in configurazione applicativa, mantenendo il vincolo repository di assenza di stringhe applicative hardcoded nei componenti.
-- **TDD Regressivo sulla PWA Mobile**: estesi i test UI per coprire prompt nativo mobile, flusso guidato iOS/Safari, assenza della CTA quando la PWA e' gia' installata e assenza della CTA su browser mobile non supportati, mantenendo coverage V8 al `100%` su statements, branches, functions e lines.
-- **Documentazione README Allineata alla PWA Mobile**: il `README.md` descrive ora in modo esplicito il comportamento della CTA di installazione su Android/Chrome, iPhone/iPad Safari, stato standalone e browser mobili non compatibili.
-- **Chip Stato Weekend Corretta Post-Qualifica**: la chip `PRONOSTICI ANCORA APERTI` nello strip alto viene ora nascosta per il weekend selezionato quando Formula1.com ha gia' pubblicato il risultato ufficiale di qualifica o sprint (`pole`), anche se `racePhase` e' ancora `open`.
-- **Regola UI Centralizzata sul Weekend Selezionato**: il frontend usa ora un helper dedicato per distinguere il solo caso `open` realmente pre-qualifica dal caso post-qualifica del `selectedMeetingKey`, senza modificare lock server-side, flussi di salvataggio o banner `live`/`finished`.
-- **TDD Regressivo Sullo Strip Alto**: estesi i test helper e UI per coprire visibilita' della chip, cambio weekend, assenza di contaminazione tra meeting diversi e protezione da risposte stale dell'endpoint risultati.
-- **Stato Gara Dinamico End-to-End**: `GET /api/results/:meetingKey` restituisce ora anche `racePhase` (`open`, `live`, `finished`) mantenendo il payload flatten dei risultati ufficiali; il frontend usa lo stato backend per distinguere correttamente gara in corso e gara terminata senza alterare il lock server-side dei pronostici.
-- **Backend Risultati Riallineato e Ottimizzato**: centralizzata la risoluzione di stato gara sul weekend selezionato e rimossa la lettura duplicata del calendario nel flusso risultati ufficiali, preservando compatibilita', cache e sicurezza dei flussi production-facing.
-- **Copy Readonly Admin Aggiornato**: il banner della vista non admin mostra ora `Solo gli admin possono modificare i pronostici.` tramite configurazione centralizzata, senza introdurre stringhe inline o modifiche ai flussi di business.
-- **README e Contratti Documentati**: aggiornata la documentazione per esplicitare la separazione tra `race lock` e `racePhase`, il criterio di completamento gara basato sui risultati ufficiali e il payload reale dell'endpoint risultati.
-- **Protocollo AGENTS Rafforzato su Coverage e Piani**: `AGENTS.md` richiede ora in modo esplicito copertura totale al `100%`, strategia `RED -> GREEN -> REFACTOR` mostrata nei piani e riepilogo finale con verifica coverage eseguita.
-- **Coverage Race Lock Portata al 100%**: estesi i test API sul fallback `endDate` del messaggio `race_locked` e aggiunta una suite isolata per coprire il fallback difensivo `unknown` in `app.js`, mantenendo invariato il comportamento runtime e il baseline coverage ufficiale a `100%`.
-- **Cleanup Conservativo con Snapshot Locale Integrale**: creata una snapshot completa del working tree locale prima del cleanup operativo e rimossi i residui locali rigenerabili (`.playwright-cli`, `output`, `screenshot`, log locali, `.DS_Store`) insieme ai residui file-based legacy in `F1Result/`.
-- **Launcher Locale Forzato in Development**: `start_fantaf1.command` e `scripts/dev-launcher.mjs` impongono ora esplicitamente `NODE_ENV=development`, cosi' il bootstrap locale resta allineato in modo deterministico a `fantaf1_dev` anche quando l'ambiente chiamante o `.env` espongono valori incoerenti.
-- **Hardening TDD dello Stack Responsive Locale**: `scripts/ui-responsive/diagnostics.mjs` forza a sua volta `development` per il bootstrap del check browser reale; aggiunti test dedicati sul launcher e sul caricamento env del tooling responsive per coprire il caso regressivo `production` ereditato dal parent process.
-- **Rimozione Asset Orfani di Scaffold e Branding Legacy**: eliminati gli asset non piu' referenziati `src/assets/react.svg`, `src/assets/pitstop.png`, `src/assets/tire.png`, `public/vite.svg` e `public/tire.png`, mantenendo invariati il loader attuale, gli asset PWA e il percorso di deploy su Render.
-- **Centralizzazione Stringhe Applicative e Runtime**: introdotti entrypoint dedicati per il copy frontend (`src/uiText.ts`) e backend (`backend/text.js`), con estensione di `config/app-config.json` per spostare testi UI, messaggi runtime e messaggistica backend fuori dai componenti e dai flussi server principali.
-- **Regola Persistente No Hardcoded Strings + TDD**: `AGENTS.md` ora impone esplicitamente la centralizzazione delle stringhe applicative e l'uso obbligatorio del ciclo RED/GREEN/REFACTOR per fix, modifiche e nuove implementazioni; la stessa preferenza e' stata registrata anche nella memoria globale di Codex dell'utente.
-- **Refactor Modulare del Check Responsive**: `scripts/ui-responsive-check.mjs` e' stato ridotto a wrapper CLI; bootstrap stack locale, adapter Playwright, validazione stato, scenari, diagnostica e cleanup vivono ora in moduli dedicati sotto `scripts/ui-responsive/`.
-- **Baseline Coverage da Aggiornare Sempre**: `AGENTS.md` impone ora in modo esplicito l'aggiornamento automatico del baseline coverage ogni volta che una task produce un nuovo risultato verificato di release coverage, mantenendo invariati i numeri quando il risultato resta gia' al 100%.
-- **Vista Pubblica Condivisibile e Insight Stagionali**: la UI espone ora `Weekend pulse`, `Analisi stagione`, guida pubblica, filtri storico e drill-down dei GP; `meeting`, `view`, `historyUser`, `historySearch` e `hash` vengono idratati dall'URL e riscritti in modo coerente per condividere la vista corrente senza concedere accesso admin via query string.
-- **Analytics Stagionali Tipizzate**: introdotti summary derivati per gap leader, costanza, rendimento Sprint e recap dell'ultimo GP, calcolati dal solo storico gia' persistito senza mutare i dati di gioco.
-- **Smoke Responsive Stabilizzato**: `npm run test:ui-responsive` usa ora un adapter Playwright CLI con timeout espliciti, navigazione nativa verificata, preflight fail-fast su sessioni `ui-*` residue e teardown piu' robusto senza killare processi non creati dal comando.
-- **Diagnostica UI Responsive Potenziata**: in caso di shell bloccata o navigazione incoerente il comando salva summary, stato pagina, tab-list, screenshot se disponibile, log console e network in `output/playwright/ui-responsive/`, evitando timeout opachi.
-- **TDD Sul Tooling Responsive**: la suite monolitica responsive e' stata spezzata in test dedicati per stack locale, adapter Playwright, validazione, scenari e runner, mantenendo la copertura su dirty-state Playwright, timeout CLI, `goto`, readiness minima, artefatti e ordering del cleanup.
-- **Hover/Focus Surface Unificati**: i nuovi riquadri KPI, analytics, storico e confronto stagione riusano ora lo stesso feedback visuale interattivo gia' presente negli altri riquadri dell'app, con coerenza tra vista admin e vista pubblica.
-- **Coverage Estesa Allo Scope Applicativo Ufficiale**: il perimetro coverage include ora `app.js`, `server.js`, tutto `backend/**/*.js` e tutti i file applicativi `src/**/*.ts(x)`, mantenendo il 100% su statements, functions, branches e lines.
-- **Hardening Browser Admin/Public/Mobile/Desktop**: il controllo responsive valida ora anche la sanita' delle API di bootstrap, distingue stack locale parziale da stack realmente pronta e verifica il toggle admin/public su tutti i breakpoint principali.
+- **Dropdown Windows Resi Leggibili**: i `select` condivisi usano ora token
+  dedicati, fondo opaco, `color-scheme: dark` e regole esplicite per
+  `option`/`optgroup`, evitando testo invisibile o contrasto instabile nei menu
+  nativi su Windows e PWA standalone.
+- **Controlli Responsive Estesi ai Form Control**: il tooling `ui-responsive`
+  ispeziona ora anche i dropdown chiave della UI e fallisce quando rileva testo
+  o sfondi trasparenti sui `select` condivisi.
+- **TDD Regressivo sui Dropdown Cross-Platform**: aggiunti test UI e validazioni
+  dedicate per coprire la presenza dei dropdown nelle viste admin/public e
+  impedire regressioni di stile sui controlli nativi.
+- **Installazione PWA Mobile Riallineata**: la CTA `INSTALLA APPLICAZIONE` e'
+  ora gestita in modo contestuale sulla shell frontend e compare in vista mobile
+  solo quando l'app non risulta gia' installata o aperta in modalita'
+  standalone.
+- **Prompt Nativo e Flusso Guidato iOS Distinti**: sui browser che espongono
+  `beforeinstallprompt` il pulsante usa il prompt nativo di installazione,
+  mentre su `iPhone` e `iPad` con `Safari` apre un dialog guidato con i passaggi
+  `Condividi -> Aggiungi a Home`, evitando percorsi morti sui browser mobile non
+  supportati.
+- **Detection Installazione Centralizzata e Sicura**: il frontend usa ora una
+  risoluzione esplicita e testata di `display-mode: standalone`,
+  `navigator.standalone`, viewport mobile e compatibilita' iOS Safari, azzerando
+  la CTA anche dopo l'evento `appinstalled` senza toccare backend, persistence o
+  logica punteggi.
+- **Copy PWA e Dialog Mobile Centralizzati**: label `INSTALLA APPLICAZIONE`,
+  messaggi toast e contenuti del dialog iOS sono stati spostati in
+  configurazione applicativa, mantenendo il vincolo repository di assenza di
+  stringhe applicative hardcoded nei componenti.
+- **TDD Regressivo sulla PWA Mobile**: estesi i test UI per coprire prompt
+  nativo mobile, flusso guidato iOS/Safari, assenza della CTA quando la PWA e'
+  gia' installata e assenza della CTA su browser mobile non supportati,
+  mantenendo coverage V8 al `100%` su statements, branches, functions e lines.
+- **Documentazione README Allineata alla PWA Mobile**: il `README.md` descrive
+  ora in modo esplicito il comportamento della CTA di installazione su
+  Android/Chrome, iPhone/iPad Safari, stato standalone e browser mobili non
+  compatibili.
+- **Chip Stato Weekend Corretta Post-Qualifica**: la chip
+  `PRONOSTICI ANCORA APERTI` nello strip alto viene ora nascosta per il weekend
+  selezionato quando Formula1.com ha gia' pubblicato il risultato ufficiale di
+  qualifica o sprint (`pole`), anche se `racePhase` e' ancora `open`.
+- **Regola UI Centralizzata sul Weekend Selezionato**: il frontend usa ora un
+  helper dedicato per distinguere il solo caso `open` realmente pre-qualifica
+  dal caso post-qualifica del `selectedMeetingKey`, senza modificare lock
+  server-side, flussi di salvataggio o banner `live`/`finished`.
+- **TDD Regressivo Sullo Strip Alto**: estesi i test helper e UI per coprire
+  visibilita' della chip, cambio weekend, assenza di contaminazione tra meeting
+  diversi e protezione da risposte stale dell'endpoint risultati.
+- **Stato Gara Dinamico End-to-End**: `GET /api/results/:meetingKey` restituisce
+  ora anche `racePhase` (`open`, `live`, `finished`) mantenendo il payload
+  flatten dei risultati ufficiali; il frontend usa lo stato backend per
+  distinguere correttamente gara in corso e gara terminata senza alterare il
+  lock server-side dei pronostici.
+- **Backend Risultati Riallineato e Ottimizzato**: centralizzata la risoluzione
+  di stato gara sul weekend selezionato e rimossa la lettura duplicata del
+  calendario nel flusso risultati ufficiali, preservando compatibilita', cache e
+  sicurezza dei flussi production-facing.
+- **Copy Readonly Admin Aggiornato**: il banner della vista non admin mostra ora
+  `Solo gli admin possono modificare i pronostici.` tramite configurazione
+  centralizzata, senza introdurre stringhe inline o modifiche ai flussi di
+  business.
+- **README e Contratti Documentati**: aggiornata la documentazione per
+  esplicitare la separazione tra `race lock` e `racePhase`, il criterio di
+  completamento gara basato sui risultati ufficiali e il payload reale
+  dell'endpoint risultati.
+- **Protocollo AGENTS Rafforzato su Coverage e Piani**: `AGENTS.md` richiede ora
+  in modo esplicito copertura totale al `100%`, strategia
+  `RED -> GREEN -> REFACTOR` mostrata nei piani e riepilogo finale con verifica
+  coverage eseguita.
+- **Coverage Race Lock Portata al 100%**: estesi i test API sul fallback
+  `endDate` del messaggio `race_locked` e aggiunta una suite isolata per coprire
+  il fallback difensivo `unknown` in `app.js`, mantenendo invariato il
+  comportamento runtime e il baseline coverage ufficiale a `100%`.
+- **Cleanup Conservativo con Snapshot Locale Integrale**: creata una snapshot
+  completa del working tree locale prima del cleanup operativo e rimossi i
+  residui locali rigenerabili (`.playwright-cli`, `output`, `screenshot`, log
+  locali, `.DS_Store`) insieme ai residui file-based legacy in `F1Result/`.
+- **Launcher Locale Forzato in Development**: `start_fantaf1.command` e
+  `scripts/dev-launcher.mjs` impongono ora esplicitamente
+  `NODE_ENV=development`, cosi' il bootstrap locale resta allineato in modo
+  deterministico a `fantaf1_dev` anche quando l'ambiente chiamante o `.env`
+  espongono valori incoerenti.
+- **Hardening TDD dello Stack Responsive Locale**:
+  `scripts/ui-responsive/diagnostics.mjs` forza a sua volta `development` per il
+  bootstrap del check browser reale; aggiunti test dedicati sul launcher e sul
+  caricamento env del tooling responsive per coprire il caso regressivo
+  `production` ereditato dal parent process.
+- **Rimozione Asset Orfani di Scaffold e Branding Legacy**: eliminati gli asset
+  non piu' referenziati `src/assets/react.svg`, `src/assets/pitstop.png`,
+  `src/assets/tire.png`, `public/vite.svg` e `public/tire.png`, mantenendo
+  invariati il loader attuale, gli asset PWA e il percorso di deploy su Render.
+- **Centralizzazione Stringhe Applicative e Runtime**: introdotti entrypoint
+  dedicati per il copy frontend (`src/uiText.ts`) e backend (`backend/text.js`),
+  con estensione di `config/app-config.json` per spostare testi UI, messaggi
+  runtime e messaggistica backend fuori dai componenti e dai flussi server
+  principali.
+- **Regola Persistente No Hardcoded Strings + TDD**: `AGENTS.md` ora impone
+  esplicitamente la centralizzazione delle stringhe applicative e l'uso
+  obbligatorio del ciclo RED/GREEN/REFACTOR per fix, modifiche e nuove
+  implementazioni; la stessa preferenza e' stata registrata anche nella memoria
+  globale di Codex dell'utente.
+- **Refactor Modulare del Check Responsive**: `scripts/ui-responsive-check.mjs`
+  e' stato ridotto a wrapper CLI; bootstrap stack locale, adapter Playwright,
+  validazione stato, scenari, diagnostica e cleanup vivono ora in moduli
+  dedicati sotto `scripts/ui-responsive/`.
+- **Baseline Coverage da Aggiornare Sempre**: `AGENTS.md` impone ora in modo
+  esplicito l'aggiornamento automatico del baseline coverage ogni volta che una
+  task produce un nuovo risultato verificato di release coverage, mantenendo
+  invariati i numeri quando il risultato resta gia' al 100%.
+- **Vista Pubblica Condivisibile e Insight Stagionali**: la UI espone ora
+  `Weekend pulse`, `Analisi stagione`, guida pubblica, filtri storico e
+  drill-down dei GP; `meeting`, `view`, `historyUser`, `historySearch` e `hash`
+  vengono idratati dall'URL e riscritti in modo coerente per condividere la
+  vista corrente senza concedere accesso admin via query string.
+- **Analytics Stagionali Tipizzate**: introdotti summary derivati per gap
+  leader, costanza, rendimento Sprint e recap dell'ultimo GP, calcolati dal solo
+  storico gia' persistito senza mutare i dati di gioco.
+- **Smoke Responsive Stabilizzato**: `npm run test:ui-responsive` usa ora un
+  adapter Playwright CLI con timeout espliciti, navigazione nativa verificata,
+  preflight fail-fast su sessioni `ui-*` residue e teardown piu' robusto senza
+  killare processi non creati dal comando.
+- **Diagnostica UI Responsive Potenziata**: in caso di shell bloccata o
+  navigazione incoerente il comando salva summary, stato pagina, tab-list,
+  screenshot se disponibile, log console e network in
+  `output/playwright/ui-responsive/`, evitando timeout opachi.
+- **TDD Sul Tooling Responsive**: la suite monolitica responsive e' stata
+  spezzata in test dedicati per stack locale, adapter Playwright, validazione,
+  scenari e runner, mantenendo la copertura su dirty-state Playwright, timeout
+  CLI, `goto`, readiness minima, artefatti e ordering del cleanup.
+- **Hover/Focus Surface Unificati**: i nuovi riquadri KPI, analytics, storico e
+  confronto stagione riusano ora lo stesso feedback visuale interattivo gia'
+  presente negli altri riquadri dell'app, con coerenza tra vista admin e vista
+  pubblica.
+- **Coverage Estesa Allo Scope Applicativo Ufficiale**: il perimetro coverage
+  include ora `app.js`, `server.js`, tutto `backend/**/*.js` e tutti i file
+  applicativi `src/**/*.ts(x)`, mantenendo il 100% su statements, functions,
+  branches e lines.
+- **Hardening Browser Admin/Public/Mobile/Desktop**: il controllo responsive
+  valida ora anche la sanita' delle API di bootstrap, distingue stack locale
+  parziale da stack realmente pronta e verifica il toggle admin/public su tutti
+  i breakpoint principali.
 
 ## v1.3.12
 
-- **Auth Reale Admin/Public**: introdotte sessioni admin firmate via cookie HTTP-only, endpoint `GET /api/session`, `POST /api/admin/session` e `DELETE /api/admin/session`, con default `public` in production e `admin` in development.
-- **Dashboard KPI e Analytics Estese**: introdotti KPI utente, analytics deep-dive, storico mobile piu' compatto, toast UX e CTA PWA senza modificare i payload pubblici principali.
-- **Roster Dinamico da Database**: eliminato l'hardcoding runtime dei nomi giocatore; validazione e riordino usano ora il roster persistito nell'ultimo `appdata.users`, mantenendo fallback neutrale solo su database vuoto.
-- **Rimozione Completa Weekend Boost**: eliminati scoring bonus, route dedicate, stato per-weekend, campi storage/schema e pannelli UI del boost, con script `migrate:remove-weekend-boost` per ripulire i documenti legacy.
-- **Hardening Server-Side**: rafforzate la validazione partecipanti e la sanitizzazione storage per impedire save semanticamente invalidi.
-- **Coverage e Regressioni Verificate**: validati `vitest` con coverage `100%`, `lint`, `build` e smoke `test:save-local` sullo stato finale della release `v1.3.12`; controllo `test:ui-responsive` esplicitamente saltato in deploy su override manuale.
+- **Auth Reale Admin/Public**: introdotte sessioni admin firmate via cookie
+  HTTP-only, endpoint `GET /api/session`, `POST /api/admin/session` e
+  `DELETE /api/admin/session`, con default `public` in production e `admin` in
+  development.
+- **Dashboard KPI e Analytics Estese**: introdotti KPI utente, analytics
+  deep-dive, storico mobile piu' compatto, toast UX e CTA PWA senza modificare i
+  payload pubblici principali.
+- **Roster Dinamico da Database**: eliminato l'hardcoding runtime dei nomi
+  giocatore; validazione e riordino usano ora il roster persistito nell'ultimo
+  `appdata.users`, mantenendo fallback neutrale solo su database vuoto.
+- **Rimozione Completa Weekend Boost**: eliminati scoring bonus, route dedicate,
+  stato per-weekend, campi storage/schema e pannelli UI del boost, con script
+  `migrate:remove-weekend-boost` per ripulire i documenti legacy.
+- **Hardening Server-Side**: rafforzate la validazione partecipanti e la
+  sanitizzazione storage per impedire save semanticamente invalidi.
+- **Coverage e Regressioni Verificate**: validati `vitest` con coverage `100%`,
+  `lint`, `build` e smoke `test:save-local` sullo stato finale della release
+  `v1.3.12`; controllo `test:ui-responsive` esplicitamente saltato in deploy su
+  override manuale.
 
 ## v1.3.11
 
-- **Hotfix Build Render Deterministica**: aggiunto `.npmrc` con `include=dev` per garantire anche in ambiente build la presenza di TypeScript, Vite e dei type package React necessari alla compilazione frontend.
-- **Documentazione Deploy Allineata**: aggiornata la sezione Render del `README.md` per esplicitare che il repository forza l'installazione delle `devDependencies` durante la build ed evitare regressioni dovute a configurazioni implicite della piattaforma.
-- **Release Validation Completa**: riprodotto il failure con installazione production-like senza devDependencies e validati poi `build`, `lint` e `vitest` dopo l'hotfix prima della release `v1.3.11`.
+- **Hotfix Build Render Deterministica**: aggiunto `.npmrc` con `include=dev`
+  per garantire anche in ambiente build la presenza di TypeScript, Vite e dei
+  type package React necessari alla compilazione frontend.
+- **Documentazione Deploy Allineata**: aggiornata la sezione Render del
+  `README.md` per esplicitare che il repository forza l'installazione delle
+  `devDependencies` durante la build ed evitare regressioni dovute a
+  configurazioni implicite della piattaforma.
+- **Release Validation Completa**: riprodotto il failure con installazione
+  production-like senza devDependencies e validati poi `build`, `lint` e
+  `vitest` dopo l'hotfix prima della release `v1.3.11`.
 
 ## v1.3.10
 
-- **Set Icone Browser e PWA Riallineato**: favicon, `apple-touch-icon`, icone `192x192`, `512x512` e `maskable` usano ora il set grafico reale fornito in `IMMAGINIDAUSARE`, pubblicato nei path statici standard dell'app.
-- **Loader Iniziale Aggiornato**: il caricamento iniziale non usa piu' la combinazione `pitstop` + `tire`; mostra invece il logo splash `FantaF1` coerente con il nuovo branding visuale.
-- **Asset Splash Preparati per la Shell**: aggiunti gli asset statici `ios-splash-screen.png` e `splash-logo-only.png` per mantenere coerente la shell browser/PWA senza introdurre wiring iOS multi-device extra.
-- **Disciplina Deploy Formalizzata**: `AGENTS.md` documenta ora il trigger esplicito `deploya`, con workflow di release obbligatorio e failure policy deterministica.
-- **Regressioni Coperte e Release Validation Completa**: aggiunti test statici sugli asset PWA/browser e test UI sul loader; validati `vitest`, coverage `100%`, `lint` e `build` prima della release `v1.3.10`.
+- **Set Icone Browser e PWA Riallineato**: favicon, `apple-touch-icon`, icone
+  `192x192`, `512x512` e `maskable` usano ora il set grafico reale fornito in
+  `IMMAGINIDAUSARE`, pubblicato nei path statici standard dell'app.
+- **Loader Iniziale Aggiornato**: il caricamento iniziale non usa piu' la
+  combinazione `pitstop` + `tire`; mostra invece il logo splash `FantaF1`
+  coerente con il nuovo branding visuale.
+- **Asset Splash Preparati per la Shell**: aggiunti gli asset statici
+  `ios-splash-screen.png` e `splash-logo-only.png` per mantenere coerente la
+  shell browser/PWA senza introdurre wiring iOS multi-device extra.
+- **Disciplina Deploy Formalizzata**: `AGENTS.md` documenta ora il trigger
+  esplicito `deploya`, con workflow di release obbligatorio e failure policy
+  deterministica.
+- **Regressioni Coperte e Release Validation Completa**: aggiunti test statici
+  sugli asset PWA/browser e test UI sul loader; validati `vitest`, coverage
+  `100%`, `lint` e `build` prima della release `v1.3.10`.
 
 ## v1.3.9
 
-- **Recupero Risultati Ufficiali Riallineato per Tutti i Weekend**: `GET /api/results/:meetingKey` costruisce ora gli URL Formula1.com nel formato canonico `.../results/<year>/races/<meetingKey>/<slug>/...`, cosi' qualifying, race-result e sprint-results tornano ad aggiornarsi correttamente anche per i weekend futuri.
-- **Riepilogo Risultati Hero Piu' Leggibile**: Nel riquadro dei risultati del weekend selezionato i piloti sono mostrati come `Nome Cognome`, mantenuti su una sola riga quando il viewport desktop lo consente e con fallback responsive sicuro su mobile.
-- **Regressioni Coperte da Test Mirati**: Estesi i test backend sugli URL ufficiali esatti di Formula1.com e i test UI sul hero card dei risultati selezionati, mantenendo invariato il formato `Cognome Nome` nel resto dell'app.
-- **Release Validation Completa**: Validati `lint`, suite `vitest`, `build`, `test:ui-responsive` e `test:save-local` sullo stack locale di sviluppo prima della preparazione della release `v1.3.9`.
+- **Recupero Risultati Ufficiali Riallineato per Tutti i Weekend**:
+  `GET /api/results/:meetingKey` costruisce ora gli URL Formula1.com nel formato
+  canonico `.../results/<year>/races/<meetingKey>/<slug>/...`, cosi' qualifying,
+  race-result e sprint-results tornano ad aggiornarsi correttamente anche per i
+  weekend futuri.
+- **Riepilogo Risultati Hero Piu' Leggibile**: Nel riquadro dei risultati del
+  weekend selezionato i piloti sono mostrati come `Nome Cognome`, mantenuti su
+  una sola riga quando il viewport desktop lo consente e con fallback responsive
+  sicuro su mobile.
+- **Regressioni Coperte da Test Mirati**: Estesi i test backend sugli URL
+  ufficiali esatti di Formula1.com e i test UI sul hero card dei risultati
+  selezionati, mantenendo invariato il formato `Cognome Nome` nel resto
+  dell'app.
+- **Release Validation Completa**: Validati `lint`, suite `vitest`, `build`,
+  `test:ui-responsive` e `test:save-local` sullo stack locale di sviluppo prima
+  della preparazione della release `v1.3.9`.
 
 ## v1.3.8
 
-- **Sincronizzazione Pronostici per Weekend**: I pronostici e i risultati correnti vengono ora persistiti per `meetingKey` tramite `weekendStateByMeetingKey`, cosi' il cambio weekend riallinea subito tutta la UI al draft corretto del weekend selezionato.
-- **Preservazione Dati Legacy e Race Lock Corretto**: Backend, storage e validazione ricostruiscono i dati legacy nel weekend corretto e applicano save manuale e race lock solo al weekend selezionato, senza sovrascrivere i draft degli altri weekend.
-- **Placeholder e Reset Coerenti per Weekend Vuoti**: Un weekend senza pronostici salvati mostra nuovamente `Seleziona un pilota`, mentre il reset pulisce e salva solo il weekend attivo.
-- **Launcher Locale Stabilizzato**: Il launcher integrato non chiude piu' backend e frontend per falsi negativi sul rilevamento della finestra Chrome, eliminando i `Failed to fetch` intermittenti durante il lavoro locale.
-- **Suite di Test e Smoke Estesa**: Aggiunti test regressivi su stato per-weekend, migrazione backend, launcher locale e switch weekend; lo smoke responsive copre anche il cambio weekend e il viewport iPhone 16 Pro Max.
+- **Sincronizzazione Pronostici per Weekend**: I pronostici e i risultati
+  correnti vengono ora persistiti per `meetingKey` tramite
+  `weekendStateByMeetingKey`, cosi' il cambio weekend riallinea subito tutta la
+  UI al draft corretto del weekend selezionato.
+- **Preservazione Dati Legacy e Race Lock Corretto**: Backend, storage e
+  validazione ricostruiscono i dati legacy nel weekend corretto e applicano save
+  manuale e race lock solo al weekend selezionato, senza sovrascrivere i draft
+  degli altri weekend.
+- **Placeholder e Reset Coerenti per Weekend Vuoti**: Un weekend senza
+  pronostici salvati mostra nuovamente `Seleziona un pilota`, mentre il reset
+  pulisce e salva solo il weekend attivo.
+- **Launcher Locale Stabilizzato**: Il launcher integrato non chiude piu'
+  backend e frontend per falsi negativi sul rilevamento della finestra Chrome,
+  eliminando i `Failed to fetch` intermittenti durante il lavoro locale.
+- **Suite di Test e Smoke Estesa**: Aggiunti test regressivi su stato
+  per-weekend, migrazione backend, launcher locale e switch weekend; lo smoke
+  responsive copre anche il cambio weekend e il viewport iPhone 16 Pro Max.
 
 ## v1.3.7
 
-- **Proiezioni Live Riallineate**: Il tab `Pronostici dei giocatori` e la `Classifica live` usano ora in modo coerente il weekend selezionato e la stessa proiezione ufficiale del weekend corrente.
-- **Parsing Risultati Formula1.com Aggiornato**: Il backend non dipende piu' da `data-driver-id`; legge la tabella HTML corrente di Formula1.com, supporta `race-result`, `qualifying` e `sprint-results`, e restituisce campi vuoti quando la fonte ufficiale espone `No results available`.
-- **Cache Read-Only per Risultati Ufficiali**: Introdotta una cache in-memory a TTL corto sull'endpoint `GET /api/results/:meetingKey` per sostenere il polling live senza scritture automatiche su database e senza moltiplicare le richieste upstream.
-- **Chiarezza UX su Risultati Ufficiali**: Quando i risultati ufficiali non esistono ancora, la UI espone un messaggio esplicito invece di mostrare solo `0`; quando i risultati sono parziali, segnala chiaramente che proiezione e classifica live sono parziali.
-- **Regressioni Coperte da Test**: Estesi test unitari, API e UI su scoring live, parser risultati, cache TTL, stati `none/partial/complete` e riallineamento del weekend selezionato.
-- **Documentazione Allineata**: Aggiornati `README.md` e `CHANGELOG.md` per riflettere il recupero read-only dei risultati ufficiali, il polling live del weekend selezionato e il nuovo stato UI per risultati assenti o parziali.
+- **Proiezioni Live Riallineate**: Il tab `Pronostici dei giocatori` e la
+  `Classifica live` usano ora in modo coerente il weekend selezionato e la
+  stessa proiezione ufficiale del weekend corrente.
+- **Parsing Risultati Formula1.com Aggiornato**: Il backend non dipende piu' da
+  `data-driver-id`; legge la tabella HTML corrente di Formula1.com, supporta
+  `race-result`, `qualifying` e `sprint-results`, e restituisce campi vuoti
+  quando la fonte ufficiale espone `No results available`.
+- **Cache Read-Only per Risultati Ufficiali**: Introdotta una cache in-memory a
+  TTL corto sull'endpoint `GET /api/results/:meetingKey` per sostenere il
+  polling live senza scritture automatiche su database e senza moltiplicare le
+  richieste upstream.
+- **Chiarezza UX su Risultati Ufficiali**: Quando i risultati ufficiali non
+  esistono ancora, la UI espone un messaggio esplicito invece di mostrare solo
+  `0`; quando i risultati sono parziali, segnala chiaramente che proiezione e
+  classifica live sono parziali.
+- **Regressioni Coperte da Test**: Estesi test unitari, API e UI su scoring
+  live, parser risultati, cache TTL, stati `none/partial/complete` e
+  riallineamento del weekend selezionato.
+- **Documentazione Allineata**: Aggiornati `README.md` e `CHANGELOG.md` per
+  riflettere il recupero read-only dei risultati ufficiali, il polling live del
+  weekend selezionato e il nuovo stato UI per risultati assenti o parziali.
 
 ## v1.3.6
 
-- **Hotfix Save Manuale Pronostici**: Il pulsante `Salva dati inseriti` ora richiede solo la presenza di almeno un pronostico compilato e accetta anche stati completamente compilati.
-- **Endpoint Dedicato**: Introdotto `POST /api/predictions` per applicare la regola del save manuale senza alterare i flussi di persistenza generica usati da reset, conferma risultati e storico.
-- **Allineamento Full-Stack**: Aggiornati validatori frontend/backend, messaggistica UI ed error code stabile `predictions_missing`.
-- **TDD Regressivo e Coverage**: Estesi test unitari, API e UI per coprire save vuoto, save valido con almeno un campo, race lock, persistenza generica invariata e casi limite di validazione.
-- **Documentazione Tecnica Allineata**: Aggiornati `README.md` e `PROJECT.md` per riflettere il nuovo contratto di salvataggio, la distinzione tra salvataggio manuale e persistenza generica e i vincoli di coerenza release.
-- **Disciplina Operativa di Release**: Rafforzate in `AGENTS.md` le regole di TDD, validazione completa e sincronizzazione obbligatoria tra changelog, versioni applicative e stato reale della release.
+- **Hotfix Save Manuale Pronostici**: Il pulsante `Salva dati inseriti` ora
+  richiede solo la presenza di almeno un pronostico compilato e accetta anche
+  stati completamente compilati.
+- **Endpoint Dedicato**: Introdotto `POST /api/predictions` per applicare la
+  regola del save manuale senza alterare i flussi di persistenza generica usati
+  da reset, conferma risultati e storico.
+- **Allineamento Full-Stack**: Aggiornati validatori frontend/backend,
+  messaggistica UI ed error code stabile `predictions_missing`.
+- **TDD Regressivo e Coverage**: Estesi test unitari, API e UI per coprire save
+  vuoto, save valido con almeno un campo, race lock, persistenza generica
+  invariata e casi limite di validazione.
+- **Documentazione Tecnica Allineata**: Aggiornati `README.md` e `PROJECT.md`
+  per riflettere il nuovo contratto di salvataggio, la distinzione tra
+  salvataggio manuale e persistenza generica e i vincoli di coerenza release.
+- **Disciplina Operativa di Release**: Rafforzate in `AGENTS.md` le regole di
+  TDD, validazione completa e sincronizzazione obbligatoria tra changelog,
+  versioni applicative e stato reale della release.
 
 ## v1.3.5
 
-- **Inversione Logica di Validazione**: Il salvataggio dei pronostici è ora consentito **esclusivamente** per stati parzialmente compilati (almeno un campo compilato e almeno uno vuoto).
-- **Hardening Validazione**: Gli stati "tutti vuoti" o "tutti completi" sono ora considerati non validi e vengono bloccati sia dal frontend che dal backend per forzare un flusso di inserimento incrementale.
-- **Aggiornamento UI**: Aggiornato il messaggio di alert per riflettere con precisione il nuovo requisito di validazione.
-- **Suite di Test**: Aggiornati i test unitari (`game.test.ts` e `validation.test.js`) per coprire la nuova logica (TDD), garantendo che gli stati estremi (tutti vuoti/pieni) falliscano correttamente.
+- **Inversione Logica di Validazione**: Il salvataggio dei pronostici è ora
+  consentito **esclusivamente** per stati parzialmente compilati (almeno un
+  campo compilato e almeno uno vuoto).
+- **Hardening Validazione**: Gli stati "tutti vuoti" o "tutti completi" sono ora
+  considerati non validi e vengono bloccati sia dal frontend che dal backend per
+  forzare un flusso di inserimento incrementale.
+- **Aggiornamento UI**: Aggiornato il messaggio di alert per riflettere con
+  precisione il nuovo requisito di validazione.
+- **Suite di Test**: Aggiornati i test unitari (`game.test.ts` e
+  `validation.test.js`) per coprire la nuova logica (TDD), garantendo che gli
+  stati estremi (tutti vuoti/pieni) falliscano correttamente.
 
 ## v1.3.4
 
-- Separata l'applicazione Express in `app.js` per isolare la logica delle rotte dall'avvio del server, migliorando la testabilità.
-- Introdotta una nuova suite di test di integrazione API utilizzando `supertest`.
-- Introdotta una suite di test dei componenti React tramite `jsdom` e `@testing-library/react`.
-- Formalizzato il protocollo TDD (Test-Driven Development) come standard obbligatorio per ogni modifica al repository.
-- Risolti conflitti di ambiente tra test Node.js e JSDOM, garantendo la compatibilità della suite completa.
-- **Hardening Database**: Implementata la risoluzione dinamica del database tramite `MONGODB_URI`. Il backend ora estrae il nome del database dal path della URI e verifica all'avvio che coincida esattamente con quello atteso per l'ambiente (`fantaf1_dev` in locale, `fantaf1` in produzione), prevenendo errori di connessione accidentali.
-- **Error Handling Avanzato**: Introdotto un sistema di tracciamento degli errori con `requestId` e codici specifici (es. `race_locked`, `participants_invalid`), migliorando drasticamente la diagnosi dei problemi e la sicurezza dei dati.
-- **Automazione CI/CD Locale**: Lo script `start_fantaf1.command` e il launcher locale sono stati potenziati. Ora eseguono una suite completa di pre-volo: Lint, Unit Test, Build, Test UI Responsive e Smoke Test di salvataggio prima dell'apertura effettiva dell'app.
-- **Controllo Responsive Automatizzato**: Aggiunto lo script `ui-responsive-check.mjs` (Playwright) che valida automaticamente 5 breakpoint (Mobile, Tablet, Laptop, Desktop, Desktop-XL), garantendo l'assenza di overflow o clipping del testo.
-- **Consolidamento Ambiente**: Eliminazione di `.env.local` a favore di un unico file `.env` per semplificare la configurazione tra locale e produzione.
-- **Semplificazione UI**: Rimossa l'indicazione dell'Admin dall'intestazione dei pronostici, ora semplificata in "Pronostici dei giocatori".
-- Titolo hero reso deterministico su due righe quando `VITE_APP_LOCAL_NAME` estende il titolo base: prima riga `Fanta Formula 1`, seconda riga con il suffisso configurato.
-- Il titolo hero usa ora un fit reale basato sulla larghezza del contenitore: mantiene il massimo visivo sui desktop larghi e riduce il `font-size` solo quanto necessario per evitare clipping su viewport medi e piccoli.
-- Introdotta la utility `src/utils/title.ts` per centralizzare la scomposizione del titolo hero e riusare una logica coerente tra runtime e test.
-- Aggiunti test unitari specifici sul parsing del titolo hero e ripristinata la coverage globale allo standard del repo sullo scope configurato (`100%` lines/statements/functions, branch sopra soglia).
-- Formalizzato in `AGENTS.md` e `PROJECT.md` l'obbligo di aggiornare sempre `CHANGELOG.md` per ogni nuova versione applicativa, tag git o release GitHub.
+- Separata l'applicazione Express in `app.js` per isolare la logica delle rotte
+  dall'avvio del server, migliorando la testabilità.
+- Introdotta una nuova suite di test di integrazione API utilizzando
+  `supertest`.
+- Introdotta una suite di test dei componenti React tramite `jsdom` e
+  `@testing-library/react`.
+- Formalizzato il protocollo TDD (Test-Driven Development) come standard
+  obbligatorio per ogni modifica al repository.
+- Risolti conflitti di ambiente tra test Node.js e JSDOM, garantendo la
+  compatibilità della suite completa.
+- **Hardening Database**: Implementata la risoluzione dinamica del database
+  tramite `MONGODB_URI`. Il backend ora estrae il nome del database dal path
+  della URI e verifica all'avvio che coincida esattamente con quello atteso per
+  l'ambiente (`fantaf1_dev` in locale, `fantaf1` in produzione), prevenendo
+  errori di connessione accidentali.
+- **Error Handling Avanzato**: Introdotto un sistema di tracciamento degli
+  errori con `requestId` e codici specifici (es. `race_locked`,
+  `participants_invalid`), migliorando drasticamente la diagnosi dei problemi e
+  la sicurezza dei dati.
+- **Automazione CI/CD Locale**: Lo script `start_fantaf1.command` e il launcher
+  locale sono stati potenziati. Ora eseguono una suite completa di pre-volo:
+  Lint, Unit Test, Build, Test UI Responsive e Smoke Test di salvataggio prima
+  dell'apertura effettiva dell'app.
+- **Controllo Responsive Automatizzato**: Aggiunto lo script
+  `ui-responsive-check.mjs` (Playwright) che valida automaticamente 5 breakpoint
+  (Mobile, Tablet, Laptop, Desktop, Desktop-XL), garantendo l'assenza di
+  overflow o clipping del testo.
+- **Consolidamento Ambiente**: Eliminazione di `.env.local` a favore di un unico
+  file `.env` per semplificare la configurazione tra locale e produzione.
+- **Semplificazione UI**: Rimossa l'indicazione dell'Admin dall'intestazione dei
+  pronostici, ora semplificata in "Pronostici dei giocatori".
+- Titolo hero reso deterministico su due righe quando `VITE_APP_LOCAL_NAME`
+  estende il titolo base: prima riga `Fanta Formula 1`, seconda riga con il
+  suffisso configurato.
+- Il titolo hero usa ora un fit reale basato sulla larghezza del contenitore:
+  mantiene il massimo visivo sui desktop larghi e riduce il `font-size` solo
+  quanto necessario per evitare clipping su viewport medi e piccoli.
+- Introdotta la utility `src/utils/title.ts` per centralizzare la scomposizione
+  del titolo hero e riusare una logica coerente tra runtime e test.
+- Aggiunti test unitari specifici sul parsing del titolo hero e ripristinata la
+  coverage globale allo standard del repo sullo scope configurato (`100%`
+  lines/statements/functions, branch sopra soglia).
+- Formalizzato in `AGENTS.md` e `PROJECT.md` l'obbligo di aggiornare sempre
+  `CHANGELOG.md` per ogni nuova versione applicativa, tag git o release GitHub.
 
 ## v1.3.3
 
-- Riallineata e ampliata la documentazione tecnica e di business logic nel `README.md` per riflettere con precisione il comportamento reale del repository.
-- Estratto il changelog operativo dal `README.md` in un file dedicato `CHANGELOG.md`, mantenendo la cronologia separata dalla documentazione evergreen.
-- Aggiornata la sezione release per indicare `v1.3.3` come versione in produzione e mantenere coerenti versione applicativa, footer UI, tag e release GitHub.
-- Rimosso l'asset inutilizzato `src/assets/flag.png`, che non era referenziato dal codice ed era in realta' contenuto HTML non valido.
+- Riallineata e ampliata la documentazione tecnica e di business logic nel
+  `README.md` per riflettere con precisione il comportamento reale del
+  repository.
+- Estratto il changelog operativo dal `README.md` in un file dedicato
+  `CHANGELOG.md`, mantenendo la cronologia separata dalla documentazione
+  evergreen.
+- Aggiornata la sezione release per indicare `v1.3.3` come versione in
+  produzione e mantenere coerenti versione applicativa, footer UI, tag e release
+  GitHub.
+- Rimosso l'asset inutilizzato `src/assets/flag.png`, che non era referenziato
+  dal codice ed era in realta' contenuto HTML non valido.
 
 ## v1.3.2
 
-- Coverage del layer di business logic e utils portata al massimo standard del progetto, con 117 test totali, 100% su lines/functions/statements e una suite estesa su parsing, formattazione temporale, storage MongoDB e failure di rete per prevenire regressioni.
-- Rimossi i riferimenti hard-coded all'anno corrente: frontend, backend, titolo e test usano ora l'anno di sistema in modo dinamico.
-- La card "Prossimo weekend" mostra il programma completo delle sessioni con orari sincronizzati in tempo reale.
-- Introdotto un sistema di icone dinamiche (`Timer`, `Zap`, `FastForward`, `Flag`) per distinguere visivamente prove libere, qualifiche, sprint e gara.
-- Formattazione date e orari raffinata sullo standard italiano `Giorno dd/MM/yyyy HH:mm` e localizzazione piu' coerente dell'intero calendario weekend.
+- Coverage del layer di business logic e utils portata al massimo standard del
+  progetto, con 117 test totali, 100% su lines/functions/statements e una suite
+  estesa su parsing, formattazione temporale, storage MongoDB e failure di rete
+  per prevenire regressioni.
+- Rimossi i riferimenti hard-coded all'anno corrente: frontend, backend, titolo
+  e test usano ora l'anno di sistema in modo dinamico.
+- La card "Prossimo weekend" mostra il programma completo delle sessioni con
+  orari sincronizzati in tempo reale.
+- Introdotto un sistema di icone dinamiche (`Timer`, `Zap`, `FastForward`,
+  `Flag`) per distinguere visivamente prove libere, qualifiche, sprint e gara.
+- Formattazione date e orari raffinata sullo standard italiano
+  `Giorno dd/MM/yyyy HH:mm` e localizzazione piu' coerente dell'intero
+  calendario weekend.
 - Track map ingrandita, centrata e ottimizzata per una resa ad alta definizione.
-- Loader "Pit Stop 2.0" rivisto con animazioni piu' fluide e messaggi di stato dinamici.
-- Restyling UI "Pro" di livello piu' avanzato, con glassmorphism, glow neon e animazioni piu' fluide per un'impostazione visiva piu' immersiva e coerente con il linguaggio Formula 1.
-- Rimossi i vecchi riferimenti alle cache locali legacy di piloti e calendario, con persistenza ormai interamente appoggiata a MongoDB Atlas.
-- Ottimizzazione tipografica con revisione dell'uso del font Formula 1 nelle card e nelle etichette per migliorare la leggibilita'.
-- Riorganizzati i controlli di reset e salvataggio dei pronostici per una disposizione piu' coerente sotto la griglia dei giocatori.
-- Pulsanti principali resi full-width per migliorare accessibilita' e coerenza tra desktop e mobile.
-- Migliorata l'automazione del launcher locale, inclusa la gestione intelligente di apertura, chiusura e riassetto della finestra Chrome durante stop e riavvio dell'app.
+- Loader "Pit Stop 2.0" rivisto con animazioni piu' fluide e messaggi di stato
+  dinamici.
+- Restyling UI "Pro" di livello piu' avanzato, con glassmorphism, glow neon e
+  animazioni piu' fluide per un'impostazione visiva piu' immersiva e coerente
+  con il linguaggio Formula 1.
+- Rimossi i vecchi riferimenti alle cache locali legacy di piloti e calendario,
+  con persistenza ormai interamente appoggiata a MongoDB Atlas.
+- Ottimizzazione tipografica con revisione dell'uso del font Formula 1 nelle
+  card e nelle etichette per migliorare la leggibilita'.
+- Riorganizzati i controlli di reset e salvataggio dei pronostici per una
+  disposizione piu' coerente sotto la griglia dei giocatori.
+- Pulsanti principali resi full-width per migliorare accessibilita' e coerenza
+  tra desktop e mobile.
+- Migliorata l'automazione del launcher locale, inclusa la gestione intelligente
+  di apertura, chiusura e riassetto della finestra Chrome durante stop e riavvio
+  dell'app.
 
 ## v1.3.1
 
-- Risolto il problema dei pulsanti di reset e salvataggio in produzione su Render, rendendo piu' flessibile la validazione lato server per accettare anche nomi partecipanti personalizzati gia' presenti nel database.
-- Spostata la sincronizzazione iniziale di piloti e calendario in background all'avvio del server, riducendo il rischio di timeout in deploy.
-- Corretti i problemi di parsing delle date su mobile e Safari per mantenere affidabili lock gara e gestione weekend.
-- Corretta una regressione sui nomi dei partecipanti durante modifica o cancellazione dello storico, preservando i nomi personalizzati nei ricalcoli.
-- Migliorata l'estrazione del nome database dalla URI MongoDB Atlas per rendere piu' stabile la connessione in ambienti cloud.
+- Risolto il problema dei pulsanti di reset e salvataggio in produzione su
+  Render, rendendo piu' flessibile la validazione lato server per accettare
+  anche nomi partecipanti personalizzati gia' presenti nel database.
+- Spostata la sincronizzazione iniziale di piloti e calendario in background
+  all'avvio del server, riducendo il rischio di timeout in deploy.
+- Corretti i problemi di parsing delle date su mobile e Safari per mantenere
+  affidabili lock gara e gestione weekend.
+- Corretta una regressione sui nomi dei partecipanti durante modifica o
+  cancellazione dello storico, preservando i nomi personalizzati nei ricalcoli.
+- Migliorata l'estrazione del nome database dalla URI MongoDB Atlas per rendere
+  piu' stabile la connessione in ambienti cloud.
 
 ## v1.3.0
 
-- Risolta una race condition logica nel frontend che poteva mostrare un salvataggio riuscito in anticipo rispetto alla persistenza reale.
-- Il reset dei pronostici correnti azzera i dati e li salva immediatamente nel database.
+- Risolta una race condition logica nel frontend che poteva mostrare un
+  salvataggio riuscito in anticipo rispetto alla persistenza reale.
+- Il reset dei pronostici correnti azzera i dati e li salva immediatamente nel
+  database.
 - Introdotto il modulo di validazione backend dedicato `backend/validation.js`.
-- Rafforzata in modo significativo la suite di test automatizzati, arrivando alla milestone dei 54 test passanti del ciclo di release.
-- Migliorato il parsing del calendario, incluso il supporto agli eventi di un solo giorno e una maggiore resilienza del recupero dati.
+- Rafforzata in modo significativo la suite di test automatizzati, arrivando
+  alla milestone dei 54 test passanti del ciclo di release.
+- Migliorato il parsing del calendario, incluso il supporto agli eventi di un
+  solo giorno e una maggiore resilienza del recupero dati.
 
 ## v1.2.1
 
-- Aggiornata la versione applicativa a `1.2.1` e riallineato il changelog del progetto.
+- Aggiornata la versione applicativa a `1.2.1` e riallineato il changelog del
+  progetto.
 - Centrato il footer dell'applicazione.
-- Riallineati i controlli dell'area pronostici per una disposizione piu' coerente.
+- Riallineati i controlli dell'area pronostici per una disposizione piu'
+  coerente.
 
 ## v1.2.0
 
-- Migrazione completa a MongoDB Atlas per dati di gioco, cache piloti e calendario, con impostazione cloud-ready per locale e produzione.
-- Integrazione visuale con nuovi asset grafici principali, inclusi `pitstop.png`, `tire.png` e l'asset storico `flag.png`.
-- Rafforzata la validazione server-side su salvataggi, partecipanti e blocco temporale delle gare.
-- Migliorato il process management locale tramite launcher piu' robusto e migliore gestione dell'apertura browser.
-- Aggiornamento del backend per la piena compatibilita' con Express 5 e risoluzione dei problemi critici di routing/catch-all.
+- Migrazione completa a MongoDB Atlas per dati di gioco, cache piloti e
+  calendario, con impostazione cloud-ready per locale e produzione.
+- Integrazione visuale con nuovi asset grafici principali, inclusi
+  `pitstop.png`, `tire.png` e l'asset storico `flag.png`.
+- Rafforzata la validazione server-side su salvataggi, partecipanti e blocco
+  temporale delle gare.
+- Migliorato il process management locale tramite launcher piu' robusto e
+  migliore gestione dell'apertura browser.
+- Aggiornamento del backend per la piena compatibilita' con Express 5 e
+  risoluzione dei problemi critici di routing/catch-all.
 - Inserimento del numero di versione nel footer dell'applicazione.
 
 ## v1.1.0
 
-- Introdotta la classifica live con proiezioni dei punti durante il weekend di gara.
-- Implementato il blocco automatico dei pronostici all'orario ufficiale di inizio gara.
+- Introdotta la classifica live con proiezioni dei punti durante il weekend di
+  gara.
+- Implementato il blocco automatico dei pronostici all'orario ufficiale di
+  inizio gara.
 - Aggiunto il recupero automatico dei risultati reali a fine weekend.
-- Introdotto il salvataggio manuale dei pronostici con validazione di completezza per tutti i partecipanti.
-- Rafforzata l'ottimizzazione backend con meccanismi di retry per sincronizzazione calendario e roster piloti.
-- Introdotti loader tematico Pit Stop e font Formula 1 personalizzati nell'interfaccia.
+- Introdotto il salvataggio manuale dei pronostici con validazione di
+  completezza per tutti i partecipanti.
+- Rafforzata l'ottimizzazione backend con meccanismi di retry per
+  sincronizzazione calendario e roster piloti.
+- Introdotti loader tematico Pit Stop e font Formula 1 personalizzati
+  nell'interfaccia.

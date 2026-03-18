@@ -1,30 +1,64 @@
-# Implementation Plan: Streamline documentation (GEMINI.md & AGENTS.md)
+# Implementation Plan: Streamline documentation (GEMINI.md)
 
-## Phase 1: Audit and Alignment
-- [ ] Task: Read and compare `AGENTS.md` and `GEMINI.md`.
-- [ ] Task: Identify critical instructions present in `AGENTS.md` but missing in `GEMINI.md`.
-- [ ] Task: Update `GEMINI.md` to incorporate missing mandates from `AGENTS.md`.
-- [ ] Task: Conductor - User Manual Verification 'Audit and Alignment' (Protocol in workflow.md)
+## Phase 1: Audit and Mapping
 
-## Phase 2: Responsibility Analysis
-- [ ] Task: Map existing sections in `GEMINI.md` to specific responsibility categories (Style, Workflow, Security, etc.).
-- [ ] Task: Identify which sections are "heavy" and better suited for a Skill or a sub-document.
-- [ ] Task: Draft a proposal for the new documentation structure.
-- [ ] Task: Conductor - User Manual Verification 'Responsibility Analysis' (Protocol in workflow.md)
+- [x] Task: Review `AGENTS.md` to identify core mandates that `GEMINI.md` must
+      enforce.
+- [x] Task: Audit current `GEMINI.md` and map its sections to potential modular
+      targets (Skills or sub-docs).
+- [x] Task: Conductor - User Manual Verification 'Audit and Mapping' (Protocol
+      in workflow.md)
 
-## Phase 3: Migration and Modularization
-- [ ] Task: Create or update local `.skill` files for operational workflows identified in Phase 2.
-- [ ] Task: Move coding style guides to `conductor/code_styleguides/` or appropriate sub-directories.
-- [ ] Task: Update `GEMINI.md` to link to the new Skills and sub-documents, removing the migrated content.
-- [ ] Task: Ensure `AGENTS.md` remains aligned or refers to the same modular sources.
-- [ ] Task: Conductor - User Manual Verification 'Migration and Modularization' (Protocol in workflow.md)
+## Phase 2: Modularization and Skill Definition
 
-## Phase 4: Merge Strategy Proposal
-- [ ] Task: Define the requirements for a "Documentation Merge Skill" to keep `GEMINI.md` and `AGENTS.md` in sync.
-- [ ] Task: Create a draft or prototype of this skill (e.g., in `~/.gemini/skills/`).
-- [ ] Task: Conductor - User Manual Verification 'Merge Strategy Proposal' (Protocol in workflow.md)
+- [x] Task: Create `fantaf1-tdd-coverage` skill.
+  - **Sub-agent:** `generalist` (Coverage Restorer).
+  - **Task:** Analyze coverage reports and write missing tests to maintain 100%.
+- [x] Task: Create `fantaf1-deploy` skill (The 23-point protocol).
+  - **Fase A: Release Planner (`generalist`):** Preflight, Dry-run, Version Bump
+    in all files, Release Notes in `CHANGELOG.md`. (Punti 1-6)
+  - **Fase B: Quality Gatekeeper (`generalist`):** Full validation (Lint, Test,
+    Build), Scoring/Projection safety checks. (Punti 7-9)
+  - **Fase C: Integration Manager (`generalist`):** Commit, Push, PR creation
+    (`gh cli`), Auto-merge monitoring. (Punti 10-17)
+  - **Fase D: Release Publisher (`generalist`):** Tagging, GitHub Release
+    creation, Cleanup, Branch restore. (Punti 18-23)
+- [x] Task: Create `fantaf1-browser-verification` skill.
+  - **Sub-agent:** `generalist` (UI Automation Engineer).
+  - **Task:** Execute `check viste`, analyze visual failures, propose CSS/TSX
+    fixes.
+- [x] Task: Create `markdown-formatter` skill.
+  - **Sub-agent:** `generalist` (Doc Custodian).
+  - **Task:** Batch linting/formatting of all `.md` files in the workspace.
+- [x] Task: Create `fantaf1-core-audit` skill.
+  - **Sub-agent:** `codebase_investigator` (Domain Architect).
+  - **Task:** Map C# -> React data flow and verify business invariants.
+- [x] Task: Conductor - User Manual Verification 'Skill Definition' (Protocol in
+      workflow.md)
 
-## Phase 5: Final Review
-- [ ] Task: Perform a final `conductor-compliance-audit` to ensure no mandates were lost.
-- [ ] Task: Verify that the lean `GEMINI.md` still provides enough context for the agent to operate correctly.
-- [ ] Task: Conductor - User Manual Verification 'Final Review' (Protocol in workflow.md)
+## Phase 3: GEMINI.md Streamlining & Routing
+
+- [x] Task: Rewrite `GEMINI.md` as a minimal "Router".
+  - Load `AGENTS.md` mandates.
+  - Activate the 5 new skills via `activate_skill`.
+- [x] Task: Move detailed technical rules to `conductor/code_styleguides/` for
+      shared access.
+- [x] Task: Verify that `AGENTS.md` remains the untouched single source of
+      truth.
+- [x] Task: Conductor - User Manual Verification 'GEMINI.md Streamlining'
+      (Protocol in workflow.md)
+
+## Phase 4: Markdown Formatting Execution
+
+- [x] Task: Execute `markdown-formatter` via `generalist` on all `.md` files.
+- [x] Task: Verify all formatting warnings are resolved.
+- [x] Task: Conductor - User Manual Verification 'Markdown Formatting Execution'
+      (Protocol in workflow.md)
+
+## Phase 5: Final Validation & Audit
+
+- [x] Task: Perform `fantaf1-core-audit` via `codebase_investigator` to ensure
+      no mandates were lost.
+- [x] Task: Verify 100% coverage is maintained using `fantaf1-tdd-coverage`.
+- [x] Task: Conductor - User Manual Verification 'Final Review' (Protocol in
+      workflow.md)
