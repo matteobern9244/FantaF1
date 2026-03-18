@@ -2017,6 +2017,12 @@ public sealed class SubphaseEightBootstrapTests
         public IReadOnlyList<WeekendDocument> CachedWeekends { get; init; } = [];
         public List<WeekendDocument> WrittenWeekends { get; } = [];
 
+        public Task<WeekendDocument?> GetByIdAsync(string id, CancellationToken cancellationToken) => throw new NotImplementedException();
+        public Task<IReadOnlyList<WeekendDocument>> GetAllAsync(CancellationToken cancellationToken) => throw new NotImplementedException();
+        public Task AddAsync(WeekendDocument entity, CancellationToken cancellationToken) => throw new NotImplementedException();
+        public Task UpdateAsync(WeekendDocument entity, CancellationToken cancellationToken) => throw new NotImplementedException();
+        public Task DeleteAsync(string id, CancellationToken cancellationToken) => throw new NotImplementedException();
+
         public Task<IReadOnlyList<WeekendDocument>> ReadAllAsync(CancellationToken cancellationToken)
         {
             return Task.FromResult(CachedWeekends);
@@ -2037,6 +2043,12 @@ public sealed class SubphaseEightBootstrapTests
 
     private sealed class ThrowingWeekendRepository : IWeekendRepository
     {
+        public Task<WeekendDocument?> GetByIdAsync(string id, CancellationToken cancellationToken) => throw new NotImplementedException();
+        public Task<IReadOnlyList<WeekendDocument>> GetAllAsync(CancellationToken cancellationToken) => throw new NotImplementedException();
+        public Task AddAsync(WeekendDocument entity, CancellationToken cancellationToken) => throw new NotImplementedException();
+        public Task UpdateAsync(WeekendDocument entity, CancellationToken cancellationToken) => throw new NotImplementedException();
+        public Task DeleteAsync(string id, CancellationToken cancellationToken) => throw new NotImplementedException();
+
         public Task<IReadOnlyList<WeekendDocument>> ReadAllAsync(CancellationToken cancellationToken)
         {
             throw new InvalidOperationException("calendar-cache");

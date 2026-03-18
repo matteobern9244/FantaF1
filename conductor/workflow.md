@@ -18,9 +18,12 @@ Per ogni task, l'agente deve:
     -   **RED:** Creare test che riproducano il bug o definiscano la nuova feature.
     -   **GREEN:** Implementare il codice minimo per far passare i test.
     -   **REFACTOR:** Pulire il codice mantenendo i test verdi e la copertura al 100%.
-4.  **Validazione:** Eseguire `npm run lint`, `npm run test`, `npm run build` e il launcher locale.
+4.  **Validazione:**
+    -   Eseguire `conductor-compliance-audit` per verificare l'aderenza ai principi di ingegneria (TDD, DI, UoW, Repository Pattern).
+    -   Eseguire `npm run lint`, `npm run test`, `npm run test:ui-responsive` (o il comando `check viste`).
+    -   Eseguire `npm run build` e il launcher locale per i finti test di fumo.
 
-## 3. Comandi e Strumenti Canonici
+## 5. Comandi e Strumenti Canonici
 - **Avvio App:** Utilizzare sempre `./start_fantaf1.command` (non `npm run start:local`).
 - **Verifica UI:** Il comando `check viste` esegue `npm run test:ui-responsive` per validare i breakpoint desktop/mobile.
 - **Backend C#:** C# (.NET 10) è l'implementazione autoritativa e l'unica supportata.

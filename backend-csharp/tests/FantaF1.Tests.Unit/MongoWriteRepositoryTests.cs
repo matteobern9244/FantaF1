@@ -232,7 +232,7 @@ public sealed class MongoWriteRepositoryTests
                 },
             ],
         });
-        var repository = new MongoWeekendRepository(harness.Database, new MongoLegacyReadDocumentMapper());
+        var repository = new MongoWeekendRepository(harness.Database, new MongoLegacyReadDocumentMapper(), new MongoLegacyWriteDocumentMapper());
 
         await repository.WriteHighlightsLookupAsync(
             "race-1",
@@ -257,7 +257,7 @@ public sealed class MongoWriteRepositoryTests
         {
             [MongoCollectionNames.Weekends] = [],
         });
-        var repository = new MongoWeekendRepository(harness.Database, new MongoLegacyReadDocumentMapper());
+        var repository = new MongoWeekendRepository(harness.Database, new MongoLegacyReadDocumentMapper(), new MongoLegacyWriteDocumentMapper());
 
         await Assert.ThrowsAsync<ArgumentException>(() => repository.WriteHighlightsLookupAsync("", new HighlightsLookupDocument("", "", "", ""), CancellationToken.None));
         await Assert.ThrowsAsync<ArgumentNullException>(() => repository.WriteHighlightsLookupAsync("race-1", null!, CancellationToken.None));
@@ -273,7 +273,7 @@ public sealed class MongoWriteRepositoryTests
                 new BsonDocument { ["meetingKey"] = "race-1", ["roundNumber"] = 1 },
             ],
         });
-        var repository = new MongoWeekendRepository(harness.Database, new MongoLegacyReadDocumentMapper());
+        var repository = new MongoWeekendRepository(harness.Database, new MongoLegacyReadDocumentMapper(), new MongoLegacyWriteDocumentMapper());
 
         await repository.WriteHighlightsLookupAsync(
             "race-1",

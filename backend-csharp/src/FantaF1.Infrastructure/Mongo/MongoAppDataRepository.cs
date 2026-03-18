@@ -7,9 +7,8 @@ using MongoDB.Driver;
 
 namespace FantaF1.Infrastructure.Mongo;
 
-public sealed class MongoAppDataRepository : IAppDataRepository
+public sealed class MongoAppDataRepository : MongoRepository<AppDataDocument, string>, IAppDataRepository
 {
-    private readonly IMongoCollection<BsonDocument> _collection;
     private readonly MongoLegacyReadDocumentMapper _mapper;
     private readonly MongoLegacyWriteDocumentMapper _writeMapper;
     private readonly ParticipantRosterValidator _participantRosterValidator;
@@ -21,19 +20,22 @@ public sealed class MongoAppDataRepository : IAppDataRepository
         MongoLegacyWriteDocumentMapper writeMapper,
         ParticipantRosterValidator participantRosterValidator,
         IClock clock)
+        : base(database, MongoCollectionNames.AppDatas)
     {
-        ArgumentNullException.ThrowIfNull(database);
-
-        _collection = database.GetCollection<BsonDocument>(MongoCollectionNames.AppDatas);
         _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
         _writeMapper = writeMapper ?? throw new ArgumentNullException(nameof(writeMapper));
         _participantRosterValidator = participantRosterValidator ?? throw new ArgumentNullException(nameof(participantRosterValidator));
         _clock = clock ?? throw new ArgumentNullException(nameof(clock));
     }
 
+    public override async Task<AppDataDocument?> GetByIdAsync(string id, CancellationToken cancellationToken)
+    {
+        return await ReadLatestAsync(cancellationToken);
+    }
+
     public async Task<AppDataDocument?> ReadLatestAsync(CancellationToken cancellationToken)
     {
-        var document = await _collection
+        var document = await Collection
             .Find(FilterDefinition<BsonDocument>.Empty)
             .SortByDescending(document => document["createdAt"])
             .FirstOrDefaultAsync(cancellationToken);
@@ -58,7 +60,7 @@ public sealed class MongoAppDataRepository : IAppDataRepository
     {
         ArgumentNullException.ThrowIfNull(document);
 
-        var existingDocument = await _collection
+        var existingDocument = await Collection
             .Find(FilterDefinition<BsonDocument>.Empty)
             .SortByDescending(existing => existing["createdAt"])
             .FirstOrDefaultAsync(cancellationToken);
@@ -66,11 +68,11 @@ public sealed class MongoAppDataRepository : IAppDataRepository
 
         if (existingDocument is null)
         {
-            await _collection.InsertOneAsync(mappedDocument, null, cancellationToken);
+            await Collection.InsertOneAsync(mappedDocument, null, cancellationToken);
             return;
         }
 
-        await _collection.ReplaceOneAsync(
+        await Collection.ReplaceOneAsync(
             Builders<BsonDocument>.Filter.Eq("_id", existingDocument["_id"]),
             mappedDocument,
             new ReplaceOptions
@@ -79,4 +81,17 @@ public sealed class MongoAppDataRepository : IAppDataRepository
             },
             cancellationToken);
     }
+
+    public override Task AddAsync(AppDataDocument entity, CancellationToken cancellationToken)
+    {
+        return WriteAsync(entity, cancellationToken);
+    }
+
+    public override Task UpdateAsync(AppDataDocument entity, CancellationToken cancellationToken)
+    {
+        return WriteAsync(entity, cancellationToken);
+    }
+
+    protected override AppDataDocument MapToEntity(BsonDocument document) => _mapper.MapAppData(document);
+    protected override BsonDocument MapToDocument(AppDataDocument entity) => _writeMapper.MapAppData(entity, _clock.UtcNow, null);
 }

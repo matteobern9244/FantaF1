@@ -29,11 +29,14 @@ public sealed class RaceHighlightsLookupService : IRaceHighlightsLookupService
     private readonly IClock _clock;
     private readonly RaceHighlightsLookupPolicy _lookupPolicy;
 
-    public RaceHighlightsLookupService(HttpClient httpClient, IClock clock)
+    public RaceHighlightsLookupService(
+        HttpClient httpClient,
+        IClock clock,
+        RaceHighlightsLookupPolicy lookupPolicy)
     {
         _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
         _clock = clock ?? throw new ArgumentNullException(nameof(clock));
-        _lookupPolicy = new RaceHighlightsLookupPolicy(TimeSpan.FromHours(OfficialResultsReferenceData.HighlightsLookupMissingTtlHours));
+        _lookupPolicy = lookupPolicy ?? throw new ArgumentNullException(nameof(lookupPolicy));
     }
 
     public bool ShouldLookup(WeekendDocument race, DateTimeOffset now)

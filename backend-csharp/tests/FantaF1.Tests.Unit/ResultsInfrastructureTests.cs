@@ -4,6 +4,7 @@ using System.Reflection;
 using System.Text.Json;
 using FantaF1.Application.Abstractions.System;
 using FantaF1.Domain.ReadModels;
+using FantaF1.Domain.Results;
 using FantaF1.Infrastructure.Results;
 
 namespace FantaF1.Tests.Unit;
@@ -17,15 +18,16 @@ public sealed class ResultsInfrastructureTests
         var clock = new StubClock(new DateTimeOffset(2026, 03, 13, 09, 00, 00, TimeSpan.Zero));
 
         Assert.Throws<ArgumentNullException>(() => new ResultsSourceClient(null!));
-        Assert.Throws<ArgumentNullException>(() => new RaceHighlightsLookupService(null!, clock));
-        Assert.Throws<ArgumentNullException>(() => new RaceHighlightsLookupService(httpClient, null!));
+        Assert.Throws<ArgumentNullException>(() => new RaceHighlightsLookupService(null!, clock, new RaceHighlightsLookupPolicy(TimeSpan.FromHours(1))));
+        Assert.Throws<ArgumentNullException>(() => new RaceHighlightsLookupService(httpClient, null!, new RaceHighlightsLookupPolicy(TimeSpan.FromHours(1))));
+        Assert.Throws<ArgumentNullException>(() => new RaceHighlightsLookupService(httpClient, clock, null!));
     }
 
     [Fact]
     public void Highlights_lookup_service_should_lookup_matches_the_node_policy()
     {
         using var httpClient = new HttpClient(new RecordingHttpMessageHandler(_ => new HttpResponseMessage(HttpStatusCode.OK)));
-        var service = new RaceHighlightsLookupService(httpClient, new StubClock(new DateTimeOffset(2026, 03, 01, 18, 00, 00, TimeSpan.Zero)));
+        var service = new RaceHighlightsLookupService(httpClient, new StubClock(new DateTimeOffset(2026, 03, 01, 18, 00, 00, TimeSpan.Zero)), new RaceHighlightsLookupPolicy(TimeSpan.FromHours(1)));
 
         Assert.False(service.ShouldLookup(CreateWeekend() with { HighlightsVideoUrl = "https://www.youtube.com/watch?v=done" }, new DateTimeOffset(2026, 03, 01, 18, 00, 00, TimeSpan.Zero)));
         Assert.False(service.ShouldLookup(CreateWeekend() with { EndDate = "2026-03-02" }, new DateTimeOffset(2026, 03, 01, 18, 00, 00, TimeSpan.Zero)));
@@ -109,7 +111,7 @@ public sealed class ResultsInfrastructureTests
             return new HttpResponseMessage(HttpStatusCode.NotFound);
         });
         using var httpClient = new HttpClient(handler);
-        var service = new RaceHighlightsLookupService(httpClient, new StubClock(new DateTimeOffset(2026, 03, 01, 18, 00, 00, TimeSpan.Zero)));
+        var service = new RaceHighlightsLookupService(httpClient, new StubClock(new DateTimeOffset(2026, 03, 01, 18, 00, 00, TimeSpan.Zero)), new RaceHighlightsLookupPolicy(TimeSpan.FromHours(1)));
 
         var result = await service.ResolveAsync(CreateWeekend(), CancellationToken.None);
 
@@ -162,7 +164,7 @@ public sealed class ResultsInfrastructureTests
             return new HttpResponseMessage(HttpStatusCode.NotFound);
         });
         using var httpClient = new HttpClient(handler);
-        var service = new RaceHighlightsLookupService(httpClient, new StubClock(new DateTimeOffset(2026, 03, 01, 18, 00, 00, TimeSpan.Zero)));
+        var service = new RaceHighlightsLookupService(httpClient, new StubClock(new DateTimeOffset(2026, 03, 01, 18, 00, 00, TimeSpan.Zero)), new RaceHighlightsLookupPolicy(TimeSpan.FromHours(1)));
 
         var result = await service.ResolveAsync(CreateWeekend(), CancellationToken.None);
 
@@ -223,7 +225,7 @@ public sealed class ResultsInfrastructureTests
             return new HttpResponseMessage(HttpStatusCode.NotFound);
         });
         using var httpClient = new HttpClient(handler);
-        var service = new RaceHighlightsLookupService(httpClient, new StubClock(new DateTimeOffset(2026, 03, 22, 18, 00, 00, TimeSpan.Zero)));
+        var service = new RaceHighlightsLookupService(httpClient, new StubClock(new DateTimeOffset(2026, 03, 22, 18, 00, 00, TimeSpan.Zero)), new RaceHighlightsLookupPolicy(TimeSpan.FromHours(1)));
 
         var result = await service.ResolveAsync(
             CreateWeekend() with
@@ -299,7 +301,7 @@ public sealed class ResultsInfrastructureTests
             return new HttpResponseMessage(HttpStatusCode.NotFound);
         });
         using var httpClient = new HttpClient(handler);
-        var service = new RaceHighlightsLookupService(httpClient, new StubClock(new DateTimeOffset(2026, 03, 01, 18, 00, 00, TimeSpan.Zero)));
+        var service = new RaceHighlightsLookupService(httpClient, new StubClock(new DateTimeOffset(2026, 03, 01, 18, 00, 00, TimeSpan.Zero)), new RaceHighlightsLookupPolicy(TimeSpan.FromHours(1)));
 
         var result = await service.ResolveAsync(CreateWeekend(), CancellationToken.None);
 
@@ -351,7 +353,7 @@ public sealed class ResultsInfrastructureTests
             return new HttpResponseMessage(HttpStatusCode.NotFound);
         });
         using var httpClient = new HttpClient(handler);
-        var service = new RaceHighlightsLookupService(httpClient, new StubClock(new DateTimeOffset(2026, 03, 01, 18, 00, 00, TimeSpan.Zero)));
+        var service = new RaceHighlightsLookupService(httpClient, new StubClock(new DateTimeOffset(2026, 03, 01, 18, 00, 00, TimeSpan.Zero)), new RaceHighlightsLookupPolicy(TimeSpan.FromHours(1)));
 
         var result = await service.ResolveAsync(CreateWeekend(), CancellationToken.None);
 
@@ -395,7 +397,7 @@ public sealed class ResultsInfrastructureTests
             return new HttpResponseMessage(HttpStatusCode.NotFound);
         });
         using var httpClient = new HttpClient(handler);
-        var service = new RaceHighlightsLookupService(httpClient, new StubClock(new DateTimeOffset(2026, 03, 01, 18, 00, 00, TimeSpan.Zero)));
+        var service = new RaceHighlightsLookupService(httpClient, new StubClock(new DateTimeOffset(2026, 03, 01, 18, 00, 00, TimeSpan.Zero)), new RaceHighlightsLookupPolicy(TimeSpan.FromHours(1)));
 
         await Assert.ThrowsAsync<ArgumentNullException>(() => service.ResolveAsync(null!, CancellationToken.None));
         var result = await service.ResolveAsync(CreateWeekend(), CancellationToken.None);
@@ -446,7 +448,7 @@ public sealed class ResultsInfrastructureTests
             return new HttpResponseMessage(HttpStatusCode.NotFound);
         });
         using var httpClient = new HttpClient(handler);
-        var service = new RaceHighlightsLookupService(httpClient, new StubClock(new DateTimeOffset(2026, 03, 01, 18, 00, 00, TimeSpan.Zero)));
+        var service = new RaceHighlightsLookupService(httpClient, new StubClock(new DateTimeOffset(2026, 03, 01, 18, 00, 00, TimeSpan.Zero)), new RaceHighlightsLookupPolicy(TimeSpan.FromHours(1)));
 
         var result = await service.ResolveAsync(CreateWeekend(), CancellationToken.None);
 
@@ -489,7 +491,7 @@ public sealed class ResultsInfrastructureTests
             return new HttpResponseMessage(HttpStatusCode.NotFound);
         });
         using var httpClient = new HttpClient(handler);
-        var service = new RaceHighlightsLookupService(httpClient, new StubClock(new DateTimeOffset(2026, 03, 01, 18, 00, 00, TimeSpan.Zero)));
+        var service = new RaceHighlightsLookupService(httpClient, new StubClock(new DateTimeOffset(2026, 03, 01, 18, 00, 00, TimeSpan.Zero)), new RaceHighlightsLookupPolicy(TimeSpan.FromHours(1)));
 
         // Race with no year in detailUrl; DeriveSeasonYear falls back to GrandPrixTitle
         var race = new WeekendDocument(
@@ -553,7 +555,7 @@ public sealed class ResultsInfrastructureTests
             return new HttpResponseMessage(HttpStatusCode.NotFound);
         });
         using var httpClient = new HttpClient(handler);
-        var service = new RaceHighlightsLookupService(httpClient, new StubClock(new DateTimeOffset(2026, 03, 01, 18, 00, 00, TimeSpan.Zero)));
+        var service = new RaceHighlightsLookupService(httpClient, new StubClock(new DateTimeOffset(2026, 03, 01, 18, 00, 00, TimeSpan.Zero)), new RaceHighlightsLookupPolicy(TimeSpan.FromHours(1)));
 
         var result = await service.ResolveAsync(CreateWeekend(), CancellationToken.None);
 
@@ -619,7 +621,7 @@ public sealed class ResultsInfrastructureTests
             return new HttpResponseMessage(HttpStatusCode.NotFound);
         });
         using var httpClient = new HttpClient(handler);
-        var service = new RaceHighlightsLookupService(httpClient, new StubClock(new DateTimeOffset(2026, 03, 01, 18, 00, 00, TimeSpan.Zero)));
+        var service = new RaceHighlightsLookupService(httpClient, new StubClock(new DateTimeOffset(2026, 03, 01, 18, 00, 00, TimeSpan.Zero)), new RaceHighlightsLookupPolicy(TimeSpan.FromHours(1)));
 
         var result = await service.ResolveAsync(CreateWeekend(), CancellationToken.None);
 
@@ -672,7 +674,7 @@ public sealed class ResultsInfrastructureTests
             return new HttpResponseMessage(HttpStatusCode.NotFound);
         });
         using var httpClient = new HttpClient(handler);
-        var service = new RaceHighlightsLookupService(httpClient, new StubClock(new DateTimeOffset(2026, 03, 01, 18, 00, 00, TimeSpan.Zero)));
+        var service = new RaceHighlightsLookupService(httpClient, new StubClock(new DateTimeOffset(2026, 03, 01, 18, 00, 00, TimeSpan.Zero)), new RaceHighlightsLookupPolicy(TimeSpan.FromHours(1)));
 
         var result = await service.ResolveAsync(CreateWeekend(), CancellationToken.None);
 
@@ -714,7 +716,7 @@ public sealed class ResultsInfrastructureTests
             return new HttpResponseMessage(HttpStatusCode.NotFound);
         });
         using var httpClient = new HttpClient(handler);
-        var service = new RaceHighlightsLookupService(httpClient, new StubClock(new DateTimeOffset(2026, 03, 01, 18, 00, 00, TimeSpan.Zero)));
+        var service = new RaceHighlightsLookupService(httpClient, new StubClock(new DateTimeOffset(2026, 03, 01, 18, 00, 00, TimeSpan.Zero)), new RaceHighlightsLookupPolicy(TimeSpan.FromHours(1)));
 
         // Race with no year in detailUrl, GrandPrixTitle, or MeetingName → DeriveSeasonYear uses DateTime.UtcNow
         var raceNoYear = new WeekendDocument(
@@ -819,7 +821,7 @@ public sealed class ResultsInfrastructureTests
             return new HttpResponseMessage(HttpStatusCode.NotFound);
         });
         using var httpClient = new HttpClient(handler);
-        var service = new RaceHighlightsLookupService(httpClient, new StubClock(new DateTimeOffset(2026, 03, 01, 18, 00, 00, TimeSpan.Zero)));
+        var service = new RaceHighlightsLookupService(httpClient, new StubClock(new DateTimeOffset(2026, 03, 01, 18, 00, 00, TimeSpan.Zero)), new RaceHighlightsLookupPolicy(TimeSpan.FromHours(1)));
 
         var result = await service.ResolveAsync(CreateWeekend(), CancellationToken.None);
 
@@ -856,7 +858,7 @@ public sealed class ResultsInfrastructureTests
             };
         });
         using var httpClient = new HttpClient(handler);
-        var service = new RaceHighlightsLookupService(httpClient, new StubClock(new DateTimeOffset(2026, 03, 01, 18, 00, 00, TimeSpan.Zero)));
+        var service = new RaceHighlightsLookupService(httpClient, new StubClock(new DateTimeOffset(2026, 03, 01, 18, 00, 00, TimeSpan.Zero)), new RaceHighlightsLookupPolicy(TimeSpan.FromHours(1)));
 
         // Race with MeetingKey non-null, DetailUrl=null → triggers both DeriveSeasonYear null-DetailUrl
         // path and ExtractSeasonYear(null) path, then falls back to DateTime.UtcNow.Year
@@ -946,7 +948,7 @@ public sealed class ResultsInfrastructureTests
             return new HttpResponseMessage(HttpStatusCode.NotFound);
         });
         using var httpClient = new HttpClient(handler);
-        var service = new RaceHighlightsLookupService(httpClient, new StubClock(new DateTimeOffset(2026, 06, 29, 18, 00, 00, TimeSpan.Zero)));
+        var service = new RaceHighlightsLookupService(httpClient, new StubClock(new DateTimeOffset(2026, 06, 29, 18, 00, 00, TimeSpan.Zero)), new RaceHighlightsLookupPolicy(TimeSpan.FromHours(1)));
 
         // Race for Great Britain: the "great britain" alias key maps to ["silverstone"]
         var race = new WeekendDocument(
@@ -1019,7 +1021,7 @@ public sealed class ResultsInfrastructureTests
             return new HttpResponseMessage(HttpStatusCode.NotFound);
         });
         using var httpClient = new HttpClient(handler);
-        var service = new RaceHighlightsLookupService(httpClient, new StubClock(new DateTimeOffset(2026, 03, 01, 18, 00, 00, TimeSpan.Zero)));
+        var service = new RaceHighlightsLookupService(httpClient, new StubClock(new DateTimeOffset(2026, 03, 01, 18, 00, 00, TimeSpan.Zero)), new RaceHighlightsLookupPolicy(TimeSpan.FromHours(1)));
 
         var result = await service.ResolveAsync(CreateWeekend(), CancellationToken.None);
 
@@ -1069,7 +1071,7 @@ public sealed class ResultsInfrastructureTests
             return new HttpResponseMessage(HttpStatusCode.NotFound);
         });
         using var httpClient = new HttpClient(handler);
-        var service = new RaceHighlightsLookupService(httpClient, new StubClock(new DateTimeOffset(2026, 03, 01, 18, 00, 00, TimeSpan.Zero)));
+        var service = new RaceHighlightsLookupService(httpClient, new StubClock(new DateTimeOffset(2026, 03, 01, 18, 00, 00, TimeSpan.Zero)), new RaceHighlightsLookupPolicy(TimeSpan.FromHours(1)));
 
         var result = await service.ResolveAsync(CreateWeekend(), CancellationToken.None);
 
@@ -1121,7 +1123,7 @@ public sealed class ResultsInfrastructureTests
             return new HttpResponseMessage(HttpStatusCode.NotFound);
         });
         using var httpClient = new HttpClient(handler);
-        var service = new RaceHighlightsLookupService(httpClient, new StubClock(new DateTimeOffset(2026, 03, 01, 18, 00, 00, TimeSpan.Zero)));
+        var service = new RaceHighlightsLookupService(httpClient, new StubClock(new DateTimeOffset(2026, 03, 01, 18, 00, 00, TimeSpan.Zero)), new RaceHighlightsLookupPolicy(TimeSpan.FromHours(1)));
 
         var result = await service.ResolveAsync(CreateWeekend(), CancellationToken.None);
 
@@ -1170,7 +1172,7 @@ public sealed class ResultsInfrastructureTests
             return new HttpResponseMessage(HttpStatusCode.NotFound);
         });
         using var httpClient = new HttpClient(handler);
-        var service = new RaceHighlightsLookupService(httpClient, new StubClock(new DateTimeOffset(2026, 03, 01, 18, 00, 00, TimeSpan.Zero)));
+        var service = new RaceHighlightsLookupService(httpClient, new StubClock(new DateTimeOffset(2026, 03, 01, 18, 00, 00, TimeSpan.Zero)), new RaceHighlightsLookupPolicy(TimeSpan.FromHours(1)));
 
         var result = await service.ResolveAsync(CreateWeekend(), CancellationToken.None);
 
@@ -1220,7 +1222,7 @@ public sealed class ResultsInfrastructureTests
             return new HttpResponseMessage(HttpStatusCode.NotFound);
         });
         using var httpClient = new HttpClient(handler);
-        var service = new RaceHighlightsLookupService(httpClient, new StubClock(new DateTimeOffset(2026, 03, 01, 18, 00, 00, TimeSpan.Zero)));
+        var service = new RaceHighlightsLookupService(httpClient, new StubClock(new DateTimeOffset(2026, 03, 01, 18, 00, 00, TimeSpan.Zero)), new RaceHighlightsLookupPolicy(TimeSpan.FromHours(1)));
 
         var result = await service.ResolveAsync(CreateWeekend(), CancellationToken.None);
 
@@ -1278,7 +1280,7 @@ public sealed class ResultsInfrastructureTests
             return new HttpResponseMessage(HttpStatusCode.NotFound);
         });
         using var httpClient = new HttpClient(handler);
-        var service = new RaceHighlightsLookupService(httpClient, new StubClock(new DateTimeOffset(2026, 03, 01, 18, 00, 00, TimeSpan.Zero)));
+        var service = new RaceHighlightsLookupService(httpClient, new StubClock(new DateTimeOffset(2026, 03, 01, 18, 00, 00, TimeSpan.Zero)), new RaceHighlightsLookupPolicy(TimeSpan.FromHours(1)));
 
         var result = await service.ResolveAsync(CreateWeekend(), CancellationToken.None);
 
@@ -1357,7 +1359,7 @@ public sealed class ResultsInfrastructureTests
             "",
             "");
 
-        var service = new RaceHighlightsLookupService(httpClient, new StubClock(new DateTimeOffset(2026, 03, 01, 18, 00, 00, TimeSpan.Zero)));
+        var service = new RaceHighlightsLookupService(httpClient, new StubClock(new DateTimeOffset(2026, 03, 01, 18, 00, 00, TimeSpan.Zero)), new RaceHighlightsLookupPolicy(TimeSpan.FromHours(1)));
 
         var result = await service.ResolveAsync(raceNullDetail, CancellationToken.None);
         Assert.Equal("missing", result.HighlightsLookupStatus);
@@ -1393,7 +1395,7 @@ public sealed class ResultsInfrastructureTests
             return new HttpResponseMessage(HttpStatusCode.NotFound);
         });
         using var httpClient = new HttpClient(handler);
-        var service = new RaceHighlightsLookupService(httpClient, new StubClock(new DateTimeOffset(2026, 03, 01, 18, 00, 00, TimeSpan.Zero)));
+        var service = new RaceHighlightsLookupService(httpClient, new StubClock(new DateTimeOffset(2026, 03, 01, 18, 00, 00, TimeSpan.Zero)), new RaceHighlightsLookupPolicy(TimeSpan.FromHours(1)));
 
         var result = await service.ResolveAsync(CreateWeekend(), CancellationToken.None);
 
@@ -1425,7 +1427,7 @@ public sealed class ResultsInfrastructureTests
     public void Highlights_lookup_service_private_markup_parser_prefers_direct_video_id_and_rejects_unsupported_title_shape()
     {
         using var httpClient = new HttpClient(new RecordingHttpMessageHandler(_ => new HttpResponseMessage(HttpStatusCode.OK)));
-        var service = new RaceHighlightsLookupService(httpClient, new StubClock(new DateTimeOffset(2026, 03, 01, 18, 00, 00, TimeSpan.Zero)));
+        var service = new RaceHighlightsLookupService(httpClient, new StubClock(new DateTimeOffset(2026, 03, 01, 18, 00, 00, TimeSpan.Zero)), new RaceHighlightsLookupPolicy(TimeSpan.FromHours(1)));
         var rawContent =
             """{"videoRenderer":{"videoId":"direct-video-id","title":{"unexpected":"value"},"ownerText":{"simpleText":"Sky Sport F1"},"navigationEndpoint":{"watchEndpoint":{"videoId":"watch-endpoint-id"}}}}""";
 
@@ -1479,7 +1481,7 @@ public sealed class ResultsInfrastructureTests
             return new HttpResponseMessage(HttpStatusCode.NotFound);
         });
         using var httpClient = new HttpClient(handler);
-        var service = new RaceHighlightsLookupService(httpClient, new StubClock(new DateTimeOffset(2026, 03, 01, 18, 00, 00, TimeSpan.Zero)));
+        var service = new RaceHighlightsLookupService(httpClient, new StubClock(new DateTimeOffset(2026, 03, 01, 18, 00, 00, TimeSpan.Zero)), new RaceHighlightsLookupPolicy(TimeSpan.FromHours(1)));
 
         var result = await service.ResolveAsync(CreateWeekend(), CancellationToken.None);
 
@@ -1524,7 +1526,7 @@ public sealed class ResultsInfrastructureTests
             return new HttpResponseMessage(HttpStatusCode.NotFound);
         });
         using var httpClient = new HttpClient(handler);
-        var service = new RaceHighlightsLookupService(httpClient, new StubClock(new DateTimeOffset(2026, 03, 01, 18, 00, 00, TimeSpan.Zero)));
+        var service = new RaceHighlightsLookupService(httpClient, new StubClock(new DateTimeOffset(2026, 03, 01, 18, 00, 00, TimeSpan.Zero)), new RaceHighlightsLookupPolicy(TimeSpan.FromHours(1)));
         var race = CreateWeekend() with
         {
             StartDate = "not-a-date",
@@ -1541,7 +1543,7 @@ public sealed class ResultsInfrastructureTests
     public void Highlights_lookup_service_private_markup_parser_covers_short_byline_and_default_author_fallback()
     {
         using var httpClient = new HttpClient(new RecordingHttpMessageHandler(_ => new HttpResponseMessage(HttpStatusCode.OK)));
-        var service = new RaceHighlightsLookupService(httpClient, new StubClock(new DateTimeOffset(2026, 03, 01, 18, 00, 00, TimeSpan.Zero)));
+        var service = new RaceHighlightsLookupService(httpClient, new StubClock(new DateTimeOffset(2026, 03, 01, 18, 00, 00, TimeSpan.Zero)), new RaceHighlightsLookupPolicy(TimeSpan.FromHours(1)));
         var rawContent =
             """
             {"videoRenderer":{"videoId":"short-byline-video","title":{"simpleText":"F1 GP Australia highlights 2026"},"shortBylineText":{"simpleText":"Sky Sport F1"},"navigationEndpoint":{"watchEndpoint":{"videoId":"short-byline-video"}}}}
@@ -1712,7 +1714,7 @@ public sealed class ResultsInfrastructureTests
             return new HttpResponseMessage(HttpStatusCode.NotFound);
         });
         using var httpClient = new HttpClient(handler);
-        var service = new RaceHighlightsLookupService(httpClient, new StubClock(new DateTimeOffset(2026, 03, 01, 18, 00, 00, TimeSpan.Zero)));
+        var service = new RaceHighlightsLookupService(httpClient, new StubClock(new DateTimeOffset(2026, 03, 01, 18, 00, 00, TimeSpan.Zero)), new RaceHighlightsLookupPolicy(TimeSpan.FromHours(1)));
 
         var result = await service.ResolveAsync(CreateWeekend(), CancellationToken.None);
 

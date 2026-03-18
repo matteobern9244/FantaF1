@@ -27,10 +27,12 @@ public sealed class MongoReadRepositoryTests
 
         Assert.Throws<ArgumentNullException>(() => new MongoAppDataRepository(null!, mapper, writeMapper, rosterValidator, clock));
         Assert.Throws<ArgumentNullException>(() => new MongoAppDataRepository(database.Database, null!, writeMapper, rosterValidator, clock));
-        Assert.Throws<ArgumentNullException>(() => new MongoDriverRepository(null!, mapper));
-        Assert.Throws<ArgumentNullException>(() => new MongoDriverRepository(database.Database, null!));
-        Assert.Throws<ArgumentNullException>(() => new MongoWeekendRepository(null!, mapper));
-        Assert.Throws<ArgumentNullException>(() => new MongoWeekendRepository(database.Database, null!));
+        Assert.Throws<ArgumentNullException>(() => new MongoDriverRepository(null!, mapper, writeMapper));
+        Assert.Throws<ArgumentNullException>(() => new MongoDriverRepository(database.Database, null!, writeMapper));
+        Assert.Throws<ArgumentNullException>(() => new MongoDriverRepository(database.Database, mapper, null!));
+        Assert.Throws<ArgumentNullException>(() => new MongoWeekendRepository(null!, mapper, writeMapper));
+        Assert.Throws<ArgumentNullException>(() => new MongoWeekendRepository(database.Database, null!, writeMapper));
+        Assert.Throws<ArgumentNullException>(() => new MongoWeekendRepository(database.Database, mapper, null!));
     }
 
     [Fact]
@@ -100,7 +102,7 @@ public sealed class MongoReadRepositoryTests
                 },
             ],
         });
-        var repository = new MongoDriverRepository(harness.Database, new MongoLegacyReadDocumentMapper());
+        var repository = new MongoDriverRepository(harness.Database, new MongoLegacyReadDocumentMapper(), new MongoLegacyWriteDocumentMapper());
 
         var result = await repository.ReadAllAsync(CancellationToken.None);
 
@@ -131,7 +133,7 @@ public sealed class MongoReadRepositoryTests
                 },
             ],
         });
-        var repository = new MongoWeekendRepository(harness.Database, new MongoLegacyReadDocumentMapper());
+        var repository = new MongoWeekendRepository(harness.Database, new MongoLegacyReadDocumentMapper(), new MongoLegacyWriteDocumentMapper());
 
         var result = await repository.ReadAllAsync(CancellationToken.None);
 

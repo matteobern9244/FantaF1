@@ -137,9 +137,9 @@ Il lock e' server-side:
 - solution: [backend-csharp/FantaF1.Backend.sln](/Users/matteobernardini/code/FantaF1/backend-csharp/FantaF1.Backend.sln)
 - layer:
   - `Api`
-  - `Application`
-  - `Domain`
-  - `Infrastructure`
+  - `Application`: contiene le interfacce `IRepository<TEntity, TId>` e i contratti di dominio.
+  - `Domain`: definisce l'interfaccia `IEntity<TId>` implementata da tutti i ReadModels.
+  - `Infrastructure`: implementa la persistenza tramite `MongoRepository<TEntity, TId>` e gestisce le dipendenze via Dependency Injection (DI) senza istanziazioni dirette.
 - startup non bloccante su sync esterni
 - static serving same-origin del build frontend in `dist`
 

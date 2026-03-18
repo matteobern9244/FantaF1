@@ -1,3 +1,5 @@
+using FantaF1.Domain.Common;
+
 namespace FantaF1.Domain.ReadModels;
 
 public sealed record PredictionDocument(
@@ -32,7 +34,10 @@ public sealed record AppDataDocument(
     string? GpName,
     PredictionDocument? RaceResults,
     string? SelectedMeetingKey,
-    IReadOnlyDictionary<string, WeekendPredictionStateDocument>? WeekendStateByMeetingKey);
+    IReadOnlyDictionary<string, WeekendPredictionStateDocument>? WeekendStateByMeetingKey) : IEntity<string>
+{
+    public string Id => "Singleton";
+}
 
 public sealed record DriverDocument(
     string Id,
@@ -40,7 +45,7 @@ public sealed record DriverDocument(
     string? Team,
     string? Color,
     string? AvatarUrl,
-    string? TeamSlug);
+    string? TeamSlug) : IEntity<string>;
 
 public sealed record WeekendSessionDocument(
     string? Name,
@@ -63,7 +68,10 @@ public sealed record WeekendDocument(
     string? HighlightsVideoUrl,
     string? HighlightsLookupCheckedAt,
     string? HighlightsLookupStatus,
-    string? HighlightsLookupSource);
+    string? HighlightsLookupSource) : IEntity<string>
+{
+    public string Id => MeetingKey;
+}
 
 public sealed record DriverStandingDocument(
     int Position,
@@ -84,4 +92,7 @@ public sealed record ConstructorStandingDocument(
 public sealed record StandingsDocument(
     IReadOnlyList<DriverStandingDocument> DriverStandings,
     IReadOnlyList<ConstructorStandingDocument> ConstructorStandings,
-    string UpdatedAt);
+    string UpdatedAt) : IEntity<string>
+{
+    public string Id => "current";
+}

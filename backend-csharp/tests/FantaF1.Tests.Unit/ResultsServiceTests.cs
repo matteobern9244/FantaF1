@@ -622,6 +622,12 @@ public sealed class ResultsServiceTests
 
         public HighlightsLookupDocument? WrittenLookup { get; private set; }
 
+        public Task<WeekendDocument?> GetByIdAsync(string id, CancellationToken cancellationToken) => throw new NotImplementedException();
+        public Task<IReadOnlyList<WeekendDocument>> GetAllAsync(CancellationToken cancellationToken) => throw new NotImplementedException();
+        public Task AddAsync(WeekendDocument entity, CancellationToken cancellationToken) => throw new NotImplementedException();
+        public Task UpdateAsync(WeekendDocument entity, CancellationToken cancellationToken) => throw new NotImplementedException();
+        public Task DeleteAsync(string id, CancellationToken cancellationToken) => throw new NotImplementedException();
+
         public Task<IReadOnlyList<WeekendDocument>> ReadAllAsync(CancellationToken cancellationToken)
         {
             ReadAllCalls += 1;
