@@ -4,7 +4,6 @@ This file is the compact summary view of Conductor tracks in this repository.
 
 ## Active Tracks
 
-- `protect_staging_branch_20260318` | proteggere il branch 'staging' a livello di github in modo identico a come è protetto il branch 'main' | `completed` | phase `completed` | Branch protection enabled and documented. | `conductor/tracks/protect_staging_branch_20260318`
 - `stabilize_highlights_persistence_20260318` | Persistenza Definitiva Highlights Per Gara | `completed` | phase `completed` | Implementation, coverage, responsive verification, and production-like preview checks completed without commit or push. | `conductor/tracks/stabilize_highlights_persistence_20260318`
 
 ## Archived Tracks

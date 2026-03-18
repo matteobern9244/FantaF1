@@ -4,13 +4,6 @@ This file is the prompt-first navigation index for the Conductor workspace in th
 
 ## Active Tracks
 
-## protect_staging_branch_20260318 - proteggere il branch 'staging' a livello di github in modo identico a come è protetto il branch 'main'
-
-- Status: `new`
-- Phase: `new`
-- Active task: `New track created.`
-- Path: `conductor/tracks/protect_staging_branch_20260318`
-
 ## stabilize_highlights_persistence_20260318 - Persistenza Definitiva Highlights Per Gara
 
 - Status: `completed`
@@ -19,6 +12,13 @@ This file is the prompt-first navigation index for the Conductor workspace in th
 - Path: `conductor/tracks/stabilize_highlights_persistence_20260318`
 
 ## Archived Tracks
+
+## protect_staging_branch_20260318 - proteggere il branch 'staging' a livello di github in modo identico a come è protetto il branch 'main'
+
+- Status: `archived`
+- Phase: `archived`
+- Active task: Archived
+- Path: `conductor/archive/protect_staging_branch_20260318`
 
 ## achieve_100_coverage_20260314 - Certificazione Copertura Test 100% (Frontend, Node, C#)
 

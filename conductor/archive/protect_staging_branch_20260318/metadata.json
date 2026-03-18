@@ -1,0 +1,19 @@
+{
+  "id": "protect_staging_branch_20260318",
+  "track_id": "protect_staging_branch_20260318",
+  "slug": "protect_staging_branch_20260318",
+  "title": "proteggere il branch 'staging' a livello di github in modo identico a come è protetto il branch 'main'",
+  "phase": "completed",
+  "activeTask": null,
+  "createdAt": "2026-03-18T10:00:00Z",
+  "updatedAt": "2026-03-18T10:00:00Z",
+  "archivedAt": null,
+  "path": "conductor/tracks/protect_staging_branch_20260318",
+  "relatedTrackIds": [],
+  "type": "chore",
+  "status": "completed",
+  "created_at": "2026-03-18T10:00:00Z",
+  "updated_at": "2026-03-18T10:00:00Z",
+  "description": "proteggere il branch 'staging' a livello di github in modo identico a come è protetto il branch 'main'"
+}
+
