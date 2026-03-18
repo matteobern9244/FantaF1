@@ -2,12 +2,12 @@
   "id": "fix_multi_race_highlights_20260315",
   "slug": "fix-multi-race-highlights",
   "title": "Fix Multi Race Highlights",
-  "status": "done",
-  "phase": "done",
+  "status": "archived",
+  "phase": "archived",
   "createdAt": "2026-03-15T22:58:00Z",
   "updatedAt": "2026-03-15T23:10:00Z",
-  "archivedAt": null,
-  "path": "conductor/tracks/fix_multi_race_highlights_20260315",
+  "archivedAt": "2026-03-18T10:00:00Z",
+  "path": "conductor/archive/fix_multi_race_highlights_20260315",
   "relatedTrackIds": [
     "fix_highlights_lookup_20260315"
   ],

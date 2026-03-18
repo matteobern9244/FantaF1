@@ -2,12 +2,12 @@
   "id": "fix_startup_command_20260317",
   "slug": "fix-startup-command-and-test-cycles",
   "title": "Execute test cycles and fix startup script",
-  "status": "done",
-  "phase": "done",
+  "status": "archived",
+  "phase": "archived",
   "createdAt": "2026-03-17T10:00:00Z",
   "updatedAt": "2026-03-17T21:00:00Z",
-  "archivedAt": null,
-  "path": "conductor/tracks/fix_startup_command_20260317",
+  "archivedAt": "2026-03-18T10:00:00Z",
+  "path": "conductor/archive/fix_startup_command_20260317",
   "relatedTrackIds": [],
   "activeTask": "Completed"
 }
