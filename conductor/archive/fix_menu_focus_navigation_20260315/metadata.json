@@ -2,12 +2,12 @@
   "id": "fix_menu_focus_navigation_20260315",
   "slug": "fix-menu-focus-navigation",
   "title": "Fix Menu Focus And Active Navigation",
-  "status": "done",
-  "phase": "done",
+  "status": "archived",
+  "phase": "archived",
   "createdAt": "2026-03-15T22:45:00Z",
   "updatedAt": "2026-03-15T22:49:00Z",
-  "archivedAt": null,
-  "path": "conductor/tracks/fix_menu_focus_navigation_20260315",
+  "archivedAt": "2026-03-18T10:00:00Z",
+  "path": "conductor/archive/fix_menu_focus_navigation_20260315",
   "relatedTrackIds": [
     "ui_menu_rework_20260315"
   ],

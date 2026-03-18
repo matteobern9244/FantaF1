@@ -1,0 +1,22 @@
+{
+  "id": "stabilize_highlights_persistence_20260318",
+  "slug": "stabilize-highlights-persistence",
+  "title": "Persistenza Definitiva Highlights Per Gara",
+  "status": "completed",
+  "phase": "completed",
+  "createdAt": "2026-03-18T12:05:00Z",
+  "updatedAt": "2026-03-18T12:15:00Z",
+  "archivedAt": null,
+  "active_task": "Implementation, coverage, responsive verification, and production-like preview checks completed without commit or push.",
+  "activeTask": "Implementation, coverage, responsive verification, and production-like preview checks completed without commit or push.",
+  "path": "conductor/tracks/stabilize_highlights_persistence_20260318",
+  "relatedTrackIds": [
+    "investigate_highlights_algorithm_20260317",
+    "fix_highlights_lookup_20260315",
+    "fix_multi_race_highlights_20260315"
+  ],
+  "branch_policy": "Dedicated branch already created: track/stabilize-highlights-persistence-20260318. No further git operations allowed in this track except the already approved branch creation.",
+  "commit_policy": "No commit or push in this track.",
+  "coverage_target": "100% statements, functions, branches, and lines for the official repository/application scope.",
+  "description": "Preserve highlights found per race in the weekends persistence model, prevent destructive downgrade on later missing lookups, and align calendar sync time handling on IClock."
+}

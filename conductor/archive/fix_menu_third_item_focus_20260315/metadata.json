@@ -2,12 +2,12 @@
   "id": "fix_menu_third_item_focus_20260315",
   "slug": "fix-menu-third-item-focus",
   "title": "Fix Menu Third Item Focus",
-  "status": "done",
-  "phase": "done",
+  "status": "archived",
+  "phase": "archived",
   "createdAt": "2026-03-15T23:12:00Z",
   "updatedAt": "2026-03-15T23:32:00Z",
-  "archivedAt": null,
-  "path": "conductor/tracks/fix_menu_third_item_focus_20260315",
+  "archivedAt": "2026-03-18T10:00:00Z",
+  "path": "conductor/archive/fix_menu_third_item_focus_20260315",
   "relatedTrackIds": [
     "fix_menu_focus_navigation_20260315"
   ],

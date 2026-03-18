@@ -4,10 +4,15 @@ Cronologia sintetica delle release documentate del progetto Fanta Formula 1.
 
 ## [Unreleased]
 
+- **Persistenza Definitiva Highlights Per Gara**: il sync calendario C# preserva ora gli highlights gia' trovati nel documento `weekends` della gara, mantenendo l'associazione stabile per `meetingKey` e impedendo che un successivo lookup `missing` o un errore transitorio cancellino un `highlightsVideoUrl` gia' valido.
+- **Clock Unificato nel Sync Calendario**: il path autorevole C# usa ora `IClock` anche nella decisione di lookup highlights durante il bootstrap, eliminando l'accesso diretto a `DateTimeOffset.UtcNow` e riducendo le ambiguita' temporali tra locale e staging.
+- **TDD Regressivo sulla Persistenza Highlights**: aggiunti test backend dedicati alla preservazione di un `found` gia' persistito in caso di `missing`, eccezione di lookup, aggiornamento con nuovo `found` e gating tramite clock iniettato, mantenendo la coverage ufficiale del backend al `100%`.
+- **Simulazione Staging Locale Verificata**: confermata la tenuta del fix anche nel target same-origin `csharp-staging-local` su database isolato `fantaf1_local_staging`, con smoke save e controllo responsive eseguiti localmente senza deploy su Render staging.
+- **Baseline Coverage C# Riallineata**: verificata e documentata la nuova baseline ufficiale di `backend-csharp/src/` a **3052 / 3052** linee, **1721 / 1721** branch e **502 / 502** metodi coperti.
 - **Riallineamento Metadati Conductor e Ripristino Test**: risolto il mismatch nel formato `metadata.json` per i nuovi track e quelli archiviati, ripristinando il corretto funzionamento della suite di test di compatibilita' e dello startup script.
 - **Validazione Pre-Volo Estesa nel Launcher Locale**: il comando `./start_fantaf1.command` integra ora tutti i cicli di test del progetto (Frontend, Backend C#, UI Responsive) e una verifica rigorosa della connettivita' a MongoDB Atlas prima dell'avvio.
 - **Aggiornamento Dati di Riferimento Gare 2026**: aggiornata la lista delle gare e dei relativi alias/localizzazioni in `OfficialResultsReferenceData.cs` per la stagione 2026, includendo il supporto a Barcelona-Catalunya e rimuovendo circuiti obsoleti.
-- **Certificazione Baseline Coverage C# Incrementata**: verificata la copertura totale al 100% per il backend C# con baseline aggiornata a **2994 / 2994** linee covered, mantenendo l'integrita' TDD su tutto il perimetro di infrastruttura.
+- **Certificazione Coverage C# Mantenuta al 100%**: i cicli TDD e i fix infrastrutturali dell'area backend continuano a mantenere la copertura totale del perimetro ufficiale, con baseline riallineata ai valori piu' recenti documentati sopra.
 - **TDD Regressivo sui Dati di Riferimento**: aggiunta una nuova suite di test unitari per garantire la correttezza dei mapping geografici e dei nomi brevi delle gare nel backend.
 
 ## [1.6.1] - 2026-03-16

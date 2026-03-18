@@ -4,15 +4,7 @@ This file is the compact summary view of Conductor tracks in this repository.
 
 ## Active Tracks
 
-- `fix_highlights_lookup_20260315` | Fix Highlights Lookup Availability | `done` | phase `done` | Completed | `conductor/tracks/fix_highlights_lookup_20260315`
-- `fix_local_startup_20260315` | Fix Local Startup | `done` | phase `done` | Completed | `conductor/tracks/fix_local_startup_20260315`
-- `fix_menu_focus_navigation_20260315` | Fix Menu Focus And Active Navigation | `done` | phase `done` | Completed | `conductor/tracks/fix_menu_focus_navigation_20260315`
-- `fix_menu_third_item_focus_20260315` | Fix Menu Third Item Focus | `done` | phase `done` | Completed | `conductor/tracks/fix_menu_third_item_focus_20260315`
-- `fix_multi_race_highlights_20260315` | Fix Multi Race Highlights | `done` | phase `done` | Completed | `conductor/tracks/fix_multi_race_highlights_20260315`
-- `merge_develop_into_staging_release_20260315` | Merge Develop Into Staging Release | `done` | phase `done` | Completed | `conductor/tracks/merge_develop_into_staging_release_20260315`
-- `restaylyng_menu_mobile_20260316` | Mobile Menu Restyling | `new` | phase `new` | No active task | `conductor/tracks/restaylyng-menu-mobile`
-- `track-001` | Fix Mobile Menu Readability And Scroll Affordance | `done` | phase `done` | Completed | `conductor/tracks/track-001-fix-mobile-menu-readability-and-scroll-affordance`
-- `fix_startup_command_20260317` | Execute test cycles and fix startup script | `done` | phase `done` | Completed | `conductor/tracks/fix_startup_command_20260317`
+- `stabilize_highlights_persistence_20260318` | Persistenza Definitiva Highlights Per Gara | `completed` | phase `completed` | Implementation, coverage, responsive verification, and production-like preview checks completed without commit or push. | `conductor/tracks/stabilize_highlights_persistence_20260318`
 
 ## Archived Tracks
 
@@ -27,15 +19,24 @@ This file is the compact summary view of Conductor tracks in this repository.
 - `fix-dropdowns` | fix-dropdowns | `archived` | phase `archived` | Archived | `conductor/archive/fix-dropdowns`
 - `fix-scroll-performance` | fix-scroll-performance | `archived` | phase `archived` | Archived | `conductor/archive/fix-scroll-performance`
 - `fix_docker_build_error_20260315` | Fix Docker build error on Render staging due to missing /backend directory in backend-csharp/Dockerfile. | `archived` | phase `archived` | Archived | `conductor/archive/fix_docker_build_error_20260315`
+- `fix_highlights_lookup_20260315` | Fix Highlights Lookup Availability | `archived` | phase `archived` | Archived | `conductor/archive/fix_highlights_lookup_20260315`
 - `fix_local_backend_startup_failure_20260314` | Fix fallimento avvio backend locale durante preflight | `archived` | phase `archived` | Archived | `conductor/archive/fix_local_backend_startup_failure_20260314`
+- `fix_local_startup_20260315` | Fix Local Startup | `archived` | phase `archived` | Archived | `conductor/archive/fix_local_startup_20260315`
+- `fix_menu_focus_navigation_20260315` | Fix Menu Focus And Active Navigation | `archived` | phase `archived` | Archived | `conductor/archive/fix_menu_focus_navigation_20260315`
+- `fix_menu_third_item_focus_20260315` | Fix Menu Third Item Focus | `archived` | phase `archived` | Archived | `conductor/archive/fix_menu_third_item_focus_20260315`
+- `fix_multi_race_highlights_20260315` | Fix Multi Race Highlights | `archived` | phase `archived` | Archived | `conductor/archive/fix_multi_race_highlights_20260315`
 - `fix_render_dockerfile_not_found_20260315` | Fix Render Dockerfile not found error by clean rewrite and verification. | `archived` | phase `archived` | Archived | `conductor/archive/fix_render_dockerfile_not_found_20260315`
 - `fix_render_staging_deploy_definitive_20260315` | Definitive fix for Render staging deploy error: '/backend' not found. | `archived` | phase `archived` | Archived | `conductor/archive/fix_render_staging_deploy_definitive_20260315`
+- `fix_startup_command_20260317` | Execute test cycles and fix startup script | `archived` | phase `archived` | Archived | `conductor/archive/fix_startup_command_20260317`
 - `investigate_highlights_algorithm_20260317` | Investigation plan for the "HIGHLIGHTS" algorithm | `archived` | phase `archived` | Archived | `conductor/archive/investigate_highlights_algorithm_20260317`
 - `integrate_dotnet_format_20260314` | Integrazione dotnet format nel workflow C# e CI/CD | `archived` | phase `archived` | Archived | `conductor/archive/integrate_dotnet_format_20260314`
+- `merge_develop_into_staging_release_20260315` | Merge Develop Into Staging Release | `archived` | phase `archived` | Archived | `conductor/archive/merge_develop_into_staging_release_20260315`
 - `porting_csharp_phase_10_20260314` | Docker Render Staging and Atlas Operationalization (Phase 10) for C# Backend Port | `archived` | phase `archived` | Archived | `conductor/archive/porting_csharp_phase_10_20260314`
+- `restaylyng_menu_mobile_20260316` | Mobile Menu Restyling | `archived` | phase `archived` | Archived | `conductor/archive/restaylyng-menu-mobile`
 - `restore_prod_to_staging_20260314` | Restore production database dump to staging for testing | `archived` | phase `archived` | Archived | `conductor/archive/restore_prod_to_staging_20260314`
 - `setup_dotnet10_20260314` | setup dotnet10 20260314 | `archived` | phase `archived` | Archived | `conductor/archive/setup_dotnet10_20260314`
 - `setup_mongodb_tooling_20260314` | Install MongoDB Database Tools and mongosh via Homebrew | `archived` | phase `archived` | Archived | `conductor/archive/setup_mongodb_tooling_20260314`
+- `track-001` | Fix Mobile Menu Readability And Scroll Affordance | `archived` | phase `archived` | Archived | `conductor/archive/track-001-fix-mobile-menu-readability-and-scroll-affordance`
 - `ui_menu_rework_20260315` | UI Menu Rework | `archived` | phase `archived` | Completed and archived | `conductor/archive/ui_menu_rework_20260315`
 - `verify-subphase-07` | verify-subphase-07 | `archived` | phase `archived` | Archived | `conductor/archive/verify-subphase-07`
 - `verify_after_clean_20260314` | Verify Build and Tests after git clean -fdx | `archived` | phase `archived` | Archived | `conductor/archive/verify_after_clean_20260314`
