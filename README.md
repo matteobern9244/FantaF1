@@ -26,7 +26,7 @@ Lo staging deve rimanere allineato alla produzione a livello di funzionalita'. D
 
 ## Governance Branch
 
-- `staging` e' il branch candidato di certificazione e il branch sorgente atteso per l'ambiente Render di staging.
+- `staging` e' il branch candidato di certificazione e il branch sorgente atteso per l'ambiente Render di staging. E' un **branch protetto** con regole identiche a `main` (richiede PR, approvazione e superamento dei controlli CI).
 - `main` resta il branch protetto di release e il target finale del flusso di deploy.
 - Il rename operativo da `develop` a `staging` richiede anche il riallineamento fuori repo della configurazione Render, delle branch protection e di eventuali automazioni GitHub/Render che puntavano al vecchio nome branch.
 
@@ -508,7 +508,7 @@ Workflow principali:
 - [pr-auto-merge.yml](/Users/matteobernardini/code/FantaF1/.github/workflows/pr-auto-merge.yml)
 - [post-merge-health.yml](/Users/matteobernardini/code/FantaF1/.github/workflows/post-merge-health.yml)
 
-Job richiesti su PR verso `main`:
+Job richiesti su PR verso `main` e `staging`:
 
 - `lint`
 - `build`

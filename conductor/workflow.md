@@ -33,6 +33,7 @@ Per ogni task, l'agente deve:
 - **Nessun Commit Automatico:** I commit e i push devono essere autorizzati esplicitamente dall'utente.
 - **Riepiloghi:** I riepiloghi dei task completati devono essere registrati nei metadati dei **Git Notes**.
 - **Messaggi di Commit:** Devono essere accurati, in inglese e focalizzati sul "perché" oltre che sul "cosa".
+- **Branch Protetti:** `main` e `staging` sono branch protetti. Le modifiche devono passare tramite Pull Request, approvazione e superamento dei controlli CI.
 
 ## 5. Protocollo di Deployment ("deploya")
 Quando l'utente autorizza esplicitamente il deploy (comando `deploya`), seguire questa sequenza:
