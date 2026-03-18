@@ -4,6 +4,13 @@ This file is the prompt-first navigation index for the Conductor workspace in th
 
 ## Active Tracks
 
+## streamline_core_docs_20260318 - Streamline core documentation (GEMINI.md & AGENTS.md)
+
+- Status: `new`
+- Phase: `new`
+- Active task: `New track created.`
+- Path: `conductor/tracks/streamline_core_docs_20260318`
+
 ## stabilize_highlights_persistence_20260318 - Persistenza Definitiva Highlights Per Gara
 
 - Status: `completed`

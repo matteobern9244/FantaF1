@@ -4,6 +4,7 @@ This file is the compact summary view of Conductor tracks in this repository.
 
 ## Active Tracks
 
+- `streamline_core_docs_20260318` | Streamline core documentation (GEMINI.md & AGENTS.md) | `new` | phase `new` | New track created. | `conductor/tracks/streamline_core_docs_20260318`
 - `stabilize_highlights_persistence_20260318` | Persistenza Definitiva Highlights Per Gara | `completed` | phase `completed` | Implementation, coverage, responsive verification, and production-like preview checks completed without commit or push. | `conductor/tracks/stabilize_highlights_persistence_20260318`
 
 ## Archived Tracks
