@@ -69,6 +69,8 @@ Il lock e' server-side:
 - I risultati ufficiali vengono recuperati tramite `GET /api/results/:meetingKey`.
 - Il backend espone `racePhase` (`open`, `live`, `finished`) separato dal race lock.
 - Per ogni weekend concluso il backend puo' restituire un `highlightsVideoUrl` specifico della gara selezionata, se disponibile nel catalogo Sky Sport F1.
+- Gli highlights sono persistiti nel documento `weekends` della gara e restano associati in modo stabile al relativo `meetingKey`.
+- Un highlights gia' trovato non viene degradato a `missing` da un lookup successivo transitorio o da un bootstrap calendario successivo che non riesce a risolverlo.
 - La conferma risultati e' consentita solo quando il weekend e' `finished` e i risultati reali sono completi.
 - Punteggi configurati:
   - `5` punti primo corretto
@@ -218,6 +220,11 @@ Ogni weekend puo' includere:
 - `sessions`
 - `highlightsVideoUrl`
   - URL highlights specifica del weekend, presente solo quando il lookup trova un video compatibile
+- `highlightsLookupStatus`
+- `highlightsLookupCheckedAt`
+- `highlightsLookupSource`
+
+La persistenza highlights e' keyed per `meetingKey`: il sync calendario puo' aggiornare i metadati del weekend, ma non deve cancellare un URL highlights gia' trovato solo perche' un lookup successivo ritorna `missing` o fallisce in modo transitorio.
 
 ## Database e migrazioni
 
@@ -295,6 +302,11 @@ Queste variabili vengono generate dai runner locali; non vanno impostate manualm
 - `PORT`: non necessaria; l'host locale usa `3003`
 - `Frontend__BuildPath`: gestita dal runtime same-origin locale
 - `VITE_APP_LOCAL_NAME`: opzionale
+
+Questo target e' il runbook corretto per simulare `staging` in locale senza toccare Render staging. La verifica staging-like same-origin usa:
+
+- `SAVE_SMOKE_TARGET=csharp-staging-local node scripts/save-local-check.mjs`
+- `UI_RESPONSIVE_TARGET=csharp-staging-local npm run test:ui-responsive`
 
 ### Render staging
 
@@ -519,9 +531,9 @@ Baseline verificata corrente sullo scope ufficiale frontend/repository:
 
 Baseline verificata corrente su `backend-csharp/src/`:
 
-- `2994 / 2994` lines
-- `1671 / 1671` branches
-- `494 / 494` methods
+- `3052 / 3052` lines
+- `1721 / 1721` branches
+- `502 / 502` methods
 - `70` file inclusi
 
 Le soglie repository restano a `100%` su statements, branches, functions e lines.

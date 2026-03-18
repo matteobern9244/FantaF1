@@ -64,6 +64,7 @@ public sealed class SubphaseEightBootstrapTests
             CreatePortingAppConfig(expectedDrivers: 1, expectedWeekends: 1),
             new SpyWeekendRepository(),
             new StubHighlightsLookupService(false, new HighlightsLookupDocument("", "", "", "")),
+            new StubClock(new DateTimeOffset(2026, 03, 13, 12, 00, 00, TimeSpan.Zero)),
             CreateHttpClient(new Dictionary<string, string>
             {
                 ["https://formula1.example/en/racing/2026"] = "__throw__",
@@ -93,6 +94,7 @@ public sealed class SubphaseEightBootstrapTests
             CreatePortingAppConfig(expectedDrivers: 1, expectedWeekends: 1),
             new SpyWeekendRepository(),
             new StubHighlightsLookupService(false, new HighlightsLookupDocument("", "", "", "")),
+            new StubClock(new DateTimeOffset(2026, 03, 13, 12, 00, 00, TimeSpan.Zero)),
             CreateHttpClient(new Dictionary<string, string>
             {
                 ["https://formula1.example/en/racing/2026"] = """
@@ -124,6 +126,7 @@ public sealed class SubphaseEightBootstrapTests
             CreatePortingAppConfig(expectedDrivers: 1, expectedWeekends: 1),
             new ThrowingWeekendRepository(),
             new StubHighlightsLookupService(false, new HighlightsLookupDocument("", "", "", "")),
+            new StubClock(new DateTimeOffset(2026, 03, 13, 12, 00, 00, TimeSpan.Zero)),
             CreateHttpClient(new Dictionary<string, string>
             {
                 ["https://formula1.example/en/racing/2026"] = "__throw__",
@@ -993,20 +996,23 @@ public sealed class SubphaseEightBootstrapTests
     [InlineData("config")]
     [InlineData("weekendRepository")]
     [InlineData("highlightsLookupService")]
+    [InlineData("clock")]
     [InlineData("httpClient")]
     public void Official_calendar_sync_service_constructor_rejects_null_dependencies(string parameterName)
     {
         var config = CreatePortingAppConfig(expectedDrivers: 1, expectedWeekends: 1);
         var repository = new SpyWeekendRepository();
         var highlights = new StubHighlightsLookupService(false, new HighlightsLookupDocument("", "", "", ""));
+        var clock = new StubClock(new DateTimeOffset(2026, 03, 13, 12, 00, 00, TimeSpan.Zero));
         var httpClient = CreateHttpClient(new Dictionary<string, string>());
 
         var exception = Assert.Throws<ArgumentNullException>(() => parameterName switch
         {
-            "config" => new OfficialCalendarSyncService(null!, repository, highlights, httpClient),
-            "weekendRepository" => new OfficialCalendarSyncService(config, null!, highlights, httpClient),
-            "highlightsLookupService" => new OfficialCalendarSyncService(config, repository, null!, httpClient),
-            "httpClient" => new OfficialCalendarSyncService(config, repository, highlights, null!),
+            "config" => new OfficialCalendarSyncService(null!, repository, highlights, clock, httpClient),
+            "weekendRepository" => new OfficialCalendarSyncService(config, null!, highlights, clock, httpClient),
+            "highlightsLookupService" => new OfficialCalendarSyncService(config, repository, null!, clock, httpClient),
+            "clock" => new OfficialCalendarSyncService(config, repository, highlights, null!, httpClient),
+            "httpClient" => new OfficialCalendarSyncService(config, repository, highlights, clock, null!),
             _ => throw new ArgumentOutOfRangeException(nameof(parameterName)),
         });
 
@@ -1027,6 +1033,7 @@ public sealed class SubphaseEightBootstrapTests
             config,
             repository,
             highlights,
+            new StubClock(new DateTimeOffset(2026, 03, 22, 12, 00, 00, TimeSpan.Zero)),
             CreateHttpClient(new Dictionary<string, string>
             {
                 [config.Calendar.SeasonUrl] = seasonHtml,
@@ -1063,6 +1070,7 @@ public sealed class SubphaseEightBootstrapTests
             config,
             repository,
             new ThrowingHighlightsLookupService(),
+            new StubClock(new DateTimeOffset(2026, 03, 22, 12, 00, 00, TimeSpan.Zero)),
             CreateHttpClient(new Dictionary<string, string>
             {
                 [config.Calendar.SeasonUrl] = seasonHtml,
@@ -1083,6 +1091,7 @@ public sealed class SubphaseEightBootstrapTests
             config,
             new SpyWeekendRepository(),
             new StubHighlightsLookupService(false, new HighlightsLookupDocument("ignored", "ignored", "ignored", "ignored")),
+            new StubClock(new DateTimeOffset(2026, 03, 22, 12, 00, 00, TimeSpan.Zero)),
             CreateHttpClient(new Dictionary<string, string>
             {
                 [config.Calendar.SeasonUrl] = seasonHtml,
@@ -1097,6 +1106,7 @@ public sealed class SubphaseEightBootstrapTests
             CreatePortingAppConfig(expectedDrivers: 22, expectedWeekends: 5),
             new SpyWeekendRepository(),
             new StubHighlightsLookupService(false, new HighlightsLookupDocument("", "", "", "")),
+            new StubClock(new DateTimeOffset(2026, 03, 22, 12, 00, 00, TimeSpan.Zero)),
             CreateHttpClient(new Dictionary<string, string>
             {
                 ["https://formula1.example/en/racing/2026"] = "__throw__",
@@ -1108,6 +1118,7 @@ public sealed class SubphaseEightBootstrapTests
             CreatePortingAppConfig(expectedDrivers: 22, expectedWeekends: 3),
             repository,
             new StubHighlightsLookupService(false, new HighlightsLookupDocument("", "", "", "")),
+            new StubClock(new DateTimeOffset(2026, 03, 22, 12, 00, 00, TimeSpan.Zero)),
             CreateHttpClient(new Dictionary<string, string>
             {
                 ["https://formula1.example/en/racing/2026"] = """
@@ -1133,6 +1144,7 @@ public sealed class SubphaseEightBootstrapTests
             config,
             repository,
             new StubHighlightsLookupService(false, new HighlightsLookupDocument("", "", "", "")),
+            new StubClock(new DateTimeOffset(2026, 03, 13, 12, 00, 00, TimeSpan.Zero)),
             CreateHttpClient(new Dictionary<string, string>
             {
                 [config.Calendar.SeasonUrl] = "__throw__",
@@ -1151,6 +1163,7 @@ public sealed class SubphaseEightBootstrapTests
             CreatePortingAppConfig(expectedDrivers: 22, expectedWeekends: 1),
             new SpyWeekendRepository(),
             new StubHighlightsLookupService(false, new HighlightsLookupDocument("", "", "", "")),
+            new StubClock(new DateTimeOffset(2026, 03, 13, 12, 00, 00, TimeSpan.Zero)),
             CreateHttpClient(new Dictionary<string, string>()));
 
         var seasonHtml = """
@@ -1198,6 +1211,7 @@ public sealed class SubphaseEightBootstrapTests
             CreatePortingAppConfig(expectedDrivers: 22, expectedWeekends: 1),
             new SpyWeekendRepository(),
             new StubHighlightsLookupService(false, new HighlightsLookupDocument("", "", "", "")),
+            new StubClock(new DateTimeOffset(2026, 03, 13, 12, 00, 00, TimeSpan.Zero)),
             CreateHttpClient(new Dictionary<string, string>()));
 
         var seasonWeekends = service.ParseSeasonCalendarPage(
@@ -1265,6 +1279,7 @@ public sealed class SubphaseEightBootstrapTests
             CreatePortingAppConfig(expectedDrivers: 22, expectedWeekends: 1),
             noDetailUrlRepository,
             new StubHighlightsLookupService(false, new HighlightsLookupDocument("", "", "", "")),
+            new StubClock(new DateTimeOffset(2026, 03, 13, 12, 00, 00, TimeSpan.Zero)),
             CreateHttpClient(new Dictionary<string, string>
             {
                 ["https://formula1.example/en/racing/2026"] = """
@@ -1288,6 +1303,269 @@ public sealed class SubphaseEightBootstrapTests
         var nullDetail = service.ParseRaceDetailPage(null!, null!, null!, string.Empty);
         Assert.Equal(string.Empty, nullDetail.MeetingKey);
         Assert.Equal(" Grand Prix 2026", nullDetail.GrandPrixTitle);
+    }
+
+    [Fact]
+    public async Task Official_calendar_sync_service_preserves_persisted_found_highlights_when_a_new_lookup_returns_missing()
+    {
+        var config = CreatePortingAppConfig(expectedDrivers: 22, expectedWeekends: 1);
+        var repository = new SpyWeekendRepository
+        {
+            CachedWeekends =
+            [
+                new WeekendDocument(
+                    "1279",
+                    "Australia",
+                    "Australian Grand Prix 2026",
+                    1,
+                    "06 - 08 MAR",
+                    "https://www.formula1.com/en/racing/2026/australia",
+                    "hero-old.webp",
+                    "track-old.webp",
+                    false,
+                    "2026-03-06",
+                    "2026-03-08",
+                    "2026-03-08T04:00:00.000Z",
+                    [new WeekendSessionDocument("Race", "2026-03-08T04:00:00.000Z")],
+                    "https://www.youtube.com/watch?v=persisted-found",
+                    "2026-03-08T12:00:00.000Z",
+                    "found",
+                    "feed"),
+            ],
+        };
+        var seasonHtml = """
+            <a href="/en/racing/2026/australia"><span>ROUND 1</span><span>06 - 08 MAR</span><span>Australia</span><span>FORMULA 1 AUSTRALIAN GRAND PRIX 2026</span></a>
+        """;
+        var service = new OfficialCalendarSyncService(
+            config,
+            repository,
+            new StubHighlightsLookupService(
+                shouldLookup: true,
+                result: new HighlightsLookupDocument(string.Empty, "2026-03-18T09:00:00.000Z", "missing", string.Empty)),
+            new StubClock(new DateTimeOffset(2026, 03, 18, 10, 00, 00, TimeSpan.Zero)),
+            CreateHttpClient(new Dictionary<string, string>
+            {
+                [config.Calendar.SeasonUrl] = seasonHtml,
+                ["https://www.formula1.com/en/racing/2026/australia"] = """
+                    <title>Australia GP - F1 Race</title>
+                    <script>{"@type":"SportsEvent","name":"Race - Melbourne","startDate":"2026-03-08T04:00:00.000Z"}</script>
+                """,
+            }));
+
+        var result = await service.SyncAsync(CancellationToken.None);
+
+        var australia = Assert.Single(result);
+        Assert.Equal("https://www.youtube.com/watch?v=persisted-found", australia.HighlightsVideoUrl);
+        Assert.Equal("found", australia.HighlightsLookupStatus);
+        Assert.Equal("feed", australia.HighlightsLookupSource);
+    }
+
+    [Fact]
+    public async Task Official_calendar_sync_service_preserves_persisted_found_highlights_when_a_new_lookup_throws()
+    {
+        var config = CreatePortingAppConfig(expectedDrivers: 22, expectedWeekends: 1);
+        var repository = new SpyWeekendRepository
+        {
+            CachedWeekends =
+            [
+                new WeekendDocument(
+                    "1279",
+                    "Australia",
+                    "Australian Grand Prix 2026",
+                    1,
+                    "06 - 08 MAR",
+                    "https://www.formula1.com/en/racing/2026/australia",
+                    "hero-old.webp",
+                    "track-old.webp",
+                    false,
+                    "2026-03-06",
+                    "2026-03-08",
+                    "2026-03-08T04:00:00.000Z",
+                    [new WeekendSessionDocument("Race", "2026-03-08T04:00:00.000Z")],
+                    "https://www.youtube.com/watch?v=persisted-found",
+                    "2026-03-08T12:00:00.000Z",
+                    "found",
+                    "feed"),
+            ],
+        };
+        var seasonHtml = """
+            <a href="/en/racing/2026/australia"><span>ROUND 1</span><span>06 - 08 MAR</span><span>Australia</span><span>FORMULA 1 AUSTRALIAN GRAND PRIX 2026</span></a>
+        """;
+        var service = new OfficialCalendarSyncService(
+            config,
+            repository,
+            new ThrowingHighlightsLookupService(),
+            new StubClock(new DateTimeOffset(2026, 03, 18, 10, 00, 00, TimeSpan.Zero)),
+            CreateHttpClient(new Dictionary<string, string>
+            {
+                [config.Calendar.SeasonUrl] = seasonHtml,
+                ["https://www.formula1.com/en/racing/2026/australia"] = """
+                    <title>Australia GP - F1 Race</title>
+                    <script>{"@type":"SportsEvent","name":"Race - Melbourne","startDate":"2026-03-08T04:00:00.000Z"}</script>
+                """,
+            }));
+
+        var result = await service.SyncAsync(CancellationToken.None);
+
+        var australia = Assert.Single(result);
+        Assert.Equal("https://www.youtube.com/watch?v=persisted-found", australia.HighlightsVideoUrl);
+        Assert.Equal("found", australia.HighlightsLookupStatus);
+        Assert.Equal("feed", australia.HighlightsLookupSource);
+    }
+
+    [Fact]
+    public async Task Official_calendar_sync_service_uses_the_injected_clock_for_highlights_lookup_gating()
+    {
+        var config = CreatePortingAppConfig(expectedDrivers: 22, expectedWeekends: 1);
+        var repository = new SpyWeekendRepository();
+        var lookup = new RecordingHighlightsLookupService();
+        var seasonHtml = """
+            <a href="/en/racing/2026/australia"><span>ROUND 1</span><span>06 - 08 MAR</span><span>Australia</span><span>FORMULA 1 AUSTRALIAN GRAND PRIX 2026</span></a>
+        """;
+        var injectedNow = new DateTimeOffset(2026, 03, 18, 10, 30, 00, TimeSpan.Zero);
+        var service = new OfficialCalendarSyncService(
+            config,
+            repository,
+            lookup,
+            new StubClock(injectedNow),
+            CreateHttpClient(new Dictionary<string, string>
+            {
+                [config.Calendar.SeasonUrl] = seasonHtml,
+                ["https://www.formula1.com/en/racing/2026/australia"] = """
+                    <title>Australia GP - F1 Race</title>
+                    <script>{"@type":"SportsEvent","name":"Race - Melbourne","startDate":"2026-03-08T04:00:00.000Z"}</script>
+                """,
+            }));
+
+        await service.SyncAsync(CancellationToken.None);
+
+        Assert.Equal(injectedNow, lookup.LastShouldLookupNow);
+    }
+
+    [Fact]
+    public void Official_calendar_sync_service_preserved_highlights_helpers_cover_null_persisted_fields()
+    {
+        var weekend = new WeekendDocument(
+            "1279",
+            "Australia",
+            "Australian Grand Prix 2026",
+            1,
+            "06 - 08 MAR",
+            "https://www.formula1.com/en/racing/2026/australia",
+            "hero.webp",
+            "track.webp",
+            false,
+            "2026-03-06",
+            "2026-03-08",
+            "2026-03-08T04:00:00.000Z",
+            [new WeekendSessionDocument("Race", "2026-03-08T04:00:00.000Z")],
+            "new-url",
+            "new-checked-at",
+            "new-status",
+            "new-source");
+        var persistedWeekend = weekend with
+        {
+            HighlightsVideoUrl = null,
+            HighlightsLookupCheckedAt = null,
+            HighlightsLookupStatus = null,
+            HighlightsLookupSource = null,
+        };
+
+        var mergedWeekend = OfficialCalendarSyncService.BuildWeekendWithPersistedHighlights(weekend, persistedWeekend);
+
+        Assert.Equal(string.Empty, mergedWeekend.HighlightsVideoUrl);
+        Assert.Equal(string.Empty, mergedWeekend.HighlightsLookupCheckedAt);
+        Assert.Equal(string.Empty, mergedWeekend.HighlightsLookupStatus);
+        Assert.Equal(string.Empty, mergedWeekend.HighlightsLookupSource);
+    }
+
+    [Fact]
+    public void Official_calendar_sync_service_persisted_weekend_index_supports_meeting_key_detail_url_slug_and_null_fallbacks()
+    {
+        var nestedType = typeof(OfficialCalendarSyncService).GetNestedType("PersistedWeekendIndex", BindingFlags.NonPublic)
+            ?? throw new InvalidOperationException("PersistedWeekendIndex nested type not found.");
+        var createMethod = nestedType.GetMethod("Create", BindingFlags.Public | BindingFlags.Static)
+            ?? throw new InvalidOperationException("PersistedWeekendIndex.Create not found.");
+        var findMethod = nestedType.GetMethod(
+            "Find",
+            BindingFlags.Public | BindingFlags.Instance,
+            null,
+            [typeof(string), typeof(string), typeof(string)],
+            null)
+            ?? throw new InvalidOperationException("PersistedWeekendIndex.Find overload not found.");
+
+        var weekends = new[]
+        {
+            new WeekendDocument(
+                "1279",
+                "Australia",
+                "Australian Grand Prix 2026",
+                1,
+                "06 - 08 MAR",
+                null,
+                "",
+                "",
+                false,
+                "2026-03-06",
+                "2026-03-08",
+                null,
+                [],
+                "https://www.youtube.com/watch?v=meeting-key",
+                "",
+                "found",
+                "feed"),
+            new WeekendDocument(
+                "slug-only",
+                "China",
+                "Chinese Grand Prix 2026",
+                2,
+                "13 - 15 MAR",
+                "https://www.formula1.com/en/racing/2026/china",
+                "",
+                "",
+                true,
+                "2026-03-13",
+                "2026-03-15",
+                null,
+                [],
+                "https://www.youtube.com/watch?v=slug",
+                "",
+                "found",
+                "feed"),
+            new WeekendDocument(
+                "",
+                "Japan",
+                "Japanese Grand Prix 2026",
+                3,
+                "27 - 29 MAR",
+                "https://www.formula1.com/en/racing/2026/japan",
+                "",
+                "",
+                false,
+                "2026-03-27",
+                "2026-03-29",
+                null,
+                [],
+                "https://www.youtube.com/watch?v=detail-url",
+                "",
+                "found",
+                "feed"),
+        };
+
+        var index = createMethod.Invoke(null, [weekends])
+            ?? throw new InvalidOperationException("PersistedWeekendIndex.Create returned null.");
+
+        var byMeetingKey = (WeekendDocument?)findMethod.Invoke(index, ["1279", null, "australia"]);
+        var byDetailUrl = (WeekendDocument?)findMethod.Invoke(index, [null, "https://www.formula1.com/en/racing/2026/japan", ""]);
+        var bySlug = (WeekendDocument?)findMethod.Invoke(index, [null, "https://www.formula1.com/en/racing/2026/china", ""]);
+        var byFallbackSlug = (WeekendDocument?)findMethod.Invoke(index, [null, null, "china"]);
+        var missing = (WeekendDocument?)findMethod.Invoke(index, [null, null, ""]);
+
+        Assert.Equal("https://www.youtube.com/watch?v=meeting-key", byMeetingKey?.HighlightsVideoUrl);
+        Assert.Equal("https://www.youtube.com/watch?v=detail-url", byDetailUrl?.HighlightsVideoUrl);
+        Assert.Equal("https://www.youtube.com/watch?v=slug", bySlug?.HighlightsVideoUrl);
+        Assert.Equal("https://www.youtube.com/watch?v=slug", byFallbackSlug?.HighlightsVideoUrl);
+        Assert.Null(missing);
     }
 
     [Fact]
@@ -1684,6 +1962,22 @@ public sealed class SubphaseEightBootstrapTests
         public Task<HighlightsLookupDocument> ResolveAsync(WeekendDocument race, CancellationToken cancellationToken)
         {
             throw new InvalidOperationException("highlights");
+        }
+    }
+
+    private sealed class RecordingHighlightsLookupService : IRaceHighlightsLookupService
+    {
+        public DateTimeOffset? LastShouldLookupNow { get; private set; }
+
+        public bool ShouldLookup(WeekendDocument race, DateTimeOffset now)
+        {
+            LastShouldLookupNow = now;
+            return false;
+        }
+
+        public Task<HighlightsLookupDocument> ResolveAsync(WeekendDocument race, CancellationToken cancellationToken)
+        {
+            throw new NotSupportedException("ResolveAsync should not be called when ShouldLookup returns false.");
         }
     }
 

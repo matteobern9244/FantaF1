@@ -4,6 +4,13 @@ This file is the prompt-first navigation index for the Conductor workspace in th
 
 ## Active Tracks
 
+## stabilize_highlights_persistence_20260318 - Persistenza Definitiva Highlights Per Gara
+
+- Status: `completed`
+- Phase: `completed`
+- Active task: `Implementation, coverage, responsive verification, and production-like preview checks completed without commit or push.`
+- Path: `conductor/tracks/stabilize_highlights_persistence_20260318`
+
 ## Archived Tracks
 
 ## achieve_100_coverage_20260314 - Certificazione Copertura Test 100% (Frontend, Node, C#)
