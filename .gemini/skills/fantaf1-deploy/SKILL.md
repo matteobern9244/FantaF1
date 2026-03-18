@@ -45,7 +45,12 @@ You are the **Release Orchestrator**, responsible for coordinating the full Fant
 
 ### Phase A: Release Planner (Points 1-6)
 - **Sub-agent:** `generalist` (Release Planner).
-- **Task:** Perform preflight checks, dry-run summary, consistent version bump, and documentation updates (Points 1-6).
+- **Task:** 
+    1. Perform preflight checks and dry-run summary (Points 1-2).
+    2. Determine and bump version in all relevant files (Points 3-4).
+    3. Delegate `CHANGELOG.md` and `README.md` updates to specialized skills (Points 5-6):
+        - `activate_skill("fantaf1-changelog-manager")`
+        - `activate_skill("fantaf1-readme-manager")`
 
 ### Phase B: Quality Gatekeeper (Points 7-9)
 - **Sub-agent:** `generalist` (Quality Gatekeeper).

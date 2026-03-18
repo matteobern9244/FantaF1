@@ -20,16 +20,14 @@ file serves as your primary routing and configuration entry point.
 Before starting any task, you MUST activate the following skills to load their
 specialized instructions:
 
-- `activate_skill("fantaf1-tdd-coverage")`: To maintain the 100% coverage
-  baseline.
-- `activate_skill("fantaf1-deploy")`: To execute the 23-point deployment
-  protocol ("deploya").
-- `activate_skill("fantaf1-browser-verification")`: To perform UI and responsive
-  checks ("check viste").
-- `activate_skill("markdown-formatter")`: To ensure documentation quality and
-  formatting.
-- `activate_skill("fantaf1-core-audit")`: To audit data flow and business
-  invariants.
+- `activate_skill("fantaf1-tdd-coverage")`: To maintain the 100% coverage baseline.
+- `activate_skill("fantaf1-deploy")`: To execute the 23-point deployment protocol ("deploya").
+- `activate_skill("fantaf1-browser-verification")`: To perform UI and responsive checks ("check viste").
+- `activate_skill("markdown-formatter")`: To ensure documentation quality and formatting.
+- `activate_skill("fantaf1-core-audit")`: To audit data flow and business invariants.
+- `activate_skill("fantaf1-changelog-manager")`: To manage and update CHANGELOG.md.
+- `activate_skill("fantaf1-readme-manager")`: To manage and update README.md.
+
 
 ---
 
