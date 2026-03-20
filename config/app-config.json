@@ -396,7 +396,7 @@
         "availabilityPending": "In attesa"
       },
       "seasonAnalysis": {
-        "title": "Analisi stagione",
+        "title": "Stagione attuale",
         "leaderGapTemplate": "Gap leader {gap}",
         "hitRateTemplate": "Hit rate {hitRate}%",
         "consistencyTemplate": "Costanza {consistency}",
@@ -450,10 +450,11 @@
     },
     "navigation": {
       "calendar": "Calendario stagione",
+      "analysisGroup": "Analisi",
       "userKpi": "User KPI Dashboard",
       "userAnalytics": "Deep-dive KPI dashboard",
       "publicStandings": "Classifiche reali",
-      "seasonAnalysis": "Analisi stagione",
+      "seasonAnalysis": "Stagione attuale",
       "weekendLive": "Weekend pulse",
       "publicGuide": "Come funziona",
       "predictions": "Pronostici dei giocatori",

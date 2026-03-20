@@ -133,12 +133,12 @@ public sealed class PortingDocumentationConsistencyTests
         var readme = StripAllWhitespace(ReadRepositoryFile("README.md"));
         var agents = StripAllWhitespace(ReadRepositoryFile("AGENTS.md"));
 
-        Assert.Contains("-`5489/5489`statements", readme, StringComparison.Ordinal);
-        Assert.Contains("-`737/737`functions", readme, StringComparison.Ordinal);
-        Assert.Contains("-`2826/2826`branches", readme, StringComparison.Ordinal);
-        Assert.Contains("-`5489/5489`lines", readme, StringComparison.Ordinal);
+        Assert.Contains("-`2510/2510`statements", readme, StringComparison.Ordinal);
+        Assert.Contains("-`213/213`functions", readme, StringComparison.Ordinal);
+        Assert.Contains("-`1138/1138`branches", readme, StringComparison.Ordinal);
+        Assert.Contains("-`2510/2510`lines", readme, StringComparison.Ordinal);
         Assert.Contains(
-            StripAllWhitespace("**100% statements (5489 / 5489)**, **100% functions (737 / 737)**, **100% branches (2826 / 2826)**, and **100% lines (5489 / 5489)**"),
+            StripAllWhitespace("**100% statements (2510 / 2510)**, **100% functions (213 / 213)**, **100% branches (1138 / 1138)**, and **100% lines (2510 / 2510)**"),
             agents,
             StringComparison.Ordinal);
         Assert.Contains("-`3194/3194`lines", readme, StringComparison.Ordinal);

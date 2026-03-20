@@ -5,12 +5,21 @@ import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import MobileOverlay from '../src/components/MobileOverlay';
 import { appText } from '../src/uiText';
-import type { SectionNavigationId } from '../src/utils/sectionNavigation';
+import type { SectionNavigationEntry, SectionNavigationId } from '../src/utils/sectionNavigation';
 
 describe('MobileOverlay Component', () => {
-  const mockItems: Array<{ id: SectionNavigationId; label: string }> = [
-    { id: 'calendar-section', label: 'Calendar' },
-    { id: 'user-kpi-section', label: 'KPIs' },
+  const mockItems: SectionNavigationEntry[] = [
+    { kind: 'item', id: 'calendar-section', label: 'Calendar' },
+    {
+      kind: 'group',
+      id: 'analysis-group',
+      label: 'Analisi',
+      children: [
+        { kind: 'item', id: 'season-analysis', label: 'Stagione attuale' },
+        { kind: 'item', id: 'user-analytics-section', label: 'Deep-dive KPI dashboard' },
+        { kind: 'item', id: 'user-kpi-section', label: 'User KPI Dashboard' },
+      ],
+    },
   ];
 
   const defaultProps = {
@@ -28,13 +37,23 @@ describe('MobileOverlay Component', () => {
   it('renders all navigation items', () => {
     render(<MobileOverlay {...defaultProps} />);
     expect(screen.getAllByText('Calendar')).not.toHaveLength(0);
-    expect(screen.getAllByText('KPIs')).not.toHaveLength(0);
+    expect(screen.getByText('Analisi')).toBeInTheDocument();
+    expect(screen.getAllByText('Stagione attuale')).not.toHaveLength(0);
+    expect(screen.getAllByText('Deep-dive KPI dashboard')).not.toHaveLength(0);
+    expect(screen.getAllByText('User KPI Dashboard')).not.toHaveLength(0);
   });
 
   it('calls onItemClick and onClose when an item is clicked', () => {
     render(<MobileOverlay {...defaultProps} />);
-    fireEvent.click(screen.getAllByText('KPIs')[0]);
+    fireEvent.click(screen.getAllByText('User KPI Dashboard')[0]);
     expect(defaultProps.onItemClick).toHaveBeenCalledWith('user-kpi-section');
+    expect(defaultProps.onClose).toHaveBeenCalled();
+  });
+
+  it('calls onItemClick and onClose when a top-level item is clicked', () => {
+    render(<MobileOverlay {...defaultProps} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Calendar' }));
+    expect(defaultProps.onItemClick).toHaveBeenCalledWith('calendar-section');
     expect(defaultProps.onClose).toHaveBeenCalled();
   });
 
@@ -76,19 +95,39 @@ describe('MobileOverlay Component', () => {
   it('uses fallback icon for unknown items', () => {
     const customItems = [
       ...mockItems,
-      { id: 'unknown-id' as any, label: 'Unknown' },
+      { kind: 'item', id: 'unknown-id' as any, label: 'Unknown' },
     ];
     render(<MobileOverlay {...defaultProps} items={customItems} />);
     expect(screen.getAllByText('Unknown')).not.toHaveLength(0);
   });
 
   it('uses the fallback icon in the current section summary for an unknown active item', () => {
-    const customItems = [{ id: 'unknown-id' as any, label: 'Unknown' }];
+    const customItems = [{ kind: 'item', id: 'unknown-id' as any, label: 'Unknown' }];
     const { container } = render(
       <MobileOverlay {...defaultProps} items={customItems} activeId="unknown-id" />,
     );
     expect(screen.getByText(appText.shell.navigation.currentSection)).toBeInTheDocument();
     expect(container.querySelector('.mobile-nav-current .lucide-gauge')).toBeInTheDocument();
+  });
+
+  it('uses the fallback icon for unknown child items inside the Analisi group', () => {
+    const customItems: SectionNavigationEntry[] = [
+      { kind: 'item', id: 'calendar-section', label: 'Calendar' },
+      {
+        kind: 'group',
+        id: 'analysis-group',
+        label: 'Analisi',
+        children: [
+          { kind: 'item', id: 'unknown-id' as SectionNavigationId, label: 'Unknown child' },
+        ],
+      },
+    ];
+    const { container } = render(
+      <MobileOverlay {...defaultProps} items={customItems} activeId="unknown-id" />,
+    );
+
+    expect(screen.getAllByText('Unknown child')).toHaveLength(2);
+    expect(container.querySelector('.mobile-nav-subitem .lucide-gauge')).toBeInTheDocument();
   });
 
   it('shows Admin View icon when in admin mode', () => {
@@ -135,5 +174,21 @@ describe('MobileOverlay Component', () => {
     fireEvent.click(screen.getByText(appText.shell.navigation.items.installApp));
     expect(onInstall).toHaveBeenCalled();
     expect(defaultProps.onClose).toHaveBeenCalled();
+  });
+
+  it('renders child items after the Analisi group label in the requested order', () => {
+    const { container } = render(<MobileOverlay {...defaultProps} />);
+    const section = container.querySelector('.mobile-nav-section.section-nav-list');
+    const labels = Array.from(
+      section?.querySelectorAll('.mobile-nav-group-label, .mobile-nav-item .mobile-nav-label') ?? [],
+    ).map((element) => element.textContent?.trim());
+
+    expect(labels).toEqual([
+      'Calendar',
+      'Analisi',
+      'Stagione attuale',
+      'Deep-dive KPI dashboard',
+      'User KPI Dashboard',
+    ]);
   });
 });

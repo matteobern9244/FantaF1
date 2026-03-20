@@ -4,6 +4,32 @@ Cronologia sintetica delle release documentate del progetto Fanta Formula 1.
 
 ## [Unreleased]
 
+- **Menu `Analisi` Riallineato su Menu e Dashboard**: la navigazione pubblica e
+  admin raggruppa ora sotto `Analisi` le tre voci `Stagione attuale`,
+  `Deep-dive KPI dashboard` e `User KPI Dashboard`; la precedente label
+  `Analisi stagione` e' stata rinominata in `Stagione attuale` anche nel
+  pannello dashboard corrispondente.
+- **Sidebar e Overlay Rifiniti Contro Clipping e Ambiguita' Visive**: la
+  sidebar desktop usa ora una larghezza leggermente maggiore e lascia margine
+  utile ai bordi delle voci attive; sia desktop sia mobile introducono inoltre
+  uno stacco visivo esplicito tra il gruppo `Analisi` e la successiva voce
+  `Storico gare`, cosi' il raggruppamento del submenu resta chiaro.
+- **Parita' Windows per il Tool di Pulizia Chrome**: aggiunto
+  [clean_google_chrome.bat](/Users/matteobernardini/code/FantaF1/clean_google_chrome.bat)
+  come equivalente Windows di `clean_google_chrome.command`, con verifica
+  installazione Chrome, cleanup dei processi Playwright/DevTools residui,
+  rilancio del browser e conferma di riavvio riuscito.
+- **TDD Regressivo per Menu e Script Chrome**: estesi i test CSS/UI sulla
+  sidebar desktop e sull'overlay mobile per bloccare clipping, spacing e
+  gerarchia del gruppo `Analisi`; aggiunto anche un test di parita' tra gli
+  script `clean_google_chrome.command` e `clean_google_chrome.bat`.
+- **Suite Full-Stack Rieseguita e Confermata Verde**: rieseguiti con esito
+  positivo `npm run lint`, `npm run test`, `npm run build`,
+  `npm run test:coverage`, `npm run test:csharp-coverage` e
+  `npm run test:ui-responsive`; l'ultimo esito verificato e' di `48` file test
+  verdi e `318` test verdi, mantenendo la coverage ufficiale frontend e backend
+  al `100%`.
+
 - **CI/CD Post-Merge Health Distinto per Staging e Produzione**: il workflow
   [post-merge-health.yml](/Users/matteobernardini/code/FantaF1/.github/workflows/post-merge-health.yml)
   seleziona ora il secret corretto in base al branch mergiato

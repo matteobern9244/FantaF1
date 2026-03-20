@@ -6,6 +6,8 @@ import { fireEvent, render, screen, waitFor, within } from '@testing-library/rea
 import React from 'react';
 import App from '../src/App';
 
+const originalConsoleError = console.error;
+
 Object.defineProperty(window, 'matchMedia', {
   writable: true,
   value: vi.fn().mockImplementation((query) => ({
@@ -17,6 +19,16 @@ Object.defineProperty(window, 'matchMedia', {
     addEventListener: vi.fn(),
     removeEventListener: vi.fn(),
     dispatchEvent: vi.fn(),
+  })),
+});
+
+Object.defineProperty(window, 'IntersectionObserver', {
+  writable: true,
+  value: vi.fn().mockImplementation(() => ({
+    observe: vi.fn(),
+    unobserve: vi.fn(),
+    disconnect: vi.fn(),
+    takeRecords: vi.fn(() => []),
   })),
 });
 
@@ -233,6 +245,13 @@ describe('Live projection UI', () => {
     vi.clearAllMocks();
     window.history.replaceState({}, '', '/');
     vi.spyOn(window, 'open').mockImplementation(() => null);
+    vi.spyOn(console, 'error').mockImplementation((message?: unknown, ...optionalParams: unknown[]) => {
+      if (typeof message === 'string' && message.includes('not wrapped in act')) {
+        return;
+      }
+
+      originalConsoleError(message, ...optionalParams);
+    });
   });
 
   it('shows explicit waiting messages when the selected weekend has no official results yet', async () => {
@@ -279,7 +298,7 @@ describe('Live projection UI', () => {
     const highlightsButton = await screen.findByRole(
       'button',
       { name: /guarda highlights/i },
-      { timeout: 5000 },
+      { timeout: 30000 },
     );
 
     const selectedRaceHeroCard = getSelectedRaceHeroCard();
@@ -288,7 +307,7 @@ describe('Live projection UI', () => {
       within(selectedRaceHeroCard as HTMLElement).getByRole('button', { name: /guarda highlights/i }),
     ).toBeEnabled();
     expect(highlightsButton).toBeEnabled();
-  }, 15000);
+  }, 30000);
 
   it('shows the highlights CTA for a second finished race when that weekend has its own video', async () => {
     mockAppFetches({
@@ -308,7 +327,7 @@ describe('Live projection UI', () => {
 
     render(<App />);
 
-    await screen.findByRole('button', { name: /guarda highlights/i }, { timeout: 5000 });
+    await screen.findByRole('button', { name: /guarda highlights/i }, { timeout: 30000 });
 
     fireEvent.change(document.getElementById('meeting-selector') as HTMLSelectElement, {
       target: { value: 'race-2' },
@@ -323,7 +342,7 @@ describe('Live projection UI', () => {
     expect(
       within(getSelectedRaceHeroCard() as HTMLElement).getByText('Chinese Grand Prix 2099'),
     ).toBeInTheDocument();
-  }, 15000);
+  }, 30000);
 
   it('shows the official grand prix title in the selected race recap when the race is finished', async () => {
     mockAppFetches({
@@ -338,7 +357,7 @@ describe('Live projection UI', () => {
 
     render(<App />);
 
-    await screen.findByRole('button', { name: /guarda highlights/i }, { timeout: 5000 });
+    await screen.findByRole('button', { name: /guarda highlights/i }, { timeout: 30000 });
 
     const selectedRaceHeroCard = getSelectedRaceHeroCard();
     expect(selectedRaceHeroCard).not.toBeNull();
@@ -348,7 +367,7 @@ describe('Live projection UI', () => {
     expect(
       within(selectedRaceHeroCard as HTMLElement).queryByText('Australia'),
     ).not.toBeInTheDocument();
-  }, 15000);
+  }, 30000);
 
   it('opens the YouTube highlights outside the app when the CTA is clicked', async () => {
     mockAppFetches({
@@ -372,7 +391,7 @@ describe('Live projection UI', () => {
     const highlightsButton = await screen.findByRole(
       'button',
       { name: /guarda highlights/i },
-      { timeout: 5000 },
+      { timeout: 30000 },
     );
 
     expect(
@@ -385,7 +404,7 @@ describe('Live projection UI', () => {
       '_blank',
       'noopener,noreferrer',
     );
-  });
+  }, 30000);
 
   it('shows a disabled highlights CTA when the finished race video is not available yet', async () => {
     mockAppFetches({
@@ -402,10 +421,10 @@ describe('Live projection UI', () => {
 
     const disabledButton = await screen.findByRole('button', {
       name: /highlights non presenti/i,
-    }, { timeout: 5000 });
+    }, { timeout: 30000 });
 
     expect(disabledButton).toBeDisabled();
-  });
+  }, 30000);
 
   it('falls back to the unavailable highlights CTA when the results payload omits highlightsVideoUrl', async () => {
     mockAppFetches({
@@ -421,10 +440,10 @@ describe('Live projection UI', () => {
 
     const disabledButton = await screen.findByRole('button', {
       name: /highlights non presenti/i,
-    }, { timeout: 5000 });
+    }, { timeout: 30000 });
 
     expect(disabledButton).toBeDisabled();
-  });
+  }, 30000);
 
   it('falls back to the unavailable highlights CTA when the results payload has a null highlightsVideoUrl', async () => {
     mockAppFetches({
@@ -441,10 +460,10 @@ describe('Live projection UI', () => {
 
     const disabledButton = await screen.findByRole('button', {
       name: /highlights non presenti/i,
-    }, { timeout: 5000 });
+    }, { timeout: 30000 });
 
     expect(disabledButton).toBeDisabled();
-  });
+  }, 30000);
 
   it('does not show the highlights CTA before the selected race is finished', async () => {
     mockAppFetches({

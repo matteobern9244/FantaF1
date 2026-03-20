@@ -17,13 +17,13 @@ import {
   Download,
   Smartphone,
 } from 'lucide-react';
-import type { SectionNavigationId } from '../utils/sectionNavigation';
+import type { SectionNavigationEntry, SectionNavigationId } from '../utils/sectionNavigation';
 import type { ViewMode } from '../types';
 import { appText } from '../uiText';
 import MenuLogo from './MenuLogo';
 
 interface SidebarProps {
-  items: Array<{ id: SectionNavigationId; label: string }>;
+  items: SectionNavigationEntry[];
   activeId: string;
   onItemClick: (id: string) => void;
   isAdmin: boolean;
@@ -86,6 +86,36 @@ const Sidebar: React.FC<SidebarProps> = ({
 
       <nav className="sidebar-nav section-nav-list" aria-label={appText.shell.navigation.ariaLabel}>
         {items.map((item) => {
+          if (item.kind === 'group') {
+            return (
+              <div
+                key={item.id}
+                className={`sidebar-group ${item.children.some((child) => child.id === activeId) ? 'active' : ''}`}
+              >
+                <div className="sidebar-group-header" title={isCollapsed ? item.label : ''}>
+                  <Gauge size={20} />
+                  {!isCollapsed && <span className="sidebar-group-label">{item.label}</span>}
+                </div>
+                {item.children.map((child) => {
+                  const Icon = iconMap[child.id] || Gauge;
+                  return (
+                    <button
+                      key={child.id}
+                      className={`sidebar-item sidebar-subitem ${activeId === child.id ? 'active' : ''}`}
+                      aria-current={activeId === child.id ? 'page' : undefined}
+                      onClick={() => onItemClick(child.id)}
+                      title={isCollapsed ? child.label : ''}
+                      type="button"
+                    >
+                      <Icon size={20} />
+                      {!isCollapsed && <span className="sidebar-label">{child.label}</span>}
+                    </button>
+                  );
+                })}
+              </div>
+            );
+          }
+
           const Icon = iconMap[item.id] || Gauge;
           return (
             <button

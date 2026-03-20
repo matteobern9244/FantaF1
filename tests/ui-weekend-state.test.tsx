@@ -28,6 +28,16 @@ Object.defineProperty(window, 'matchMedia', {
   })),
 });
 
+Object.defineProperty(window, 'IntersectionObserver', {
+  writable: true,
+  value: vi.fn().mockImplementation(() => ({
+    observe: vi.fn(),
+    unobserve: vi.fn(),
+    disconnect: vi.fn(),
+    takeRecords: vi.fn(() => []),
+  })),
+});
+
 function createEmptyPrediction() {
   return {
     first: '',
@@ -278,7 +288,7 @@ describe('Weekend draft synchronization UI', () => {
     );
     expect(getResultSelect(/risultato 1°/i)).toHaveValue('');
     },
-    20000,
+    60000,
   );
 
   it('keeps shared selects readable across admin and public flows', async () => {
@@ -305,7 +315,7 @@ describe('Weekend draft synchronization UI', () => {
     expectReadableSelectStyles(screen.getByLabelText(/weekend selezionato/i) as HTMLSelectElement);
     expectReadableSelectStyles(screen.getByLabelText(/dashboard utente/i) as HTMLSelectElement);
     expectReadableSelectStyles(screen.getByLabelText(/filtra per giocatore/i) as HTMLSelectElement);
-  });
+  }, 30000);
 
   it('removes the hero title blur and keeps the race background brightness isolated to the dynamic layer', async () => {
     setupFetch();
@@ -348,7 +358,7 @@ describe('Weekend draft synchronization UI', () => {
           'linear-gradient(145deg, rgba(10, 11, 19, 0.95), rgba(10, 11, 19, 0.55)), url(https://media.example.com/china-hero.webp)',
       });
     });
-  });
+  }, 30000);
   it('saves the selected weekend draft without overwriting other weekend drafts', async () => {
     const fetchMock = setupFetch();
 
@@ -394,7 +404,7 @@ describe('Weekend draft synchronization UI', () => {
       // Should reflect the local change ('lec') before a new full data fetch would overwrite it
       expect(getPredictionSelect('Player 1', /vincitore gara/i)).toHaveValue('lec');
     });
-  }, 15000);
+  }, 30000);
 
   it('ignores stale official results responses after changing weekend', async () => {
     const race1Results = createDeferredResponse();

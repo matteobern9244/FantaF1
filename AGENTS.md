@@ -390,8 +390,8 @@ the repository. Where applicable this includes:
   Testing Library.
 - Coverage provider: V8 (Frontend), coverlet (Backend).
 - Current verified merged baseline for the configured official application-code
-  scope is **100% statements (5489 / 5489)**, **100% functions (737 / 737)**,
-  **100% branches (2826 / 2826)**, and **100% lines (5489 / 5489)**, aligned
+  scope is **100% statements (2510 / 2510)**, **100% functions (213 / 213)**,
+  **100% branches (1138 / 1138)**, and **100% lines (2510 / 2510)**, aligned
   with the thresholds currently documented in `README.md`.
 - Official backend-csharp application coverage on `backend-csharp/src/` is
   **100% line coverage (3194 / 3194)**, **100% branch coverage (1793 / 1793)**,
@@ -402,6 +402,10 @@ the repository. Where applicable this includes:
 - If a task produces a new verified merged coverage result for the tracked
   scope, update the baseline in `AGENTS.md` and never accept a regression below
   that verified baseline.
+- Whenever coverage is executed and yields a new verified result for the
+  official tracked frontend/repository scope or the official backend C# scope,
+  always update the corresponding baseline lines in both `AGENTS.md` and
+  `README.md` within the same task before declaring completion.
 
 A task is not complete if:
 

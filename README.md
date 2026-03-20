@@ -463,6 +463,8 @@ impedire mutazioni dei database condivisi.
 
 - [start_fantaf1.command](/Users/matteobernardini/code/FantaF1/start_fantaf1.command) (macOS/Linux)
 - [start_fantaf1.bat](/Users/matteobernardini/code/FantaF1/start_fantaf1.bat) (Windows)
+- [clean_google_chrome.command](/Users/matteobernardini/code/FantaF1/clean_google_chrome.command) (macOS/Linux)
+- [clean_google_chrome.bat](/Users/matteobernardini/code/FantaF1/clean_google_chrome.bat) (Windows)
 
 Quando un task richiede di `avviare l'app`, questo e' il solo entrypoint
 canonico. Il launcher esegue una serie di controlli pre-volo obbligatori:
@@ -474,6 +476,34 @@ canonico. Il launcher esegue una serie di controlli pre-volo obbligatori:
 - validazione UI responsive (Playwright)
 - build di produzione frontend
 - smoke test di salvataggio locale
+
+### Note operative UI recenti
+
+- il gruppo `Analisi` nel menu e nella dashboard contiene ora `Stagione attuale`,
+  `Deep-dive KPI dashboard` e `User KPI Dashboard`
+- `Stagione attuale` sostituisce la precedente label `Analisi stagione`
+- la sidebar desktop usa una larghezza leggermente maggiore per evitare clipping
+  dei bordi attivi
+- desktop sidebar e mobile overlay mantengono ora uno stacco visivo tra il
+  gruppo `Analisi` e la successiva voce `Storico gare`
+- i bordi delle voci attive restano interamente visibili sia in desktop sia in
+  mobile/PWA
+
+### Tool locale di pulizia Chrome
+
+Per ripristinare rapidamente Google Chrome dopo sessioni Playwright o DevTools
+residue sono disponibili due entrypoint equivalenti:
+
+- [clean_google_chrome.command](/Users/matteobernardini/code/FantaF1/clean_google_chrome.command)
+- [clean_google_chrome.bat](/Users/matteobernardini/code/FantaF1/clean_google_chrome.bat)
+
+Entrambi gli script:
+
+- verificano che Google Chrome sia installato
+- chiudono i processi di automazione residui che matchano
+  `playwright_chromiumdev_profile-` e `chrome-devtools-mcp`
+- rilanciano Google Chrome
+- verificano che Chrome sia effettivamente ripartito
 
 ### Comandi principali
 
@@ -644,10 +674,10 @@ Trigger operativi documentati:
 
 Baseline verificata corrente sullo scope ufficiale frontend/repository:
 
-- `5489 / 5489` statements
-- `737 / 737` functions
-- `2826 / 2826` branches
-- `5489 / 5489` lines
+- `2510 / 2510` statements
+- `213 / 213` functions
+- `1138 / 1138` branches
+- `2510 / 2510` lines
 
 Baseline verificata corrente su `backend-csharp/src/`:
 
@@ -667,6 +697,11 @@ Verifica piu' recente rieseguita localmente:
 - `npm run lint`
 - `npm run build`
 - `npm run test:ui-responsive`
+
+Ultimo esito verificato:
+
+- `48` file test verdi
+- `318` test verdi
 
 ## Struttura repository
 
