@@ -1,6 +1,7 @@
 # Verification: Fix Highlights Lookup Availability
 
 ## Executed Commands
+
 - `dotnet test backend-csharp/tests/FantaF1.Tests.Unit/FantaF1.Tests.Unit.csproj --filter "FullyQualifiedName~ResultsInfrastructureTests"`
 - `npm run lint`
 - `npm run test`
@@ -10,15 +11,20 @@
 - `npm run test:ui-responsive`
 
 ## Results
+
 - Targeted C# regression tests: green (`36/36` in `ResultsInfrastructureTests`)
 - Frontend/repository tests: green (`286/286`)
-- Frontend/repository coverage: `100%` statements, branches, functions, and lines
+- Frontend/repository coverage: `100%` statements, branches, functions, and
+  lines
 - Official backend C# coverage on `backend-csharp/src/`:
   - lines: `2944/2944` (`100%`)
   - branches: `1655/1655` (`100%`)
   - methods: `490/490` (`100%`)
-- Responsive validation: green on mobile, iphone-16-pro-max, tablet, laptop, desktop, desktop-xl
+- Responsive validation: green on mobile, iphone-16-pro-max, tablet, laptop,
+  desktop, desktop-xl
 
 ## Regression Check Outcome
-- No regressions observed in desktop browser view or mobile view during responsive validation.
+
+- No regressions observed in desktop browser view or mobile view during
+  responsive validation.
 - No build or lint regression introduced by the lookup fix.

@@ -232,7 +232,7 @@ public sealed class MongoWriteRepositoryTests
                 },
             ],
         });
-        var repository = new MongoWeekendRepository(harness.Database, new MongoLegacyReadDocumentMapper());
+        var repository = new MongoWeekendRepository(harness.Database, new MongoLegacyReadDocumentMapper(), new MongoLegacyWriteDocumentMapper());
 
         await repository.WriteHighlightsLookupAsync(
             "race-1",
@@ -257,7 +257,7 @@ public sealed class MongoWriteRepositoryTests
         {
             [MongoCollectionNames.Weekends] = [],
         });
-        var repository = new MongoWeekendRepository(harness.Database, new MongoLegacyReadDocumentMapper());
+        var repository = new MongoWeekendRepository(harness.Database, new MongoLegacyReadDocumentMapper(), new MongoLegacyWriteDocumentMapper());
 
         await Assert.ThrowsAsync<ArgumentException>(() => repository.WriteHighlightsLookupAsync("", new HighlightsLookupDocument("", "", "", ""), CancellationToken.None));
         await Assert.ThrowsAsync<ArgumentNullException>(() => repository.WriteHighlightsLookupAsync("race-1", null!, CancellationToken.None));
@@ -273,7 +273,7 @@ public sealed class MongoWriteRepositoryTests
                 new BsonDocument { ["meetingKey"] = "race-1", ["roundNumber"] = 1 },
             ],
         });
-        var repository = new MongoWeekendRepository(harness.Database, new MongoLegacyReadDocumentMapper());
+        var repository = new MongoWeekendRepository(harness.Database, new MongoLegacyReadDocumentMapper(), new MongoLegacyWriteDocumentMapper());
 
         await repository.WriteHighlightsLookupAsync(
             "race-1",
@@ -285,6 +285,172 @@ public sealed class MongoWriteRepositoryTests
         Assert.Equal(string.Empty, harness.RenderedUpdate["$set"]["highlightsLookupCheckedAt"].AsString);
         Assert.Equal(string.Empty, harness.RenderedUpdate["$set"]["highlightsLookupStatus"].AsString);
         Assert.Equal(string.Empty, harness.RenderedUpdate["$set"]["highlightsLookupSource"].AsString);
+    }
+
+    [Fact]
+    public async Task Mongo_weekend_repository_does_not_remove_persisted_found_highlights_when_a_new_lookup_is_missing()
+    {
+        var harness = CreateDatabase(new Dictionary<string, IReadOnlyList<BsonDocument>>
+        {
+            [MongoCollectionNames.Weekends] =
+            [
+                new BsonDocument
+                {
+                    ["meetingKey"] = "race-1",
+                    ["roundNumber"] = 1,
+                    ["highlightsVideoUrl"] = "https://www.youtube.com/watch?v=persisted-found",
+                    ["highlightsLookupCheckedAt"] = "2026-03-01T15:00:00.000Z",
+                    ["highlightsLookupStatus"] = "found",
+                    ["highlightsLookupSource"] = "feed",
+                },
+            ],
+        });
+        var repository = new MongoWeekendRepository(harness.Database, new MongoLegacyReadDocumentMapper(), new MongoLegacyWriteDocumentMapper());
+
+        await repository.WriteHighlightsLookupAsync(
+            "race-1",
+            new HighlightsLookupDocument(
+                string.Empty,
+                "2026-03-02T09:00:00.000Z",
+                "missing",
+                string.Empty),
+            CancellationToken.None);
+
+        Assert.NotNull(harness.RenderedUpdate);
+        Assert.Equal("https://www.youtube.com/watch?v=persisted-found", harness.RenderedUpdate!["$set"]["highlightsVideoUrl"].AsString);
+        Assert.Equal("2026-03-01T15:00:00.000Z", harness.RenderedUpdate["$set"]["highlightsLookupCheckedAt"].AsString);
+        Assert.Equal("found", harness.RenderedUpdate["$set"]["highlightsLookupStatus"].AsString);
+        Assert.Equal("feed", harness.RenderedUpdate["$set"]["highlightsLookupSource"].AsString);
+    }
+
+    [Fact]
+    public async Task Mongo_weekend_repository_preserves_persisted_highlights_even_when_existing_metadata_fields_are_null()
+    {
+        var harness = CreateDatabase(new Dictionary<string, IReadOnlyList<BsonDocument>>
+        {
+            [MongoCollectionNames.Weekends] =
+            [
+                new BsonDocument
+                {
+                    ["meetingKey"] = "race-1",
+                    ["roundNumber"] = 1,
+                    ["highlightsVideoUrl"] = "https://www.youtube.com/watch?v=persisted-found",
+                    ["highlightsLookupCheckedAt"] = BsonNull.Value,
+                    ["highlightsLookupStatus"] = BsonNull.Value,
+                    ["highlightsLookupSource"] = BsonNull.Value,
+                },
+            ],
+        });
+        var repository = new MongoWeekendRepository(harness.Database, new MongoLegacyReadDocumentMapper(), new MongoLegacyWriteDocumentMapper());
+
+        await repository.WriteHighlightsLookupAsync(
+            "race-1",
+            new HighlightsLookupDocument(
+                string.Empty,
+                "2026-03-02T09:00:00.000Z",
+                "missing",
+                string.Empty),
+            CancellationToken.None);
+
+        Assert.NotNull(harness.RenderedUpdate);
+        Assert.Equal("https://www.youtube.com/watch?v=persisted-found", harness.RenderedUpdate!["$set"]["highlightsVideoUrl"].AsString);
+        Assert.Equal(string.Empty, harness.RenderedUpdate["$set"]["highlightsLookupCheckedAt"].AsString);
+        Assert.Equal(string.Empty, harness.RenderedUpdate["$set"]["highlightsLookupStatus"].AsString);
+        Assert.Equal(string.Empty, harness.RenderedUpdate["$set"]["highlightsLookupSource"].AsString);
+    }
+
+    [Fact]
+    public async Task Mongo_weekend_repository_allows_missing_lookup_writes_when_no_persisted_document_exists()
+    {
+        var harness = CreateDatabase(new Dictionary<string, IReadOnlyList<BsonDocument>>
+        {
+            [MongoCollectionNames.Weekends] = [],
+        });
+        var repository = new MongoWeekendRepository(harness.Database, new MongoLegacyReadDocumentMapper(), new MongoLegacyWriteDocumentMapper());
+
+        await repository.WriteHighlightsLookupAsync(
+            "race-1",
+            new HighlightsLookupDocument(
+                string.Empty,
+                "2026-03-02T09:00:00.000Z",
+                "missing",
+                string.Empty),
+            CancellationToken.None);
+
+        Assert.NotNull(harness.RenderedUpdate);
+        Assert.Equal(string.Empty, harness.RenderedUpdate!["$set"]["highlightsVideoUrl"].AsString);
+        Assert.Equal("2026-03-02T09:00:00.000Z", harness.RenderedUpdate["$set"]["highlightsLookupCheckedAt"].AsString);
+        Assert.Equal("missing", harness.RenderedUpdate["$set"]["highlightsLookupStatus"].AsString);
+        Assert.Equal(string.Empty, harness.RenderedUpdate["$set"]["highlightsLookupSource"].AsString);
+    }
+
+    [Fact]
+    public async Task Mongo_app_data_repository_add_calls_write()
+    {
+        var harness = CreateDatabase(new Dictionary<string, IReadOnlyList<BsonDocument>>
+        {
+            [MongoCollectionNames.AppDatas] = [],
+        });
+        var repository = new MongoAppDataRepository(
+            harness.Database,
+            new MongoLegacyReadDocumentMapper(),
+            new MongoLegacyWriteDocumentMapper(),
+            new ParticipantRosterValidator(),
+            new StaticClock(new DateTimeOffset(2026, 03, 12, 09, 30, 00, TimeSpan.Zero)));
+
+        await repository.AddAsync(
+            new AppDataDocument([], [], string.Empty, new PredictionDocument("", "", "", ""), string.Empty, null),
+            CancellationToken.None);
+
+        Assert.NotNull(harness.ReplacedDocument);
+    }
+
+    [Fact]
+    public async Task Mongo_app_data_repository_update_calls_write()
+    {
+        var harness = CreateDatabase(new Dictionary<string, IReadOnlyList<BsonDocument>>
+        {
+            [MongoCollectionNames.AppDatas] = [new BsonDocument { ["_id"] = 1, ["createdAt"] = DateTime.UtcNow }],
+        });
+        var repository = new MongoAppDataRepository(
+            harness.Database,
+            new MongoLegacyReadDocumentMapper(),
+            new MongoLegacyWriteDocumentMapper(),
+            new ParticipantRosterValidator(),
+            new StaticClock(new DateTimeOffset(2026, 03, 12, 09, 30, 00, TimeSpan.Zero)));
+
+        await repository.UpdateAsync(
+            new AppDataDocument([], [], string.Empty, new PredictionDocument("", "", "", ""), string.Empty, null),
+            CancellationToken.None);
+
+        Assert.NotNull(harness.ReplacedDocument);
+    }
+
+    [Fact]
+    public async Task Mongo_app_data_repository_get_by_id_reads_latest()
+    {
+        var harness = CreateDatabase(new Dictionary<string, IReadOnlyList<BsonDocument>>
+        {
+            [MongoCollectionNames.AppDatas] =
+            [
+                new BsonDocument
+                {
+                    ["createdAt"] = new BsonDateTime(new DateTime(2026, 03, 12, 00, 00, 00, DateTimeKind.Utc)),
+                    ["gpName"] = "Target GP",
+                },
+            ],
+        });
+        var repository = new MongoAppDataRepository(
+            harness.Database,
+            new MongoLegacyReadDocumentMapper(),
+            new MongoLegacyWriteDocumentMapper(),
+            new ParticipantRosterValidator(),
+            new StaticClock(new DateTimeOffset(2026, 03, 12, 09, 30, 00, TimeSpan.Zero)));
+
+        var result = await repository.GetByIdAsync("any", CancellationToken.None);
+
+        Assert.NotNull(result);
+        Assert.Equal("Target GP", result!.GpName);
     }
 
     private static MongoDatabaseHarness CreateDatabase(IReadOnlyDictionary<string, IReadOnlyList<BsonDocument>> documentsByCollection)

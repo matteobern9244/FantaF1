@@ -101,7 +101,7 @@ import {
   upsertWeekendPredictionState,
   upsertWeekendRaceResults,
 } from './utils/weekendState';
-import { getSectionNavigationItems } from './utils/sectionNavigation';
+import { getSectionNavigationItems, getSectionNavigationLeafItems } from './utils/sectionNavigation';
 
 const { driversSource, points, uiText } = appConfig;
 
@@ -301,7 +301,8 @@ function App() {
   const canAssignPoints = isFinished && allResultsFilled;
   const isPublicView = viewMode === 'public';
   const sectionNavigationItems = getSectionNavigationItems(viewMode);
-  const firstSectionId = sectionNavigationItems[0]?.id ?? '';
+  const sectionNavigationLeafItems = getSectionNavigationLeafItems(viewMode);
+  const firstSectionId = sectionNavigationLeafItems[0]?.id ?? '';
   const liveResultsStatusMessage =
     officialResultsAvailability === 'none'
       ? uiText.status.liveNoOfficialResults
@@ -638,14 +639,18 @@ function App() {
   }, [loading, viewMode]);
 
   useEffect(() => {
-    if (loading || sectionNavigationItems.length === 0) {
+    const effectSectionNavigationLeafItems = getSectionNavigationLeafItems(viewMode);
+
+    if (loading || effectSectionNavigationLeafItems.length === 0) {
       return;
     }
 
     const hashSectionId = window.location.hash.replace(/^#/, '');
     const fallbackSectionId = hashSectionId || firstSectionId;
     setActiveSectionId((currentActiveSectionId) => {
-      const isCurrentSectionVisible = sectionNavigationItems.some((item) => item.id === currentActiveSectionId);
+      const isCurrentSectionVisible = effectSectionNavigationLeafItems.some(
+        (item) => item.id === currentActiveSectionId,
+      );
       return isCurrentSectionVisible ? currentActiveSectionId : fallbackSectionId;
     });
 
@@ -653,7 +658,7 @@ function App() {
       return;
     }
 
-    const observedSections = sectionNavigationItems
+    const observedSections = effectSectionNavigationLeafItems
       .map((item) => document.getElementById(item.id))
       .filter((section): section is HTMLElement => Boolean(section));
 
@@ -716,7 +721,7 @@ function App() {
     return () => {
       sectionObserver.disconnect();
     };
-  }, [firstSectionId, loading, sectionNavigationItems]);
+  }, [firstSectionId, loading, viewMode]);
 
   useEffect(() => {
     if (loading) {
@@ -1722,153 +1727,6 @@ function App() {
             )}
           </section>
 
-          <section className="panel nav-section" id="user-kpi-section">
-            <div className="panel-head">
-              <div className="section-title">
-                <BarChart3 size={20} />
-                <h2>{uiText.headings.userKpi}</h2>
-              </div>
-              <div className="insights-picker">
-                <label htmlFor="insights-user-selector">{uiText.labels.userKpiSelector}</label>
-                <select
-                  id="insights-user-selector"
-                  value={selectedInsightsUserName}
-                  onChange={(event) => setSelectedInsightsUser(event.target.value)}
-                >
-                  {users.map((user) => (
-                    <option key={`insights-${user.name}`} value={user.name}>
-                      {user.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-            {selectedKpiSummary ? (
-              <div className="kpi-grid" data-testid="user-kpi-dashboard">
-                <article className="kpi-card interactive-surface">
-                  <strong>{selectedKpiSummary.seasonPoints}</strong>
-                  <span>{uiText.labels.seasonPoints}</span>
-                </article>
-                <article className="kpi-card interactive-surface">
-                  <strong>{formatAverageValue(selectedKpiSummary.averagePosition, 1)}</strong>
-                  <span>{uiText.labels.averagePosition}</span>
-                </article>
-                <article className="kpi-card interactive-surface">
-                  <strong>{selectedKpiSummary.poleAccuracy}%</strong>
-                  <span>{uiText.labels.poleAccuracy}</span>
-                </article>
-                <article className="kpi-card interactive-surface">
-                  <strong>{formatAverageValue(selectedKpiSummary.averagePointsPerRace, 2)}</strong>
-                  <span>{uiText.labels.averagePointsPerRace}</span>
-                </article>
-              </div>
-            ) : (
-              <p className="empty-copy">{uiText.history.analyticsEmpty}</p>
-            )}
-          </section>
-
-          <section className="panel analytics-panel nav-section" id="user-analytics-section">
-            <div className="section-title">
-              <BarChart3 size={20} />
-              <h2>{uiText.headings.userAnalytics}</h2>
-            </div>
-            {selectedAnalyticsSummary ? (
-              <>
-                <div className="analytics-summary-grid">
-                  <article className="analytics-card interactive-surface">
-                    <span className="analytics-label">{uiText.labels.bestWeekend}</span>
-                    <strong>{selectedAnalyticsSummary.bestWeekend?.gpName ?? uiText.history.unknownDriver}</strong>
-                    <small>
-                      {selectedAnalyticsSummary.bestWeekend?.points ?? 0} {uiText.pointsSuffix}
-                    </small>
-                  </article>
-                  <article className="analytics-card interactive-surface">
-                    <span className="analytics-label">{uiText.labels.worstWeekend}</span>
-                    <strong>{selectedAnalyticsSummary.worstWeekend?.gpName ?? uiText.history.unknownDriver}</strong>
-                    <small>
-                      {selectedAnalyticsSummary.worstWeekend?.points ?? 0} {uiText.pointsSuffix}
-                    </small>
-                  </article>
-                  <article className="analytics-card interactive-surface">
-                    <span className="analytics-label">{uiText.labels.mostPickedDriver}</span>
-                    <strong>{formatTrendDriver(selectedAnalyticsSummary.mostPickedDriverId)}</strong>
-                    <small>{selectedInsightsUserName}</small>
-                  </article>
-                </div>
-
-                <div className="analytics-columns">
-                  <div className="analytics-subpanel interactive-surface">
-                    <h3>{uiText.labels.fieldAccuracy}</h3>
-                    <div className="field-accuracy-list">
-                      {selectedAnalyticsSummary.fieldAccuracy.map((entry) => (
-                        <div key={`${selectedAnalyticsSummary.userName}-${entry.field}`} className="field-accuracy-row">
-                          <span>{predictionLabels[entry.field]}</span>
-                          <strong>{entry.accuracy}%</strong>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                  <div className="analytics-subpanel interactive-surface">
-                    <h3>{uiText.labels.pointsTrend}</h3>
-                    {selectedAnalyticsSummary.trend.length > 0 ? (
-                      <div className="trend-chart" data-testid="user-points-trend">
-                        {selectedAnalyticsSummary.trend.map((point) => {
-                          const maxTrendValue = Math.max(
-                            ...selectedAnalyticsSummary.trend.map((trendPoint) => trendPoint.points),
-                            1,
-                          );
-
-                          return (
-                            <div key={`${selectedAnalyticsSummary.userName}-${point.gpName}`} className="trend-bar-group">
-                              <div className="trend-bar-shell">
-                                <span
-                                  className="trend-bar"
-                                  style={{ height: `${Math.max((point.points / maxTrendValue) * 100, 8)}%` }}
-                                />
-                              </div>
-                              <strong>{point.points}</strong>
-                              <span>{point.gpName}</span>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    ) : (
-                      <p className="empty-copy">{uiText.history.analyticsEmpty}</p>
-                    )}
-                  </div>
-                </div>
-              </>
-            ) : (
-              <p className="empty-copy">{uiText.history.analyticsEmpty}</p>
-            )}
-          </section>
-
-          <SeasonAnalysisPanel
-            analyticsEmptyLabel={uiText.history.analyticsEmpty}
-            emptyOptionLabel={uiText.placeholders.emptyOption}
-            predictionLabels={predictionLabels}
-            seasonAnalytics={seasonAnalytics}
-          />
-
-          <WeekendLivePanel
-            getDriverName={getWeekendLiveDriverName}
-            predictionFieldOrder={predictionFieldOrder}
-            predictionLabels={predictionLabels}
-            weekendComparison={weekendComparison}
-          />
-
-          {isPublicView ? (
-            <PublicStandingsPanel
-              constructorStandings={standings.constructorStandings}
-              driverStandings={standings.driverStandings}
-              updatedAt={standings.updatedAt}
-            />
-          ) : null}
-
-          {isPublicView ? (
-            <PublicGuidePanel />
-          ) : null}
-
           {!isPublicView ? (
           <section className="panel nav-section" id="predictions-section">
             <div className="panel-head">
@@ -2031,7 +1889,7 @@ function App() {
                   {uiText.buttons.cancelEdit}
                 </button>
               ) : null}
-              <div 
+              <div
                 className={`tooltip-wrapper ${!canAssignPoints ? 'disabled-wrapper' : ''} ${showTooltip && !canAssignPoints ? 'show-tooltip' : ''}`}
                 onMouseEnter={() => setShowTooltip(true)}
                 onMouseLeave={() => setShowTooltip(false)}
@@ -2051,6 +1909,149 @@ function App() {
               </div>
             </div>
           </section>
+          ) : null}
+
+          <WeekendLivePanel
+            getDriverName={getWeekendLiveDriverName}
+            predictionFieldOrder={predictionFieldOrder}
+            predictionLabels={predictionLabels}
+            weekendComparison={weekendComparison}
+          />
+
+          <SeasonAnalysisPanel
+            analyticsEmptyLabel={uiText.history.analyticsEmpty}
+            emptyOptionLabel={uiText.placeholders.emptyOption}
+            predictionLabels={predictionLabels}
+            seasonAnalytics={seasonAnalytics}
+          />
+
+          <section className="panel analytics-panel nav-section" id="user-analytics-section">
+            <div className="section-title">
+              <BarChart3 size={20} />
+              <h2>{uiText.headings.userAnalytics}</h2>
+            </div>
+            {selectedAnalyticsSummary ? (
+              <>
+                <div className="analytics-summary-grid">
+                  <article className="analytics-card interactive-surface">
+                    <span className="analytics-label">{uiText.labels.bestWeekend}</span>
+                    <strong>{selectedAnalyticsSummary.bestWeekend?.gpName ?? uiText.history.unknownDriver}</strong>
+                    <small>
+                      {selectedAnalyticsSummary.bestWeekend?.points ?? 0} {uiText.pointsSuffix}
+                    </small>
+                  </article>
+                  <article className="analytics-card interactive-surface">
+                    <span className="analytics-label">{uiText.labels.worstWeekend}</span>
+                    <strong>{selectedAnalyticsSummary.worstWeekend?.gpName ?? uiText.history.unknownDriver}</strong>
+                    <small>
+                      {selectedAnalyticsSummary.worstWeekend?.points ?? 0} {uiText.pointsSuffix}
+                    </small>
+                  </article>
+                  <article className="analytics-card interactive-surface">
+                    <span className="analytics-label">{uiText.labels.mostPickedDriver}</span>
+                    <strong>{formatTrendDriver(selectedAnalyticsSummary.mostPickedDriverId)}</strong>
+                    <small>{selectedInsightsUserName}</small>
+                  </article>
+                </div>
+
+                <div className="analytics-columns">
+                  <div className="analytics-subpanel interactive-surface">
+                    <h3>{uiText.labels.fieldAccuracy}</h3>
+                    <div className="field-accuracy-list">
+                      {selectedAnalyticsSummary.fieldAccuracy.map((entry) => (
+                        <div key={`${selectedAnalyticsSummary.userName}-${entry.field}`} className="field-accuracy-row">
+                          <span>{predictionLabels[entry.field]}</span>
+                          <strong>{entry.accuracy}%</strong>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="analytics-subpanel interactive-surface">
+                    <h3>{uiText.labels.pointsTrend}</h3>
+                    {selectedAnalyticsSummary.trend.length > 0 ? (
+                      <div className="trend-chart" data-testid="user-points-trend">
+                        {selectedAnalyticsSummary.trend.map((point) => {
+                          const maxTrendValue = Math.max(
+                            ...selectedAnalyticsSummary.trend.map((trendPoint) => trendPoint.points),
+                            1,
+                          );
+
+                          return (
+                            <div key={`${selectedAnalyticsSummary.userName}-${point.gpName}`} className="trend-bar-group">
+                              <div className="trend-bar-shell">
+                                <span
+                                  className="trend-bar"
+                                  style={{ height: `${Math.max((point.points / maxTrendValue) * 100, 8)}%` }}
+                                />
+                              </div>
+                              <strong>{point.points}</strong>
+                              <span>{point.gpName}</span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <p className="empty-copy">{uiText.history.analyticsEmpty}</p>
+                    )}
+                  </div>
+                </div>
+              </>
+            ) : (
+              <p className="empty-copy">{uiText.history.analyticsEmpty}</p>
+            )}
+          </section>
+
+          <section className="panel nav-section" id="user-kpi-section">
+            <div className="panel-head">
+              <div className="section-title">
+                <BarChart3 size={20} />
+                <h2>{uiText.headings.userKpi}</h2>
+              </div>
+              <div className="insights-picker">
+                <label htmlFor="insights-user-selector">{uiText.labels.userKpiSelector}</label>
+                <select
+                  id="insights-user-selector"
+                  value={selectedInsightsUserName}
+                  onChange={(event) => setSelectedInsightsUser(event.target.value)}
+                >
+                  {users.map((user) => (
+                    <option key={`insights-${user.name}`} value={user.name}>
+                      {user.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+            {selectedKpiSummary ? (
+              <div className="kpi-grid" data-testid="user-kpi-dashboard">
+                <article className="kpi-card interactive-surface">
+                  <strong>{selectedKpiSummary.seasonPoints}</strong>
+                  <span>{uiText.labels.seasonPoints}</span>
+                </article>
+                <article className="kpi-card interactive-surface">
+                  <strong>{formatAverageValue(selectedKpiSummary.averagePosition, 1)}</strong>
+                  <span>{uiText.labels.averagePosition}</span>
+                </article>
+                <article className="kpi-card interactive-surface">
+                  <strong>{selectedKpiSummary.poleAccuracy}%</strong>
+                  <span>{uiText.labels.poleAccuracy}</span>
+                </article>
+                <article className="kpi-card interactive-surface">
+                  <strong>{formatAverageValue(selectedKpiSummary.averagePointsPerRace, 2)}</strong>
+                  <span>{uiText.labels.averagePointsPerRace}</span>
+                </article>
+              </div>
+            ) : (
+              <p className="empty-copy">{uiText.history.analyticsEmpty}</p>
+            )}
+          </section>
+
+          {isPublicView ? (
+            <PublicStandingsPanel
+              constructorStandings={standings.constructorStandings}
+              driverStandings={standings.driverStandings}
+              updatedAt={standings.updatedAt}
+            />
           ) : null}
 
           <HistoryArchivePanel
@@ -2076,6 +2077,10 @@ function App() {
             userDisplayNameForWinner={getHistoryWinnerDriverName}
             users={users}
           />
+
+          {isPublicView ? (
+            <PublicGuidePanel />
+          ) : null}
         </section>
       </main>
 

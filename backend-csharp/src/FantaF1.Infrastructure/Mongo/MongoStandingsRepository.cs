@@ -5,24 +5,26 @@ using MongoDB.Driver;
 
 namespace FantaF1.Infrastructure.Mongo;
 
-public sealed class MongoStandingsRepository : IStandingsRepository
+public sealed class MongoStandingsRepository : MongoRepository<StandingsDocument, string>, IStandingsRepository
 {
     private const string CurrentCacheKey = "current";
 
-    private readonly IMongoCollection<BsonDocument> _collection;
     private readonly MongoLegacyReadDocumentMapper _mapper;
 
     public MongoStandingsRepository(IMongoDatabase database, MongoLegacyReadDocumentMapper mapper)
+        : base(database, MongoCollectionNames.StandingsCaches)
     {
-        ArgumentNullException.ThrowIfNull(database);
-
-        _collection = database.GetCollection<BsonDocument>(MongoCollectionNames.StandingsCaches);
         _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
+    }
+
+    public override async Task<StandingsDocument?> GetByIdAsync(string id, CancellationToken cancellationToken)
+    {
+        return await ReadCurrentAsync(cancellationToken);
     }
 
     public async Task<StandingsDocument> ReadCurrentAsync(CancellationToken cancellationToken)
     {
-        var document = await _collection
+        var document = await Collection
             .Find(new BsonDocument("cacheKey", CurrentCacheKey))
             .Limit(1)
             .FirstOrDefaultAsync(cancellationToken);
@@ -34,15 +36,9 @@ public sealed class MongoStandingsRepository : IStandingsRepository
     {
         ArgumentNullException.ThrowIfNull(document);
 
-        var replacement = new BsonDocument
-        {
-            ["cacheKey"] = CurrentCacheKey,
-            ["driverStandings"] = new BsonArray(document.DriverStandings.Select(MapDriverStanding)),
-            ["constructorStandings"] = new BsonArray(document.ConstructorStandings.Select(MapConstructorStanding)),
-            ["updatedAt"] = document.UpdatedAt ?? string.Empty,
-        };
+        var replacement = MapToDocument(document);
 
-        await _collection.FindOneAndReplaceAsync(
+        await Collection.FindOneAndReplaceAsync(
             new BsonDocument("cacheKey", CurrentCacheKey),
             replacement,
             new FindOneAndReplaceOptions<BsonDocument>
@@ -51,6 +47,29 @@ public sealed class MongoStandingsRepository : IStandingsRepository
                 ReturnDocument = ReturnDocument.After,
             },
             cancellationToken);
+    }
+
+    public override Task AddAsync(StandingsDocument entity, CancellationToken cancellationToken)
+    {
+        return WriteCurrentAsync(entity, cancellationToken);
+    }
+
+    public override Task UpdateAsync(StandingsDocument entity, CancellationToken cancellationToken)
+    {
+        return WriteCurrentAsync(entity, cancellationToken);
+    }
+
+    protected override StandingsDocument MapToEntity(BsonDocument document) => _mapper.MapStandings(document);
+
+    protected override BsonDocument MapToDocument(StandingsDocument entity)
+    {
+        return new BsonDocument
+        {
+            ["cacheKey"] = CurrentCacheKey,
+            ["driverStandings"] = new BsonArray(entity.DriverStandings.Select(MapDriverStanding)),
+            ["constructorStandings"] = new BsonArray(entity.ConstructorStandings.Select(MapConstructorStanding)),
+            ["updatedAt"] = entity.UpdatedAt ?? string.Empty,
+        };
     }
 
     private static BsonDocument MapDriverStanding(DriverStandingDocument standing)

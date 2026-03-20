@@ -1,0 +1,16 @@
+{
+  "id": "deploya_staging_20260319",
+  "track_id": "deploya_staging_20260319",
+  "slug": "deploya_staging_20260319",
+  "title": "Implementare un comando 'deploya-staging' e una skill 'fantaf1_deploy_staging' per automatizzare il deploy verso 'staging' partendo da 'develop'.",
+  "status": "completed",
+  "phase": "completed",
+  "createdAt": "2026-03-19T10:00:00Z",
+  "updatedAt": "2026-03-19T10:00:00Z",
+  "archivedAt": "2026-03-19T10:00:00Z",
+  "path": "conductor/archive/deploya_staging_20260319",
+  "relatedTrackIds": [],
+  "activeTask": null,
+  "type": "chore",
+  "description": "Implementare un comando 'deploya-staging' e una skill 'fantaf1_deploy_staging' per automatizzare il deploy verso 'staging' partendo da 'develop'."
+}

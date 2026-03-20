@@ -6,6 +6,7 @@ using FantaF1.Application.Abstractions.Persistence;
 using FantaF1.Application.Abstractions.Services;
 using FantaF1.Application.Abstractions.System;
 using FantaF1.Domain.ReadModels;
+using FantaF1.Domain.Results;
 using FantaF1.Infrastructure.Authentication;
 using FantaF1.Infrastructure.Bootstrap;
 using FantaF1.Infrastructure.Calendar;
@@ -1443,6 +1444,43 @@ public sealed class SubphaseEightBootstrapTests
     }
 
     [Fact]
+    public async Task Official_calendar_sync_service_does_not_backfill_highlights_before_same_day_race_start_time()
+    {
+        var config = CreatePortingAppConfig(expectedDrivers: 22, expectedWeekends: 1);
+        var repository = new SpyWeekendRepository();
+        var lookup = new PolicyBackedHighlightsLookupService(
+            new RaceHighlightsLookupPolicy(TimeSpan.FromHours(1)),
+            new HighlightsLookupDocument(
+                "https://www.youtube.com/watch?v=too-early",
+                "2026-03-08T02:00:00.000Z",
+                "found",
+                "feed"));
+        var seasonHtml = """
+            <a href="/en/racing/2026/australia"><span>ROUND 1</span><span>06 - 08 MAR</span><span>Australia</span><span>FORMULA 1 AUSTRALIAN GRAND PRIX 2026</span></a>
+        """;
+        var service = new OfficialCalendarSyncService(
+            config,
+            repository,
+            lookup,
+            new StubClock(new DateTimeOffset(2026, 03, 08, 02, 00, 00, TimeSpan.Zero)),
+            CreateHttpClient(new Dictionary<string, string>
+            {
+                [config.Calendar.SeasonUrl] = seasonHtml,
+                ["https://www.formula1.com/en/racing/2026/australia"] = """
+                    <title>Australia GP - F1 Race</title>
+                    <script>{"@type":"SportsEvent","name":"Race - Melbourne","startDate":"2026-03-08T04:00:00.000Z"}</script>
+                """,
+            }));
+
+        var result = await service.SyncAsync(CancellationToken.None);
+
+        var australia = Assert.Single(result);
+        Assert.Equal("2026-03-08T04:00:00.000Z", australia.RaceStartTime);
+        Assert.Equal(string.Empty, australia.HighlightsVideoUrl);
+        Assert.Equal(0, lookup.ResolveCalls);
+    }
+
+    [Fact]
     public void Official_calendar_sync_service_preserved_highlights_helpers_cover_null_persisted_fields()
     {
         var weekend = new WeekendDocument(
@@ -1566,6 +1604,59 @@ public sealed class SubphaseEightBootstrapTests
         Assert.Equal("https://www.youtube.com/watch?v=slug", bySlug?.HighlightsVideoUrl);
         Assert.Equal("https://www.youtube.com/watch?v=slug", byFallbackSlug?.HighlightsVideoUrl);
         Assert.Null(missing);
+    }
+
+    [Fact]
+    public async Task Official_calendar_sync_service_preserves_persisted_highlights_when_f1_changes_slug_but_round_and_dates_match()
+    {
+        var config = CreatePortingAppConfig(expectedDrivers: 22, expectedWeekends: 1);
+        var repository = new SpyWeekendRepository
+        {
+            CachedWeekends =
+            [
+                new WeekendDocument(
+                    "old-australia",
+                    "Australia",
+                    "Australian Grand Prix 2026",
+                    1,
+                    "06 - 08 MAR",
+                    "https://www.formula1.com/en/racing/2026/australia-old",
+                    "hero-old.webp",
+                    "track-old.webp",
+                    false,
+                    "2026-03-06",
+                    "2026-03-08",
+                    "2026-03-08T04:00:00.000Z",
+                    [new WeekendSessionDocument("Race", "2026-03-08T04:00:00.000Z")],
+                    "https://www.youtube.com/watch?v=persisted-found",
+                    "2026-03-08T12:00:00.000Z",
+                    "found",
+                    "feed"),
+            ],
+        };
+        var seasonHtml = """
+            <a href="/en/racing/2026/australia"><span>ROUND 1</span><span>06 - 08 MAR</span><span>Australia</span><span>FORMULA 1 AUSTRALIAN GRAND PRIX 2026</span></a>
+        """;
+        var service = new OfficialCalendarSyncService(
+            config,
+            repository,
+            new StubHighlightsLookupService(false, new HighlightsLookupDocument(string.Empty, string.Empty, string.Empty, string.Empty)),
+            new StubClock(new DateTimeOffset(2026, 03, 18, 10, 00, 00, TimeSpan.Zero)),
+            CreateHttpClient(new Dictionary<string, string>
+            {
+                [config.Calendar.SeasonUrl] = seasonHtml,
+                ["https://www.formula1.com/en/racing/2026/australia"] = """
+                    <title>Australia GP - F1 Race</title>
+                    <script>{"@type":"SportsEvent","name":"Race - Melbourne","startDate":"2026-03-08T04:00:00.000Z"}</script>
+                """,
+            }));
+
+        var result = await service.SyncAsync(CancellationToken.None);
+
+        var australia = Assert.Single(result);
+        Assert.Equal("https://www.youtube.com/watch?v=persisted-found", australia.HighlightsVideoUrl);
+        Assert.Equal("found", australia.HighlightsLookupStatus);
+        Assert.Equal("feed", australia.HighlightsLookupSource);
     }
 
     [Fact]
@@ -1981,6 +2072,31 @@ public sealed class SubphaseEightBootstrapTests
         }
     }
 
+    private sealed class PolicyBackedHighlightsLookupService : IRaceHighlightsLookupService
+    {
+        private readonly RaceHighlightsLookupPolicy _policy;
+        private readonly HighlightsLookupDocument _result;
+
+        public PolicyBackedHighlightsLookupService(RaceHighlightsLookupPolicy policy, HighlightsLookupDocument result)
+        {
+            _policy = policy;
+            _result = result;
+        }
+
+        public int ResolveCalls { get; private set; }
+
+        public bool ShouldLookup(WeekendDocument race, DateTimeOffset now)
+        {
+            return _policy.ShouldLookup(race, now);
+        }
+
+        public Task<HighlightsLookupDocument> ResolveAsync(WeekendDocument race, CancellationToken cancellationToken)
+        {
+            ResolveCalls += 1;
+            return Task.FromResult(_result);
+        }
+    }
+
     private sealed class SpyDriverRepository : IDriverRepository
     {
         public IReadOnlyList<DriverDocument> CachedDrivers { get; init; } = [];
@@ -2017,6 +2133,12 @@ public sealed class SubphaseEightBootstrapTests
         public IReadOnlyList<WeekendDocument> CachedWeekends { get; init; } = [];
         public List<WeekendDocument> WrittenWeekends { get; } = [];
 
+        public Task<WeekendDocument?> GetByIdAsync(string id, CancellationToken cancellationToken) => throw new NotImplementedException();
+        public Task<IReadOnlyList<WeekendDocument>> GetAllAsync(CancellationToken cancellationToken) => throw new NotImplementedException();
+        public Task AddAsync(WeekendDocument entity, CancellationToken cancellationToken) => throw new NotImplementedException();
+        public Task UpdateAsync(WeekendDocument entity, CancellationToken cancellationToken) => throw new NotImplementedException();
+        public Task DeleteAsync(string id, CancellationToken cancellationToken) => throw new NotImplementedException();
+
         public Task<IReadOnlyList<WeekendDocument>> ReadAllAsync(CancellationToken cancellationToken)
         {
             return Task.FromResult(CachedWeekends);
@@ -2037,6 +2159,12 @@ public sealed class SubphaseEightBootstrapTests
 
     private sealed class ThrowingWeekendRepository : IWeekendRepository
     {
+        public Task<WeekendDocument?> GetByIdAsync(string id, CancellationToken cancellationToken) => throw new NotImplementedException();
+        public Task<IReadOnlyList<WeekendDocument>> GetAllAsync(CancellationToken cancellationToken) => throw new NotImplementedException();
+        public Task AddAsync(WeekendDocument entity, CancellationToken cancellationToken) => throw new NotImplementedException();
+        public Task UpdateAsync(WeekendDocument entity, CancellationToken cancellationToken) => throw new NotImplementedException();
+        public Task DeleteAsync(string id, CancellationToken cancellationToken) => throw new NotImplementedException();
+
         public Task<IReadOnlyList<WeekendDocument>> ReadAllAsync(CancellationToken cancellationToken)
         {
             throw new InvalidOperationException("calendar-cache");

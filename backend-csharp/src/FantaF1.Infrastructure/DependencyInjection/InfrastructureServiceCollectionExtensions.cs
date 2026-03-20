@@ -9,6 +9,7 @@ using FantaF1.Infrastructure.Drivers;
 using FantaF1.Infrastructure.Mongo;
 using FantaF1.Infrastructure.Results;
 using FantaF1.Infrastructure.Standings;
+using FantaF1.Domain.Results;
 using FantaF1.Domain.SaveValidation;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
@@ -59,6 +60,7 @@ public static class InfrastructureServiceCollectionExtensions
         });
         services.AddSingleton<MongoLegacyReadDocumentMapper>();
         services.AddSingleton<MongoLegacyWriteDocumentMapper>();
+        services.AddSingleton<RaceHighlightsLookupPolicy>(_ => new RaceHighlightsLookupPolicy(TimeSpan.FromHours(OfficialResultsReferenceData.HighlightsLookupMissingTtlHours)));
         services.AddSingleton(sp => sp.GetRequiredService<PortingAppConfigLoader>().Load());
         services.AddSingleton<PortingAppConfigLoader>();
         services.AddSingleton<ParticipantRosterValidator>();

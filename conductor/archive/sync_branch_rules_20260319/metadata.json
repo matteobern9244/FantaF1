@@ -1,0 +1,16 @@
+{
+  "id": "sync_branch_rules_20260319",
+  "track_id": "sync_branch_rules_20260319",
+  "slug": "sync_branch_rules_20260319",
+  "title": "Verificare le rules su github per il branch 'main', NON FARE NESSUNA MODIFICA alle rules di eper 'main' ma applicarle anche al branch 'staging'",
+  "status": "completed",
+  "phase": "completed",
+  "createdAt": "2026-03-19T10:00:00Z",
+  "updatedAt": "2026-03-19T10:00:00Z",
+  "archivedAt": "2026-03-19T10:00:00Z",
+  "path": "conductor/archive/sync_branch_rules_20260319",
+  "relatedTrackIds": [],
+  "activeTask": null,
+  "type": "chore",
+  "description": "Verificare le rules su github per il branch 'main', NON FARE NESSUNA MODIFICA alle rules di eper 'main' ma applicarle anche al branch 'staging'"
+}

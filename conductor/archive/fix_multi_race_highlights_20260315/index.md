@@ -1,8 +1,7 @@
-# Track: Fix Multi Race Highlights
+# Track fix_multi_race_highlights_20260315 Context
 
-- ID: `fix_multi_race_highlights_20260315`
-- Title: `Fix Multi Race Highlights`
-- Status: `in_progress`
-- Phase: `implementation`
-- Active task: `Fix highlights lookup for all finished races and align the unavailable CTA copy.`
-
+- [Specification](./spec.md)
+- [Implementation Plan](./plan.md)
+- [Metadata](./metadata.json)
+- [Review](./review.md)
+- [Verification](./verify.md)

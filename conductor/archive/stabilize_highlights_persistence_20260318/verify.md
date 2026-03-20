@@ -24,13 +24,16 @@
   - Result: `44` files passed, `297` tests passed
 - `npm run test:csharp-coverage`
   - Status: passed
-  - Result: official summary `3052/3052` lines, `1721/1721` branches, `502/502` methods
+  - Result: official summary `3052/3052` lines, `1721/1721` branches, `502/502`
+    methods
 - `npm run test:ui-responsive`
   - Status: passed
-  - Result: responsive checks passed across mobile, tablet, laptop, desktop, and desktop-xl viewports
+  - Result: responsive checks passed across mobile, tablet, laptop, desktop, and
+    desktop-xl viewports
 - `npm run preview -- --host 127.0.0.1 --port 4173`
   - Status: passed
-  - Result: preview server served `http://127.0.0.1:4173/` successfully and was then stopped cleanly
+  - Result: preview server served `http://127.0.0.1:4173/` successfully and was
+    then stopped cleanly
 
 ## Outcome
 
