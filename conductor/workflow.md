@@ -51,6 +51,11 @@ Per ogni task, l'agente deve:
   supportata.
 - **Smoke Test:** Utilizzare `npm run test:save-local` per verificare
   l'integrità della persistenza.
+- **Deploy Staging:** Il comando `deploya-staging` avvia il protocollo a 23
+  punti per il merge da `develop` a `staging`.
+- **Deploy Produzione:** Il comando `deploya` avvia il protocollo a 23 punti
+  per il merge da `staging` a `main`.
+
 
 ## 4. Gestione Git e Commit
 
@@ -64,17 +69,18 @@ Per ogni task, l'agente deve:
   devono passare tramite Pull Request, approvazione e superamento dei controlli
   CI.
 
-## 5. Protocollo di Deployment ("deploya")
+## 5. Protocollo di Deployment ("deploya" e "deploya-staging")
 
-Quando l'utente autorizza esplicitamente il deploy (comando `deploya`), seguire
-questa sequenza:
+Quando l'utente autorizza esplicitamente il deploy (comandi `deploya` o
+`deploya-staging`), seguire questa sequenza:
 
 1.  Verifica stato repository (nessun file non stageato).
 2.  Incremento versione applicativa.
 3.  Aggiornamento `README.md` e `CHANGELOG.md`.
 4.  Esecuzione completa di test, lint, build e validazione UI.
 5.  Commit e Push su branch di lavoro.
-6.  Creazione Pull Request verso `main` con auto-merge abilitato.
+6.  Creazione Pull Request verso il branch target (`main` o `staging`) con
+    auto-merge abilitato.
 7.  Creazione Tag e GitHub Release solo dopo il merge avvenuto con successo.
 
 ## 6. Sicurezza e Privacy

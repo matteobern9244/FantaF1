@@ -22,6 +22,18 @@ this repository.
 
 ## Archived Tracks
 
+## deploya_staging_20260319 - Implement 'deploya-staging' command and skill
+- Status: `completed`
+- Phase: `completed`
+- Active task: `Track fully complete.`
+- Path: `conductor/tracks/deploya_staging_20260319`
+
+## sync_branch_rules_20260319 - Synchronize branch protection rules from main to staging
+- Status: `completed`
+- Phase: `completed`
+- Active task: `Track fully complete.`
+- Path: `conductor/tracks/sync_branch_rules_20260319`
+
 ## protect_staging_branch_20260318 - proteggere il branch 'staging' a livello di github in modo identico a come è protetto il branch 'main'
 
 - Status: `archived`

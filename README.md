@@ -46,9 +46,13 @@ divergenze funzionali.
 
 - `staging` e' il branch candidato di certificazione e il branch sorgente atteso
   per l'ambiente Render di staging. E' un **branch protetto** con regole
-  identiche a `main` (richiede PR, approvazione e superamento dei controlli CI).
+  identiche a `main`: richiede Pull Request, approvazione, superamento dei
+  controlli CI (`lint`, `build`, `responsive-dev`, `smoke-ci-db`), risoluzione
+  delle conversazioni ed esecuzione dei controlli anche per gli amministratori.
 - `main` resta il branch protetto di release e il target finale del flusso di
   deploy.
+- Il flusso di certificazione verso staging parte dal branch `develop` ed e'
+  automatizzato dal comando `deploya-staging`.
 - Il rename operativo da `develop` a `staging` richiede anche il riallineamento
   fuori repo della configurazione Render, delle branch protection e di eventuali
   automazioni GitHub/Render che puntavano al vecchio nome branch.

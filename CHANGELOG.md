@@ -4,6 +4,16 @@ Cronologia sintetica delle release documentate del progetto Fanta Formula 1.
 
 ## [Unreleased]
 
+- **Sincronizzazione Regole di Protezione Branch (main -> staging)**: replicate
+  le GitHub branch protection rules del branch `main` sul branch `staging`
+  tramite GitHub API; entrambi i branch ora richiedono Pull Request, superamento
+  dei controlli CI (`lint`, `build`, `responsive-dev`, `smoke-ci-db`),
+  risoluzione delle conversazioni ed esecuzione dei controlli da parte degli
+  amministratori, garantendo la parità di governance tra produzione e staging.
+- **Aggiornamento Documentazione di Governance**: `README.md` riflette ora in
+  modo esplicito che `staging` e `main` condividono le stesse regole di
+  protezione branch, consolidando il ruolo di `staging` come branch di
+  certificazione ad alta integrità.
 - **Refactoring Architetturale dei Repository Backend**: introdotta la classe
   base generica `MongoRepository<TEntity, TId>` e l'interfaccia
   `IRepository<TEntity, TId>` in Application layer; tutti i repository di

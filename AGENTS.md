@@ -489,17 +489,26 @@ current working branch is `staging`. If `main` intentionally still points to a
 legacy or cutover-pending structure, stop immediately and report that `deploya`
 is not currently activatable.
 
+If the user writes exactly `deploya-staging`, treat that as explicit
+authorization to run the 23-point staging deployment workflow. Before starting,
+verify that the current branch is `develop` and the target is `staging`. This
+flow follows the same 23 points as `deploya`, adapted for the `staging`
+certification environment.
+
 1. Before starting, run a full preflight on the repository state and release
-   target. Verify there are no unstaged files, `main` is aligned with the stack
-   intended for release, the current branch is exactly `staging`, the branch is
-   synced with its remote, required `git` and `gh` authentication are available,
-   the required runtime/toolchain versions are present, the minimum required
+   target. Verify there are no unstaged files, the target branch (`main` for
+   `deploya`, `staging` for `deploya-staging`) is aligned with the stack
+   intended for release/certification, the current branch is correct (`staging`
+   for `deploya`, `develop` for `deploya-staging`), the branch is synced with
+   its remote, required `git` and `gh` authentication are available, the
+   required runtime/toolchain versions are present, the minimum required
    environment variables and deploy secrets exist, and the release target is
    still valid. If any of these checks fail, stop immediately and do not
    proceed.
 2. Run a dry-run summary before any mutating action. Show the computed next
    version, the files expected to change, the validations that will run, the
-   Pull Request target, and any tag/release names that would be created. Do not
+   Pull Request target (`main` for `deploya`, `staging` for
+   `deploya-staging`), and any tag/release names that would be created. Do not
    commit, push, tag, or release during the dry-run phase.
 3. Determine the correct next application version and bump it consistently
    across the repository wherever needed.
@@ -534,21 +543,23 @@ is not currently activatable.
     performed.
 11. Commit all required changes.
 12. Push the current working branch to its remote branch.
-13. Create or update a Pull Request from `staging` into `main`.
+13. Create or update a Pull Request from the source branch into the target
+    branch (`staging -> main` for `deploya`, `develop -> staging` for
+    `deploya-staging`).
 14. Verify that the Pull Request configuration is correct before enabling merge
     automation. Confirm the title, body, labels, base branch, head branch,
     reviewers, assignees, and release metadata are accurate and complete.
 15. Enable auto-merge on that Pull Request using the repository's configured
-    merge method, without bypassing branch protection on `main`.
+    merge method, without bypassing branch protection on the target branch.
 16. Wait until the Pull Request is either merged by GitHub after all required
     checks pass or remains open because at least one required check failed or
     stayed pending.
-17. If the Pull Request is not merged successfully into `main`, stop
+17. If the Pull Request is not merged successfully into the target branch, stop
     immediately, do not create tags or releases, and report the exact blocking
     state.
-18. After GitHub has merged the Pull Request into `main`, verify that the merged
-    commit on `main` is the expected release commit and that the repository
-    state still matches the validated release candidate.
+18. After GitHub has merged the Pull Request into the target branch, verify that
+    the merged commit on the target branch is the expected release commit and
+    that the repository state still matches the validated release candidate.
 19. Create a tag on `main` that matches the new version.
 20. Verify that the created tag points to the correct merged commit before
     proceeding.
@@ -560,16 +571,17 @@ is not currently activatable.
     state.
 23. Return to the original branch from which the deployment workflow started.
 
-Failure policy for `deploya`:
+Failure policy for `deploya` and `deploya-staging`:
 
 - stop immediately if any critical step fails
-- do not proceed if the current branch is not `staging`
+- do not proceed if the current branch is not `staging` (for `deploya`) or
+  `develop` (for `deploya-staging`)
 - do not proceed if preflight, dry-run, version-diff, changelog-quality,
   workflow-validation, or post-merge verification checks fail
 - do not bypass Pull Request requirements, required checks, or branch protection
-  on `main`
-- do not create tags unless GitHub completed the merge to `main` successfully
-  through the protected Pull Request flow
+  on the target branch (`main` or `staging`)
+- do not create tags unless GitHub completed the merge to the target branch
+  successfully through the protected Pull Request flow
 - do not create a GitHub Release unless the tag was created successfully and all
   previous steps completed successfully
 

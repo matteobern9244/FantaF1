@@ -24,6 +24,8 @@ specialized instructions:
   baseline.
 - `activate_skill("fantaf1-deploy")`: To execute the 23-point deployment
   protocol ("deploya").
+- `activate_skill("fantaf1_deploy_staging")`: To execute the 23-point staging
+  deployment protocol ("deploya-staging").
 - `activate_skill("fantaf1-browser-verification")`: To perform UI and responsive
   checks ("check viste").
 - `activate_skill("markdown-formatter")`: To ensure documentation quality and
