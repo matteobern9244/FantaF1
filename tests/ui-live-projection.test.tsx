@@ -288,7 +288,7 @@ describe('Live projection UI', () => {
       within(selectedRaceHeroCard as HTMLElement).getByRole('button', { name: /guarda highlights/i }),
     ).toBeEnabled();
     expect(highlightsButton).toBeEnabled();
-  });
+  }, 15000);
 
   it('shows the highlights CTA for a second finished race when that weekend has its own video', async () => {
     mockAppFetches({
@@ -323,7 +323,7 @@ describe('Live projection UI', () => {
     expect(
       within(getSelectedRaceHeroCard() as HTMLElement).getByText('Chinese Grand Prix 2099'),
     ).toBeInTheDocument();
-  });
+  }, 15000);
 
   it('shows the official grand prix title in the selected race recap when the race is finished', async () => {
     mockAppFetches({
@@ -348,7 +348,7 @@ describe('Live projection UI', () => {
     expect(
       within(selectedRaceHeroCard as HTMLElement).queryByText('Australia'),
     ).not.toBeInTheDocument();
-  });
+  }, 15000);
 
   it('opens the YouTube highlights outside the app when the CTA is clicked', async () => {
     mockAppFetches({

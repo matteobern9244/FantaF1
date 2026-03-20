@@ -448,7 +448,8 @@ impedire mutazioni dei database condivisi.
 
 ### Launcher canonico
 
-- [start_fantaf1.command](/Users/matteobernardini/code/FantaF1/start_fantaf1.command)
+- [start_fantaf1.command](/Users/matteobernardini/code/FantaF1/start_fantaf1.command) (macOS/Linux)
+- [start_fantaf1.bat](/Users/matteobernardini/code/FantaF1/start_fantaf1.bat) (Windows)
 
 Quando un task richiede di `avviare l'app`, questo e' il solo entrypoint
 canonico. Il launcher esegue una serie di controlli pre-volo obbligatori:
@@ -606,17 +607,17 @@ e devono continuare a parsare correttamente come YAML.
 
 Baseline verificata corrente sullo scope ufficiale frontend/repository:
 
-- `5212 / 5212` statements
-- `412 / 412` functions
-- `2114 / 2114` branches
-- `5212 / 5212` lines
+- `5489 / 5489` statements
+- `737 / 737` functions
+- `2826 / 2826` branches
+- `5489 / 5489` lines
 
 Baseline verificata corrente su `backend-csharp/src/`:
 
-- `3052 / 3052` lines
-- `1721 / 1721` branches
-- `502 / 502` methods
-- `70` file inclusi
+- `3088 / 3088` lines
+- `1731 / 1731` branches
+- `528 / 528` methods
+- `71` file inclusi
 
 Le soglie repository restano a `100%` su statements, branches, functions e
 lines.

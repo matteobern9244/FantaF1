@@ -1,0 +1,16 @@
+{
+  "id": "windows_startup_script_20260319",
+  "track_id": "windows_startup_script_20260319",
+  "slug": "windows_startup_script_20260319",
+  "title": "Creare un file start_fantaf1.bat che deve essere equivalente al file start_fantaf1.command",
+  "status": "in_progress",
+  "phase": "implementation",
+  "createdAt": "2026-03-19T10:00:00Z",
+  "updatedAt": "2026-03-19T10:00:00Z",
+  "archivedAt": null,
+  "path": "conductor/tracks/windows_startup_script_20260319",
+  "relatedTrackIds": [],
+  "activeTask": "Implementing start_fantaf1.bat",
+  "type": "feature",
+  "description": "Creare un file start_fantaf1.bat che deve essere equivalente al file start_fantaf1.command"
+}

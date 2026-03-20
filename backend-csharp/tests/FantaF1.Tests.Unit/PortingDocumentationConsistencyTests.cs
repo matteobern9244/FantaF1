@@ -126,20 +126,20 @@ public sealed class PortingDocumentationConsistencyTests
         var readme = StripAllWhitespace(ReadRepositoryFile("README.md"));
         var agents = StripAllWhitespace(ReadRepositoryFile("AGENTS.md"));
 
-        Assert.Contains("5212/5212statements", readme, StringComparison.Ordinal);
-        Assert.Contains("412/412functions", readme, StringComparison.Ordinal);
-        Assert.Contains("2114/2114branches", readme, StringComparison.Ordinal);
-        Assert.Contains("5212/5212lines", readme, StringComparison.Ordinal);
+        Assert.Contains("-`5489/5489`statements", readme, StringComparison.Ordinal);
+        Assert.Contains("-`737/737`functions", readme, StringComparison.Ordinal);
+        Assert.Contains("-`2826/2826`branches", readme, StringComparison.Ordinal);
+        Assert.Contains("-`5489/5489`lines", readme, StringComparison.Ordinal);
         Assert.Contains(
-            StripAllWhitespace("**100% statements (5212 / 5212)**, **100% functions (412 / 412)**, **100% branches (2114 / 2114)**, and **100% lines (5212 / 5212)**"),
+            StripAllWhitespace("**100% statements (5489 / 5489)**, **100% functions (737 / 737)**, **100% branches (2826 / 2826)**, and **100% lines (5489 / 5489)**"),
             agents,
             StringComparison.Ordinal);
-        Assert.Contains("2994/2994lines", readme, StringComparison.Ordinal);
-        Assert.Contains("1671/1671branches", readme, StringComparison.Ordinal);
-        Assert.Contains("494/494methods", readme, StringComparison.Ordinal);
-        Assert.Contains(StripAllWhitespace("**100% line coverage (2994 / 2994)**"), agents, StringComparison.Ordinal);
-        Assert.Contains(StripAllWhitespace("**100% branch coverage (1671 / 1671)**"), agents, StringComparison.Ordinal);
-        Assert.Contains(StripAllWhitespace("**100% method coverage (494 / 494)**"), agents, StringComparison.Ordinal);
+        Assert.Contains("-`3088/3088`lines", readme, StringComparison.Ordinal);
+        Assert.Contains("-`1731/1731`branches", readme, StringComparison.Ordinal);
+        Assert.Contains("-`528/528`methods", readme, StringComparison.Ordinal);
+        Assert.Contains(StripAllWhitespace("**100% line coverage (3088 / 3088)**"), agents, StringComparison.Ordinal);
+        Assert.Contains(StripAllWhitespace("**100% branch coverage (1731 / 1731)**"), agents, StringComparison.Ordinal);
+        Assert.Contains(StripAllWhitespace("**100% method coverage (528 / 528)**"), agents, StringComparison.Ordinal);
     }
 
     [Fact]

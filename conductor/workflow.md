@@ -43,8 +43,8 @@ Per ogni task, l'agente deve:
 
 ## 5. Comandi e Strumenti Canonici
 
-- **Avvio App:** Utilizzare sempre `./start_fantaf1.command` (non
-  `npm run start:local`).
+- **Avvio App:** Utilizzare sempre `./start_fantaf1.command` (o
+  `start_fantaf1.bat` su Windows).
 - **Verifica UI:** Il comando `check viste` esegue `npm run test:ui-responsive`
   per validare i breakpoint desktop/mobile.
 - **Backend C#:** C# (.NET 10) è l'implementazione autoritativa e l'unica

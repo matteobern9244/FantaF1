@@ -4,6 +4,10 @@ Cronologia sintetica delle release documentate del progetto Fanta Formula 1.
 
 ## [Unreleased]
 
+- **Automazione Deploy Staging (deploya-staging)**: introdotto il nuovo comando
+  operativo e la relativa skill Gemini `fantaf1_deploy_staging` per gestire il
+  flusso di rilascio `develop -> staging`, integrando il protocollo a 23 punti
+  per la certificazione dell'ambiente di staging.
 - **Sincronizzazione Regole di Protezione Branch (main -> staging)**: replicate
   le GitHub branch protection rules del branch `main` sul branch `staging`
   tramite GitHub API; entrambi i branch ora richiedono Pull Request, superamento
@@ -14,6 +18,22 @@ Cronologia sintetica delle release documentate del progetto Fanta Formula 1.
   modo esplicito che `staging` e `main` condividono le stesse regole di
   protezione branch, consolidando il ruolo di `staging` come branch di
   certificazione ad alta integrità.
+- **Supporto Nativo per Windows (start_fantaf1.bat)**: introdotto lo script
+  Batch equivalente al comando macOS/Linux per l'avvio completo e monitorato
+  dell'applicazione su Windows, inclusi i pre-volo di connettivita' database e
+  build automatica.
+- **TDD Regressivo sui Launcher Locali**: aggiunti test di parita' per garantire
+  che i launcher macOS e Windows eseguano la stessa sequenza di validazione e
+  utilizzino le stesse variabili d'ambiente core.
+- **Ripristino Certificazione Coverage 100% Full-Stack**: completata la copertura
+  dei nuovi repository MongoDB e dei mapping protetti nel backend C# tramite
+  unit test mirati; riallineate le baseline documentali in `AGENTS.md` e
+  `README.md` ai valori reali verificati (5489 lines repository-wide, 3088 lines
+  backend-only).
+- **Hardening Workspace Conductor**: completata l'archiviazione massiva di tutti
+  i piani operativi e dei track completati, con riallineamento degli indici
+  `conductor/index.md` e `conductor/tracks.md` per riflettere lo stato pulito
+  del workspace.
 - **Refactoring Architetturale dei Repository Backend**: introdotta la classe
   base generica `MongoRepository<TEntity, TId>` e l'interfaccia
   `IRepository<TEntity, TId>` in Application layer; tutti i repository di

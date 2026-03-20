@@ -5,34 +5,41 @@ this repository.
 
 ## Active Tracks
 
+No active tracks currently registered.
+
+## Archived Tracks
+
 ## streamline_core_docs_20260318 - Streamline core documentation (GEMINI.md & AGENTS.md)
 
-- Status: `new`
-- Phase: `new`
-- Active task: `New track created.`
-- Path: `conductor/tracks/streamline_core_docs_20260318`
+- Status: `archived`
+- Phase: `archived`
+- Active task: Archived
+- Path: `conductor/archive/streamline_core_docs_20260318`
 
 ## stabilize_highlights_persistence_20260318 - Persistenza Definitiva Highlights Per Gara
 
+- Status: `archived`
+- Phase: `archived`
+- Active task: Archived
+- Path: `conductor/archive/stabilize_highlights_persistence_20260318`
+
+## windows_startup_script_20260319 - Create Windows startup script (start_fantaf1.bat)
 - Status: `completed`
 - Phase: `completed`
-- Active task:
-  `Implementation, coverage, responsive verification, and production-like preview checks completed without commit or push.`
-- Path: `conductor/tracks/stabilize_highlights_persistence_20260318`
-
-## Archived Tracks
+- Active task: `Track fully complete.`
+- Path: `conductor/archive/windows_startup_script_20260319`
 
 ## deploya_staging_20260319 - Implement 'deploya-staging' command and skill
 - Status: `completed`
 - Phase: `completed`
 - Active task: `Track fully complete.`
-- Path: `conductor/tracks/deploya_staging_20260319`
+- Path: `conductor/archive/deploya_staging_20260319`
 
 ## sync_branch_rules_20260319 - Synchronize branch protection rules from main to staging
 - Status: `completed`
 - Phase: `completed`
 - Active task: `Track fully complete.`
-- Path: `conductor/tracks/sync_branch_rules_20260319`
+- Path: `conductor/archive/sync_branch_rules_20260319`
 
 ## protect_staging_branch_20260318 - proteggere il branch 'staging' a livello di github in modo identico a come è protetto il branch 'main'
 

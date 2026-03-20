@@ -8,8 +8,9 @@ No active tracks currently registered.
 
 ## Archived Tracks
 
-- `deploya_staging_20260319` | Implementare un comando 'deploya-staging' e una skill 'fantaf1_deploy_staging' per automatizzare il deploy verso 'staging' partendo da 'develop'. | `completed` | phase `completed` | Track fully complete. | `conductor/tracks/deploya_staging_20260319/`
-- `sync_branch_rules_20260319` | Verificare le rules su github per il branch 'main', NON FARE NESSUNA MODIFICA alle rules di eper 'main' ma applicarle anche al branch 'staging' | `completed` | phase `completed` | Track fully complete. | `conductor/tracks/sync_branch_rules_20260319/`
+- `windows_startup_script_20260319` | Creare un file start_fantaf1.bat che deve essere equivalente al file start_fantaf1.command | `completed` | phase `completed` | Track fully complete. | `conductor/archive/windows_startup_script_20260319/`
+- `deploya_staging_20260319` | Implementare un comando 'deploya-staging' e una skill 'fantaf1_deploy_staging' per automatizzare il deploy verso 'staging' partendo da 'develop'. | `completed` | phase `completed` | Track fully complete. | `conductor/archive/deploya_staging_20260319/`
+- `sync_branch_rules_20260319` | Verificare le rules su github per il branch 'main', NON FARE NESSUNA MODIFICA alle rules di eper 'main' ma applicarle anche al branch 'staging' | `completed` | phase `completed` | Track fully complete. | `conductor/archive/sync_branch_rules_20260319/`
 - `streamline_core_docs_20260318` | Streamline core documentation (GEMINI.md &
   AGENTS.md) | `archived` | phase `archived` | Archived |
   `conductor/archive/streamline_core_docs_20260318`

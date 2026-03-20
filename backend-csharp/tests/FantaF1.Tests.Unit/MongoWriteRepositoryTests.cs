@@ -287,6 +287,75 @@ public sealed class MongoWriteRepositoryTests
         Assert.Equal(string.Empty, harness.RenderedUpdate["$set"]["highlightsLookupSource"].AsString);
     }
 
+    [Fact]
+    public async Task Mongo_app_data_repository_add_calls_write()
+    {
+        var harness = CreateDatabase(new Dictionary<string, IReadOnlyList<BsonDocument>>
+        {
+            [MongoCollectionNames.AppDatas] = [],
+        });
+        var repository = new MongoAppDataRepository(
+            harness.Database,
+            new MongoLegacyReadDocumentMapper(),
+            new MongoLegacyWriteDocumentMapper(),
+            new ParticipantRosterValidator(),
+            new StaticClock(new DateTimeOffset(2026, 03, 12, 09, 30, 00, TimeSpan.Zero)));
+
+        await repository.AddAsync(
+            new AppDataDocument([], [], string.Empty, new PredictionDocument("", "", "", ""), string.Empty, null),
+            CancellationToken.None);
+
+        Assert.NotNull(harness.ReplacedDocument);
+    }
+
+    [Fact]
+    public async Task Mongo_app_data_repository_update_calls_write()
+    {
+        var harness = CreateDatabase(new Dictionary<string, IReadOnlyList<BsonDocument>>
+        {
+            [MongoCollectionNames.AppDatas] = [new BsonDocument { ["_id"] = 1, ["createdAt"] = DateTime.UtcNow }],
+        });
+        var repository = new MongoAppDataRepository(
+            harness.Database,
+            new MongoLegacyReadDocumentMapper(),
+            new MongoLegacyWriteDocumentMapper(),
+            new ParticipantRosterValidator(),
+            new StaticClock(new DateTimeOffset(2026, 03, 12, 09, 30, 00, TimeSpan.Zero)));
+
+        await repository.UpdateAsync(
+            new AppDataDocument([], [], string.Empty, new PredictionDocument("", "", "", ""), string.Empty, null),
+            CancellationToken.None);
+
+        Assert.NotNull(harness.ReplacedDocument);
+    }
+
+    [Fact]
+    public async Task Mongo_app_data_repository_get_by_id_reads_latest()
+    {
+        var harness = CreateDatabase(new Dictionary<string, IReadOnlyList<BsonDocument>>
+        {
+            [MongoCollectionNames.AppDatas] =
+            [
+                new BsonDocument
+                {
+                    ["createdAt"] = new BsonDateTime(new DateTime(2026, 03, 12, 00, 00, 00, DateTimeKind.Utc)),
+                    ["gpName"] = "Target GP",
+                },
+            ],
+        });
+        var repository = new MongoAppDataRepository(
+            harness.Database,
+            new MongoLegacyReadDocumentMapper(),
+            new MongoLegacyWriteDocumentMapper(),
+            new ParticipantRosterValidator(),
+            new StaticClock(new DateTimeOffset(2026, 03, 12, 09, 30, 00, TimeSpan.Zero)));
+
+        var result = await repository.GetByIdAsync("any", CancellationToken.None);
+
+        Assert.NotNull(result);
+        Assert.Equal("Target GP", result!.GpName);
+    }
+
     private static MongoDatabaseHarness CreateDatabase(IReadOnlyDictionary<string, IReadOnlyList<BsonDocument>> documentsByCollection)
     {
         var requestedCollectionNames = new List<string>();

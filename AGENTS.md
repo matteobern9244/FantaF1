@@ -390,12 +390,12 @@ the repository. Where applicable this includes:
   Testing Library.
 - Coverage provider: V8 (Frontend), coverlet (Backend).
 - Current verified merged baseline for the configured official application-code
-  scope is **100% statements (5212 / 5212)**, **100% functions (412 / 412)**,
-  **100% branches (2114 / 2114)**, and **100% lines (5212 / 5212)**, aligned
+  scope is **100% statements (5489 / 5489)**, **100% functions (737 / 737)**,
+  **100% branches (2826 / 2826)**, and **100% lines (5489 / 5489)**, aligned
   with the thresholds currently documented in `README.md`.
 - Official backend-csharp application coverage on `backend-csharp/src/` is
-  **100% line coverage (3052 / 3052)**, **100% branch coverage (1721 / 1721)**,
-  and **100% method coverage (502 / 502)** across **70 included files**, as
+  **100% line coverage (3088 / 3088)**, **100% branch coverage (1731 / 1731)**,
+  and **100% method coverage (528 / 528)** across **71 included files**, as
   reported by `npm run test:csharp-coverage`.
 - Whenever a task produces a new verified merged Release coverage result, update
   this baseline in `AGENTS.md` to the new numbers.
