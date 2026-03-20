@@ -4,6 +4,8 @@ Cronologia sintetica delle release documentate del progetto Fanta Formula 1.
 
 ## [Unreleased]
 
+## [1.6.2] - 2026-03-21
+
 - **Menu `Analisi` Riallineato su Menu e Dashboard**: la navigazione pubblica e
   admin raggruppa ora sotto `Analisi` le tre voci `Stagione attuale`,
   `Deep-dive KPI dashboard` e `User KPI Dashboard`; la precedente label

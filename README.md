@@ -11,7 +11,7 @@ Atlas.
 - Il runtime locale, Docker, staging Render e CI/CD sono allineati al backend
   C#.
 - Il branch `staging` e' il branch di certificazione corrente.
-- La release candidata corrente del branch `staging` e' `1.6.1`.
+- La release candidata corrente del branch `staging` e' `1.6.2`.
 - `main` resta il target di rilascio protetto e va aggiornato solo dopo cutover
   esplicito.
 - La documentazione operativa canonica del repository vive in questo file; la
