@@ -20,11 +20,17 @@ describe('CI/CD workflow contract', () => {
 
   it('keeps README aligned with the actual workflow inventory and deploy triggers', () => {
     const readme = readRepositoryFile('README.md').replace(/\s+/g, ' ');
+    const agents = readRepositoryFile('AGENTS.md').replace(/\s+/g, ' ');
 
     expect(readme).toContain('`deploya-staging`');
     expect(readme).toContain('`develop -> staging`');
     expect(readme).toContain('`deploya`');
     expect(readme).toContain('`staging -> main`');
+    expect(readme).toContain('`matteobern9244` come assignee');
+    expect(readme).toContain('label aderenti alle modifiche reali');
+    expect(agents).toContain('The Pull Request body must be idonea');
+    expect(agents).toContain('`matteobern9244` must be assigned as assignee');
+    expect(agents).toContain('Pull Request labels must reflect the work actually performed');
     expect(readme).not.toContain('workflow aggiuntivi `gemini-*`');
   });
 });

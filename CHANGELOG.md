@@ -4,6 +4,12 @@ Cronologia sintetica delle release documentate del progetto Fanta Formula 1.
 
 ## [Unreleased]
 
+- **Policy PR Rafforzata per `deploya` e `deploya-staging`**: i trigger di
+  deploy richiedono ora esplicitamente una descrizione PR idonea e coerente con
+  il lavoro svolto, `matteobern9244` come assignee e label aderenti alle
+  modifiche effettivamente consegnate; la regola e' stata resa persistente in
+  `AGENTS.md` e riallineata nel `README.md`.
+
 ## [1.6.2] - 2026-03-21
 
 - **Menu `Analisi` Riallineato su Menu e Dashboard**: la navigazione pubblica e

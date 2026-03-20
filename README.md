@@ -667,10 +667,14 @@ Healthcheck post-merge:
 Trigger operativi documentati:
 
 - `deploya-staging`: valido solo dal branch corrente `develop`, crea/aggiorna la
-  PR `develop -> staging` e dipende dai gate `pr-ci`, `pr-auto-merge` e dal
-  healthcheck post-merge dello staging
+  PR `develop -> staging`, richiede una descrizione idonea e coerente con il
+  lavoro svolto, `matteobern9244` come assignee e label aderenti alle modifiche
+  reali, e dipende dai gate `pr-ci`, `pr-auto-merge` e dal healthcheck
+  post-merge dello staging
 - `deploya`: valido solo dal branch corrente `staging`, crea/aggiorna la PR
-  `staging -> main` e dipende dagli stessi gate verso produzione
+  `staging -> main`, richiede una descrizione idonea e coerente con il lavoro
+  svolto, `matteobern9244` come assignee e label aderenti alle modifiche reali,
+  e dipende dagli stessi gate verso produzione
 - entrambi i trigger restano invalidi se il workspace non e' pulito, se il
   branch non e' quello atteso o se i secret/controlli richiesti non sono
   disponibili
