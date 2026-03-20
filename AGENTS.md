@@ -394,8 +394,8 @@ the repository. Where applicable this includes:
   **100% branches (2826 / 2826)**, and **100% lines (5489 / 5489)**, aligned
   with the thresholds currently documented in `README.md`.
 - Official backend-csharp application coverage on `backend-csharp/src/` is
-  **100% line coverage (3088 / 3088)**, **100% branch coverage (1731 / 1731)**,
-  and **100% method coverage (528 / 528)** across **71 included files**, as
+  **100% line coverage (3194 / 3194)**, **100% branch coverage (1793 / 1793)**,
+  and **100% method coverage (539 / 539)** across **71 included files**, as
   reported by `npm run test:csharp-coverage`.
 - Whenever a task produces a new verified merged Release coverage result, update
   this baseline in `AGENTS.md` to the new numbers.

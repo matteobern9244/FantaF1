@@ -24,6 +24,10 @@ public sealed class RaceHighlightsLookupService : IRaceHighlightsLookupService
         "<entry>([\\s\\S]*?)</entry>",
         RegexOptions.IgnoreCase | RegexOptions.CultureInvariant,
         TimeSpan.FromSeconds(1));
+    private static readonly Regex PlaylistCandidatePattern = new(
+        "\"playlistRenderer\"\\s*:\\s*\\{[\\s\\S]*?\"title\"\\s*:\\s*\\{\\s*\"simpleText\"\\s*:\\s*\"([^\"]+)\"[\\s\\S]*?\"videoId\"\\s*:\\s*\"([A-Za-z0-9_-]{6,})\"",
+        RegexOptions.IgnoreCase | RegexOptions.CultureInvariant,
+        TimeSpan.FromSeconds(1));
 
     private readonly HttpClient _httpClient;
     private readonly IClock _clock;
@@ -49,15 +53,24 @@ public sealed class RaceHighlightsLookupService : IRaceHighlightsLookupService
         ArgumentNullException.ThrowIfNull(race);
 
         var now = _clock.UtcNow;
+        var seasonYear = DeriveSeasonYear(race, _clock.UtcNow.Year);
         var feedCandidates = await LoadFeedCandidatesAsync(cancellationToken);
-        var feedCandidate = await ValidateCandidatesInOrderAsync(feedCandidates, race, cancellationToken);
+        var feedCandidate = await ValidateCandidatesInOrderAsync(feedCandidates, race, seasonYear, cancellationToken);
         if (feedCandidate is not null)
         {
             return _lookupPolicy.BuildLookupResult(now, feedCandidate.VideoUrl, "found", "feed");
         }
 
+        var playlistCandidates = await LoadPlaylistCandidatesAsync(cancellationToken);
+        var playlistCandidate = await ValidateCandidatesInOrderAsync(playlistCandidates, race, seasonYear, cancellationToken);
+        if (playlistCandidate is not null)
+        {
+            return _lookupPolicy.BuildLookupResult(now, playlistCandidate.VideoUrl, "found", "playlists");
+        }
+
         var channelSearchCandidate = await ResolveMarkupSearchCandidateAsync(
             race,
+            seasonYear,
             OfficialResultsReferenceData.HighlightsChannelSearchBaseUrl,
             "channel-search",
             "Sky Sport F1",
@@ -70,6 +83,7 @@ public sealed class RaceHighlightsLookupService : IRaceHighlightsLookupService
 
         var globalSearchCandidate = await ResolveMarkupSearchCandidateAsync(
             race,
+            seasonYear,
             OfficialResultsReferenceData.HighlightsSearchBaseUrl,
             "global-search",
             string.Empty,
@@ -78,6 +92,13 @@ public sealed class RaceHighlightsLookupService : IRaceHighlightsLookupService
         if (globalSearchCandidate is not null)
         {
             return _lookupPolicy.BuildLookupResult(now, globalSearchCandidate.VideoUrl, "found", "global-search");
+        }
+
+        var skyPageCandidates = await LoadSkyPageCandidatesAsync(cancellationToken);
+        var skyPageCandidate = await ValidateCandidatesInOrderAsync(skyPageCandidates, race, seasonYear, cancellationToken);
+        if (skyPageCandidate is not null)
+        {
+            return _lookupPolicy.BuildLookupResult(now, skyPageCandidate.VideoUrl, "found", "sky-page");
         }
 
         return _lookupPolicy.BuildLookupResult(now, string.Empty, "missing", string.Empty);
@@ -109,6 +130,68 @@ public sealed class RaceHighlightsLookupService : IRaceHighlightsLookupService
             .ToArray();
     }
 
+    private async Task<IReadOnlyList<HighlightsCandidate>> LoadPlaylistCandidatesAsync(CancellationToken cancellationToken)
+    {
+        var markup = await FetchStringOrEmptyAsync(OfficialResultsReferenceData.HighlightsChannelPlaylistsUrl, cancellationToken);
+        if (string.IsNullOrWhiteSpace(markup))
+        {
+            return [];
+        }
+
+        var jsonCandidates = ExtractJsonPlaylistRenderers(markup)
+            .Select(renderer =>
+            {
+                var videoId = NormalizeText(ReadNestedWatchEndpointVideoId(renderer) ?? string.Empty);
+                return new HighlightsCandidate(
+                    videoId,
+                    NormalizeYoutubeWatchUrl(string.IsNullOrWhiteSpace(videoId) ? string.Empty : $"/watch?v={videoId}"),
+                    ReadRendererText(renderer, "title") ?? string.Empty,
+                    OfficialResultsReferenceData.HighlightsPublisherLabel,
+                    $"https://www.youtube.com/{OfficialResultsReferenceData.HighlightsChannelHandle}",
+                    string.Empty,
+                    "playlists");
+            })
+            .Where(candidate => !string.IsNullOrWhiteSpace(candidate.VideoUrl))
+            .ToArray();
+        if (jsonCandidates.Length > 0)
+        {
+            return jsonCandidates;
+        }
+
+        return PlaylistCandidatePattern.Matches(markup)
+            .Select(match => new HighlightsCandidate(
+                match.Groups[2].Value,
+                NormalizeYoutubeWatchUrl($"/watch?v={match.Groups[2].Value}"),
+                NormalizeText(match.Groups[1].Value),
+                OfficialResultsReferenceData.HighlightsPublisherLabel,
+                $"https://www.youtube.com/{OfficialResultsReferenceData.HighlightsChannelHandle}",
+                string.Empty,
+                "playlists"))
+            .Where(candidate => !string.IsNullOrWhiteSpace(candidate.VideoUrl))
+            .ToArray();
+    }
+
+    private async Task<IReadOnlyList<HighlightsCandidate>> LoadSkyPageCandidatesAsync(CancellationToken cancellationToken)
+    {
+        var markup = await FetchStringOrEmptyAsync(OfficialResultsReferenceData.HighlightsSkyPageUrl, cancellationToken);
+        if (string.IsNullOrWhiteSpace(markup))
+        {
+            return [];
+        }
+
+        return AnchorPattern.Matches(markup)
+            .Select(match => new HighlightsCandidate(
+                string.Empty,
+                NormalizeSkyHighlightsUrl(match.Groups[1].Value),
+                NormalizeText(match.Groups[2].Value),
+                OfficialResultsReferenceData.HighlightsPublisherLabel,
+                OfficialResultsReferenceData.HighlightsSkyPageUrl,
+                string.Empty,
+                "sky-page"))
+            .Where(candidate => !string.IsNullOrWhiteSpace(candidate.VideoUrl))
+            .ToArray();
+    }
+
     private async Task<IReadOnlyList<HighlightsCandidate>> LoadMarkupCandidatesAsync(
         string url,
         string source,
@@ -125,11 +208,12 @@ public sealed class RaceHighlightsLookupService : IRaceHighlightsLookupService
     private async Task<HighlightsCandidate?> ValidateCandidatesInOrderAsync(
         IReadOnlyList<HighlightsCandidate> candidates,
         WeekendDocument race,
+        string seasonYear,
         CancellationToken cancellationToken)
     {
-        foreach (var candidate in SortCandidates(candidates, race))
+        foreach (var candidate in SortCandidates(candidates, race, seasonYear))
         {
-            var validatedCandidate = await ValidateCandidateAsync(candidate, race, cancellationToken);
+            var validatedCandidate = await ValidateCandidateAsync(candidate, race, seasonYear, cancellationToken);
             if (validatedCandidate is not null)
             {
                 return validatedCandidate;
@@ -141,13 +225,14 @@ public sealed class RaceHighlightsLookupService : IRaceHighlightsLookupService
 
     private async Task<HighlightsCandidate?> ResolveMarkupSearchCandidateAsync(
         WeekendDocument race,
+        string seasonYear,
         string baseUrl,
         string source,
         string defaultAuthorName,
         string defaultAuthorUrl,
         CancellationToken cancellationToken)
     {
-        foreach (var query in BuildSearchQueries(race))
+        foreach (var query in BuildSearchQueriesForSeason(race, seasonYear))
         {
             var candidates = await LoadMarkupCandidatesAsync(
                 $"{baseUrl}{Uri.EscapeDataString(query)}",
@@ -155,7 +240,7 @@ public sealed class RaceHighlightsLookupService : IRaceHighlightsLookupService
                 defaultAuthorName,
                 defaultAuthorUrl,
                 cancellationToken);
-            var validatedCandidate = await ValidateCandidatesInOrderAsync(candidates, race, cancellationToken);
+            var validatedCandidate = await ValidateCandidatesInOrderAsync(candidates, race, seasonYear, cancellationToken);
             if (validatedCandidate is not null)
             {
                 return validatedCandidate;
@@ -168,8 +253,16 @@ public sealed class RaceHighlightsLookupService : IRaceHighlightsLookupService
     private async Task<HighlightsCandidate?> ValidateCandidateAsync(
         HighlightsCandidate candidate,
         WeekendDocument race,
+        string seasonYear,
         CancellationToken cancellationToken)
     {
+        if (string.Equals(candidate.Source, "sky-page", StringComparison.Ordinal))
+        {
+            return double.IsFinite(BuildCandidateScore(candidate, race, seasonYear))
+                ? candidate
+                : null;
+        }
+
         var oEmbedPayload = await FetchStringOrEmptyAsync(
             $"{OfficialResultsReferenceData.HighlightsOEmbedBaseUrl}{Uri.EscapeDataString(candidate.VideoUrl)}",
             cancellationToken);
@@ -190,7 +283,7 @@ public sealed class RaceHighlightsLookupService : IRaceHighlightsLookupService
             };
 
             return IsPublisherMatch($"{validatedCandidate.AuthorName} {validatedCandidate.AuthorUrl}")
-                && double.IsFinite(BuildCandidateScore(validatedCandidate, race))
+                && double.IsFinite(BuildCandidateScore(validatedCandidate, race, seasonYear))
                 ? validatedCandidate
                 : null;
         }
@@ -247,10 +340,10 @@ public sealed class RaceHighlightsLookupService : IRaceHighlightsLookupService
             .ToArray();
     }
 
-    private IReadOnlyList<HighlightsCandidate> SortCandidates(IReadOnlyList<HighlightsCandidate> candidates, WeekendDocument race)
+    private IReadOnlyList<HighlightsCandidate> SortCandidates(IReadOnlyList<HighlightsCandidate> candidates, WeekendDocument race, string seasonYear)
     {
         return candidates
-            .Select(candidate => new RankedHighlightsCandidate(candidate, BuildCandidateScore(candidate, race)))
+            .Select(candidate => new RankedHighlightsCandidate(candidate, BuildCandidateScore(candidate, race, seasonYear)))
             .Where(candidate => double.IsFinite(candidate.Score) && candidate.Score > 0)
             .OrderByDescending(candidate => candidate.Score)
             .ThenByDescending(candidate => ParsePublishedAt(candidate.Candidate.PublishedAt))
@@ -258,14 +351,13 @@ public sealed class RaceHighlightsLookupService : IRaceHighlightsLookupService
             .ToArray();
     }
 
-    private double BuildCandidateScore(HighlightsCandidate candidate, WeekendDocument race)
+    private double BuildCandidateScore(HighlightsCandidate candidate, WeekendDocument race, string seasonYear)
     {
         var title = NormalizeLookupText(candidate.Title);
         var author = NormalizeLookupText(candidate.AuthorName);
         var authorUrl = NormalizeLookupText(candidate.AuthorUrl);
         var combinedSource = $"{title} {author} {authorUrl}";
         var raceMatchTerms = BuildRaceMatchTerms(race);
-        var seasonYear = DeriveSeasonYear(race);
         var candidateSeasonYear = ExtractSeasonYear(candidate.Title);
 
         if (string.Equals(candidate.Source, "global-search", StringComparison.Ordinal)
@@ -274,7 +366,9 @@ public sealed class RaceHighlightsLookupService : IRaceHighlightsLookupService
             return double.NegativeInfinity;
         }
 
-        if (!raceMatchTerms.Any(term => title.Contains(term, StringComparison.Ordinal)))
+        var isPlaylistCandidate = string.Equals(candidate.Source, "playlists", StringComparison.Ordinal);
+        if (!raceMatchTerms.Any(term => title.Contains(term, StringComparison.Ordinal))
+            && !(isPlaylistCandidate && HasRequiredKeyword(title)))
         {
             return double.NegativeInfinity;
         }
@@ -393,10 +487,14 @@ public sealed class RaceHighlightsLookupService : IRaceHighlightsLookupService
 
     private static IReadOnlyList<string> BuildSearchQueries(WeekendDocument race)
     {
+        return BuildSearchQueriesForSeason(race, DeriveSeasonYear(race));
+    }
+
+    private static IReadOnlyList<string> BuildSearchQueriesForSeason(WeekendDocument race, string seasonYear)
+    {
         var queries = BuildSearchTitleSeeds(race)
             .Select(titleSeed =>
             {
-                var seasonYear = DeriveSeasonYear(race);
                 return NormalizeText($"{titleSeed} {seasonYear} highlights {OfficialResultsReferenceData.HighlightsPublisherLabel}");
             })
             .Distinct(StringComparer.Ordinal)
@@ -454,6 +552,11 @@ public sealed class RaceHighlightsLookupService : IRaceHighlightsLookupService
 
     private static string DeriveSeasonYear(WeekendDocument race)
     {
+        return DeriveSeasonYear(race, DateTime.UtcNow.Year);
+    }
+
+    private static string DeriveSeasonYear(WeekendDocument race, int fallbackYear)
+    {
         var detailMatch = Regex.Match(race.DetailUrl ?? string.Empty, "/racing/(\\d{4})/", RegexOptions.IgnoreCase, TimeSpan.FromSeconds(1));
         if (detailMatch.Success)
         {
@@ -462,7 +565,7 @@ public sealed class RaceHighlightsLookupService : IRaceHighlightsLookupService
 
         return ExtractSeasonYear(race.GrandPrixTitle)
             ?? ExtractSeasonYear(race.MeetingName)
-            ?? DateTime.UtcNow.Year.ToString(CultureInfo.InvariantCulture);
+            ?? fallbackYear.ToString(CultureInfo.InvariantCulture);
     }
 
     private static string? ExtractSeasonYear(string? value)
@@ -508,7 +611,17 @@ public sealed class RaceHighlightsLookupService : IRaceHighlightsLookupService
 
     private static IEnumerable<JsonElement> ExtractJsonVideoRenderers(string rawContent)
     {
-        const string pattern = "{\"videoRenderer\":{";
+        return ExtractJsonRenderers(rawContent, "videoRenderer");
+    }
+
+    private static IEnumerable<JsonElement> ExtractJsonPlaylistRenderers(string rawContent)
+    {
+        return ExtractJsonRenderers(rawContent, "playlistRenderer");
+    }
+
+    private static IEnumerable<JsonElement> ExtractJsonRenderers(string rawContent, string rendererPropertyName)
+    {
+        var pattern = $"{{\"{rendererPropertyName}\":{{";
         var renderers = new List<JsonElement>();
 
         for (var index = 0; index < rawContent.Length; index += 1)
@@ -529,7 +642,7 @@ public sealed class RaceHighlightsLookupService : IRaceHighlightsLookupService
             try
             {
                 using var document = JsonDocument.Parse(rawContent[startIndex..(endIndex + 1)]);
-                if (document.RootElement.TryGetProperty("videoRenderer", out var renderer))
+                if (document.RootElement.TryGetProperty(rendererPropertyName, out var renderer))
                 {
                     renderers.Add(renderer.Clone());
                 }
@@ -683,6 +796,24 @@ public sealed class RaceHighlightsLookupService : IRaceHighlightsLookupService
         var shortMatch = Regex.Match(value, @"(?:https://www\.youtube\.com)?/shorts/([A-Za-z0-9_-]{6,})", RegexOptions.IgnoreCase, TimeSpan.FromSeconds(1));
         return shortMatch.Success
             ? $"https://www.youtube.com/watch?v={shortMatch.Groups[1].Value}"
+            : string.Empty;
+    }
+
+    private static string NormalizeSkyHighlightsUrl(string? href)
+    {
+        var value = (href ?? string.Empty).Trim();
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return string.Empty;
+        }
+
+        if (value.StartsWith("https://sport.sky.it/", StringComparison.Ordinal))
+        {
+            return value;
+        }
+
+        return value.StartsWith("/", StringComparison.Ordinal)
+            ? $"https://sport.sky.it{value}"
             : string.Empty;
     }
 

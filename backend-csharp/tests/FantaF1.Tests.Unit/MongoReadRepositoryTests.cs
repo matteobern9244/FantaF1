@@ -195,7 +195,7 @@ public sealed class MongoReadRepositoryTests
 
         // 4. AppData specific triggers
         await appDataRepo.ReadPersistedParticipantRosterAsync(CancellationToken.None);
-        
+
         // Trigger catch block in ReadPersistedParticipantRosterAsync
         // and also trigger the null latestDocument path
         var faultyHarness = CreateDatabase(new Dictionary<string, IReadOnlyList<BsonDocument>>());
@@ -215,7 +215,7 @@ public sealed class MongoReadRepositoryTests
 
         // 5. Weekend specific triggers
         await weekendRepo.WriteHighlightsLookupAsync("key", new HighlightsLookupDocument("url", "now", "ok", "src"), CancellationToken.None);
-        
+
         // Driver specific WriteAllAsync triggers
         await driverRepo.WriteAllAsync([], CancellationToken.None);
         await driverRepo.WriteAllAsync([driver], CancellationToken.None);

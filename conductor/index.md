@@ -5,7 +5,12 @@ this repository.
 
 ## Active Tracks
 
-No active tracks currently registered.
+## persistent_race_highlights_backfill_utc_hardening_20260320 - Persistenza definitiva highlights per gara con backfill ufficiale F1, matching Sky/YouTube e hardening UTC su Render
+
+- Status: `completed`
+- Phase: `completed`
+- Active task: Track fully complete.
+- Path: `conductor/tracks/persistent_race_highlights_backfill_utc_hardening_20260320`
 
 ## Archived Tracks
 

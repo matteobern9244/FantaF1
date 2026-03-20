@@ -288,6 +288,103 @@ public sealed class MongoWriteRepositoryTests
     }
 
     [Fact]
+    public async Task Mongo_weekend_repository_does_not_remove_persisted_found_highlights_when_a_new_lookup_is_missing()
+    {
+        var harness = CreateDatabase(new Dictionary<string, IReadOnlyList<BsonDocument>>
+        {
+            [MongoCollectionNames.Weekends] =
+            [
+                new BsonDocument
+                {
+                    ["meetingKey"] = "race-1",
+                    ["roundNumber"] = 1,
+                    ["highlightsVideoUrl"] = "https://www.youtube.com/watch?v=persisted-found",
+                    ["highlightsLookupCheckedAt"] = "2026-03-01T15:00:00.000Z",
+                    ["highlightsLookupStatus"] = "found",
+                    ["highlightsLookupSource"] = "feed",
+                },
+            ],
+        });
+        var repository = new MongoWeekendRepository(harness.Database, new MongoLegacyReadDocumentMapper(), new MongoLegacyWriteDocumentMapper());
+
+        await repository.WriteHighlightsLookupAsync(
+            "race-1",
+            new HighlightsLookupDocument(
+                string.Empty,
+                "2026-03-02T09:00:00.000Z",
+                "missing",
+                string.Empty),
+            CancellationToken.None);
+
+        Assert.NotNull(harness.RenderedUpdate);
+        Assert.Equal("https://www.youtube.com/watch?v=persisted-found", harness.RenderedUpdate!["$set"]["highlightsVideoUrl"].AsString);
+        Assert.Equal("2026-03-01T15:00:00.000Z", harness.RenderedUpdate["$set"]["highlightsLookupCheckedAt"].AsString);
+        Assert.Equal("found", harness.RenderedUpdate["$set"]["highlightsLookupStatus"].AsString);
+        Assert.Equal("feed", harness.RenderedUpdate["$set"]["highlightsLookupSource"].AsString);
+    }
+
+    [Fact]
+    public async Task Mongo_weekend_repository_preserves_persisted_highlights_even_when_existing_metadata_fields_are_null()
+    {
+        var harness = CreateDatabase(new Dictionary<string, IReadOnlyList<BsonDocument>>
+        {
+            [MongoCollectionNames.Weekends] =
+            [
+                new BsonDocument
+                {
+                    ["meetingKey"] = "race-1",
+                    ["roundNumber"] = 1,
+                    ["highlightsVideoUrl"] = "https://www.youtube.com/watch?v=persisted-found",
+                    ["highlightsLookupCheckedAt"] = BsonNull.Value,
+                    ["highlightsLookupStatus"] = BsonNull.Value,
+                    ["highlightsLookupSource"] = BsonNull.Value,
+                },
+            ],
+        });
+        var repository = new MongoWeekendRepository(harness.Database, new MongoLegacyReadDocumentMapper(), new MongoLegacyWriteDocumentMapper());
+
+        await repository.WriteHighlightsLookupAsync(
+            "race-1",
+            new HighlightsLookupDocument(
+                string.Empty,
+                "2026-03-02T09:00:00.000Z",
+                "missing",
+                string.Empty),
+            CancellationToken.None);
+
+        Assert.NotNull(harness.RenderedUpdate);
+        Assert.Equal("https://www.youtube.com/watch?v=persisted-found", harness.RenderedUpdate!["$set"]["highlightsVideoUrl"].AsString);
+        Assert.Equal(string.Empty, harness.RenderedUpdate["$set"]["highlightsLookupCheckedAt"].AsString);
+        Assert.Equal(string.Empty, harness.RenderedUpdate["$set"]["highlightsLookupStatus"].AsString);
+        Assert.Equal(string.Empty, harness.RenderedUpdate["$set"]["highlightsLookupSource"].AsString);
+    }
+
+    [Fact]
+    public async Task Mongo_weekend_repository_allows_missing_lookup_writes_when_no_persisted_document_exists()
+    {
+        var harness = CreateDatabase(new Dictionary<string, IReadOnlyList<BsonDocument>>
+        {
+            [MongoCollectionNames.Weekends] = [],
+        });
+        var repository = new MongoWeekendRepository(harness.Database, new MongoLegacyReadDocumentMapper(), new MongoLegacyWriteDocumentMapper());
+
+        await repository.WriteHighlightsLookupAsync(
+            "race-1",
+            new HighlightsLookupDocument(
+                string.Empty,
+                "2026-03-02T09:00:00.000Z",
+                "missing",
+                string.Empty),
+            CancellationToken.None);
+
+        Assert.NotNull(harness.RenderedUpdate);
+        Assert.Equal(string.Empty, harness.RenderedUpdate!["$set"]["highlightsVideoUrl"].AsString);
+        Assert.Equal("2026-03-02T09:00:00.000Z", harness.RenderedUpdate["$set"]["highlightsLookupCheckedAt"].AsString);
+        Assert.Equal("missing", harness.RenderedUpdate["$set"]["highlightsLookupStatus"].AsString);
+        Assert.Equal(string.Empty, harness.RenderedUpdate["$set"]["highlightsLookupSource"].AsString);
+    }
+
+    [Fact]
     public async Task Mongo_app_data_repository_add_calls_write()
     {
         var harness = CreateDatabase(new Dictionary<string, IReadOnlyList<BsonDocument>>

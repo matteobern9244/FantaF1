@@ -1,8 +1,7 @@
-# Track: Fix Menu Third Item Focus
+# Track fix_menu_third_item_focus_20260315 Context
 
-- ID: `fix_menu_third_item_focus_20260315`
-- Title: `Fix Menu Third Item Focus`
-- Status: `in_progress`
-- Phase: `implementation`
-- Active task:
-  `Fix active highlight/focus on the third menu item and reduce mobile menu font size.`
+- [Specification](./spec.md)
+- [Implementation Plan](./plan.md)
+- [Metadata](./metadata.json)
+- [Review](./review.md)
+- [Verification](./verify.md)

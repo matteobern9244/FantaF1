@@ -4,6 +4,46 @@ Cronologia sintetica delle release documentate del progetto Fanta Formula 1.
 
 ## [Unreleased]
 
+- **CI/CD Post-Merge Health Distinto per Staging e Produzione**: il workflow
+  [post-merge-health.yml](/Users/matteobernardini/code/FantaF1/.github/workflows/post-merge-health.yml)
+  seleziona ora il secret corretto in base al branch mergiato
+  (`RENDER_STAGING_HEALTHCHECK_URL` per `staging`,
+  `RENDER_PRODUCTION_HEALTHCHECK_URL` per `main`), evitando il falso allineamento
+  dato da un unico endpoint condiviso.
+- **Documentazione Deploy e Workflow Riallineata**: [README.md](/Users/matteobernardini/code/FantaF1/README.md)
+  documenta ora in modo esplicito i trigger `deploya-staging` (`develop ->
+  staging`) e `deploya` (`staging -> main`), i gate reali di `pr-ci` e i secret
+  opzionali corretti per i controlli Render post-merge.
+- **Audit CI/CD Remoto Verificato**: la branch protection GitHub reale di
+  `main` e `staging` e' stata ricontrollata via API; i required status checks
+  attivi restano `lint`, `build`, `responsive-dev` e `smoke-ci-db`, mentre i
+  job `format-csharp`, `build-csharp` e `test-csharp` continuano a essere
+  eseguiti dal workflow PR senza risultare ancora required a livello remoto.
+- **Gate `format-csharp` Ripristinato Verde**: corretto un difetto di
+  formattazione in un test backend che faceva fallire `dotnet format
+  --verify-no-changes`, riportando il gate C# in uno stato coerente con la CI.
+- **Hardening UTC del Lookup Highlights e del Backfill Calendario**: il path
+  autorevole C# usa ora gating temporale coerente in `UTC` per stabilire quando
+  una gara e' realmente conclusa, eliminando i casi in cui locale e
+  staging/produzione potevano divergere sul bootstrap highlights.
+- **Persistenza Highlights Definitivamente Append-Only**: `MongoWeekendRepository`
+  e il merge calendario preservano un `highlightsVideoUrl` gia' valido anche se
+  un lookup successivo ritorna `missing` o se metadati persistiti parziali sono
+  nulli, impedendo la rimozione silenziosa dei link storici.
+- **Riconciliazione Calendario F1 Rafforzata**: il sync ufficiale conserva gli
+  highlights gia' persistiti anche quando `f1.com` cambia slug o URL della
+  stessa gara, usando round e date come ulteriore chiave di riconciliazione per
+  evitare perdite di associazione sui weekend ufficiali.
+- **Matching Highlights Esteso a Playlist YouTube e Sky Page**: il resolver
+  priorizza ora feed, playlist del canale `@skysportf1`, search del canale,
+  ricerca globale vincolata al publisher Sky e fallback
+  `sport.sky.it/formula-1/video/highlights`, migliorando precisione e stabilita'
+  del recupero highlights per gara.
+- **Suite e Coverage Rieseguite e Riallineate al 100%**: rieseguiti con esito
+  verde `npm run test`, `npm run test:coverage`, `npm run test:csharp-coverage`,
+  `npm run lint`, `npm run build` e `npm run test:ui-responsive`; il baseline
+  ufficiale backend C# documentato in `AGENTS.md` e `README.md` e' ora
+  `3194 / 3194` linee, `1793 / 1793` branch e `539 / 539` metodi.
 - **Automazione Deploy Staging (deploya-staging)**: introdotto il nuovo comando
   operativo e la relativa skill Gemini `fantaf1_deploy_staging` per gestire il
   flusso di rilascio `develop -> staging`, integrando il protocollo a 23 punti

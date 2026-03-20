@@ -73,7 +73,13 @@ public sealed partial class OfficialCalendarSyncService
                         var detailData = ParseRaceDetailPage(detailHtml, weekend.MeetingName!, weekend.MeetingKey, weekend.EndDate!);
                         var weekendWithDetail = BuildWeekendWithPersistedHighlights(
                             BuildWeekendWithDetailData(weekend, detailData),
-                            persistedWeekendsIndex.Find(detailData.MeetingKey, weekend.DetailUrl, weekend.MeetingKey) ?? persistedWeekend);
+                            persistedWeekendsIndex.Find(
+                                detailData.MeetingKey,
+                                weekend.DetailUrl,
+                                weekend.MeetingKey,
+                                weekend.RoundNumber,
+                                weekend.StartDate,
+                                weekend.EndDate) ?? persistedWeekend);
 
                         if (!_highlightsLookupService.ShouldLookup(weekendWithDetail, _clock.UtcNow))
                         {
@@ -366,15 +372,18 @@ public sealed partial class OfficialCalendarSyncService
         private readonly IReadOnlyDictionary<string, WeekendDocument> _byMeetingKey;
         private readonly IReadOnlyDictionary<string, WeekendDocument> _byDetailUrl;
         private readonly IReadOnlyDictionary<string, WeekendDocument> _bySlug;
+        private readonly IReadOnlyDictionary<string, WeekendDocument> _byRoundAndDates;
 
         private PersistedWeekendIndex(
             IReadOnlyDictionary<string, WeekendDocument> byMeetingKey,
             IReadOnlyDictionary<string, WeekendDocument> byDetailUrl,
-            IReadOnlyDictionary<string, WeekendDocument> bySlug)
+            IReadOnlyDictionary<string, WeekendDocument> bySlug,
+            IReadOnlyDictionary<string, WeekendDocument> byRoundAndDates)
         {
             _byMeetingKey = byMeetingKey;
             _byDetailUrl = byDetailUrl;
             _bySlug = bySlug;
+            _byRoundAndDates = byRoundAndDates;
         }
 
         public static PersistedWeekendIndex Create(IReadOnlyList<WeekendDocument> weekends)
@@ -382,6 +391,7 @@ public sealed partial class OfficialCalendarSyncService
             var byMeetingKey = new Dictionary<string, WeekendDocument>(StringComparer.Ordinal);
             var byDetailUrl = new Dictionary<string, WeekendDocument>(StringComparer.Ordinal);
             var bySlug = new Dictionary<string, WeekendDocument>(StringComparer.OrdinalIgnoreCase);
+            var byRoundAndDates = new Dictionary<string, WeekendDocument>(StringComparer.Ordinal);
 
             foreach (var weekend in weekends)
             {
@@ -400,17 +410,34 @@ public sealed partial class OfficialCalendarSyncService
                 {
                     bySlug[slug] = weekend;
                 }
+
+                var roundAndDatesKey = BuildRoundAndDatesKey(weekend.RoundNumber, weekend.StartDate, weekend.EndDate);
+                if (!string.IsNullOrWhiteSpace(roundAndDatesKey))
+                {
+                    byRoundAndDates[roundAndDatesKey] = weekend;
+                }
             }
 
-            return new PersistedWeekendIndex(byMeetingKey, byDetailUrl, bySlug);
+            return new PersistedWeekendIndex(byMeetingKey, byDetailUrl, bySlug, byRoundAndDates);
         }
 
         public WeekendDocument? Find(WeekendDocument weekend)
         {
-            return Find(weekend.MeetingKey, weekend.DetailUrl, weekend.MeetingKey);
+            return Find(weekend.MeetingKey, weekend.DetailUrl, weekend.MeetingKey, weekend.RoundNumber, weekend.StartDate, weekend.EndDate);
         }
 
         public WeekendDocument? Find(string? meetingKey, string? detailUrl, string? fallbackSlug)
+        {
+            return Find(meetingKey, detailUrl, fallbackSlug, null, null, null);
+        }
+
+        public WeekendDocument? Find(
+            string? meetingKey,
+            string? detailUrl,
+            string? fallbackSlug,
+            int? roundNumber,
+            string? startDate,
+            string? endDate)
         {
             var normalizedMeetingKey = NormalizeKey(meetingKey);
             if (!string.IsNullOrWhiteSpace(normalizedMeetingKey)
@@ -427,8 +454,14 @@ public sealed partial class OfficialCalendarSyncService
             }
 
             var slug = ExtractSlug(detailUrl) ?? NormalizeKey(fallbackSlug);
-            return !string.IsNullOrWhiteSpace(slug) && _bySlug.TryGetValue(slug, out var weekendBySlug)
-                ? weekendBySlug
+            if (!string.IsNullOrWhiteSpace(slug) && _bySlug.TryGetValue(slug, out var weekendBySlug))
+            {
+                return weekendBySlug;
+            }
+
+            var roundAndDatesKey = BuildRoundAndDatesKey(roundNumber, startDate, endDate);
+            return !string.IsNullOrWhiteSpace(roundAndDatesKey) && _byRoundAndDates.TryGetValue(roundAndDatesKey, out var weekendByRoundAndDates)
+                ? weekendByRoundAndDates
                 : null;
         }
 
@@ -441,6 +474,15 @@ public sealed partial class OfficialCalendarSyncService
         {
             var normalizedValue = value?.Trim();
             return string.IsNullOrWhiteSpace(normalizedValue) ? null : normalizedValue;
+        }
+
+        private static string? BuildRoundAndDatesKey(int? roundNumber, string? startDate, string? endDate)
+        {
+            return roundNumber is null
+                || string.IsNullOrWhiteSpace(startDate)
+                || string.IsNullOrWhiteSpace(endDate)
+                ? null
+                : $"{roundNumber.Value}|{startDate.Trim()}|{endDate.Trim()}";
         }
     }
 

@@ -14,12 +14,31 @@ jobs:
     name: post-merge-health
     runs-on: ubuntu-latest
     env:
-      RENDER_HEALTHCHECK_URL: ${{ secrets.RENDER_HEALTHCHECK_URL }}
+      RENDER_PRODUCTION_HEALTHCHECK_URL: ${{ secrets.RENDER_PRODUCTION_HEALTHCHECK_URL }}
+      RENDER_STAGING_HEALTHCHECK_URL: ${{ secrets.RENDER_STAGING_HEALTHCHECK_URL }}
     steps:
-      - name: Skip when healthcheck URL is not configured
-        if: ${{ env.RENDER_HEALTHCHECK_URL == '' }}
-        run: echo "RENDER_HEALTHCHECK_URL non configurato; controllo post-merge saltato."
+      - name: Select Render health endpoint for the merged branch
+        run: |
+          if [ "${GITHUB_REF_NAME}" = "main" ]; then
+            target_url="$RENDER_PRODUCTION_HEALTHCHECK_URL"
+            target_label="production"
+          elif [ "${GITHUB_REF_NAME}" = "staging" ]; then
+            target_url="$RENDER_STAGING_HEALTHCHECK_URL"
+            target_label="staging"
+          else
+            echo "Unsupported branch ${GITHUB_REF_NAME}." >&2
+            exit 1
+          fi
+
+          {
+            echo "TARGET_HEALTHCHECK_URL=$target_url"
+            echo "TARGET_HEALTHCHECK_LABEL=$target_label"
+          } >> "$GITHUB_ENV"
+
+      - name: Skip when the branch healthcheck URL is not configured
+        if: ${{ env.TARGET_HEALTHCHECK_URL == '' }}
+        run: echo "Healthcheck URL non configurata per $TARGET_HEALTHCHECK_LABEL; controllo post-merge saltato."
 
       - name: Verify Render health endpoint
-        if: ${{ env.RENDER_HEALTHCHECK_URL != '' }}
-        run: curl --fail --silent --show-error --location "$RENDER_HEALTHCHECK_URL"
+        if: ${{ env.TARGET_HEALTHCHECK_URL != '' }}
+        run: curl --fail --silent --show-error --location "$TARGET_HEALTHCHECK_URL"

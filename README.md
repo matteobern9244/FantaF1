@@ -47,12 +47,15 @@ divergenze funzionali.
 - `staging` e' il branch candidato di certificazione e il branch sorgente atteso
   per l'ambiente Render di staging. E' un **branch protetto** con regole
   identiche a `main`: richiede Pull Request, approvazione, superamento dei
-  controlli CI (`lint`, `build`, `responsive-dev`, `smoke-ci-db`), risoluzione
-  delle conversazioni ed esecuzione dei controlli anche per gli amministratori.
+  controlli CI richiesti (`lint`, `build`, `responsive-dev`, `smoke-ci-db`),
+  risoluzione delle conversazioni ed esecuzione dei controlli anche per gli
+  amministratori.
 - `main` resta il branch protetto di release e il target finale del flusso di
   deploy.
 - Il flusso di certificazione verso staging parte dal branch `develop` ed e'
   automatizzato dal comando `deploya-staging`.
+- Il flusso di rilascio in produzione parte dal branch `staging` ed e'
+  automatizzato dal comando `deploya`.
 - Il rename operativo da `develop` a `staging` richiede anche il riallineamento
   fuori repo della configurazione Render, delle branch protection e di eventuali
   automazioni GitHub/Render che puntavano al vecchio nome branch.
@@ -110,6 +113,12 @@ Il lock e' server-side:
 - Un highlights gia' trovato non viene degradato a `missing` da un lookup
   successivo transitorio o da un bootstrap calendario successivo che non riesce
   a risolverlo.
+- Il bootstrap calendario usa gating `UTC` uniforme per evitare divergenze tra
+  locale, staging e produzione nella decisione su quando una gara e' davvero
+  conclusa e candidabile al backfill highlights.
+- Se `f1.com` riallinea slug o URL di una gara ufficiale, il backend conserva
+  l'associazione degli highlights gia' persistiti quando round e date restano
+  coerenti con la stessa gara.
 - La conferma risultati e' consentita solo quando il weekend e' `finished` e i
   risultati reali sono completi.
 - Punteggi configurati:
@@ -212,6 +221,9 @@ Il backend sanitizza sempre lo stato prima di persisterlo.
 - calendario: Formula1.com
 - standings: Formula1.com
 - risultati weekend: Formula1.com
+- highlights gara: feed YouTube Sky Sport F1, playlist del canale
+  `@skysportf1`, ricerca nel canale YouTube Sky Sport F1 e fallback
+  `sport.sky.it/formula-1/video/highlights`
 
 Se un sync fallisce, il backend prova a usare la cache MongoDB gia' disponibile
 per quel dominio.
@@ -429,9 +441,10 @@ Secret richiesti:
 - `MONGODB_URI_CI`
 - `ADMIN_SESSION_SECRET_CI`
 
-Secret opzionale:
+Secret opzionali:
 
-- `RENDER_HEALTHCHECK_URL`
+- `RENDER_STAGING_HEALTHCHECK_URL`
+- `RENDER_PRODUCTION_HEALTHCHECK_URL`
 
 La pipeline normalizza la URI CI e usa `MONGODB_DB_NAME_OVERRIDE=fantaf1_ci` per
 impedire mutazioni dei database condivisi.
@@ -590,7 +603,7 @@ Workflow principali:
 - [pr-auto-merge.yml](/Users/matteobernardini/code/FantaF1/.github/workflows/pr-auto-merge.yml)
 - [post-merge-health.yml](/Users/matteobernardini/code/FantaF1/.github/workflows/post-merge-health.yml)
 
-Job richiesti su PR verso `main` e `staging`:
+Job eseguiti dal workflow PR su PR verso `main` e `staging`:
 
 - `lint`
 - `build`
@@ -600,8 +613,32 @@ Job richiesti su PR verso `main` e `staging`:
 - `responsive-dev`
 - `smoke-ci-db`
 
-I workflow aggiuntivi `gemini-*` restano validi come automazioni repository-side
-e devono continuare a parsare correttamente come YAML.
+Status checks attualmente richiesti dalla branch protection remota su `main` e
+`staging`:
+
+- `lint`
+- `build`
+- `responsive-dev`
+- `smoke-ci-db`
+
+Healthcheck post-merge:
+
+- `post-merge-health.yml` gira su push a `staging` e `main`
+- usa `RENDER_STAGING_HEALTHCHECK_URL` quando il merge atterra su `staging`
+- usa `RENDER_PRODUCTION_HEALTHCHECK_URL` quando il merge atterra su `main`
+- se il secret dell'ambiente relativo non e' configurato, il job salta in modo
+  esplicito senza mascherare l'assenza del controllo
+
+Trigger operativi documentati:
+
+- `deploya-staging`: valido solo dal branch corrente `develop`, crea/aggiorna la
+  PR `develop -> staging` e dipende dai gate `pr-ci`, `pr-auto-merge` e dal
+  healthcheck post-merge dello staging
+- `deploya`: valido solo dal branch corrente `staging`, crea/aggiorna la PR
+  `staging -> main` e dipende dagli stessi gate verso produzione
+- entrambi i trigger restano invalidi se il workspace non e' pulito, se il
+  branch non e' quello atteso o se i secret/controlli richiesti non sono
+  disponibili
 
 ## Coverage e qualita'
 
@@ -614,13 +651,22 @@ Baseline verificata corrente sullo scope ufficiale frontend/repository:
 
 Baseline verificata corrente su `backend-csharp/src/`:
 
-- `3088 / 3088` lines
-- `1731 / 1731` branches
-- `528 / 528` methods
+- `3194 / 3194` lines
+- `1793 / 1793` branches
+- `539 / 539` methods
 - `71` file inclusi
 
 Le soglie repository restano a `100%` su statements, branches, functions e
 lines.
+
+Verifica piu' recente rieseguita localmente:
+
+- `npm run test`
+- `npm run test:coverage`
+- `npm run test:csharp-coverage`
+- `npm run lint`
+- `npm run build`
+- `npm run test:ui-responsive`
 
 ## Struttura repository
 

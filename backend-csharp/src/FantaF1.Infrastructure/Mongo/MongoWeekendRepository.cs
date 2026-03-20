@@ -62,11 +62,31 @@ public sealed class MongoWeekendRepository : MongoRepository<WeekendDocument, st
         ArgumentException.ThrowIfNullOrWhiteSpace(meetingKey);
         ArgumentNullException.ThrowIfNull(lookup);
 
+        var existingDocument = await Collection
+            .Find(Builders<BsonDocument>.Filter.Eq("meetingKey", meetingKey))
+            .FirstOrDefaultAsync(cancellationToken);
+        var persistedHighlightsVideoUrl = GetNullableString(existingDocument, "highlightsVideoUrl");
+        var preservePersistedHighlights = !string.IsNullOrWhiteSpace(persistedHighlightsVideoUrl)
+            && string.IsNullOrWhiteSpace(lookup.HighlightsVideoUrl)
+            && string.Equals(lookup.HighlightsLookupStatus, "missing", StringComparison.Ordinal);
+
         var updateDefinition = Builders<BsonDocument>.Update
-            .Set("highlightsVideoUrl", lookup.HighlightsVideoUrl ?? string.Empty)
-            .Set("highlightsLookupCheckedAt", lookup.HighlightsLookupCheckedAt ?? string.Empty)
-            .Set("highlightsLookupStatus", lookup.HighlightsLookupStatus ?? string.Empty)
-            .Set("highlightsLookupSource", lookup.HighlightsLookupSource ?? string.Empty);
+            .Set("highlightsVideoUrl", preservePersistedHighlights ? persistedHighlightsVideoUrl : lookup.HighlightsVideoUrl ?? string.Empty)
+            .Set(
+                "highlightsLookupCheckedAt",
+                preservePersistedHighlights
+                    ? GetNullableString(existingDocument, "highlightsLookupCheckedAt") ?? string.Empty
+                    : lookup.HighlightsLookupCheckedAt ?? string.Empty)
+            .Set(
+                "highlightsLookupStatus",
+                preservePersistedHighlights
+                    ? GetNullableString(existingDocument, "highlightsLookupStatus") ?? string.Empty
+                    : lookup.HighlightsLookupStatus ?? string.Empty)
+            .Set(
+                "highlightsLookupSource",
+                preservePersistedHighlights
+                    ? GetNullableString(existingDocument, "highlightsLookupSource") ?? string.Empty
+                    : lookup.HighlightsLookupSource ?? string.Empty);
 
         await Collection.UpdateOneAsync(
             Builders<BsonDocument>.Filter.Eq("meetingKey", meetingKey),
@@ -89,4 +109,10 @@ public sealed class MongoWeekendRepository : MongoRepository<WeekendDocument, st
 
     protected override WeekendDocument MapToEntity(BsonDocument document) => _mapper.MapWeekend(document);
     protected override BsonDocument MapToDocument(WeekendDocument entity) => _writeMapper.MapWeekend(entity);
+
+    private static string? GetNullableString(BsonDocument? document, string fieldName)
+    {
+        var value = document?.GetValue(fieldName, BsonNull.Value);
+        return value is null || value.IsBsonNull ? null : value.AsString;
+    }
 }

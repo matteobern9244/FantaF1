@@ -257,6 +257,42 @@ public sealed class ResultsServiceTests
     }
 
     [Fact]
+    public void Highlights_lookup_policy_does_not_consider_a_same_day_race_finished_before_race_start_time()
+    {
+        var policy = new RaceHighlightsLookupPolicy(TimeSpan.FromHours(6));
+        var now = new DateTimeOffset(2026, 03, 01, 12, 00, 00, TimeSpan.Zero);
+
+        var shouldLookup = policy.ShouldLookup(
+            CreateWeekend(
+                "race-start-not-reached",
+                startDate: "2026-03-01",
+                endDate: "2026-03-01",
+                raceStartTime: "2026-03-01T14:00:00Z",
+                highlightsLookupStatus: string.Empty),
+            now);
+
+        Assert.False(shouldLookup);
+    }
+
+    [Fact]
+    public void Highlights_lookup_policy_respects_an_explicit_end_timestamp_without_rewriting_it()
+    {
+        var policy = new RaceHighlightsLookupPolicy(TimeSpan.FromHours(6));
+        var now = new DateTimeOffset(2026, 03, 01, 18, 00, 00, TimeSpan.Zero);
+
+        var shouldLookup = policy.ShouldLookup(
+            CreateWeekend(
+                "explicit-end-timestamp",
+                startDate: "2026-03-01",
+                endDate: "2026-03-01T20:00:00Z",
+                raceStartTime: null,
+                highlightsLookupStatus: string.Empty),
+            now);
+
+        Assert.False(shouldLookup);
+    }
+
+    [Fact]
     public async Task Results_service_reads_the_calendar_once_uses_cached_results_and_persists_found_highlights()
     {
         var weekendRepository = new StubWeekendRepository(

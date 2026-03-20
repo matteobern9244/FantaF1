@@ -82,6 +82,8 @@ public sealed class PortingDocumentationConsistencyTests
         Assert.Contains("richiede un rebuild/redeploy per diventare visibile", readme, StringComparison.Ordinal);
         Assert.Contains("`MONGODB_URI_CI`", readme, StringComparison.Ordinal);
         Assert.Contains("`ADMIN_SESSION_SECRET_CI`", readme, StringComparison.Ordinal);
+        Assert.Contains("`RENDER_STAGING_HEALTHCHECK_URL`", readme, StringComparison.Ordinal);
+        Assert.Contains("`RENDER_PRODUCTION_HEALTHCHECK_URL`", readme, StringComparison.Ordinal);
         Assert.Contains("ASPNETCORE_ENVIRONMENT=Development", envExample, StringComparison.Ordinal);
         Assert.Contains("MONGODB_DB_NAME_OVERRIDE=", envExample, StringComparison.Ordinal);
         Assert.DoesNotContain("NODE_ENV=", envExample, StringComparison.Ordinal);
@@ -118,6 +120,11 @@ public sealed class PortingDocumentationConsistencyTests
         Assert.Contains("`smoke-ci-db`", readme, StringComparison.Ordinal);
         Assert.Contains("GitHub Actions workflows under `.github/workflows/` must stay aligned", agents, StringComparison.Ordinal);
         Assert.Contains("dotnet format backend-csharp/FantaF1.Backend.sln --verify-no-changes", packageJson, StringComparison.Ordinal);
+        Assert.Contains("`deploya-staging`", readme, StringComparison.Ordinal);
+        Assert.Contains("`develop -> staging`", readme, StringComparison.Ordinal);
+        Assert.Contains("`deploya`", readme, StringComparison.Ordinal);
+        Assert.Contains("`staging -> main`", readme, StringComparison.Ordinal);
+        Assert.DoesNotContain("workflow aggiuntivi `gemini-*`", readme, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -134,12 +141,12 @@ public sealed class PortingDocumentationConsistencyTests
             StripAllWhitespace("**100% statements (5489 / 5489)**, **100% functions (737 / 737)**, **100% branches (2826 / 2826)**, and **100% lines (5489 / 5489)**"),
             agents,
             StringComparison.Ordinal);
-        Assert.Contains("-`3088/3088`lines", readme, StringComparison.Ordinal);
-        Assert.Contains("-`1731/1731`branches", readme, StringComparison.Ordinal);
-        Assert.Contains("-`528/528`methods", readme, StringComparison.Ordinal);
-        Assert.Contains(StripAllWhitespace("**100% line coverage (3088 / 3088)**"), agents, StringComparison.Ordinal);
-        Assert.Contains(StripAllWhitespace("**100% branch coverage (1731 / 1731)**"), agents, StringComparison.Ordinal);
-        Assert.Contains(StripAllWhitespace("**100% method coverage (528 / 528)**"), agents, StringComparison.Ordinal);
+        Assert.Contains("-`3194/3194`lines", readme, StringComparison.Ordinal);
+        Assert.Contains("-`1793/1793`branches", readme, StringComparison.Ordinal);
+        Assert.Contains("-`539/539`methods", readme, StringComparison.Ordinal);
+        Assert.Contains(StripAllWhitespace("**100% line coverage (3194 / 3194)**"), agents, StringComparison.Ordinal);
+        Assert.Contains(StripAllWhitespace("**100% branch coverage (1793 / 1793)**"), agents, StringComparison.Ordinal);
+        Assert.Contains(StripAllWhitespace("**100% method coverage (539 / 539)**"), agents, StringComparison.Ordinal);
     }
 
     [Fact]

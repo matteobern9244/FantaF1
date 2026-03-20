@@ -4,7 +4,7 @@ This file is the compact summary view of Conductor tracks in this repository.
 
 ## Active Tracks
 
-No active tracks currently registered.
+- `persistent_race_highlights_backfill_utc_hardening_20260320` | Persistenza definitiva highlights per gara con backfill ufficiale F1, matching Sky/YouTube e hardening UTC su Render | `completed` | phase `completed` | Track fully complete. | `conductor/tracks/persistent_race_highlights_backfill_utc_hardening_20260320/`
 
 ## Archived Tracks
 
