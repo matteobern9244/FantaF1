@@ -30,12 +30,13 @@ Cronologia sintetica delle release documentate del progetto Fanta Formula 1.
   verdi e `318` test verdi, mantenendo la coverage ufficiale frontend e backend
   al `100%`.
 
-- **CI/CD Post-Merge Health Distinto per Staging e Produzione**: il workflow
+- **CI/CD Post-Merge Health Riallineato ai Secret Render Reali**: il workflow
   [post-merge-health.yml](/Users/matteobernardini/code/FantaF1/.github/workflows/post-merge-health.yml)
   seleziona ora il secret corretto in base al branch mergiato
   (`RENDER_STAGING_HEALTHCHECK_URL` per `staging`,
-  `RENDER_PRODUCTION_HEALTHCHECK_URL` per `main`), evitando il falso allineamento
-  dato da un unico endpoint condiviso.
+  `RENDER_HEALTHCHECK_URL` per `main`), mantenendo invariato il secret storico
+  di produzione e documentando per lo staging l'endpoint health completo
+  `https://fantaf1-staging.onrender.com/api/health`.
 - **Documentazione Deploy e Workflow Riallineata**: [README.md](/Users/matteobernardini/code/FantaF1/README.md)
   documenta ora in modo esplicito i trigger `deploya-staging` (`develop ->
   staging`) e `deploya` (`staging -> main`), i gate reali di `pr-ci` e i secret

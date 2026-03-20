@@ -655,9 +655,14 @@ Healthcheck post-merge:
 
 - `post-merge-health.yml` gira su push a `staging` e `main`
 - usa `RENDER_STAGING_HEALTHCHECK_URL` quando il merge atterra su `staging`
-- usa `RENDER_PRODUCTION_HEALTHCHECK_URL` quando il merge atterra su `main`
+- usa `RENDER_HEALTHCHECK_URL` quando il merge atterra su `main`
+- `RENDER_HEALTHCHECK_URL` resta il secret storico di produzione e non va
+  rinominato
 - se il secret dell'ambiente relativo non e' configurato, il job salta in modo
   esplicito senza mascherare l'assenza del controllo
+- `RENDER_STAGING_HEALTHCHECK_URL` deve contenere l'endpoint health completo
+  dello staging, ad esempio
+  `https://fantaf1-staging.onrender.com/api/health`
 
 Trigger operativi documentati:
 

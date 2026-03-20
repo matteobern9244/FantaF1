@@ -14,13 +14,13 @@ jobs:
     name: post-merge-health
     runs-on: ubuntu-latest
     env:
-      RENDER_PRODUCTION_HEALTHCHECK_URL: ${{ secrets.RENDER_PRODUCTION_HEALTHCHECK_URL }}
+      RENDER_HEALTHCHECK_URL: ${{ secrets.RENDER_HEALTHCHECK_URL }}
       RENDER_STAGING_HEALTHCHECK_URL: ${{ secrets.RENDER_STAGING_HEALTHCHECK_URL }}
     steps:
       - name: Select Render health endpoint for the merged branch
         run: |
           if [ "${GITHUB_REF_NAME}" = "main" ]; then
-            target_url="$RENDER_PRODUCTION_HEALTHCHECK_URL"
+            target_url="$RENDER_HEALTHCHECK_URL"
             target_label="production"
           elif [ "${GITHUB_REF_NAME}" = "staging" ]; then
             target_url="$RENDER_STAGING_HEALTHCHECK_URL"

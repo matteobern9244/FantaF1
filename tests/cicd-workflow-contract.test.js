@@ -7,15 +7,15 @@ function readRepositoryFile(relativePath) {
 }
 
 describe('CI/CD workflow contract', () => {
-  it('documents dedicated Render healthcheck secrets for staging and production', () => {
+  it('documents the Render healthcheck secrets actually used by the workflow', () => {
     const readme = readRepositoryFile('README.md').replace(/\s+/g, ' ');
     const workflow = readRepositoryFile('.github/workflows/post-merge-health.yml');
 
     expect(readme).toContain('`RENDER_STAGING_HEALTHCHECK_URL`');
-    expect(readme).toContain('`RENDER_PRODUCTION_HEALTHCHECK_URL`');
+    expect(readme).toContain('`RENDER_HEALTHCHECK_URL`');
     expect(workflow).toContain('RENDER_STAGING_HEALTHCHECK_URL');
-    expect(workflow).toContain('RENDER_PRODUCTION_HEALTHCHECK_URL');
-    expect(workflow).not.toContain('RENDER_HEALTHCHECK_URL: ${{ secrets.RENDER_HEALTHCHECK_URL }}');
+    expect(workflow).toContain('RENDER_HEALTHCHECK_URL');
+    expect(workflow).not.toContain('RENDER_PRODUCTION_HEALTHCHECK_URL');
   });
 
   it('keeps README aligned with the actual workflow inventory and deploy triggers', () => {
