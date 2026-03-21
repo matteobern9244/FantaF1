@@ -21,10 +21,18 @@ public sealed class RaceHighlightsLookupPolicy
             return false;
         }
 
-        var endDateValue = ParseDate(race.EndDate)
-            ?? ParseDate(race.StartDate)
-            ?? ParseDate(race.RaceStartTime);
-        if (endDateValue is null || endDateValue.Value > now)
+        var endDateValue = new[]
+        {
+            ParseDate(race.RaceStartTime),
+            ParseDate(NormalizeEndDateFallback(race.EndDate)),
+            ParseDate(race.StartDate),
+        }
+            .Where(static value => value.HasValue)
+            .Select(static value => value!.Value)
+            .OrderByDescending(static value => value)
+            .FirstOrDefault();
+
+        if (endDateValue == default || endDateValue > now)
         {
             return false;
         }
@@ -65,5 +73,18 @@ public sealed class RaceHighlightsLookupPolicy
     private static string Normalize(string? value)
     {
         return (value ?? string.Empty).Trim();
+    }
+
+    private static string NormalizeEndDateFallback(string? value)
+    {
+        var normalizedValue = Normalize(value);
+        if (string.IsNullOrWhiteSpace(normalizedValue))
+        {
+            return string.Empty;
+        }
+
+        return normalizedValue.Contains('T', StringComparison.Ordinal)
+            ? normalizedValue
+            : $"{normalizedValue}T14:00:00Z";
     }
 }

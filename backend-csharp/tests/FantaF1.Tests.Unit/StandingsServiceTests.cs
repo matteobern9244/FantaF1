@@ -228,6 +228,12 @@ public sealed class StandingsServiceTests
 
         public StandingsDocument? LastWrittenDocument { get; private set; }
 
+        public Task<StandingsDocument?> GetByIdAsync(string id, CancellationToken cancellationToken) => throw new NotImplementedException();
+        public Task<IReadOnlyList<StandingsDocument>> GetAllAsync(CancellationToken cancellationToken) => throw new NotImplementedException();
+        public Task AddAsync(StandingsDocument entity, CancellationToken cancellationToken) => throw new NotImplementedException();
+        public Task UpdateAsync(StandingsDocument entity, CancellationToken cancellationToken) => throw new NotImplementedException();
+        public Task DeleteAsync(string id, CancellationToken cancellationToken) => throw new NotImplementedException();
+
         public Task<StandingsDocument> ReadCurrentAsync(CancellationToken cancellationToken)
         {
             return Task.FromResult(_currentDocument);

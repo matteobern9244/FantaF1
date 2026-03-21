@@ -1,41 +1,74 @@
 # Fanta Formula 1
 
-Applicazione full-stack privata per gestire un Fanta Formula 1 con frontend React + TypeScript + Vite, backend ASP.NET Core (.NET 10) e persistenza MongoDB Atlas.
+Applicazione full-stack privata per gestire un Fanta Formula 1 con frontend
+React + TypeScript + Vite, backend ASP.NET Core (.NET 10) e persistenza MongoDB
+Atlas.
 
 ## Stato corrente
 
-- Il backend autorevole del repository e' C# sotto [backend-csharp/](/Users/matteobernardini/code/FantaF1/backend-csharp).
-- Il runtime locale, Docker, staging Render e CI/CD sono allineati al backend C#.
+- Il backend autorevole del repository e' C# sotto
+  [backend-csharp/](/Users/matteobernardini/code/FantaF1/backend-csharp).
+- Il runtime locale, Docker, staging Render e CI/CD sono allineati al backend
+  C#.
 - Il branch `staging` e' il branch di certificazione corrente.
-- La release candidata corrente del branch `staging` e' `1.6.1`.
-- `main` resta il target di rilascio protetto e va aggiornato solo dopo cutover esplicito.
-- La documentazione operativa canonica del repository vive in questo file; la cronologia di rilascio vive in [CHANGELOG.md](/Users/matteobernardini/code/FantaF1/CHANGELOG.md).
+- La release candidata corrente del branch `staging` e' `1.6.3`.
+- `main` resta il target di rilascio protetto e va aggiornato solo dopo cutover
+  esplicito.
+- La documentazione operativa canonica del repository vive in questo file; la
+  cronologia di rilascio vive in
+  [CHANGELOG.md](/Users/matteobernardini/code/FantaF1/CHANGELOG.md).
 
 ## Stato workspace Conductor
 
-- Il workspace live di Conductor mantiene le track correnti sotto [conductor/tracks](/Users/matteobernardini/code/FantaF1/conductor/tracks), mentre lo storico verificato resta archiviato sotto [conductor/archive](/Users/matteobernardini/code/FantaF1/conductor/archive).
-- I documenti di piano legacy rimasti in precedenza nel root di `conductor/` sono stati spostati in [conductor/archive/_root-plans](/Users/matteobernardini/code/FantaF1/conductor/archive/_root-plans) e non fanno parte della navigazione live della skill.
-- Il report operativo sul fix di compatibilita' della skill installata vive in [conductor/conductor-skill-operational-feedback.md](/Users/matteobernardini/code/FantaF1/conductor/conductor-skill-operational-feedback.md).
+- Il workspace live di Conductor mantiene le track correnti sotto
+  [conductor/tracks](/Users/matteobernardini/code/FantaF1/conductor/tracks),
+  mentre lo storico verificato resta archiviato sotto
+  [conductor/archive](/Users/matteobernardini/code/FantaF1/conductor/archive).
+- I documenti di piano legacy rimasti in precedenza nel root di `conductor/`
+  sono stati spostati in
+  [conductor/archive/\_root-plans](/Users/matteobernardini/code/FantaF1/conductor/archive/_root-plans)
+  e non fanno parte della navigazione live della skill.
+- Il report operativo sul fix di compatibilita' della skill installata vive in
+  [conductor/conductor-skill-operational-feedback.md](/Users/matteobernardini/code/FantaF1/conductor/conductor-skill-operational-feedback.md).
 
 ## Superfici runtime
 
-- Staging Render: [fantaf1-staging.onrender.com](https://fantaf1-staging.onrender.com/)
-- Produzione live: [fantaf1-47vy.onrender.com](https://fantaf1-47vy.onrender.com)
+- Staging Render:
+  [fantaf1-staging.onrender.com](https://fantaf1-staging.onrender.com/)
+- Produzione live:
+  [fantaf1-w69n.onrender.com](https://fantaf1-w69n.onrender.com)
 
-Lo staging deve rimanere allineato alla produzione a livello di funzionalita'. Differenze di branding, testo o layout sono tollerabili solo se non introducono divergenze funzionali.
+Lo staging deve rimanere allineato alla produzione a livello di funzionalita'.
+Differenze di branding, testo o layout sono tollerabili solo se non introducono
+divergenze funzionali.
 
 ## Governance Branch
 
-- `staging` e' il branch candidato di certificazione e il branch sorgente atteso per l'ambiente Render di staging.
-- `main` resta il branch protetto di release e il target finale del flusso di deploy.
-- Il rename operativo da `develop` a `staging` richiede anche il riallineamento fuori repo della configurazione Render, delle branch protection e di eventuali automazioni GitHub/Render che puntavano al vecchio nome branch.
+- `staging` e' il branch candidato di certificazione e il branch sorgente atteso
+  per l'ambiente Render di staging. E' un **branch protetto** con regole
+  identiche a `main`: richiede Pull Request, approvazione, superamento dei
+  controlli CI richiesti (`lint`, `build`, `responsive-dev`, `smoke-ci-db`),
+  risoluzione delle conversazioni ed esecuzione dei controlli anche per gli
+  amministratori.
+- `main` resta il branch protetto di release e il target finale del flusso di
+  deploy.
+- Il flusso di certificazione verso staging parte dal branch `develop` ed e'
+  automatizzato dal comando `deploya-staging`.
+- Il flusso di rilascio in produzione parte dal branch `staging` ed e'
+  automatizzato dal comando `deploya`.
+- Il rename operativo da `develop` a `staging` richiede anche il riallineamento
+  fuori repo della configurazione Render, delle branch protection e di eventuali
+  automazioni GitHub/Render che puntavano al vecchio nome branch.
 
 ## Panoramica funzionale
 
 - L'applicazione gestisce sempre esattamente `3` partecipanti.
-- I nomi dei partecipanti sono data-driven e vengono letti dallo stato persistito, non sono un vincolo hardcoded.
-- L'admin seleziona il weekend, inserisce i pronostici, registra o recupera i risultati reali e conferma i punti nello storico.
-- La vista `public` e' consultiva; le mutazioni richiedono una sessione admin valida.
+- I nomi dei partecipanti sono data-driven e vengono letti dallo stato
+  persistito, non sono un vincolo hardcoded.
+- L'admin seleziona il weekend, inserisce i pronostici, registra o recupera i
+  risultati reali e conferma i punti nello storico.
+- La vista `public` e' consultiva; le mutazioni richiedono una sessione admin
+  valida.
 - La classifica live combina punti storici e proiezione del weekend selezionato.
 - Lo storico supporta modifica, cancellazione e ricalcolo completo dei punteggi.
 
@@ -52,8 +85,11 @@ Per ogni weekend l'admin gestisce quattro campi per ciascun partecipante:
 
 ### Salvataggio
 
-- `POST /api/predictions` accetta solo payload con almeno un campo pronostico compilato.
-- `POST /api/data` e' usato dai flussi applicativi completi e puo' salvare anche uno stato corrente vuoto quando e' generato da reset, conferma risultati o ricalcolo.
+- `POST /api/predictions` accetta solo payload con almeno un campo pronostico
+  compilato.
+- `POST /api/data` e' usato dai flussi applicativi completi e puo' salvare anche
+  uno stato corrente vuoto quando e' generato da reset, conferma risultati o
+  ricalcolo.
 - Il backend rifiuta i payload con numero partecipanti diverso da `3`.
 
 ### Race lock
@@ -66,10 +102,25 @@ Il lock e' server-side:
 
 ### Risultati e punteggi
 
-- I risultati ufficiali vengono recuperati tramite `GET /api/results/:meetingKey`.
-- Il backend espone `racePhase` (`open`, `live`, `finished`) separato dal race lock.
-- Per ogni weekend concluso il backend puo' restituire un `highlightsVideoUrl` specifico della gara selezionata, se disponibile nel catalogo Sky Sport F1.
-- La conferma risultati e' consentita solo quando il weekend e' `finished` e i risultati reali sono completi.
+- I risultati ufficiali vengono recuperati tramite
+  `GET /api/results/:meetingKey`.
+- Il backend espone `racePhase` (`open`, `live`, `finished`) separato dal race
+  lock.
+- Per ogni weekend concluso il backend puo' restituire un `highlightsVideoUrl`
+  specifico della gara selezionata, se disponibile nel catalogo Sky Sport F1.
+- Gli highlights sono persistiti nel documento `weekends` della gara e restano
+  associati in modo stabile al relativo `meetingKey`.
+- Un highlights gia' trovato non viene degradato a `missing` da un lookup
+  successivo transitorio o da un bootstrap calendario successivo che non riesce
+  a risolverlo.
+- Il bootstrap calendario usa gating `UTC` uniforme per evitare divergenze tra
+  locale, staging e produzione nella decisione su quando una gara e' davvero
+  conclusa e candidabile al backfill highlights.
+- Se `f1.com` riallinea slug o URL di una gara ufficiale, il backend conserva
+  l'associazione degli highlights gia' persistiti quando round e date restano
+  coerenti con la stessa gara.
+- La conferma risultati e' consentita solo quando il weekend e' `finished` e i
+  risultati reali sono completi.
 - Punteggi configurati:
   - `5` punti primo corretto
   - `3` punti secondo corretto
@@ -107,14 +158,20 @@ Il lock e' server-side:
 
 - shell responsive desktop/mobile (F1 Racing Theme)
 - sidebar adattiva desktop (collassabile) e menu mobile overlay a tutto schermo
-- hardening della navigation shell: collapse desktop agganciato allo stato reale della shell, trigger mobile localizzato e scroll lock del body mentre l'overlay e' aperto
-- overlay mobile rifinito per leggibilita' e orientamento: label delle voci in font `Formula1` a `20px`, card piu' alte, contenuto centrato e wrapping meno aggressivo per evitare label schiacciate sui viewport stretti
-- riepilogo sticky della sezione corrente nel menu mobile per mantenere piu' intuitiva la navigazione quando l'utente scrolla o riapre l'overlay
+- hardening della navigation shell: collapse desktop agganciato allo stato reale
+  della shell, trigger mobile localizzato e scroll lock del body mentre
+  l'overlay e' aperto
+- overlay mobile rifinito per leggibilita' e orientamento: label delle voci in
+  font `Formula1` a `20px`, card piu' alte, contenuto centrato e wrapping meno
+  aggressivo per evitare label schiacciate sui viewport stretti
+- riepilogo sticky della sezione corrente nel menu mobile per mantenere piu'
+  intuitiva la navigazione quando l'utente scrolla o riapre l'overlay
 - branding MenuLogo integrato con accenti hi-contrast
 - hero full-width pulita (controlli admin/public spostati nel menu)
 - stato admin/public coerente in tutte le superfici
 - track map coerente tra hero, recap e pannello risultati
-- CTA highlights coerente per ogni weekend selezionato; se il video non e' disponibile la label disabilitata e' `HIGHLIGHTS NON PRESENTI`
+- CTA highlights coerente per ogni weekend selezionato; se il video non e'
+  disponibile la label disabilitata e' `HIGHLIGHTS NON PRESENTI`
 
 ## Architettura
 
@@ -132,12 +189,17 @@ Il lock e' server-side:
 ### Backend
 
 - ASP.NET Core 10
-- solution: [backend-csharp/FantaF1.Backend.sln](/Users/matteobernardini/code/FantaF1/backend-csharp/FantaF1.Backend.sln)
+- solution:
+  [backend-csharp/FantaF1.Backend.sln](/Users/matteobernardini/code/FantaF1/backend-csharp/FantaF1.Backend.sln)
 - layer:
   - `Api`
-  - `Application`
-  - `Domain`
-  - `Infrastructure`
+  - `Application`: contiene le interfacce `IRepository<TEntity, TId>` e i
+    contratti di dominio.
+  - `Domain`: definisce l'interfaccia `IEntity<TId>` implementata da tutti i
+    ReadModels.
+  - `Infrastructure`: implementa la persistenza tramite
+    `MongoRepository<TEntity, TId>` e gestisce le dipendenze via Dependency
+    Injection (DI) senza istanziazioni dirette.
 - startup non bloccante su sync esterni
 - static serving same-origin del build frontend in `dist`
 
@@ -159,8 +221,12 @@ Il backend sanitizza sempre lo stato prima di persisterlo.
 - calendario: Formula1.com
 - standings: Formula1.com
 - risultati weekend: Formula1.com
+- highlights gara: feed YouTube Sky Sport F1, playlist del canale
+  `@skysportf1`, ricerca nel canale YouTube Sky Sport F1 e fallback
+  `sport.sky.it/formula-1/video/highlights`
 
-Se un sync fallisce, il backend prova a usare la cache MongoDB gia' disponibile per quel dominio.
+Se un sync fallisce, il backend prova a usare la cache MongoDB gia' disponibile
+per quel dominio.
 
 ## API principali
 
@@ -217,11 +283,22 @@ Ogni weekend puo' includere:
 - `raceStartTime`
 - `sessions`
 - `highlightsVideoUrl`
-  - URL highlights specifica del weekend, presente solo quando il lookup trova un video compatibile
+  - URL highlights specifica del weekend, presente solo quando il lookup trova
+    un video compatibile
+- `highlightsLookupStatus`
+- `highlightsLookupCheckedAt`
+- `highlightsLookupSource`
+
+La persistenza highlights e' keyed per `meetingKey`: il sync calendario puo'
+aggiornare i metadati del weekend, ma non deve cancellare un URL highlights gia'
+trovato solo perche' un lookup successivo ritorna `missing` o fallisce in modo
+transitorio.
 
 ## Database e migrazioni
 
-L'analisi corrente del branch mostra che `fantaf1` e `fantaf1_staging` sono allineati sulle collection principali, sugli indici e sulla shape dei documenti campionati per:
+L'analisi corrente del branch mostra che `fantaf1` e `fantaf1_staging` sono
+allineati sulle collection principali, sugli indici e sulla shape dei documenti
+campionati per:
 
 - `appdatas`
 - `drivers`
@@ -229,7 +306,8 @@ L'analisi corrente del branch mostra che `fantaf1` e `fantaf1_staging` sono alli
 - `standingscaches`
 - `admincredentials`
 
-Alla data di questa verifica non emerge una migrazione obbligatoria da applicare ai database live per il cutover. Eventuali future migrazioni dovranno essere:
+Alla data di questa verifica non emerge una migrazione obbligatoria da applicare
+ai database live per il cutover. Eventuali future migrazioni dovranno essere:
 
 - esplicite
 - idempotenti
@@ -257,7 +335,10 @@ Alla data di questa verifica non emerge una migrazione obbligatoria da applicare
 - `VITE_APP_LOCAL_NAME`
   - override visuale del titolo hero, letto a build-time dal frontend
 
-`VITE_APP_LOCAL_NAME` viene letta dal frontend Vite a build-time. Su Docker/Render non e' una variabile runtime del backend C#: deve entrare nello stage di build frontend e ogni modifica richiede un rebuild/redeploy per diventare visibile.
+`VITE_APP_LOCAL_NAME` viene letta dal frontend Vite a build-time. Su
+Docker/Render non e' una variabile runtime del backend C#: deve entrare nello
+stage di build frontend e ogni modifica richiede un rebuild/redeploy per
+diventare visibile.
 
 ### Variabili di servizio locali
 
@@ -267,12 +348,14 @@ Alla data di questa verifica non emerge una migrazione obbligatoria da applicare
 
 ### Seed admin locale production-like
 
-Il target locale `csharp-staging-local` usa seed runtime non versionati come plaintext:
+Il target locale `csharp-staging-local` usa seed runtime non versionati come
+plaintext:
 
 - `AdminCredentialSeed__PasswordSalt`
 - `AdminCredentialSeed__PasswordHashHex`
 
-Queste variabili vengono generate dai runner locali; non vanno impostate manualmente su Render.
+Queste variabili vengono generate dai runner locali; non vanno impostate
+manualmente su Render.
 
 ## Matrice ambiente esplicita
 
@@ -296,6 +379,12 @@ Queste variabili vengono generate dai runner locali; non vanno impostate manualm
 - `Frontend__BuildPath`: gestita dal runtime same-origin locale
 - `VITE_APP_LOCAL_NAME`: opzionale
 
+Questo target e' il runbook corretto per simulare `staging` in locale senza
+toccare Render staging. La verifica staging-like same-origin usa:
+
+- `SAVE_SMOKE_TARGET=csharp-staging-local node scripts/save-local-check.mjs`
+- `UI_RESPONSIVE_TARGET=csharp-staging-local npm run test:ui-responsive`
+
 ### Render staging
 
 Impostare esplicitamente:
@@ -316,7 +405,8 @@ Non impostare:
 Note operative:
 
 - `VITE_APP_LOCAL_NAME` agisce solo sul titolo visuale frontend buildato
-- se viene modificata su Render staging, richiede un rebuild/redeploy del servizio per diventare visibile
+- se viene modificata su Render staging, richiede un rebuild/redeploy del
+  servizio per diventare visibile
 - non modifica `GET /api/health` o il runtime environment del backend
 
 ### Render produzione
@@ -338,9 +428,11 @@ Non impostare:
 
 Note operative:
 
-- `VITE_APP_LOCAL_NAME` e' una build env del frontend e non una runtime env del backend
+- `VITE_APP_LOCAL_NAME` e' una build env del frontend e non una runtime env del
+  backend
 - se viene cambiata su produzione, il servizio va rebuildato/redeployato
-- salvo esigenza esplicita, lasciarla vuota per usare il fallback da `config/app-config.json`
+- salvo esigenza esplicita, lasciarla vuota per usare il fallback da
+  `config/app-config.json`
 
 ### GitHub Actions
 
@@ -349,11 +441,13 @@ Secret richiesti:
 - `MONGODB_URI_CI`
 - `ADMIN_SESSION_SECRET_CI`
 
-Secret opzionale:
+Secret opzionali:
 
-- `RENDER_HEALTHCHECK_URL`
+- `RENDER_STAGING_HEALTHCHECK_URL`
+- `RENDER_PRODUCTION_HEALTHCHECK_URL`
 
-La pipeline normalizza la URI CI e usa `MONGODB_DB_NAME_OVERRIDE=fantaf1_ci` per impedire mutazioni dei database condivisi.
+La pipeline normalizza la URI CI e usa `MONGODB_DB_NAME_OVERRIDE=fantaf1_ci` per
+impedire mutazioni dei database condivisi.
 
 ## Avvio locale
 
@@ -367,9 +461,49 @@ La pipeline normalizza la URI CI e usa `MONGODB_DB_NAME_OVERRIDE=fantaf1_ci` per
 
 ### Launcher canonico
 
-- [start_fantaf1.command](/Users/matteobernardini/code/FantaF1/start_fantaf1.command)
+- [start_fantaf1.command](/Users/matteobernardini/code/FantaF1/start_fantaf1.command) (macOS/Linux)
+- [start_fantaf1.bat](/Users/matteobernardini/code/FantaF1/start_fantaf1.bat) (Windows)
+- [clean_google_chrome.command](/Users/matteobernardini/code/FantaF1/clean_google_chrome.command) (macOS/Linux)
+- [clean_google_chrome.bat](/Users/matteobernardini/code/FantaF1/clean_google_chrome.bat) (Windows)
 
-Quando un task richiede di `avviare l'app`, questo e' il solo entrypoint canonico.
+Quando un task richiede di `avviare l'app`, questo e' il solo entrypoint
+canonico. Il launcher esegue una serie di controlli pre-volo obbligatori:
+
+- verifica connettivita' MongoDB (Atlas o locale)
+- linting del codice
+- test unitari frontend
+- test unitari backend C#
+- validazione UI responsive (Playwright)
+- build di produzione frontend
+- smoke test di salvataggio locale
+
+### Note operative UI recenti
+
+- il gruppo `Analisi` nel menu e nella dashboard contiene ora `Stagione attuale`,
+  `Deep-dive KPI dashboard` e `User KPI Dashboard`
+- `Stagione attuale` sostituisce la precedente label `Analisi stagione`
+- la sidebar desktop usa una larghezza leggermente maggiore per evitare clipping
+  dei bordi attivi
+- desktop sidebar e mobile overlay mantengono ora uno stacco visivo tra il
+  gruppo `Analisi` e la successiva voce `Storico gare`
+- i bordi delle voci attive restano interamente visibili sia in desktop sia in
+  mobile/PWA
+
+### Tool locale di pulizia Chrome
+
+Per ripristinare rapidamente Google Chrome dopo sessioni Playwright o DevTools
+residue sono disponibili due entrypoint equivalenti:
+
+- [clean_google_chrome.command](/Users/matteobernardini/code/FantaF1/clean_google_chrome.command)
+- [clean_google_chrome.bat](/Users/matteobernardini/code/FantaF1/clean_google_chrome.bat)
+
+Entrambi gli script:
+
+- verificano che Google Chrome sia installato
+- chiudono i processi di automazione residui che matchano
+  `playwright_chromiumdev_profile-` e `chrome-devtools-mcp`
+- rilanciano Google Chrome
+- verificano che Chrome sia effettivamente ripartito
 
 ### Comandi principali
 
@@ -395,11 +529,14 @@ Target supportati:
 Se `MONGODB_URI` contiene un database condiviso, i runner locali:
 
 - lo riscrivono sul database isolato previsto quando il target e' consentito
-- falliscono esplicitamente se qualcuno tenta di usarli verso `fantaf1` o `fantaf1_staging`
+- falliscono esplicitamente se qualcuno tenta di usarli verso `fantaf1` o
+  `fantaf1_staging`
 
 ## Docker
 
-Il deploy Docker usa il [Dockerfile](/Users/matteobernardini/code/FantaF1/Dockerfile) nella root del repository.
+Il deploy Docker usa il
+[Dockerfile](/Users/matteobernardini/code/FantaF1/Dockerfile) nella root del
+repository.
 
 Caratteristiche:
 
@@ -433,7 +570,8 @@ Obiettivo del cutover:
 - usare in produzione lo stesso modello di deploy Docker gia' attivo su staging
 - servire frontend buildato e backend C# dallo stesso servizio same-origin
 - puntare il runtime di produzione al database `fantaf1`
-- esporre `GET /api/health` con `environment=production` e `databaseTarget=fantaf1`
+- esporre `GET /api/health` con `environment=production` e
+  `databaseTarget=fantaf1`
 
 Procedura operativa:
 
@@ -464,22 +602,28 @@ Procedura operativa:
 8. salvare la configurazione e deployare `main`
 9. attendere il completamento del build Docker e del boot runtime
 10. verificare immediatamente:
-   - `GET /api/health`
-   - `GET /`
-   - `GET /api/session`
-   - `GET /api/data`
-   - `GET /api/drivers`
-   - `GET /api/calendar`
-   - `GET /api/standings`
+
+- `GET /api/health`
+- `GET /`
+- `GET /api/session`
+- `GET /api/data`
+- `GET /api/drivers`
+- `GET /api/calendar`
+- `GET /api/standings`
+
 11. verificare login admin e save flow
 12. confrontare staging e produzione per confermare allineamento funzionale
 
 Condizioni di stop:
 
-- se il servizio produzione non usa davvero Docker + `./Dockerfile`, il cutover non e' pronto
-- se `GET /api/health` non restituisce `environment=production`, il cutover e' fallito
-- se `GET /api/health` non restituisce `databaseTarget=fantaf1`, il cutover e' fallito
-- non usare `MONGODB_DB_NAME_OVERRIDE` per forzare la produzione: il runtime rifiuta target non coerenti
+- se il servizio produzione non usa davvero Docker + `./Dockerfile`, il cutover
+  non e' pronto
+- se `GET /api/health` non restituisce `environment=production`, il cutover e'
+  fallito
+- se `GET /api/health` non restituisce `databaseTarget=fantaf1`, il cutover e'
+  fallito
+- non usare `MONGODB_DB_NAME_OVERRIDE` per forzare la produzione: il runtime
+  rifiuta target non coerenti
 
 ## CI/CD
 
@@ -489,7 +633,7 @@ Workflow principali:
 - [pr-auto-merge.yml](/Users/matteobernardini/code/FantaF1/.github/workflows/pr-auto-merge.yml)
 - [post-merge-health.yml](/Users/matteobernardini/code/FantaF1/.github/workflows/post-merge-health.yml)
 
-Job richiesti su PR verso `main`:
+Job eseguiti dal workflow PR su PR verso `main` e `staging`:
 
 - `lint`
 - `build`
@@ -499,25 +643,74 @@ Job richiesti su PR verso `main`:
 - `responsive-dev`
 - `smoke-ci-db`
 
-I workflow aggiuntivi `gemini-*` restano validi come automazioni repository-side e devono continuare a parsare correttamente come YAML.
+Status checks attualmente richiesti dalla branch protection remota su `main` e
+`staging`:
+
+- `lint`
+- `build`
+- `responsive-dev`
+- `smoke-ci-db`
+
+Healthcheck post-merge:
+
+- `post-merge-health.yml` gira su push a `staging` e `main`
+- usa `RENDER_STAGING_HEALTHCHECK_URL` quando il merge atterra su `staging`
+- usa `RENDER_HEALTHCHECK_URL` quando il merge atterra su `main`
+- `RENDER_HEALTHCHECK_URL` resta il secret storico di produzione e non va
+  rinominato
+- se il secret dell'ambiente relativo non e' configurato, il job salta in modo
+  esplicito senza mascherare l'assenza del controllo
+- `RENDER_STAGING_HEALTHCHECK_URL` deve contenere l'endpoint health completo
+  dello staging, ad esempio
+  `https://fantaf1-staging.onrender.com/api/health`
+
+Trigger operativi documentati:
+
+- `deploya-staging`: valido solo dal branch corrente `develop`, crea/aggiorna la
+  PR `develop -> staging`, richiede una descrizione idonea e coerente con il
+  lavoro svolto, `matteobern9244` come assignee e label aderenti alle modifiche
+  reali, e dipende dai gate `pr-ci`, `pr-auto-merge` e dal healthcheck
+  post-merge dello staging
+- `deploya`: valido solo dal branch corrente `staging`, crea/aggiorna la PR
+  `staging -> main`, richiede una descrizione idonea e coerente con il lavoro
+  svolto, `matteobern9244` come assignee e label aderenti alle modifiche reali,
+  e dipende dagli stessi gate verso produzione
+- entrambi i trigger restano invalidi se il workspace non e' pulito, se il
+  branch non e' quello atteso o se i secret/controlli richiesti non sono
+  disponibili
 
 ## Coverage e qualita'
 
 Baseline verificata corrente sullo scope ufficiale frontend/repository:
 
-- `5212 / 5212` statements
-- `412 / 412` functions
-- `2114 / 2114` branches
-- `5212 / 5212` lines
+- `2510 / 2510` statements
+- `213 / 213` functions
+- `1138 / 1138` branches
+- `2510 / 2510` lines
 
 Baseline verificata corrente su `backend-csharp/src/`:
 
-- `2986 / 2986` lines
-- `1671 / 1671` branches
-- `494 / 494` methods
-- `70` file inclusi
+- `3292 / 3292` lines
+- `1843 / 1843` branches
+- `545 / 545` methods
+- `71` file inclusi
 
-Le soglie repository restano a `100%` su statements, branches, functions e lines.
+Le soglie repository restano a `100%` su statements, branches, functions e
+lines.
+
+Verifica piu' recente rieseguita localmente:
+
+- `npm run test`
+- `npm run test:coverage`
+- `npm run test:csharp-coverage`
+- `npm run lint`
+- `npm run build`
+- `npm run test:ui-responsive`
+
+Ultimo esito verificato:
+
+- `48` file test verdi
+- `318` test verdi
 
 ## Struttura repository
 
@@ -531,7 +724,11 @@ Le soglie repository restano a `100%` su statements, branches, functions e lines
 
 ## Documenti canonici
 
-- [README.md](/Users/matteobernardini/code/FantaF1/README.md): stato operativo reale, runtime, env, deploy, CI/CD
-- [CHANGELOG.md](/Users/matteobernardini/code/FantaF1/CHANGELOG.md): cronologia release e audit
-- [PROJECT.md](/Users/matteobernardini/code/FantaF1/PROJECT.md): vincoli di business e invarianti di dominio
-- [AGENTS.md](/Users/matteobernardini/code/FantaF1/AGENTS.md): disciplina ingegneristica obbligatoria
+- [README.md](/Users/matteobernardini/code/FantaF1/README.md): stato operativo
+  reale, runtime, env, deploy, CI/CD
+- [CHANGELOG.md](/Users/matteobernardini/code/FantaF1/CHANGELOG.md): cronologia
+  release e audit
+- [PROJECT.md](/Users/matteobernardini/code/FantaF1/PROJECT.md): vincoli di
+  business e invarianti di dominio
+- [AGENTS.md](/Users/matteobernardini/code/FantaF1/AGENTS.md): disciplina
+  ingegneristica obbligatoria

@@ -30,8 +30,8 @@ public sealed class PortingDocumentationConsistencyTests
     [Fact]
     public void Canonical_docs_align_the_current_branch_with_the_csharp_runtime_and_cutover_guardrails()
     {
-        var readme = ReadRepositoryFile("README.md");
-        var agents = ReadRepositoryFile("AGENTS.md");
+        var readme = NormalizeWhitespace(ReadRepositoryFile("README.md"));
+        var agents = NormalizeWhitespace(ReadRepositoryFile("AGENTS.md"));
 
         Assert.Contains("Il backend autorevole del repository e' C#", readme, StringComparison.Ordinal);
         Assert.Contains("`main` resta il target di rilascio protetto", readme, StringComparison.Ordinal);
@@ -47,8 +47,8 @@ public sealed class PortingDocumentationConsistencyTests
     [Fact]
     public void Project_and_readme_align_with_current_persistence_runtime_and_local_database_rules()
     {
-        var project = ReadRepositoryFile("PROJECT.md");
-        var readme = ReadRepositoryFile("README.md");
+        var project = NormalizeWhitespace(ReadRepositoryFile("PROJECT.md"));
+        var readme = NormalizeWhitespace(ReadRepositoryFile("README.md"));
 
         Assert.Contains("`appdatas`", project, StringComparison.Ordinal);
         Assert.Contains("`standingscaches`", project, StringComparison.Ordinal);
@@ -67,8 +67,8 @@ public sealed class PortingDocumentationConsistencyTests
     [Fact]
     public void Readme_documents_the_required_render_and_ci_environment_variables()
     {
-        var readme = ReadRepositoryFile("README.md");
-        var envExample = ReadRepositoryFile(".env.example");
+        var readme = NormalizeWhitespace(ReadRepositoryFile("README.md"));
+        var envExample = NormalizeWhitespace(ReadRepositoryFile(".env.example"));
 
         Assert.Contains("`MONGODB_URI=<uri che punta a fantaf1_staging>`", readme, StringComparison.Ordinal);
         Assert.Contains("`ADMIN_SESSION_SECRET=<secret lungo e casuale>`", readme, StringComparison.Ordinal);
@@ -82,6 +82,8 @@ public sealed class PortingDocumentationConsistencyTests
         Assert.Contains("richiede un rebuild/redeploy per diventare visibile", readme, StringComparison.Ordinal);
         Assert.Contains("`MONGODB_URI_CI`", readme, StringComparison.Ordinal);
         Assert.Contains("`ADMIN_SESSION_SECRET_CI`", readme, StringComparison.Ordinal);
+        Assert.Contains("`RENDER_STAGING_HEALTHCHECK_URL`", readme, StringComparison.Ordinal);
+        Assert.Contains("`RENDER_PRODUCTION_HEALTHCHECK_URL`", readme, StringComparison.Ordinal);
         Assert.Contains("ASPNETCORE_ENVIRONMENT=Development", envExample, StringComparison.Ordinal);
         Assert.Contains("MONGODB_DB_NAME_OVERRIDE=", envExample, StringComparison.Ordinal);
         Assert.DoesNotContain("NODE_ENV=", envExample, StringComparison.Ordinal);
@@ -90,7 +92,7 @@ public sealed class PortingDocumentationConsistencyTests
     [Fact]
     public void Readme_contains_an_explicit_render_cutover_runbook_for_production()
     {
-        var readme = ReadRepositoryFile("README.md");
+        var readme = NormalizeWhitespace(ReadRepositoryFile("README.md"));
 
         Assert.Contains("### Runbook di switch produzione post-merge", readme, StringComparison.Ordinal);
         Assert.Contains("Environment type: `Docker`", readme, StringComparison.Ordinal);
@@ -105,9 +107,9 @@ public sealed class PortingDocumentationConsistencyTests
     [Fact]
     public void Readme_and_agents_align_on_current_ci_jobs_and_dotnet_format_gate()
     {
-        var readme = ReadRepositoryFile("README.md");
-        var agents = ReadRepositoryFile("AGENTS.md");
-        var packageJson = ReadRepositoryFile("package.json");
+        var readme = NormalizeWhitespace(ReadRepositoryFile("README.md"));
+        var agents = NormalizeWhitespace(ReadRepositoryFile("AGENTS.md"));
+        var packageJson = NormalizeWhitespace(ReadRepositoryFile("package.json"));
 
         Assert.Contains(
             "`lint`", readme, StringComparison.Ordinal);
@@ -118,34 +120,39 @@ public sealed class PortingDocumentationConsistencyTests
         Assert.Contains("`smoke-ci-db`", readme, StringComparison.Ordinal);
         Assert.Contains("GitHub Actions workflows under `.github/workflows/` must stay aligned", agents, StringComparison.Ordinal);
         Assert.Contains("dotnet format backend-csharp/FantaF1.Backend.sln --verify-no-changes", packageJson, StringComparison.Ordinal);
+        Assert.Contains("`deploya-staging`", readme, StringComparison.Ordinal);
+        Assert.Contains("`develop -> staging`", readme, StringComparison.Ordinal);
+        Assert.Contains("`deploya`", readme, StringComparison.Ordinal);
+        Assert.Contains("`staging -> main`", readme, StringComparison.Ordinal);
+        Assert.DoesNotContain("workflow aggiuntivi `gemini-*`", readme, StringComparison.Ordinal);
     }
 
     [Fact]
     public void Coverage_baseline_numbers_are_aligned_between_readme_and_agents()
     {
-        var readme = ReadRepositoryFile("README.md");
-        var agents = ReadRepositoryFile("AGENTS.md");
+        var readme = StripAllWhitespace(ReadRepositoryFile("README.md"));
+        var agents = StripAllWhitespace(ReadRepositoryFile("AGENTS.md"));
 
-        Assert.Contains("`5212 / 5212` statements", readme, StringComparison.Ordinal);
-        Assert.Contains("`412 / 412` functions", readme, StringComparison.Ordinal);
-        Assert.Contains("`2114 / 2114` branches", readme, StringComparison.Ordinal);
-        Assert.Contains("`5212 / 5212` lines", readme, StringComparison.Ordinal);
+        Assert.Contains("-`2510/2510`statements", readme, StringComparison.Ordinal);
+        Assert.Contains("-`213/213`functions", readme, StringComparison.Ordinal);
+        Assert.Contains("-`1138/1138`branches", readme, StringComparison.Ordinal);
+        Assert.Contains("-`2510/2510`lines", readme, StringComparison.Ordinal);
         Assert.Contains(
-            "**100% statements (5212 / 5212)**, **100% functions (412 / 412)**, **100% branches (2114 / 2114)**, and **100% lines (5212 / 5212)**",
+            StripAllWhitespace("**100% statements (2510 / 2510)**, **100% functions (213 / 213)**, **100% branches (1138 / 1138)**, and **100% lines (2510 / 2510)**"),
             agents,
             StringComparison.Ordinal);
-        Assert.Contains("`2986 / 2986` lines", readme, StringComparison.Ordinal);
-        Assert.Contains("`1671 / 1671` branches", readme, StringComparison.Ordinal);
-        Assert.Contains("`494 / 494` methods", readme, StringComparison.Ordinal);
-        Assert.Contains("**100% line coverage (2986 / 2986)**", agents, StringComparison.Ordinal);
-        Assert.Contains("**100% branch coverage (1671 / 1671)**", agents, StringComparison.Ordinal);
-        Assert.Contains("**100% method coverage (494 / 494)**", agents, StringComparison.Ordinal);
+        Assert.Contains("-`3292/3292`lines", readme, StringComparison.Ordinal);
+        Assert.Contains("-`1843/1843`branches", readme, StringComparison.Ordinal);
+        Assert.Contains("-`545/545`methods", readme, StringComparison.Ordinal);
+        Assert.Contains(StripAllWhitespace("**100% line coverage (3292 / 3292)**"), agents, StringComparison.Ordinal);
+        Assert.Contains(StripAllWhitespace("**100% branch coverage (1843 / 1843)**"), agents, StringComparison.Ordinal);
+        Assert.Contains(StripAllWhitespace("**100% method coverage (545 / 545)**"), agents, StringComparison.Ordinal);
     }
 
     [Fact]
     public void Changelog_records_the_latest_documentation_cleanup_and_database_audit()
     {
-        var changelog = ReadRepositoryFile("CHANGELOG.md");
+        var changelog = NormalizeWhitespace(ReadRepositoryFile("CHANGELOG.md"));
 
         Assert.Contains("## [1.5.1] - 2026-03-15", changelog, StringComparison.Ordinal);
         Assert.Contains("Runbook Ufficiale di Cutover Render Produzione", changelog, StringComparison.Ordinal);
@@ -154,6 +161,16 @@ public sealed class PortingDocumentationConsistencyTests
         Assert.Contains("Audit Finale Database Pre-Cutover", changelog, StringComparison.Ordinal);
         Assert.Contains("Workflow CI/CD Riverificati Localmente", changelog, StringComparison.Ordinal);
         Assert.Contains("Dotnet Format Formalizzato Come Gate Reale", changelog, StringComparison.Ordinal);
+    }
+
+    private static string StripAllWhitespace(string input)
+    {
+        return System.Text.RegularExpressions.Regex.Replace(input, @"\s+", "");
+    }
+
+    private static string NormalizeWhitespace(string input)
+    {
+        return System.Text.RegularExpressions.Regex.Replace(input, @"\s+", " ");
     }
 
     private static string ReadRepositoryFile(params string[] segments)

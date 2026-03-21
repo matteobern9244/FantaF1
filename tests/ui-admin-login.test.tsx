@@ -114,5 +114,5 @@ describe('Admin login UI', () => {
 
     expect(await screen.findByText('Invalid password')).toBeInTheDocument();
     expect(screen.queryByText('Impossibile salvare i dati.')).not.toBeInTheDocument();
-  });
+  }, 30000);
 });

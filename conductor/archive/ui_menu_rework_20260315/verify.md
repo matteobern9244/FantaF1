@@ -12,7 +12,10 @@
 
 ## Verification Notes
 
-- Component tests cover sidebar collapse, menu item clicks, admin/public action buttons, logout, and install CTA.
-- Runtime tests cover desktop shell collapse wiring, localized mobile trigger, overlay close path, and body scroll locking.
-- Responsive diagnostics were revalidated against the final menu wiring rather than the old toggle assumptions.
+- Component tests cover sidebar collapse, menu item clicks, admin/public action
+  buttons, logout, and install CTA.
+- Runtime tests cover desktop shell collapse wiring, localized mobile trigger,
+  overlay close path, and body scroll locking.
+- Responsive diagnostics were revalidated against the final menu wiring rather
+  than the old toggle assumptions.
 - The feature remains frontend-only; no backend contract changes were required.

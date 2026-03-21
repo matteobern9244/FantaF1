@@ -39,10 +39,10 @@ describe('dev launcher Chrome lifecycle tracking', () => {
     expect(launcherScript).toMatch(/export FANTAF1_LOCAL_RUNTIME="\$\{FANTAF1_LOCAL_RUNTIME:-csharp-dev\}"/);
   });
 
-  it('does not run the responsive browser check inside the monitored launcher preflight', () => {
+  it('runs the responsive browser check inside the monitored launcher preflight', () => {
     const launcherScript = fs.readFileSync(startCommandPath, 'utf8');
 
-    expect(launcherScript).not.toMatch(/npm run test:ui-responsive/);
+    expect(launcherScript).toMatch(/npm run test:ui-responsive/);
   });
 
   it('passes through the local launcher env for non-node targets even if the parent env is production', async () => {

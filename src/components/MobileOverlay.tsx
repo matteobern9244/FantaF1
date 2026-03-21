@@ -16,13 +16,13 @@ import {
   Download,
   Smartphone,
 } from 'lucide-react';
-import type { SectionNavigationId } from '../utils/sectionNavigation';
+import type { SectionNavigationEntry, SectionNavigationId } from '../utils/sectionNavigation';
 import type { ViewMode } from '../types';
 import { appText } from '../uiText';
 import MenuLogo from './MenuLogo';
 
 interface MobileOverlayProps {
-  items: Array<{ id: SectionNavigationId; label: string }>;
+  items: SectionNavigationEntry[];
   activeId: string;
   onItemClick: (id: string) => void;
   isAdmin: boolean;
@@ -61,7 +61,12 @@ const MobileOverlay: React.FC<MobileOverlayProps> = ({
   onInstall,
   showInstall = false,
 }) => {
-  const currentItem = items.find((item) => item.id === activeId) ?? items[0] ?? null;
+  const navigationLeafItems = items.flatMap((item) => (
+    item.kind === 'group'
+      ? item.children
+      : [item]
+  ));
+  const currentItem = navigationLeafItems.find((item) => item.id === activeId) ?? navigationLeafItems[0] ?? null;
   const CurrentIcon = currentItem ? iconMap[currentItem.id] || Gauge : Gauge;
 
   return (
@@ -93,6 +98,44 @@ const MobileOverlay: React.FC<MobileOverlayProps> = ({
 
         <div className="mobile-nav-section section-nav-list">
           {items.map((item) => {
+            if (item.kind === 'group') {
+              return (
+                <div
+                  key={item.id}
+                  className={`mobile-nav-group ${item.children.some((child) => child.id === activeId) ? 'active' : ''}`}
+                >
+                  <div className="mobile-nav-group-header">
+                    <span className="mobile-nav-icon" aria-hidden="true">
+                      <Gauge size={18} />
+                    </span>
+                    <span className="mobile-nav-group-label">{item.label}</span>
+                  </div>
+                  {item.children.map((child) => {
+                    const Icon = iconMap[child.id] || Gauge;
+                    return (
+                      <button
+                        key={child.id}
+                        className={`mobile-nav-item mobile-nav-subitem ${activeId === child.id ? 'active' : ''}`}
+                        aria-current={activeId === child.id ? 'page' : undefined}
+                        onClick={() => {
+                          onItemClick(child.id);
+                          onClose();
+                        }}
+                        type="button"
+                      >
+                        <span className="mobile-nav-icon" aria-hidden="true">
+                          <Icon size={18} />
+                        </span>
+                        <span className="mobile-nav-copy">
+                          <span className="mobile-nav-label">{child.label}</span>
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              );
+            }
+
             const Icon = iconMap[item.id] || Gauge;
             return (
               <button

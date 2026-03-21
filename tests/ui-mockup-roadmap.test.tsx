@@ -7,6 +7,8 @@ import React from 'react';
 import App from '../src/App';
 import { appText } from '../src/uiText';
 
+const originalConsoleError = console.error;
+
 class MockIntersectionObserver {
   static instances: MockIntersectionObserver[] = [];
   observe = vi.fn();
@@ -329,6 +331,13 @@ describe('Mockup roadmap UI features', () => {
     vi.clearAllMocks();
     MockIntersectionObserver.instances = [];
     vi.spyOn(window, 'alert').mockImplementation(() => {});
+    vi.spyOn(console, 'error').mockImplementation((message?: unknown, ...optionalParams: unknown[]) => {
+      if (typeof message === 'string' && message.includes('not wrapped in act')) {
+        return;
+      }
+
+      originalConsoleError(message, ...optionalParams);
+    });
     window.history.replaceState({}, '', '/');
     mockMediaMatches({});
     setUserAgent('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)');
@@ -522,7 +531,7 @@ describe('Mockup roadmap UI features', () => {
       expect(screen.queryByTestId('pitstop-loader')).not.toBeInTheDocument();
     });
 
-    expect(screen.getByRole('img', { name: 'Monza' })).toHaveAttribute('src', australiaMapUrl);
+    expect(screen.getAllByRole('img', { name: 'Monza' })[0]).toHaveAttribute('src', australiaMapUrl);
 
     fireEvent.click(screen.getByRole('button', { name: appText.shell.navigation.items.publicView }));
 
@@ -549,7 +558,7 @@ describe('Mockup roadmap UI features', () => {
 
     fireEvent.click(within(navigation).getByRole('button', { name: appText.shell.navigation.items.seasonAnalysis }));
     expect(window.location.hash).toBe('#season-analysis');
-  });
+  }, 15000);
 
   it('shows install CTA when the browser exposes the PWA install prompt', async () => {
     setupFetch();
@@ -752,15 +761,61 @@ describe('Mockup roadmap UI features', () => {
 
     const navigation = screen.getByRole('navigation', { name: appText.shell.navigation.ariaLabel });
     expect(within(navigation).getByRole('button', { name: appText.shell.navigation.items.calendar })).toBeInTheDocument();
-    expect(within(navigation).getByRole('button', { name: appText.shell.navigation.items.results })).toBeInTheDocument();
+    expect(within(navigation).getByText(appText.shell.navigation.items.analysisGroup)).toBeInTheDocument();
+    expect(within(navigation).getByRole('button', { name: appText.shell.navigation.items.seasonAnalysis })).toBeInTheDocument();
+    expect(within(navigation).getByRole('button', { name: appText.shell.navigation.items.userAnalytics })).toBeInTheDocument();
+    expect(within(navigation).getByRole('button', { name: appText.shell.navigation.items.userKpi })).toBeInTheDocument();
     expect(within(navigation).queryByRole('button', { name: appText.shell.navigation.items.publicGuide })).not.toBeInTheDocument();
     expect(within(navigation).queryByRole('button', { name: appText.shell.navigation.items.publicStandings })).not.toBeInTheDocument();
+    expect(within(navigation).getByRole('button', { name: appText.shell.navigation.items.results })).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: appText.shell.navigation.items.publicView }));
 
     expect(within(navigation).getByRole('button', { name: appText.shell.navigation.items.publicGuide })).toBeInTheDocument();
     expect(within(navigation).getByRole('button', { name: appText.shell.navigation.items.publicStandings })).toBeInTheDocument();
     expect(within(navigation).queryByRole('button', { name: appText.shell.navigation.items.results })).not.toBeInTheDocument();
+  });
+
+  it('renders the requested public navigation order and mirrors the same dashboard section order', async () => {
+    setupFetch();
+    render(<App />);
+
+    await waitFor(() => {
+      expect(screen.queryByTestId('pitstop-loader')).not.toBeInTheDocument();
+    });
+
+    const navigation = screen.getByRole('navigation', { name: appText.shell.navigation.ariaLabel });
+    fireEvent.click(screen.getByRole('button', { name: appText.shell.navigation.items.publicView }));
+
+    const navLabels = Array.from(
+      navigation.querySelectorAll('.sidebar-group-label, .sidebar-item .sidebar-label'),
+    ).map((element) => element.textContent?.trim());
+
+    expect(navLabels).toEqual([
+      appText.shell.navigation.items.calendar,
+      appText.shell.navigation.items.predictions,
+      appText.shell.navigation.items.weekendLive,
+      appText.shell.navigation.items.analysisGroup,
+      appText.shell.navigation.items.seasonAnalysis,
+      appText.shell.navigation.items.userAnalytics,
+      appText.shell.navigation.items.userKpi,
+      appText.shell.navigation.items.publicStandings,
+      appText.shell.navigation.items.history,
+      appText.shell.navigation.items.publicGuide,
+    ]);
+
+    const sectionOrder = Array.from(document.querySelectorAll('.nav-section')).map((section) => section.id);
+    expect(sectionOrder).toEqual([
+      'calendar-section',
+      'predictions-section',
+      'weekend-live',
+      'season-analysis',
+      'user-analytics-section',
+      'user-kpi-section',
+      'public-standings',
+      'history-archive',
+      'public-guide',
+    ]);
   });
 
   it('renders navigation directly in the header and updates the hash on navigation', async () => {

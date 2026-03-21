@@ -4,54 +4,19 @@ This file is the prompt-first navigation index for the Conductor workspace in th
 
 ## Active Tracks
 
-## fix_highlights_lookup_20260315 - Fix Highlights Lookup Availability
+## persistent_race_highlights_backfill_utc_hardening_20260320 - Persistenza definitiva highlights per gara con backfill ufficiale F1, matching Sky/YouTube e hardening UTC su Render
 
-- Status: `done`
-- Phase: `done`
-- Active task: Completed
-- Path: `conductor/tracks/fix_highlights_lookup_20260315`
+- Status: `completed`
+- Phase: `completed`
+- Active task: Track fully complete.
+- Path: `conductor/tracks/persistent_race_highlights_backfill_utc_hardening_20260320`
 
-## fix_local_startup_20260315 - Fix Local Startup
+## track-002 - Riordinare il menu e le voci dashboard con sottomenu Analisi per KPI e coerenza desktop/mobile/PWA
 
-- Status: `new`
-- Phase: `new`
-- Active task: No active task
-- Path: `conductor/tracks/fix_local_startup_20260315`
-
-## fix_menu_focus_navigation_20260315 - Fix Menu Focus And Active Navigation
-
-- Status: `done`
-- Phase: `done`
-- Active task: Completed
-- Path: `conductor/tracks/fix_menu_focus_navigation_20260315`
-
-## fix_menu_third_item_focus_20260315 - Fix Menu Third Item Focus
-
-- Status: `done`
-- Phase: `done`
-- Active task: Completed
-- Path: `conductor/tracks/fix_menu_third_item_focus_20260315`
-
-## fix_multi_race_highlights_20260315 - Fix Multi Race Highlights
-
-- Status: `done`
-- Phase: `done`
-- Active task: Completed
-- Path: `conductor/tracks/fix_multi_race_highlights_20260315`
-
-## merge_develop_into_staging_release_20260315 - Merge Develop Into Staging Release
-
-- Status: `done`
-- Phase: `done`
-- Active task: Completed
-- Path: `conductor/tracks/merge_develop_into_staging_release_20260315`
-
-## track-001 - Fix Mobile Menu Readability And Scroll Affordance
-
-- Status: `done`
-- Phase: `done`
-- Active task: Completed
-- Path: `conductor/tracks/track-001-fix-mobile-menu-readability-and-scroll-affordance`
+- Status: `completed`
+- Phase: `completed`
+- Active task: Track completed with full validation and 100% coverage.
+- Path: `conductor/tracks/track-002-riordinare-il-menu-e-le-voci-dashboard-con-sottomenu-analisi-per-kpi-e-coerenza-desktop-mobile-pwa`
 
 ## Archived Tracks
 
@@ -104,6 +69,13 @@ This file is the prompt-first navigation index for the Conductor workspace in th
 - Active task: Archived
 - Path: `conductor/archive/csharp_backend_migration_20260314`
 
+## deploya_staging_20260319 - Implementare un comando 'deploya-staging' e una skill 'fantaf1_deploy_staging' per automatizzare il deploy verso 'staging' partendo da 'develop'.
+
+- Status: `completed`
+- Phase: `completed`
+- Active task: Completed
+- Path: `conductor/archive/deploya_staging_20260319`
+
 ## enforce_versioning_rule_20260314 - enforce versioning rule 20260314
 
 - Status: `archived`
@@ -132,12 +104,47 @@ This file is the prompt-first navigation index for the Conductor workspace in th
 - Active task: Archived
 - Path: `conductor/archive/fix_docker_build_error_20260315`
 
+## fix_highlights_lookup_20260315 - Fix Highlights Lookup Availability
+
+- Status: `archived`
+- Phase: `archived`
+- Active task: Completed
+- Path: `conductor/archive/fix_highlights_lookup_20260315`
+
 ## fix_local_backend_startup_failure_20260314 - Fix fallimento avvio backend locale durante preflight
 
 - Status: `archived`
 - Phase: `archived`
 - Active task: Archived
 - Path: `conductor/archive/fix_local_backend_startup_failure_20260314`
+
+## fix_local_startup_20260315 - Fix Local Startup
+
+- Status: `archived`
+- Phase: `archived`
+- Active task: No active task
+- Path: `conductor/archive/fix_local_startup_20260315`
+
+## fix_menu_focus_navigation_20260315 - Fix Menu Focus And Active Navigation
+
+- Status: `archived`
+- Phase: `archived`
+- Active task: Completed
+- Path: `conductor/archive/fix_menu_focus_navigation_20260315`
+
+## fix_menu_third_item_focus_20260315 - Fix Menu Third Item Focus
+
+- Status: `archived`
+- Phase: `archived`
+- Active task: Completed
+- Path: `conductor/archive/fix_menu_third_item_focus_20260315`
+
+## fix_multi_race_highlights_20260315 - Fix Multi Race Highlights
+
+- Status: `archived`
+- Phase: `archived`
+- Active task: Completed
+- Path: `conductor/archive/fix_multi_race_highlights_20260315`
 
 ## fix_render_dockerfile_not_found_20260315 - Fix Render Dockerfile not found error by clean rewrite and verification.
 
@@ -153,6 +160,13 @@ This file is the prompt-first navigation index for the Conductor workspace in th
 - Active task: Archived
 - Path: `conductor/archive/fix_render_staging_deploy_definitive_20260315`
 
+## fix_startup_command_20260317 - Execute test cycles and fix startup script
+
+- Status: `archived`
+- Phase: `archived`
+- Active task: Completed
+- Path: `conductor/archive/fix_startup_command_20260317`
+
 ## integrate_dotnet_format_20260314 - Integrazione dotnet format nel workflow C# e CI/CD
 
 - Status: `archived`
@@ -160,12 +174,40 @@ This file is the prompt-first navigation index for the Conductor workspace in th
 - Active task: Archived
 - Path: `conductor/archive/integrate_dotnet_format_20260314`
 
+## investigate_highlights_algorithm_20260317 - Investigation plan for the "HIGHLIGHTS" algorithm
+
+- Status: `archived`
+- Phase: `archived`
+- Active task: Archived
+- Path: `conductor/archive/investigate_highlights_algorithm_20260317`
+
+## merge_develop_into_staging_release_20260315 - Merge Develop Into Staging Release
+
+- Status: `archived`
+- Phase: `archived`
+- Active task: Completed
+- Path: `conductor/archive/merge_develop_into_staging_release_20260315`
+
 ## porting_csharp_phase_10_20260314 - Docker Render Staging and Atlas Operationalization (Phase 10) for C# Backend Port
 
 - Status: `archived`
 - Phase: `archived`
 - Active task: Archived
 - Path: `conductor/archive/porting_csharp_phase_10_20260314`
+
+## protect_staging_branch_20260318 - proteggere il branch 'staging' a livello di github in modo identico a come è protetto il branch 'main'
+
+- Status: `completed`
+- Phase: `completed`
+- Active task: Completed
+- Path: `conductor/tracks/protect_staging_branch_20260318`
+
+## restaylyng_menu_mobile_20260316 - Mobile Menu Restyling
+
+- Status: `archived`
+- Phase: `archived`
+- Active task: No active task
+- Path: `conductor/archive/restaylyng-menu-mobile`
 
 ## restore_prod_to_staging_20260314 - Restore production database dump to staging for testing
 
@@ -187,6 +229,34 @@ This file is the prompt-first navigation index for the Conductor workspace in th
 - Phase: `archived`
 - Active task: Archived
 - Path: `conductor/archive/setup_mongodb_tooling_20260314`
+
+## stabilize_highlights_persistence_20260318 - Persistenza Definitiva Highlights Per Gara
+
+- Status: `completed`
+- Phase: `completed`
+- Active task: Implementation, coverage, responsive verification, and production-like preview checks completed without commit or push.
+- Path: `conductor/tracks/stabilize_highlights_persistence_20260318`
+
+## streamline_core_docs_20260318 - Streamline core documentation (GEMINI.md & AGENTS.md)
+
+- Status: `new`
+- Phase: `new`
+- Active task: No active task
+- Path: `conductor/tracks/streamline_core_docs_20260318`
+
+## sync_branch_rules_20260319 - Verificare le rules su github per il branch 'main', NON FARE NESSUNA MODIFICA alle rules di eper 'main' ma applicarle anche al branch 'staging'
+
+- Status: `completed`
+- Phase: `completed`
+- Active task: Completed
+- Path: `conductor/archive/sync_branch_rules_20260319`
+
+## track-001 - Fix Mobile Menu Readability And Scroll Affordance
+
+- Status: `archived`
+- Phase: `archived`
+- Active task: Completed
+- Path: `conductor/archive/track-001-fix-mobile-menu-readability-and-scroll-affordance`
 
 ## ui_menu_rework_20260315 - UI Menu Rework
 
@@ -236,6 +306,13 @@ This file is the prompt-first navigation index for the Conductor workspace in th
 - Phase: `archived`
 - Active task: Archived
 - Path: `conductor/archive/verify_workflow_20260314`
+
+## windows_startup_script_20260319 - Creare un file start_fantaf1.bat che deve essere equivalente al file start_fantaf1.command
+
+- Status: `completed`
+- Phase: `completed`
+- Active task: Completed
+- Path: `conductor/archive/windows_startup_script_20260319`
 
 ## Notes
 

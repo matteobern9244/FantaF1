@@ -4,13 +4,22 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import Sidebar from '../src/components/Sidebar';
-import type { SectionNavigationId } from '../src/utils/sectionNavigation';
+import type { SectionNavigationEntry, SectionNavigationId } from '../src/utils/sectionNavigation';
 import { appText } from '../src/uiText';
 
 describe('Sidebar Component', () => {
-  const mockItems: Array<{ id: SectionNavigationId; label: string }> = [
-    { id: 'calendar-section', label: 'Calendar' },
-    { id: 'user-kpi-section', label: 'KPIs' },
+  const mockItems: SectionNavigationEntry[] = [
+    { kind: 'item', id: 'calendar-section', label: 'Calendar' },
+    {
+      kind: 'group',
+      id: 'analysis-group',
+      label: 'Analisi',
+      children: [
+        { kind: 'item', id: 'season-analysis', label: 'Stagione attuale' },
+        { kind: 'item', id: 'user-analytics-section', label: 'Deep-dive KPI dashboard' },
+        { kind: 'item', id: 'user-kpi-section', label: 'User KPI Dashboard' },
+      ],
+    },
   ];
 
   const defaultProps = {
@@ -27,12 +36,15 @@ describe('Sidebar Component', () => {
   it('renders all navigation items', () => {
     render(<Sidebar {...defaultProps} />);
     expect(screen.getByText('Calendar')).toBeInTheDocument();
-    expect(screen.getByText('KPIs')).toBeInTheDocument();
+    expect(screen.getByText('Analisi')).toBeInTheDocument();
+    expect(screen.getByText('Stagione attuale')).toBeInTheDocument();
+    expect(screen.getByText('Deep-dive KPI dashboard')).toBeInTheDocument();
+    expect(screen.getByText('User KPI Dashboard')).toBeInTheDocument();
   });
 
   it('calls onItemClick when an item is clicked', () => {
     render(<Sidebar {...defaultProps} />);
-    fireEvent.click(screen.getByText('KPIs'));
+    fireEvent.click(screen.getByText('User KPI Dashboard'));
     expect(defaultProps.onItemClick).toHaveBeenCalledWith('user-kpi-section');
   });
 
@@ -63,10 +75,29 @@ describe('Sidebar Component', () => {
   it('uses fallback icon for unknown items', () => {
     const customItems = [
       ...mockItems,
-      { id: 'unknown-id' as any, label: 'Unknown' },
+      { kind: 'item', id: 'unknown-id' as any, label: 'Unknown' },
     ];
     render(<Sidebar {...defaultProps} items={customItems} />);
     expect(screen.getByText('Unknown')).toBeInTheDocument();
+  });
+
+  it('uses fallback icon for unknown child items inside the Analisi group', () => {
+    const customItems: SectionNavigationEntry[] = [
+      { kind: 'item', id: 'calendar-section', label: 'Calendar' },
+      {
+        kind: 'group',
+        id: 'analysis-group',
+        label: 'Analisi',
+        children: [
+          { kind: 'item', id: 'unknown-id' as SectionNavigationId, label: 'Unknown child' },
+        ],
+      },
+    ];
+
+    const { container } = render(<Sidebar {...defaultProps} items={customItems} activeId="unknown-id" />);
+
+    expect(screen.getByText('Unknown child')).toBeInTheDocument();
+    expect(container.querySelector('.sidebar-subitem .lucide-gauge')).toBeInTheDocument();
   });
 
   it('shows Admin Login when not admin', () => {
@@ -107,7 +138,9 @@ describe('Sidebar Component', () => {
     
     // Check navigation item title
     expect(screen.getByTitle('Calendar')).toBeInTheDocument();
-    expect(screen.getByTitle('KPIs')).toBeInTheDocument();
+    expect(screen.getByTitle('Stagione attuale')).toBeInTheDocument();
+    expect(screen.getByTitle('Deep-dive KPI dashboard')).toBeInTheDocument();
+    expect(screen.getByTitle('User KPI Dashboard')).toBeInTheDocument();
     
     // Check footer items titles
     expect(screen.getByTitle(appText.shell.navigation.items.installApp)).toBeInTheDocument();
@@ -131,5 +164,21 @@ describe('Sidebar Component', () => {
 
     expect(onCollapseChange).toHaveBeenNthCalledWith(1, true);
     expect(onCollapseChange).toHaveBeenNthCalledWith(2, false);
+  });
+
+  it('renders child items after the Analisi group label in the requested order', () => {
+    const { container } = render(<Sidebar {...defaultProps} />);
+    const navigation = container.querySelector('.sidebar-nav');
+    const labels = Array.from(navigation?.querySelectorAll('.sidebar-group-label, .sidebar-item .sidebar-label') ?? []).map(
+      (element) => element.textContent?.trim(),
+    );
+
+    expect(labels).toEqual([
+      'Calendar',
+      'Analisi',
+      'Stagione attuale',
+      'Deep-dive KPI dashboard',
+      'User KPI Dashboard',
+    ]);
   });
 });

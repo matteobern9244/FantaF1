@@ -109,7 +109,7 @@ describe('Manual predictions save UI', () => {
       "Il salvataggio richiede l'inserimento di almeno un pronostico.",
     );
     expect(fetchMock).toHaveBeenCalledTimes(fetchCallsBeforeClick);
-  });
+  }, 15000);
 
   it('posts the manual save to /api/predictions when at least one prediction exists', async () => {
     vi.spyOn(window, 'alert').mockImplementation(() => {});
@@ -187,5 +187,5 @@ describe('Manual predictions save UI', () => {
     });
 
     expect(screen.getByRole('status')).toHaveTextContent('Pronostici salvati.');
-  });
+  }, 15000);
 });

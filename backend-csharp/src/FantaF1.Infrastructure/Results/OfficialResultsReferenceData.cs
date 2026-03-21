@@ -7,9 +7,12 @@ internal static class OfficialResultsReferenceData
 
     public const string HighlightsChannelHandle = "@skysportf1";
     public const string HighlightsChannelId = "UCMQ7Gx6v-pQy_gsRoMJYzOA";
+    public const string HighlightsChannelPlaylistsUrl = "https://www.youtube.com/@skysportf1/playlists";
     public const string HighlightsChannelSearchBaseUrl = "https://www.youtube.com/@skysportf1/search?query=";
     public const string HighlightsFeedUrl = "https://www.youtube.com/feeds/videos.xml?channel_id=UCMQ7Gx6v-pQy_gsRoMJYzOA";
     public const string HighlightsSearchBaseUrl = "https://www.youtube.com/results?search_query=";
+    public const string HighlightsSkyPageUrl = "https://sport.sky.it/formula-1/video/highlights";
+    public const string HighlightsSkyRacePageBaseUrl = "https://sport.sky.it/formula-1/video/highlights/gp-";
     public const string HighlightsOEmbedBaseUrl = "https://www.youtube.com/oembed?format=json&url=";
     public const string HighlightsPublisherLabel = "Sky Sport F1";
     public const int HighlightsLookupMissingTtlHours = 6;
@@ -59,21 +62,29 @@ internal static class OfficialResultsReferenceData
     public static readonly IReadOnlyDictionary<string, string[]> HighlightsRaceAliases =
         new Dictionary<string, string[]>(StringComparer.OrdinalIgnoreCase)
         {
-            ["emilia romagna"] = ["imola"],
+            ["bahrain"] = ["Sakhir"],
+            ["saudi arabia"] = ["Jeddah", "Arabia Saudita"],
+            ["australia"] = ["Melbourne", "Albert Park"],
+            ["japan"] = ["Giappone", "Suzuka"],
             ["china"] = ["Cina", "Shanghai"],
+            ["miami"] = ["Miami"],
+            ["canada"] = ["montreal"],
+            ["monaco"] = ["Monte Carlo", "Montecarlo"],
+            ["spain"] = ["Spagna", "Barcelona", "Barcelona-Catalunya"],
+            ["austria"] = ["Spielberg", "Zeltweg"],
             ["great britain"] = ["silverstone"],
             ["hungary"] = ["Ungheria", "Budapest", "Hungaroring"],
-            ["japan"] = ["Giappone", "Suzuka"],
-            ["netherlands"] = ["Olanda", "Zandvoort"],
             ["belgium"] = ["Belgio", "Spa", "Spa Francorchamps"],
+            ["netherlands"] = ["Olanda", "Zandvoort"],
             ["italy"] = ["Italia", "Monza"],
-            ["brazil"] = ["Brasile", "Interlagos", "Sao Paulo"],
+            ["madrid"] = ["Madrid"],
             ["azerbaijan"] = ["baku"],
-            ["spain"] = ["Spagna", "Barcelona"],
-            ["canada"] = ["montreal"],
+            ["singapore"] = ["Marina Bay"],
             ["usa"] = ["austin"],
             ["mexico"] = ["Messico", "Mexico City"],
+            ["brazil"] = ["Brasile", "Interlagos", "Sao Paulo"],
             ["las vegas"] = ["vegas"],
+            ["qatar"] = ["Lusail", "Losail"],
             ["abu dhabi"] = ["yas marina"],
         };
 }

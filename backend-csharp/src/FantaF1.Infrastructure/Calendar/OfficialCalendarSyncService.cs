@@ -1,6 +1,7 @@
 using System.Text.RegularExpressions;
 using FantaF1.Application.Abstractions.Persistence;
 using FantaF1.Application.Abstractions.Services;
+using FantaF1.Application.Abstractions.System;
 using FantaF1.Domain.ReadModels;
 using FantaF1.Infrastructure.Configuration;
 
@@ -27,17 +28,20 @@ public sealed partial class OfficialCalendarSyncService
     private readonly PortingAppConfig _config;
     private readonly IWeekendRepository _weekendRepository;
     private readonly IRaceHighlightsLookupService _highlightsLookupService;
+    private readonly IClock _clock;
     private readonly HttpClient _httpClient;
 
     public OfficialCalendarSyncService(
         PortingAppConfig config,
         IWeekendRepository weekendRepository,
         IRaceHighlightsLookupService highlightsLookupService,
+        IClock clock,
         HttpClient httpClient)
     {
         _config = config ?? throw new ArgumentNullException(nameof(config));
         _weekendRepository = weekendRepository ?? throw new ArgumentNullException(nameof(weekendRepository));
         _highlightsLookupService = highlightsLookupService ?? throw new ArgumentNullException(nameof(highlightsLookupService));
+        _clock = clock ?? throw new ArgumentNullException(nameof(clock));
         _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
     }
 
@@ -49,6 +53,8 @@ public sealed partial class OfficialCalendarSyncService
         {
             try
             {
+                var persistedWeekends = await _weekendRepository.ReadAllAsync(cancellationToken);
+                var persistedWeekendsIndex = PersistedWeekendIndex.Create(persistedWeekends);
                 var seasonHtml = await FetchHtmlAsync(_config.Calendar.SeasonUrl, cancellationToken);
                 var baseCalendar = ParseSeasonCalendarPage(seasonHtml, _config.CurrentYear);
 
@@ -60,13 +66,22 @@ public sealed partial class OfficialCalendarSyncService
                 var enrichedCalendar = new List<WeekendDocument>(baseCalendar.Count);
                 foreach (var weekend in baseCalendar)
                 {
+                    var persistedWeekend = persistedWeekendsIndex.Find(weekend);
                     try
                     {
                         var detailHtml = await FetchHtmlAsync(weekend.DetailUrl!, cancellationToken);
                         var detailData = ParseRaceDetailPage(detailHtml, weekend.MeetingName!, weekend.MeetingKey, weekend.EndDate!);
-                        var weekendWithDetail = BuildWeekendWithDetailData(weekend, detailData);
+                        var weekendWithDetail = BuildWeekendWithPersistedHighlights(
+                            BuildWeekendWithDetailData(weekend, detailData),
+                            persistedWeekendsIndex.Find(
+                                detailData.MeetingKey,
+                                weekend.DetailUrl,
+                                weekend.MeetingKey,
+                                weekend.RoundNumber,
+                                weekend.StartDate,
+                                weekend.EndDate) ?? persistedWeekend);
 
-                        if (!_highlightsLookupService.ShouldLookup(weekendWithDetail, DateTimeOffset.UtcNow))
+                        if (!_highlightsLookupService.ShouldLookup(weekendWithDetail, _clock.UtcNow))
                         {
                             enrichedCalendar.Add(BuildWeekendWithHighlightsFallback(weekendWithDetail));
                             continue;
@@ -75,13 +90,7 @@ public sealed partial class OfficialCalendarSyncService
                         try
                         {
                             var lookup = await _highlightsLookupService.ResolveAsync(weekendWithDetail, cancellationToken);
-                            enrichedCalendar.Add(weekendWithDetail with
-                            {
-                                HighlightsVideoUrl = lookup.HighlightsVideoUrl,
-                                HighlightsLookupCheckedAt = lookup.HighlightsLookupCheckedAt,
-                                HighlightsLookupStatus = lookup.HighlightsLookupStatus,
-                                HighlightsLookupSource = lookup.HighlightsLookupSource,
-                            });
+                            enrichedCalendar.Add(MergeLookupResult(weekendWithDetail, persistedWeekend, lookup));
                         }
                         catch
                         {
@@ -90,7 +99,7 @@ public sealed partial class OfficialCalendarSyncService
                     }
                     catch
                     {
-                        enrichedCalendar.Add(weekend);
+                        enrichedCalendar.Add(BuildWeekendWithPersistedHighlights(weekend, persistedWeekend));
                     }
                 }
 
@@ -312,11 +321,169 @@ public sealed partial class OfficialCalendarSyncService
         };
     }
 
+    internal static WeekendDocument BuildWeekendWithPersistedHighlights(WeekendDocument weekend, WeekendDocument? persistedWeekend)
+    {
+        if (persistedWeekend is null)
+        {
+            return BuildWeekendWithHighlightsFallback(weekend);
+        }
+
+        return weekend with
+        {
+            HighlightsVideoUrl = persistedWeekend.HighlightsVideoUrl ?? string.Empty,
+            HighlightsLookupCheckedAt = persistedWeekend.HighlightsLookupCheckedAt ?? string.Empty,
+            HighlightsLookupStatus = persistedWeekend.HighlightsLookupStatus ?? string.Empty,
+            HighlightsLookupSource = persistedWeekend.HighlightsLookupSource ?? string.Empty,
+        };
+    }
+
+    internal static WeekendDocument MergeLookupResult(
+        WeekendDocument weekend,
+        WeekendDocument? persistedWeekend,
+        HighlightsLookupDocument lookup)
+    {
+        var hasPersistedHighlights = !string.IsNullOrWhiteSpace(persistedWeekend?.HighlightsVideoUrl);
+        var isMissingLookup = string.IsNullOrWhiteSpace(lookup.HighlightsVideoUrl)
+            && string.Equals(lookup.HighlightsLookupStatus, "missing", StringComparison.Ordinal);
+
+        if (hasPersistedHighlights && isMissingLookup)
+        {
+            return BuildWeekendWithPersistedHighlights(weekend, persistedWeekend);
+        }
+
+        return weekend with
+        {
+            HighlightsVideoUrl = lookup.HighlightsVideoUrl,
+            HighlightsLookupCheckedAt = lookup.HighlightsLookupCheckedAt,
+            HighlightsLookupStatus = lookup.HighlightsLookupStatus,
+            HighlightsLookupSource = lookup.HighlightsLookupSource,
+        };
+    }
+
     internal static IEnumerable<string> ExtractTextFragments(string value)
     {
         return FragmentPattern().Matches(value ?? string.Empty)
             .Select(match => NormalizeText(match.Groups[1].Value))
             .Where(static fragment => !string.IsNullOrWhiteSpace(fragment));
+    }
+
+    private sealed class PersistedWeekendIndex
+    {
+        private readonly IReadOnlyDictionary<string, WeekendDocument> _byMeetingKey;
+        private readonly IReadOnlyDictionary<string, WeekendDocument> _byDetailUrl;
+        private readonly IReadOnlyDictionary<string, WeekendDocument> _bySlug;
+        private readonly IReadOnlyDictionary<string, WeekendDocument> _byRoundAndDates;
+
+        private PersistedWeekendIndex(
+            IReadOnlyDictionary<string, WeekendDocument> byMeetingKey,
+            IReadOnlyDictionary<string, WeekendDocument> byDetailUrl,
+            IReadOnlyDictionary<string, WeekendDocument> bySlug,
+            IReadOnlyDictionary<string, WeekendDocument> byRoundAndDates)
+        {
+            _byMeetingKey = byMeetingKey;
+            _byDetailUrl = byDetailUrl;
+            _bySlug = bySlug;
+            _byRoundAndDates = byRoundAndDates;
+        }
+
+        public static PersistedWeekendIndex Create(IReadOnlyList<WeekendDocument> weekends)
+        {
+            var byMeetingKey = new Dictionary<string, WeekendDocument>(StringComparer.Ordinal);
+            var byDetailUrl = new Dictionary<string, WeekendDocument>(StringComparer.Ordinal);
+            var bySlug = new Dictionary<string, WeekendDocument>(StringComparer.OrdinalIgnoreCase);
+            var byRoundAndDates = new Dictionary<string, WeekendDocument>(StringComparer.Ordinal);
+
+            foreach (var weekend in weekends)
+            {
+                if (!string.IsNullOrWhiteSpace(weekend.MeetingKey))
+                {
+                    byMeetingKey[weekend.MeetingKey] = weekend;
+                }
+
+                if (!string.IsNullOrWhiteSpace(weekend.DetailUrl))
+                {
+                    byDetailUrl[weekend.DetailUrl] = weekend;
+                }
+
+                var slug = ExtractSlug(weekend.DetailUrl) ?? NormalizeKey(weekend.MeetingKey);
+                if (!string.IsNullOrWhiteSpace(slug))
+                {
+                    bySlug[slug] = weekend;
+                }
+
+                var roundAndDatesKey = BuildRoundAndDatesKey(weekend.RoundNumber, weekend.StartDate, weekend.EndDate);
+                if (!string.IsNullOrWhiteSpace(roundAndDatesKey))
+                {
+                    byRoundAndDates[roundAndDatesKey] = weekend;
+                }
+            }
+
+            return new PersistedWeekendIndex(byMeetingKey, byDetailUrl, bySlug, byRoundAndDates);
+        }
+
+        public WeekendDocument? Find(WeekendDocument weekend)
+        {
+            return Find(weekend.MeetingKey, weekend.DetailUrl, weekend.MeetingKey, weekend.RoundNumber, weekend.StartDate, weekend.EndDate);
+        }
+
+        public WeekendDocument? Find(string? meetingKey, string? detailUrl, string? fallbackSlug)
+        {
+            return Find(meetingKey, detailUrl, fallbackSlug, null, null, null);
+        }
+
+        public WeekendDocument? Find(
+            string? meetingKey,
+            string? detailUrl,
+            string? fallbackSlug,
+            int? roundNumber,
+            string? startDate,
+            string? endDate)
+        {
+            var normalizedMeetingKey = NormalizeKey(meetingKey);
+            if (!string.IsNullOrWhiteSpace(normalizedMeetingKey)
+                && _byMeetingKey.TryGetValue(normalizedMeetingKey, out var weekendByMeetingKey))
+            {
+                return weekendByMeetingKey;
+            }
+
+            var normalizedDetailUrl = NormalizeKey(detailUrl);
+            if (!string.IsNullOrWhiteSpace(normalizedDetailUrl)
+                && _byDetailUrl.TryGetValue(normalizedDetailUrl, out var weekendByDetailUrl))
+            {
+                return weekendByDetailUrl;
+            }
+
+            var slug = ExtractSlug(detailUrl) ?? NormalizeKey(fallbackSlug);
+            if (!string.IsNullOrWhiteSpace(slug) && _bySlug.TryGetValue(slug, out var weekendBySlug))
+            {
+                return weekendBySlug;
+            }
+
+            var roundAndDatesKey = BuildRoundAndDatesKey(roundNumber, startDate, endDate);
+            return !string.IsNullOrWhiteSpace(roundAndDatesKey) && _byRoundAndDates.TryGetValue(roundAndDatesKey, out var weekendByRoundAndDates)
+                ? weekendByRoundAndDates
+                : null;
+        }
+
+        private static string? ExtractSlug(string? detailUrl)
+        {
+            return NormalizeKey(detailUrl?.Split('/').LastOrDefault());
+        }
+
+        private static string? NormalizeKey(string? value)
+        {
+            var normalizedValue = value?.Trim();
+            return string.IsNullOrWhiteSpace(normalizedValue) ? null : normalizedValue;
+        }
+
+        private static string? BuildRoundAndDatesKey(int? roundNumber, string? startDate, string? endDate)
+        {
+            return roundNumber is null
+                || string.IsNullOrWhiteSpace(startDate)
+                || string.IsNullOrWhiteSpace(endDate)
+                ? null
+                : $"{roundNumber.Value}|{startDate.Trim()}|{endDate.Trim()}";
+        }
     }
 
     internal static bool IsMeetingNameFragment(string fragment)

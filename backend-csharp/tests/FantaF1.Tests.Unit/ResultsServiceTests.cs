@@ -257,6 +257,42 @@ public sealed class ResultsServiceTests
     }
 
     [Fact]
+    public void Highlights_lookup_policy_does_not_consider_a_same_day_race_finished_before_race_start_time()
+    {
+        var policy = new RaceHighlightsLookupPolicy(TimeSpan.FromHours(6));
+        var now = new DateTimeOffset(2026, 03, 01, 12, 00, 00, TimeSpan.Zero);
+
+        var shouldLookup = policy.ShouldLookup(
+            CreateWeekend(
+                "race-start-not-reached",
+                startDate: "2026-03-01",
+                endDate: "2026-03-01",
+                raceStartTime: "2026-03-01T14:00:00Z",
+                highlightsLookupStatus: string.Empty),
+            now);
+
+        Assert.False(shouldLookup);
+    }
+
+    [Fact]
+    public void Highlights_lookup_policy_respects_an_explicit_end_timestamp_without_rewriting_it()
+    {
+        var policy = new RaceHighlightsLookupPolicy(TimeSpan.FromHours(6));
+        var now = new DateTimeOffset(2026, 03, 01, 18, 00, 00, TimeSpan.Zero);
+
+        var shouldLookup = policy.ShouldLookup(
+            CreateWeekend(
+                "explicit-end-timestamp",
+                startDate: "2026-03-01",
+                endDate: "2026-03-01T20:00:00Z",
+                raceStartTime: null,
+                highlightsLookupStatus: string.Empty),
+            now);
+
+        Assert.False(shouldLookup);
+    }
+
+    [Fact]
     public async Task Results_service_reads_the_calendar_once_uses_cached_results_and_persists_found_highlights()
     {
         var weekendRepository = new StubWeekendRepository(
@@ -314,6 +350,50 @@ public sealed class ResultsServiceTests
             weekendRepository.WrittenLookup);
         Assert.Equal("https://www.youtube.com/watch?v=skyf1-finished", weekendRepository.Documents.Single().HighlightsVideoUrl);
         Assert.Equal(1, highlightsLookupService.ResolveCalls);
+    }
+
+    [Fact]
+    public async Task Results_service_repopulates_missing_historical_highlights_with_the_resolved_sky_race_page()
+    {
+        var weekendRepository = new StubWeekendRepository(
+        [
+            CreateWeekend(
+                "1279",
+                detailUrl: "https://www.formula1.com/en/racing/2026/australia",
+                startDate: "2026-03-06",
+                endDate: "2026-03-08",
+                raceStartTime: "2026-03-08T04:00:00Z"),
+        ]);
+        var sourceClient = new StubResultsSourceClient(new Dictionary<string, string>
+        {
+            ["https://www.formula1.com/en/results/2026/races/1279/australia/race-result"] =
+                "<table><tbody><tr><td>1</td><td>63</td><td>George Russell</td></tr><tr><td>2</td><td>12</td><td>Kimi Antonelli</td></tr><tr><td>3</td><td>16</td><td>Charles Leclerc</td></tr></tbody></table>",
+            ["https://www.formula1.com/en/results/2026/races/1279/australia/qualifying"] =
+                "<table><tbody><tr><td>1</td><td>63</td><td>George Russell</td></tr></tbody></table>",
+        });
+        var highlightsLookupService = new StubRaceHighlightsLookupService(
+            shouldLookup: true,
+            resolvedLookup: new HighlightsLookupDocument(
+                "https://sport.sky.it/formula-1/video/highlights/gp-australia",
+                "2026-03-18T09:00:00.000Z",
+                "found",
+                "sky-race-page"));
+        var service = new ResultsService(
+            weekendRepository,
+            sourceClient,
+            new RaceResultsCache(),
+            new FormulaOneResultsUrlBuilder(),
+            new OfficialResultsParser(),
+            new RacePhaseResolver(),
+            highlightsLookupService,
+            new StubClock(new DateTimeOffset(2026, 03, 18, 10, 00, 00, TimeSpan.Zero)));
+
+        var payload = await service.ReadAsync("1279", CancellationToken.None);
+
+        Assert.Equal("finished", payload.RacePhase);
+        Assert.Equal("https://sport.sky.it/formula-1/video/highlights/gp-australia", payload.HighlightsVideoUrl);
+        Assert.Equal("sky-race-page", weekendRepository.WrittenLookup?.HighlightsLookupSource);
+        Assert.Equal("https://sport.sky.it/formula-1/video/highlights/gp-australia", weekendRepository.Documents.Single().HighlightsVideoUrl);
     }
 
     [Fact]
@@ -621,6 +701,12 @@ public sealed class ResultsServiceTests
         public int ReadAllCalls { get; private set; }
 
         public HighlightsLookupDocument? WrittenLookup { get; private set; }
+
+        public Task<WeekendDocument?> GetByIdAsync(string id, CancellationToken cancellationToken) => throw new NotImplementedException();
+        public Task<IReadOnlyList<WeekendDocument>> GetAllAsync(CancellationToken cancellationToken) => throw new NotImplementedException();
+        public Task AddAsync(WeekendDocument entity, CancellationToken cancellationToken) => throw new NotImplementedException();
+        public Task UpdateAsync(WeekendDocument entity, CancellationToken cancellationToken) => throw new NotImplementedException();
+        public Task DeleteAsync(string id, CancellationToken cancellationToken) => throw new NotImplementedException();
 
         public Task<IReadOnlyList<WeekendDocument>> ReadAllAsync(CancellationToken cancellationToken)
         {
