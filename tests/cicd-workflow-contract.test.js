@@ -21,6 +21,9 @@ describe('CI/CD workflow contract', () => {
   it('keeps README aligned with the actual workflow inventory and deploy triggers', () => {
     const readme = readRepositoryFile('README.md').replace(/\s+/g, ' ');
     const agents = readRepositoryFile('AGENTS.md').replace(/\s+/g, ' ');
+    const conductorWorkflow = readRepositoryFile('conductor/workflow.md').replace(/\s+/g, ' ');
+    const deploySkill = readRepositoryFile('.gemini/skills/fantaf1-deploy/SKILL.md').replace(/\s+/g, ' ');
+    const deployStagingSkill = readRepositoryFile('.gemini/skills/fantaf1_deploy_staging/SKILL.md').replace(/\s+/g, ' ');
 
     expect(readme).toContain('`deploya-staging`');
     expect(readme).toContain('`develop -> staging`');
@@ -31,6 +34,13 @@ describe('CI/CD workflow contract', () => {
     expect(agents).toContain('The Pull Request body must be idonea');
     expect(agents).toContain('`matteobern9244` must be assigned as assignee');
     expect(agents).toContain('Pull Request labels must reflect the work actually performed');
+    expect(conductorWorkflow).toContain('La descrizione della PR deve essere idonea');
+    expect(conductorWorkflow).toContain('`matteobern9244` deve essere impostato come assignee');
+    expect(conductorWorkflow).toContain('Le label della PR devono riflettere esclusivamente il lavoro');
+    expect(deploySkill).toContain('The Pull Request body must be suitable');
+    expect(deploySkill).toContain('`matteobern9244` must be assigned as assignee');
+    expect(deployStagingSkill).toContain('The Pull Request body must be suitable');
+    expect(deployStagingSkill).toContain('`matteobern9244` must be assigned as assignee');
     expect(readme).not.toContain('workflow aggiuntivi `gemini-*`');
   });
 });

@@ -12,6 +12,7 @@ internal static class OfficialResultsReferenceData
     public const string HighlightsFeedUrl = "https://www.youtube.com/feeds/videos.xml?channel_id=UCMQ7Gx6v-pQy_gsRoMJYzOA";
     public const string HighlightsSearchBaseUrl = "https://www.youtube.com/results?search_query=";
     public const string HighlightsSkyPageUrl = "https://sport.sky.it/formula-1/video/highlights";
+    public const string HighlightsSkyRacePageBaseUrl = "https://sport.sky.it/formula-1/video/highlights/gp-";
     public const string HighlightsOEmbedBaseUrl = "https://www.youtube.com/oembed?format=json&url=";
     public const string HighlightsPublisherLabel = "Sky Sport F1";
     public const int HighlightsLookupMissingTtlHours = 6;

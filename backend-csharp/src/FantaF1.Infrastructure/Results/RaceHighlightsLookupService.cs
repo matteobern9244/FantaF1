@@ -28,6 +28,18 @@ public sealed class RaceHighlightsLookupService : IRaceHighlightsLookupService
         "\"playlistRenderer\"\\s*:\\s*\\{[\\s\\S]*?\"title\"\\s*:\\s*\\{\\s*\"simpleText\"\\s*:\\s*\"([^\"]+)\"[\\s\\S]*?\"videoId\"\\s*:\\s*\"([A-Za-z0-9_-]{6,})\"",
         RegexOptions.IgnoreCase | RegexOptions.CultureInvariant,
         TimeSpan.FromSeconds(1));
+    private static readonly Regex HtmlTitlePattern = new(
+        "<title>([^<]+)</title>",
+        RegexOptions.IgnoreCase | RegexOptions.CultureInvariant,
+        TimeSpan.FromSeconds(1));
+    private static readonly Regex OpenGraphTitlePattern = new(
+        "<meta[^>]+property=\"og:title\"[^>]+content=\"([^\"]+)\"",
+        RegexOptions.IgnoreCase | RegexOptions.CultureInvariant,
+        TimeSpan.FromSeconds(1));
+    private static readonly Regex HeadingPattern = new(
+        "<h1[^>]*>([\\s\\S]*?)</h1>",
+        RegexOptions.IgnoreCase | RegexOptions.CultureInvariant,
+        TimeSpan.FromSeconds(1));
 
     private readonly HttpClient _httpClient;
     private readonly IClock _clock;
@@ -99,6 +111,12 @@ public sealed class RaceHighlightsLookupService : IRaceHighlightsLookupService
         if (skyPageCandidate is not null)
         {
             return _lookupPolicy.BuildLookupResult(now, skyPageCandidate.VideoUrl, "found", "sky-page");
+        }
+
+        var skyRacePageCandidate = await ResolveSkyRacePageCandidateAsync(race, seasonYear, cancellationToken);
+        if (skyRacePageCandidate is not null)
+        {
+            return _lookupPolicy.BuildLookupResult(now, skyRacePageCandidate.VideoUrl, "found", "sky-race-page");
         }
 
         return _lookupPolicy.BuildLookupResult(now, string.Empty, "missing", string.Empty);
@@ -179,17 +197,7 @@ public sealed class RaceHighlightsLookupService : IRaceHighlightsLookupService
             return [];
         }
 
-        return AnchorPattern.Matches(markup)
-            .Select(match => new HighlightsCandidate(
-                string.Empty,
-                NormalizeSkyHighlightsUrl(match.Groups[1].Value),
-                NormalizeText(match.Groups[2].Value),
-                OfficialResultsReferenceData.HighlightsPublisherLabel,
-                OfficialResultsReferenceData.HighlightsSkyPageUrl,
-                string.Empty,
-                "sky-page"))
-            .Where(candidate => !string.IsNullOrWhiteSpace(candidate.VideoUrl))
-            .ToArray();
+        return ExtractSkyPageCandidates(markup, "sky-page", OfficialResultsReferenceData.HighlightsSkyPageUrl);
     }
 
     private async Task<IReadOnlyList<HighlightsCandidate>> LoadMarkupCandidatesAsync(
@@ -250,13 +258,60 @@ public sealed class RaceHighlightsLookupService : IRaceHighlightsLookupService
         return null;
     }
 
+    private async Task<HighlightsCandidate?> ResolveSkyRacePageCandidateAsync(
+        WeekendDocument race,
+        string seasonYear,
+        CancellationToken cancellationToken)
+    {
+        foreach (var pageUrl in BuildSkyRacePageUrls(race))
+        {
+            var markup = await FetchStringOrEmptyAsync(pageUrl, cancellationToken);
+            if (string.IsNullOrWhiteSpace(markup))
+            {
+                continue;
+            }
+
+            var pageAnchorsCandidate = await ValidateCandidatesInOrderAsync(
+                ExtractSkyPageCandidates(markup, "sky-race-page", pageUrl),
+                race,
+                seasonYear,
+                cancellationToken);
+            if (pageAnchorsCandidate is not null)
+            {
+                return pageAnchorsCandidate;
+            }
+
+            var pageTitle = ExtractSkyPageTitle(markup);
+            if (string.IsNullOrWhiteSpace(pageTitle))
+            {
+                continue;
+            }
+
+            var pageCandidate = new HighlightsCandidate(
+                string.Empty,
+                pageUrl,
+                pageTitle,
+                OfficialResultsReferenceData.HighlightsPublisherLabel,
+                pageUrl,
+                string.Empty,
+                "sky-race-page");
+            var validatedPageCandidate = await ValidateCandidateAsync(pageCandidate, race, seasonYear, cancellationToken);
+            if (validatedPageCandidate is not null)
+            {
+                return validatedPageCandidate;
+            }
+        }
+
+        return null;
+    }
+
     private async Task<HighlightsCandidate?> ValidateCandidateAsync(
         HighlightsCandidate candidate,
         WeekendDocument race,
         string seasonYear,
         CancellationToken cancellationToken)
     {
-        if (string.Equals(candidate.Source, "sky-page", StringComparison.Ordinal))
+        if (candidate.Source.StartsWith("sky", StringComparison.Ordinal))
         {
             return double.IsFinite(BuildCandidateScore(candidate, race, seasonYear))
                 ? candidate
@@ -334,6 +389,21 @@ public sealed class RaceHighlightsLookupService : IRaceHighlightsLookupService
                 NormalizeText(match.Groups[2].Value),
                 defaultAuthorName,
                 defaultAuthorUrl,
+                string.Empty,
+                source))
+            .Where(candidate => !string.IsNullOrWhiteSpace(candidate.VideoUrl))
+            .ToArray();
+    }
+
+    private static IReadOnlyList<HighlightsCandidate> ExtractSkyPageCandidates(string rawContent, string source, string sourcePageUrl)
+    {
+        return AnchorPattern.Matches(rawContent)
+            .Select(match => new HighlightsCandidate(
+                string.Empty,
+                NormalizeSkyHighlightsUrl(match.Groups[1].Value),
+                NormalizeText(match.Groups[2].Value),
+                OfficialResultsReferenceData.HighlightsPublisherLabel,
+                sourcePageUrl,
                 string.Empty,
                 source))
             .Where(candidate => !string.IsNullOrWhiteSpace(candidate.VideoUrl))
@@ -471,6 +541,57 @@ public sealed class RaceHighlightsLookupService : IRaceHighlightsLookupService
         }
 
         return terms;
+    }
+
+    private static IReadOnlyList<string> BuildSkyRacePageUrls(WeekendDocument race)
+    {
+        var urls = new List<string>();
+        var seenUrls = new HashSet<string>(StringComparer.Ordinal);
+        var values = new[]
+        {
+            race.MeetingName,
+            race.GrandPrixTitle,
+            race.DetailUrl?.Split('/').LastOrDefault(),
+        };
+
+        AddSkyRacePageUrl(race.DetailUrl?.Split('/').LastOrDefault());
+        AddSkyRacePageUrl(race.MeetingName);
+
+        foreach (var entry in OfficialResultsReferenceData.HighlightsRaceAliases)
+        {
+            var normalizedKey = NormalizeLookupText(entry.Key);
+            var matchesRace = values
+                .Select(NormalizeLookupText)
+                .Any(value => value.Contains(normalizedKey, StringComparison.Ordinal)
+                    || entry.Value.Any(alias => value.Contains(NormalizeLookupText(alias), StringComparison.Ordinal)));
+            if (!matchesRace)
+            {
+                continue;
+            }
+
+            AddSkyRacePageUrl(entry.Key);
+            foreach (var alias in entry.Value)
+            {
+                AddSkyRacePageUrl(alias);
+            }
+        }
+
+        return urls;
+
+        void AddSkyRacePageUrl(string? value)
+        {
+            var normalizedSlug = NormalizeSkyRacePageSlug(value);
+            if (string.IsNullOrWhiteSpace(normalizedSlug))
+            {
+                return;
+            }
+
+            var pageUrl = $"{OfficialResultsReferenceData.HighlightsSkyRacePageBaseUrl}{normalizedSlug}";
+            if (seenUrls.Add(pageUrl))
+            {
+                urls.Add(pageUrl);
+            }
+        }
     }
 
     private static string BuildSearchQuery(WeekendDocument race)
@@ -814,6 +935,39 @@ public sealed class RaceHighlightsLookupService : IRaceHighlightsLookupService
 
         return value.StartsWith("/", StringComparison.Ordinal)
             ? $"https://sport.sky.it{value}"
+            : string.Empty;
+    }
+
+    private static string NormalizeSkyRacePageSlug(string? value)
+    {
+        return string.Join(
+            "-",
+            Regex.Split(NormalizeLookupText(value), "[^a-z0-9]+")
+                .Where(token => token.Length >= 2
+                    && !token.All(char.IsDigit)
+                    && !string.Equals(token, "formula", StringComparison.Ordinal)
+                    && !string.Equals(token, "grand", StringComparison.Ordinal)
+                    && !string.Equals(token, "prix", StringComparison.Ordinal)
+                    && !string.Equals(token, "gp", StringComparison.Ordinal)));
+    }
+
+    private static string ExtractSkyPageTitle(string rawContent)
+    {
+        var openGraphTitleMatch = OpenGraphTitlePattern.Match(rawContent ?? string.Empty);
+        if (openGraphTitleMatch.Success)
+        {
+            return NormalizeText(openGraphTitleMatch.Groups[1].Value);
+        }
+
+        var titleMatch = HtmlTitlePattern.Match(rawContent ?? string.Empty);
+        if (titleMatch.Success)
+        {
+            return NormalizeText(titleMatch.Groups[1].Value);
+        }
+
+        var headingMatch = HeadingPattern.Match(rawContent ?? string.Empty);
+        return headingMatch.Success
+            ? NormalizeText(headingMatch.Groups[1].Value)
             : string.Empty;
     }
 

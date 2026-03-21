@@ -11,7 +11,7 @@ Atlas.
 - Il runtime locale, Docker, staging Render e CI/CD sono allineati al backend
   C#.
 - Il branch `staging` e' il branch di certificazione corrente.
-- La release candidata corrente del branch `staging` e' `1.6.2`.
+- La release candidata corrente del branch `staging` e' `1.6.3`.
 - `main` resta il target di rilascio protetto e va aggiornato solo dopo cutover
   esplicito.
 - La documentazione operativa canonica del repository vive in questo file; la
@@ -36,7 +36,7 @@ Atlas.
 - Staging Render:
   [fantaf1-staging.onrender.com](https://fantaf1-staging.onrender.com/)
 - Produzione live:
-  [fantaf1-47vy.onrender.com](https://fantaf1-47vy.onrender.com)
+  [fantaf1-w69n.onrender.com](https://fantaf1-w69n.onrender.com)
 
 Lo staging deve rimanere allineato alla produzione a livello di funzionalita'.
 Differenze di branding, testo o layout sono tollerabili solo se non introducono
@@ -690,9 +690,9 @@ Baseline verificata corrente sullo scope ufficiale frontend/repository:
 
 Baseline verificata corrente su `backend-csharp/src/`:
 
-- `3194 / 3194` lines
-- `1793 / 1793` branches
-- `539 / 539` methods
+- `3292 / 3292` lines
+- `1843 / 1843` branches
+- `545 / 545` methods
 - `71` file inclusi
 
 Le soglie repository restano a `100%` su statements, branches, functions e

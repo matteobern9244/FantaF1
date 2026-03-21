@@ -4,6 +4,27 @@ Cronologia sintetica delle release documentate del progetto Fanta Formula 1.
 
 ## [Unreleased]
 
+## [1.6.3] - 2026-03-21
+
+- **Highlights Storici Render Ripopolati con Fallback Sky Race-Specific**: il
+  backend C# usa ora, dopo feed/playlists/search/pagina Sky generale, un
+  fallback deterministico verso la pagina Sky specifica della gara
+  (`gp-australia`, `gp-giappone`, alias canonici inclusi) per recuperare e
+  persistere gli highlights mancanti delle gare concluse come `1279`, sia nel
+  sync ufficiale sia nel lookup on-demand di `GET /api/results/:meetingKey`.
+- **Documentazione Runtime Riallineata alla Produzione Reale**: [README.md](/Users/matteobernardini/code/FantaF1/README.md)
+  punta ora alla produzione live corretta
+  [fantaf1-w69n.onrender.com](https://fantaf1-w69n.onrender.com).
+- **Skill Gemini Deploy Uniformate in Inglese**: le skill
+  [fantaf1-deploy](/Users/matteobernardini/code/FantaF1/.gemini/skills/fantaf1-deploy/SKILL.md)
+  e
+  [fantaf1_deploy_staging](/Users/matteobernardini/code/FantaF1/.gemini/skills/fantaf1_deploy_staging/SKILL.md)
+  non contengono piu' testo misto italiano/inglese nella policy PR.
+- **Coverage Snapshot Aggiornata ai Valori Reali Correnti**: l'ultimo run
+  verificato mantiene il frontend/repository V8 a `2510 / 2510` statements,
+  `213 / 213` functions, `1138 / 1138` branches e `2510 / 2510` lines, e il
+  backend C# ufficiale su `backend-csharp/src/` a `3292 / 3292` linee,
+  `1843 / 1843` branch e `545 / 545` metodi su `71` file inclusi.
 - **Policy PR Rafforzata per `deploya` e `deploya-staging`**: i trigger di
   deploy richiedono ora esplicitamente una descrizione PR idonea e coerente con
   il lavoro svolto, `matteobern9244` come assignee e label aderenti alle

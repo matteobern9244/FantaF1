@@ -374,6 +374,275 @@ public sealed class ResultsInfrastructureTests
     }
 
     [Fact]
+    public async Task Highlights_lookup_service_falls_back_to_a_race_specific_sky_page_when_generic_sources_do_not_match()
+    {
+        var requestedUris = new List<string>();
+        var handler = new RecordingHttpMessageHandler(request =>
+        {
+            var uri = request.RequestUri!.AbsoluteUri;
+            requestedUris.Add(uri);
+
+            if (uri.Contains("/feeds/videos.xml?channel_id=", StringComparison.Ordinal))
+            {
+                return new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = new StringContent("""<?xml version="1.0" encoding="UTF-8"?><feed xmlns:yt="http://www.youtube.com/xml/schemas/2015" xmlns="http://www.w3.org/2005/Atom"></feed>"""),
+                };
+            }
+
+            if (uri == "https://www.youtube.com/@skysportf1/playlists")
+            {
+                return new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = new StringContent("""{"contents":[]}"""),
+                };
+            }
+
+            if (uri.Contains("/@skysportf1/search?query=", StringComparison.Ordinal)
+                || uri.Contains("/results?search_query=", StringComparison.Ordinal))
+            {
+                return new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = new StringContent("""{"contents":[]}"""),
+                };
+            }
+
+            if (uri == "https://sport.sky.it/formula-1/video/highlights")
+            {
+                return new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = new StringContent(
+                        """
+                        <a href="https://sport.sky.it/formula-1/2026/03/18/f1-kimi-antonelli-mercedes-intervista">
+                          <span>Kimi: "Voglio lottare per il titolo"</span>
+                        </a>
+                        """),
+                };
+            }
+
+            if (uri == "https://sport.sky.it/formula-1/video/highlights/gp-australia")
+            {
+                return new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = new StringContent(
+                        """
+                        <title>Formula 1, highlights di oggi: guarda i video delle ultime gare - GP Australia | Sky Sport</title>
+                        <meta property="og:title" content="Formula 1, highlights di oggi: guarda i video delle ultime gare - GP Australia | Sky Sport" />
+                        <h1>GP Australia Video e Highlights</h1>
+                        """),
+                };
+            }
+
+            return new HttpResponseMessage(HttpStatusCode.NotFound);
+        });
+        using var httpClient = new HttpClient(handler);
+        var service = new RaceHighlightsLookupService(httpClient, new StubClock(new DateTimeOffset(2026, 03, 18, 18, 00, 00, TimeSpan.Zero)), new RaceHighlightsLookupPolicy(TimeSpan.FromHours(1)));
+
+        var result = await service.ResolveAsync(CreateWeekend(), CancellationToken.None);
+
+        Assert.Equal("https://sport.sky.it/formula-1/video/highlights/gp-australia", result.HighlightsVideoUrl);
+        Assert.Equal("found", result.HighlightsLookupStatus);
+        Assert.Equal("sky-race-page", result.HighlightsLookupSource);
+        Assert.Contains("https://sport.sky.it/formula-1/video/highlights", requestedUris);
+        Assert.Contains("https://sport.sky.it/formula-1/video/highlights/gp-australia", requestedUris);
+    }
+
+    [Fact]
+    public async Task Highlights_lookup_service_uses_alias_based_race_specific_sky_page_urls_when_the_detail_slug_is_not_the_sky_slug()
+    {
+        var requestedUris = new List<string>();
+        var handler = new RecordingHttpMessageHandler(request =>
+        {
+            var uri = request.RequestUri!.AbsoluteUri;
+            requestedUris.Add(uri);
+
+            if (uri.Contains("/feeds/videos.xml?channel_id=", StringComparison.Ordinal))
+            {
+                return new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = new StringContent("""<?xml version="1.0" encoding="UTF-8"?><feed xmlns:yt="http://www.youtube.com/xml/schemas/2015" xmlns="http://www.w3.org/2005/Atom"></feed>"""),
+                };
+            }
+
+            if (uri == "https://www.youtube.com/@skysportf1/playlists"
+                || uri.Contains("/@skysportf1/search?query=", StringComparison.Ordinal)
+                || uri.Contains("/results?search_query=", StringComparison.Ordinal))
+            {
+                return new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = new StringContent("""{"contents":[]}"""),
+                };
+            }
+
+            if (uri == "https://sport.sky.it/formula-1/video/highlights")
+            {
+                return new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = new StringContent("<section>No highlights found here</section>"),
+                };
+            }
+
+            if (uri == "https://sport.sky.it/formula-1/video/highlights/gp-japan")
+            {
+                return new HttpResponseMessage(HttpStatusCode.NotFound);
+            }
+
+            if (uri == "https://sport.sky.it/formula-1/video/highlights/gp-giappone")
+            {
+                return new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = new StringContent(
+                        """
+                        <title>Formula 1, highlights di oggi: guarda i video delle ultime gare - GP Giappone | Sky Sport</title>
+                        <h1>GP Giappone Video e Highlights</h1>
+                        """),
+                };
+            }
+
+            return new HttpResponseMessage(HttpStatusCode.NotFound);
+        });
+        using var httpClient = new HttpClient(handler);
+        var service = new RaceHighlightsLookupService(httpClient, new StubClock(new DateTimeOffset(2026, 04, 05, 18, 00, 00, TimeSpan.Zero)), new RaceHighlightsLookupPolicy(TimeSpan.FromHours(1)));
+
+        var result = await service.ResolveAsync(
+            CreateWeekend() with
+            {
+                MeetingName = "Suzuka",
+                GrandPrixTitle = "FORMULA 1 JAPANESE GRAND PRIX 2026",
+                DetailUrl = "https://www.formula1.com/en/racing/2026/japan",
+                StartDate = "2026-04-03",
+                EndDate = "2026-04-05",
+                RaceStartTime = "2026-04-05T05:00:00Z",
+            },
+            CancellationToken.None);
+
+        Assert.Equal("https://sport.sky.it/formula-1/video/highlights/gp-giappone", result.HighlightsVideoUrl);
+        Assert.Equal("sky-race-page", result.HighlightsLookupSource);
+        Assert.Contains("https://sport.sky.it/formula-1/video/highlights/gp-japan", requestedUris);
+        Assert.Contains("https://sport.sky.it/formula-1/video/highlights/gp-giappone", requestedUris);
+    }
+
+    [Fact]
+    public async Task Highlights_lookup_service_returns_the_first_valid_anchor_from_a_race_specific_sky_page()
+    {
+        var requestedUris = new List<string>();
+        var handler = new RecordingHttpMessageHandler(request =>
+        {
+            var uri = request.RequestUri!.AbsoluteUri;
+            requestedUris.Add(uri);
+
+            if (uri.Contains("/feeds/videos.xml?channel_id=", StringComparison.Ordinal))
+            {
+                return new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = new StringContent("""<?xml version="1.0" encoding="UTF-8"?><feed xmlns:yt="http://www.youtube.com/xml/schemas/2015" xmlns="http://www.w3.org/2005/Atom"></feed>"""),
+                };
+            }
+
+            if (uri == "https://www.youtube.com/@skysportf1/playlists"
+                || uri.Contains("/@skysportf1/search?query=", StringComparison.Ordinal)
+                || uri.Contains("/results?search_query=", StringComparison.Ordinal))
+            {
+                return new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = new StringContent("""{"contents":[]}"""),
+                };
+            }
+
+            if (uri == "https://sport.sky.it/formula-1/video/highlights")
+            {
+                return new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = new StringContent("<section>No generic highlights</section>"),
+                };
+            }
+
+            if (uri == "https://sport.sky.it/formula-1/video/highlights/gp-australia")
+            {
+                return new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = new StringContent(
+                        """
+                        <a href="/formula-1/video/2026/03/08/f1-gp-australia-highlights-gara">
+                          <span>F1, GP d'Australia, gli highlights della gara 2026</span>
+                        </a>
+                        """),
+                };
+            }
+
+            return new HttpResponseMessage(HttpStatusCode.NotFound);
+        });
+        using var httpClient = new HttpClient(handler);
+        var service = new RaceHighlightsLookupService(httpClient, new StubClock(new DateTimeOffset(2026, 03, 18, 18, 00, 00, TimeSpan.Zero)), new RaceHighlightsLookupPolicy(TimeSpan.FromHours(1)));
+
+        var result = await service.ResolveAsync(CreateWeekend(), CancellationToken.None);
+
+        Assert.Equal("https://sport.sky.it/formula-1/video/2026/03/08/f1-gp-australia-highlights-gara", result.HighlightsVideoUrl);
+        Assert.Equal("found", result.HighlightsLookupStatus);
+        Assert.Equal("sky-race-page", result.HighlightsLookupSource);
+        Assert.Contains("https://sport.sky.it/formula-1/video/highlights/gp-australia", requestedUris);
+    }
+
+    [Fact]
+    public async Task Highlights_lookup_service_rejects_race_specific_sky_pages_when_the_page_year_is_wrong_or_the_title_is_not_highlights_related()
+    {
+        var requestedUris = new List<string>();
+        var handler = new RecordingHttpMessageHandler(request =>
+        {
+            var uri = request.RequestUri!.AbsoluteUri;
+            requestedUris.Add(uri);
+
+            if (uri.Contains("/feeds/videos.xml?channel_id=", StringComparison.Ordinal))
+            {
+                return new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = new StringContent("""<?xml version="1.0" encoding="UTF-8"?><feed xmlns:yt="http://www.youtube.com/xml/schemas/2015" xmlns="http://www.w3.org/2005/Atom"></feed>"""),
+                };
+            }
+
+            if (uri == "https://www.youtube.com/@skysportf1/playlists"
+                || uri.Contains("/@skysportf1/search?query=", StringComparison.Ordinal)
+                || uri.Contains("/results?search_query=", StringComparison.Ordinal))
+            {
+                return new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = new StringContent("""{"contents":[]}"""),
+                };
+            }
+
+            if (uri == "https://sport.sky.it/formula-1/video/highlights")
+            {
+                return new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = new StringContent("<section>No usable highlights</section>"),
+                };
+            }
+
+            if (uri == "https://sport.sky.it/formula-1/video/highlights/gp-australia")
+            {
+                return new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = new StringContent(
+                        """
+                        <title>Formula 1, GP Australia 2025: intervista esclusiva | Sky Sport</title>
+                        <h1>GP Australia 2025, intervista esclusiva</h1>
+                        """),
+                };
+            }
+
+            return new HttpResponseMessage(HttpStatusCode.NotFound);
+        });
+        using var httpClient = new HttpClient(handler);
+        var service = new RaceHighlightsLookupService(httpClient, new StubClock(new DateTimeOffset(2026, 03, 18, 18, 00, 00, TimeSpan.Zero)), new RaceHighlightsLookupPolicy(TimeSpan.FromHours(1)));
+
+        var result = await service.ResolveAsync(CreateWeekend(), CancellationToken.None);
+
+        Assert.Equal(string.Empty, result.HighlightsVideoUrl);
+        Assert.Equal("missing", result.HighlightsLookupStatus);
+        Assert.Contains("https://sport.sky.it/formula-1/video/highlights/gp-australia", requestedUris);
+    }
+
+    [Fact]
     public async Task Highlights_lookup_service_returns_missing_when_the_sky_sport_page_contains_only_non_highlights_content()
     {
         var handler = new RecordingHttpMessageHandler(request =>
@@ -443,6 +712,24 @@ public sealed class ResultsInfrastructureTests
             typeof(RaceHighlightsLookupService),
             "NormalizeSkyHighlightsUrl",
             input);
+
+        Assert.Equal(expected, normalized);
+    }
+
+    [Theory]
+    [InlineData("<meta property=\"og:title\" content=\"Open Graph Title\" /><title>Ignored</title><h1>Ignored heading</h1>", "Open Graph Title")]
+    [InlineData("<title>Html Title</title><h1>Ignored heading</h1>", "Html Title")]
+    [InlineData("<h1>Heading Title</h1>", "Heading Title")]
+    [InlineData("<section>No title information</section>", "")]
+    [InlineData(null, "")]
+    public void Highlights_lookup_service_private_extract_sky_page_title_prefers_open_graph_then_html_title_then_heading_then_empty(
+        string? markup,
+        string expected)
+    {
+        var normalized = InvokePrivateStaticMethod<string>(
+            typeof(RaceHighlightsLookupService),
+            "ExtractSkyPageTitle",
+            markup);
 
         Assert.Equal(expected, normalized);
     }
