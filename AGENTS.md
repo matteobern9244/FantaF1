@@ -496,8 +496,10 @@ is not currently activatable.
 If the user writes exactly `deploya-staging`, treat that as explicit
 authorization to run the 23-point staging deployment workflow. Before starting,
 verify that the current branch is `develop` and the target is `staging`. This
-flow follows the same 23 points as `deploya`, adapted for the `staging`
-certification environment.
+flow follows the same pre-merge release discipline as `deploya` for the
+`staging` certification environment, but it does not execute the `deploya`-only
+post-merge branch realignment, tag, or GitHub Release steps that happen only
+after `staging -> main`.
 
 1. Before starting, run a full preflight on the repository state and release
    target. Verify there are no unstaged files, the target branch (`main` for
@@ -570,16 +572,26 @@ certification environment.
 18. After GitHub has merged the Pull Request into the target branch, verify that
     the merged commit on the target branch is the expected release commit and
     that the repository state still matches the validated release candidate.
-19. Create a tag on `main` that matches the new version.
-20. Verify that the created tag points to the correct merged commit before
+19. Read the final commit SHA now pointed to by `main` after the protected Pull
+    Request merge has completed successfully.
+20. Temporarily lower the protection on `staging` just enough to allow a direct
+    branch ref update, then force `staging` to that final `main` commit SHA.
+21. Force `develop` to that same final `main` commit SHA so that the release
+    cycle closes with `main == staging == develop`.
+22. Restore the original `staging` protection immediately after the forced
+    branch alignment and verify that the restored policy matches the expected
+    CI/CD gate configuration.
+23. Create a tag on `main` that matches the new version.
+24. Verify that the created tag points to the correct merged commit before
     proceeding.
-21. Create a GitHub Release based on that tag, coherent with the version and
+25. Create a GitHub Release based on that tag, coherent with the version and
     delivered changes.
-22. If tag creation, release creation, or any post-merge release step fails,
-    stop immediately, do not continue with later release actions, and report the
-    exact rollback or cleanup actions required to restore a coherent release
-    state.
-23. Return to the original branch from which the deployment workflow started.
+26. If tag creation, release creation, the temporary `staging` protection
+    downgrade, the forced branch alignment, or any post-merge release step
+    fails, stop immediately, do not continue with later release actions, and
+    report the exact rollback or cleanup actions required to restore a coherent
+    release state.
+27. Return to the original branch from which the deployment workflow started.
 
 Failure policy for `deploya` and `deploya-staging`:
 

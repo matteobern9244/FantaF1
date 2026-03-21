@@ -124,6 +124,8 @@ public sealed class PortingDocumentationConsistencyTests
         Assert.Contains("`develop -> staging`", readme, StringComparison.Ordinal);
         Assert.Contains("`deploya`", readme, StringComparison.Ordinal);
         Assert.Contains("`staging -> main`", readme, StringComparison.Ordinal);
+        Assert.Contains("abbassa temporaneamente la protection di `staging`", readme, StringComparison.Ordinal);
+        Assert.Contains("forza `staging` e `develop` allo SHA finale di `main`", readme, StringComparison.Ordinal);
         Assert.DoesNotContain("workflow aggiuntivi `gemini-*`", readme, StringComparison.Ordinal);
     }
 

@@ -674,7 +674,10 @@ Trigger operativi documentati:
 - `deploya`: valido solo dal branch corrente `staging`, crea/aggiorna la PR
   `staging -> main`, richiede una descrizione idonea e coerente con il lavoro
   svolto, `matteobern9244` come assignee e label aderenti alle modifiche reali,
-  e dipende dagli stessi gate verso produzione
+  dipende dagli stessi gate verso produzione e, dopo il merge con check verdi,
+  legge lo SHA finale di `main`, abbassa temporaneamente la protection di
+  `staging`, forza `staging` e `develop` allo SHA finale di `main` e poi
+  ripristina la protection di `staging`
 - entrambi i trigger restano invalidi se il workspace non e' pulito, se il
   branch non e' quello atteso o se i secret/controlli richiesti non sono
   disponibili

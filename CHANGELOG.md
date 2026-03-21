@@ -4,6 +4,11 @@ Cronologia sintetica delle release documentate del progetto Fanta Formula 1.
 
 ## [Unreleased]
 
+- **Deploya Final Branch Reconciliation**: il protocollo `deploya` documenta
+  ora il riallineamento finale post-merge di `staging` e `develop` allo SHA di
+  `main`, con abbassamento temporaneo e successivo ripristino della protection
+  di `staging`, mantenendo invariato `deploya-staging`.
+
 ## [1.6.3] - 2026-03-21
 
 - **Highlights Storici Render Ripopolati con Fallback Sky Race-Specific**: il

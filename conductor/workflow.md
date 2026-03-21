@@ -86,7 +86,12 @@ Quando l'utente autorizza esplicitamente il deploy (comandi `deploya` o
     - `matteobern9244` deve essere impostato come assignee della PR.
     - Le label della PR devono riflettere esclusivamente il lavoro
       effettivamente svolto, senza categorie speculative o non pertinenti.
-7.  Creazione Tag e GitHub Release solo dopo il merge avvenuto con successo.
+7.  Solo per `deploya`, dopo il merge riuscito verso `main`, leggere lo SHA
+    finale di `main`, abbassare temporaneamente la protection di `staging`,
+    riallineare `staging` e `develop` allo SHA finale di `main` e ripristinare
+    subito la protection originaria di `staging`.
+8.  Creazione Tag e GitHub Release solo dopo il merge avvenuto con successo e
+    il riallineamento finale dei branch richiesto da `deploya`.
 
 ## 6. Sicurezza e Privacy
 
