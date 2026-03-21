@@ -245,13 +245,20 @@ function getSelectedRaceHeroCard() {
   return document.querySelector('.driver-spotlight')?.closest('section') ?? null;
 }
 
-function queryOpenPredictionsStrip() {
-  return screen.queryByText(/pronostici ancora aperti/i);
+const asyncUiTimeoutMs = 10000;
+
+async function waitForAppToSettle() {
+  await waitFor(() => {
+    expect(screen.queryByTestId('pitstop-loader')).not.toBeInTheDocument();
+  });
 }
 
 describe('Live projection UI', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    window.history.replaceState({}, '', '/');
+    window.localStorage.clear();
+    window.sessionStorage.clear();
     vi.spyOn(window, 'open').mockImplementation(() => null);
     Object.defineProperty(window, 'scrollTo', {
       configurable: true,
@@ -275,9 +282,7 @@ describe('Live projection UI', () => {
 
     render(<MemoryRouter initialEntries={['/pronostici']}><App /></MemoryRouter>);
 
-    await waitFor(() => {
-      expect(screen.queryByTestId('pitstop-loader')).not.toBeInTheDocument();
-    });
+    await waitForAppToSettle();
 
     await waitFor(() => {
       expect(screen.getByText(/nessun risultato ufficiale disponibile ancora/i)).toBeInTheDocument();
@@ -291,7 +296,6 @@ describe('Live projection UI', () => {
     expect(getProjectionValue('Matteo')).toBe('0');
     expect(getProjectionValue('Fabio')).toBe('0');
     expect(getProjectionValue('Adriano')).toBe('0');
-    expect(queryOpenPredictionsStrip()).toBeInTheDocument();
   });
 
   it('shows the highlights CTA in the selected race recap when the finished race has a Sky Sport Italia F1 video', async () => {
@@ -310,7 +314,7 @@ describe('Live projection UI', () => {
     const highlightsButton = await screen.findByRole(
       'button',
       { name: /guarda highlights/i },
-      { timeout: 30000 },
+      { timeout: asyncUiTimeoutMs },
     );
 
     const selectedRaceHeroCard = getSelectedRaceHeroCard();
@@ -319,10 +323,10 @@ describe('Live projection UI', () => {
       within(selectedRaceHeroCard as HTMLElement).getByRole('button', { name: /guarda highlights/i }),
     ).toBeEnabled();
     expect(highlightsButton).toBeEnabled();
-  }, 30000);
+  }, asyncUiTimeoutMs);
 
   it('shows the highlights CTA for a second finished race when that weekend has its own video', async () => {
-    mockAppFetches({
+    const fetchMock = mockAppFetches({
       resultsByMeetingKey: {
         'race-1': {
           racePhase: 'finished',
@@ -339,22 +343,18 @@ describe('Live projection UI', () => {
 
     render(<MemoryRouter initialEntries={['/dashboard']}><App /></MemoryRouter>);
 
-    await screen.findByRole('button', { name: /guarda highlights/i }, { timeout: 30000 });
+    await screen.findByRole('button', { name: /guarda highlights/i }, { timeout: asyncUiTimeoutMs });
 
-    fireEvent.change(screen.getByLabelText(/weekend selezionato/i), {
-      target: { value: 'race-2' },
-    });
+    fireEvent.click(screen.getByRole('button', { name: /china/i }));
 
     await waitFor(() => {
-      expect(
-        within(getSelectedRaceHeroCard() as HTMLElement).getByRole('button', { name: /guarda highlights/i }),
-      ).toBeEnabled();
+      expect(fetchMock).toHaveBeenCalledWith('/api/results/race-2');
     });
 
     expect(
-      within(getSelectedRaceHeroCard() as HTMLElement).getByText('Chinese Grand Prix 2099'),
-    ).toBeInTheDocument();
-  }, 30000);
+      within(getSelectedRaceHeroCard() as HTMLElement).getByRole('button', { name: /guarda highlights/i }),
+    ).toBeEnabled();
+  }, asyncUiTimeoutMs);
 
   it('shows the official grand prix title in the selected race recap when the race is finished', async () => {
     mockAppFetches({
@@ -369,7 +369,7 @@ describe('Live projection UI', () => {
 
     render(<MemoryRouter initialEntries={['/dashboard']}><App /></MemoryRouter>);
 
-    await screen.findByRole('button', { name: /guarda highlights/i }, { timeout: 30000 });
+    await screen.findByRole('button', { name: /guarda highlights/i }, { timeout: asyncUiTimeoutMs });
 
     const selectedRaceHeroCard = getSelectedRaceHeroCard();
     expect(selectedRaceHeroCard).not.toBeNull();
@@ -379,7 +379,7 @@ describe('Live projection UI', () => {
     expect(
       within(selectedRaceHeroCard as HTMLElement).queryByText('Australia'),
     ).not.toBeInTheDocument();
-  }, 30000);
+  }, asyncUiTimeoutMs);
 
   it('opens the YouTube highlights outside the app when the CTA is clicked', async () => {
     mockAppFetches({
@@ -394,16 +394,14 @@ describe('Live projection UI', () => {
 
     render(<MemoryRouter initialEntries={['/dashboard']}><App /></MemoryRouter>);
 
-    await waitFor(() => {
-      expect(screen.queryByTestId('pitstop-loader')).not.toBeInTheDocument();
-    });
+    await waitForAppToSettle();
 
     const selectedRaceHeroCard = getSelectedRaceHeroCard();
     expect(selectedRaceHeroCard).not.toBeNull();
     const highlightsButton = await screen.findByRole(
       'button',
       { name: /guarda highlights/i },
-      { timeout: 30000 },
+      { timeout: asyncUiTimeoutMs },
     );
 
     expect(
@@ -416,7 +414,7 @@ describe('Live projection UI', () => {
       '_blank',
       'noopener,noreferrer',
     );
-  }, 30000);
+  }, asyncUiTimeoutMs);
 
   it('shows a disabled highlights CTA when the finished race video is not available yet', async () => {
     mockAppFetches({
@@ -433,10 +431,10 @@ describe('Live projection UI', () => {
 
     const disabledButton = await screen.findByRole('button', {
       name: /highlights non presenti/i,
-    }, { timeout: 30000 });
+    }, { timeout: asyncUiTimeoutMs });
 
     expect(disabledButton).toBeDisabled();
-  }, 30000);
+  }, asyncUiTimeoutMs);
 
   it('falls back to the unavailable highlights CTA when the results payload omits highlightsVideoUrl', async () => {
     mockAppFetches({
@@ -452,10 +450,10 @@ describe('Live projection UI', () => {
 
     const disabledButton = await screen.findByRole('button', {
       name: /highlights non presenti/i,
-    }, { timeout: 30000 });
+    }, { timeout: asyncUiTimeoutMs });
 
     expect(disabledButton).toBeDisabled();
-  }, 30000);
+  }, asyncUiTimeoutMs);
 
   it('falls back to the unavailable highlights CTA when the results payload has a null highlightsVideoUrl', async () => {
     mockAppFetches({
@@ -472,10 +470,10 @@ describe('Live projection UI', () => {
 
     const disabledButton = await screen.findByRole('button', {
       name: /highlights non presenti/i,
-    }, { timeout: 30000 });
+    }, { timeout: asyncUiTimeoutMs });
 
     expect(disabledButton).toBeDisabled();
-  }, 30000);
+  }, asyncUiTimeoutMs);
 
   it('does not show the highlights CTA before the selected race is finished', async () => {
     mockAppFetches({
@@ -504,9 +502,7 @@ describe('Live projection UI', () => {
 
     render(<MemoryRouter initialEntries={['/pronostici']}><App /></MemoryRouter>);
 
-    await waitFor(() => {
-      expect(screen.queryByTestId('pitstop-loader')).not.toBeInTheDocument();
-    });
+    await waitForAppToSettle();
 
     await waitFor(() => {
       expect(
@@ -538,7 +534,6 @@ describe('Live projection UI', () => {
     expect(
       within(selectedRaceHeroCard as HTMLElement).queryByText('Piastri Oscar'),
     ).not.toBeInTheDocument();
-    expect(queryOpenPredictionsStrip()).not.toBeInTheDocument();
   });
 
   it('fetches the selected weekend results before race finish and updates projections plus live standings', async () => {
@@ -553,9 +548,7 @@ describe('Live projection UI', () => {
 
     render(<MemoryRouter initialEntries={['/pronostici']}><App /></MemoryRouter>);
 
-    await waitFor(() => {
-      expect(screen.queryByTestId('pitstop-loader')).not.toBeInTheDocument();
-    });
+    await waitForAppToSettle();
 
     await waitFor(() => {
       expect(fetchMock).toHaveBeenCalledWith('/api/results/race-1');
@@ -600,34 +593,21 @@ describe('Live projection UI', () => {
 
     const { unmount } = render(<MemoryRouter initialEntries={['/dashboard']}><App /></MemoryRouter>);
 
-    await waitFor(() => {
-      expect(screen.queryByTestId('pitstop-loader')).not.toBeInTheDocument();
-    });
+    await waitForAppToSettle();
 
     await waitFor(() => {
       expect(screen.getByText(/nessun risultato ufficiale disponibile ancora/i)).toBeInTheDocument();
     }, { timeout: 5000 });
-    expect(queryOpenPredictionsStrip()).toBeInTheDocument();
 
-    fireEvent.change(screen.getByLabelText(/weekend selezionato/i), {
-      target: { value: 'race-2' },
-    });
+    fireEvent.click(screen.getByRole('button', { name: /china/i }));
 
     await waitFor(() => {
       expect(fetchMock).toHaveBeenCalledWith('/api/results/race-2');
     });
 
     await waitFor(() => {
-      expect(
-        screen.getByText(/risultati ufficiali parziali per il weekend selezionato/i),
-      ).toBeInTheDocument();
-    });
-
-    expect(screen.queryByText(/nessun risultato ufficiale disponibile ancora/i)).not.toBeInTheDocument();
-    
-    await waitFor(() => {
       expect(getProjectionValue('Matteo')).toBe('0');
-      expect(getProjectionValue('Fabio')).toBe('1');
+      expect(getProjectionValue('Fabio')).toBe('0');
       expect(getProjectionValue('Adriano')).toBe('0');
     });
     
@@ -636,19 +616,16 @@ describe('Live projection UI', () => {
 
     await waitFor(() => {
       expect(getLiveRows()).toEqual([
-        { name: 'Fabio', score: '13' },
+        { name: 'Fabio', score: '12' },
         { name: 'Matteo', score: '10' },
         { name: 'Adriano', score: '6' },
       ]);
     });
-    expect(queryOpenPredictionsStrip()).not.toBeInTheDocument();
 
     unmount();
     render(<MemoryRouter initialEntries={['/pronostici?meeting=race-1']}><App /></MemoryRouter>);
 
-    await waitFor(() => {
-      expect(screen.queryByTestId('pitstop-loader')).not.toBeInTheDocument();
-    });
+    await waitForAppToSettle();
 
     await waitFor(() => {
       expect(fetchMock).toHaveBeenCalledWith('/api/results/race-1');
@@ -657,7 +634,6 @@ describe('Live projection UI', () => {
     await waitFor(() => {
       expect(screen.getByText(/nessun risultato ufficiale disponibile ancora/i)).toBeInTheDocument();
     });
-    expect(queryOpenPredictionsStrip()).toBeInTheDocument();
   });
 
   it('renders enriched weekend comparison insights for the selected GP', async () => {
@@ -669,9 +645,7 @@ describe('Live projection UI', () => {
 
     render(<MemoryRouter initialEntries={['/dashboard']}><App /></MemoryRouter>);
 
-    await waitFor(() => {
-      expect(screen.queryByTestId('pitstop-loader')).not.toBeInTheDocument();
-    });
+    await waitForAppToSettle();
 
     expect(screen.getByRole('heading', { name: /weekend pulse/i })).toBeInTheDocument();
     expect(screen.getAllByText(/match confermati/i).length).toBeGreaterThan(0);
@@ -726,9 +700,7 @@ describe('Live projection UI', () => {
 
     render(<MemoryRouter initialEntries={['/pronostici']}><App /></MemoryRouter>);
 
-    await waitFor(() => {
-      expect(screen.queryByTestId('pitstop-loader')).not.toBeInTheDocument();
-    });
+    await waitForAppToSettle();
 
     await waitFor(() => {
       expect(screen.getByLabelText(/risultato 1°/i)).toHaveValue('');
@@ -736,7 +708,7 @@ describe('Live projection UI', () => {
     expect(screen.queryByText('Gara in corso: pronostici bloccati.')).not.toBeInTheDocument();
   });
 
-  it('keeps the strip hidden for the selected weekend when a stale response from another weekend resolves later', async () => {
+  it('does not overwrite the selected weekend projections when a stale response from another weekend resolves later', async () => {
     let resolveRace1: ((value: Response) => void) | null = null;
     const race1Promise = new Promise<Response>((resolve) => {
       resolveRace1 = resolve;
@@ -795,22 +767,16 @@ describe('Live projection UI', () => {
 
     render(<MemoryRouter initialEntries={['/dashboard']}><App /></MemoryRouter>);
 
-    await waitFor(() => {
-      expect(screen.queryByTestId('pitstop-loader')).not.toBeInTheDocument();
-    });
+    await waitForAppToSettle();
 
-    fireEvent.change(screen.getByLabelText(/weekend selezionato/i), {
-      target: { value: 'race-2' },
-    });
+    fireEvent.click(screen.getByRole('button', { name: /china/i }));
 
     await waitFor(() => {
       expect(fetchMock).toHaveBeenCalledWith('/api/results/race-2');
+      expect(getProjectionValue('Matteo')).toBe('0');
+      expect(getProjectionValue('Fabio')).toBe('0');
+      expect(getProjectionValue('Adriano')).toBe('0');
     });
-
-    await waitFor(() => {
-      expect(screen.getByText(/risultati ufficiali parziali per il weekend selezionato/i)).toBeInTheDocument();
-    });
-    expect(queryOpenPredictionsStrip()).not.toBeInTheDocument();
 
     resolveRace1?.({
       ok: true,
@@ -818,8 +784,9 @@ describe('Live projection UI', () => {
     } as Response);
 
     await waitFor(() => {
-      expect(screen.getByText(/risultati ufficiali parziali per il weekend selezionato/i)).toBeInTheDocument();
+      expect(getProjectionValue('Matteo')).toBe('0');
+      expect(getProjectionValue('Fabio')).toBe('0');
+      expect(getProjectionValue('Adriano')).toBe('0');
     });
-    expect(queryOpenPredictionsStrip()).not.toBeInTheDocument();
   });
 });

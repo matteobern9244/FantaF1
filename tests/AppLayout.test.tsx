@@ -164,9 +164,10 @@ describe('AppLayout Component', () => {
       onCloseMobileNav,
     });
 
-    expect(screen.getByRole('button', { name: /chiudi sezioni/i })).toBeInTheDocument();
+    const closeButtons = screen.getAllByRole('button', { name: /chiudi sezioni/i });
+    expect(closeButtons.length).toBeGreaterThanOrEqual(2);
 
-    fireEvent.click(screen.getByRole('button', { name: /chiudi sezioni/i }));
+    fireEvent.click(closeButtons[1]);
     expect(onCloseMobileNav).toHaveBeenCalledTimes(1);
   });
 

@@ -55,6 +55,16 @@ describe('UI Calendar Utils', () => {
       expect(sorted[0].meetingKey).toBe('2');
       expect(sorted[1].meetingKey).toBe('1');
     });
+
+    it('treats invalid start dates like missing values when resolving tie breaks', () => {
+      const calendar: RaceWeekend[] = [
+        { roundNumber: 1, meetingKey: '1', startDate: 'not-a-date' } as RaceWeekend,
+        { roundNumber: 1, meetingKey: '2', endDate: `${currentYear}-03-06` } as RaceWeekend,
+      ];
+      const sorted = sortCalendarByRound(calendar);
+      expect(sorted[0].meetingKey).toBe('2');
+      expect(sorted[1].meetingKey).toBe('1');
+    });
   });
 
   describe('getNextUpcomingRace', () => {
@@ -112,6 +122,16 @@ describe('UI Calendar Utils', () => {
       const nextRace = getNextUpcomingRace(calendar);
       expect(nextRace?.meetingKey).toBe('2');
     });
+
+    it('falls back to the first sorted entry when every date is invalid', () => {
+      vi.setSystemTime(new Date(`${currentYear}-03-10T12:00:00Z`));
+      const calendar: RaceWeekend[] = [
+        { roundNumber: 2, meetingKey: '2', endDate: 'invalid' } as RaceWeekend,
+        { roundNumber: 1, meetingKey: '1', startDate: 'invalid' } as RaceWeekend,
+      ];
+      const nextRace = getNextUpcomingRace(calendar);
+      expect(nextRace?.meetingKey).toBe('1');
+    });
   });
 
   describe('getRaceByMeetingKey', () => {
@@ -142,6 +162,11 @@ describe('UI Calendar Utils', () => {
 
     it('handles F1 site specific suffixes', () => {
       expect(translateSessionName('Practice 1 - Australian Grand Prix')).toBe('Prove Libere 1');
+    });
+
+    it('supports full-name fallback aliases used by upstream feeds', () => {
+      expect(translateSessionName('Grand Prix')).toBe('Gara');
+      expect(translateSessionName('Sprint Qualifying')).toBe('Qualifiche Sprint');
     });
 
     it('returns the original name if no translation exists', () => {
@@ -185,6 +210,10 @@ describe('UI Calendar Utils', () => {
 
     it('returns null for invalid session times', () => {
       expect(formatSessionTimeParts('invalid')).toBeNull();
+    });
+
+    it('returns null for impossible ISO values', () => {
+      expect(formatSessionTimeParts('2026-13-40T25:61:00Z')).toBeNull();
     });
   });
 });

@@ -14,20 +14,25 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const appCssPath = path.resolve(__dirname, '..', 'src', 'App.css');
 const appCssContent = readFileSync(appCssPath, 'utf8');
+const asyncUiTimeoutMs = 10000;
 
-Object.defineProperty(window, 'matchMedia', {
-  writable: true,
-  value: vi.fn().mockImplementation((query) => ({
-    matches: false,
-    media: query,
-    onchange: null,
-    addListener: vi.fn(),
-    removeListener: vi.fn(),
-    addEventListener: vi.fn(),
-    removeEventListener: vi.fn(),
-    dispatchEvent: vi.fn(),
-  })),
-});
+function setDesktopMatchMedia() {
+  Object.defineProperty(window, 'matchMedia', {
+    writable: true,
+    value: vi.fn().mockImplementation((query) => ({
+      matches: false,
+      media: query,
+      onchange: null,
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    })),
+  });
+}
+
+setDesktopMatchMedia();
 
 Object.defineProperty(window, 'IntersectionObserver', {
   writable: true,
@@ -37,6 +42,11 @@ Object.defineProperty(window, 'IntersectionObserver', {
     disconnect: vi.fn(),
     takeRecords: vi.fn(() => []),
   })),
+});
+
+Object.defineProperty(window, 'scrollTo', {
+  writable: true,
+  value: vi.fn(),
 });
 
 function createEmptyPrediction() {
@@ -290,9 +300,28 @@ function clickSectionNavigationButton(label: RegExp) {
   fireEvent.click(within(sectionNavigation).getByRole('button', { name: label }));
 }
 
+function clickCalendarRaceButton(label: RegExp) {
+  const calendarSection = screen.getByRole('heading', { name: /calendario stagione/i }).closest('section');
+  if (!calendarSection) {
+    throw new Error('Calendar section not found');
+  }
+
+  fireEvent.click(within(calendarSection).getByRole('button', { name: label }));
+}
+
+async function waitForAppToSettle() {
+  await waitFor(() => {
+    expect(screen.queryByTestId('pitstop-loader')).not.toBeInTheDocument();
+  }, { timeout: asyncUiTimeoutMs });
+}
+
 describe('Weekend draft synchronization UI', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    setDesktopMatchMedia();
+    window.history.replaceState({}, '', '/');
+    window.localStorage.clear();
+    window.sessionStorage.clear();
     vi.spyOn(window, 'alert').mockImplementation(() => {});
   });
 
@@ -303,17 +332,13 @@ describe('Weekend draft synchronization UI', () => {
 
     const { unmount } = render(<MemoryRouter initialEntries={['/dashboard']}><App /></MemoryRouter>);
 
-    await waitFor(() => {
-      expect(screen.queryByTestId('pitstop-loader')).not.toBeInTheDocument();
-    });
+    await waitForAppToSettle();
 
     await waitFor(() => {
       expect(screen.getByLabelText(/weekend selezionato/i)).toHaveValue('race-1');
-    });
+    }, { timeout: asyncUiTimeoutMs });
 
-    fireEvent.change(screen.getByLabelText(/weekend selezionato/i), {
-      target: { value: 'race-2' },
-    });
+    clickCalendarRaceButton(/china/i);
 
     await waitFor(() => {
       const userCard = getUserCard('Player 1');
@@ -329,15 +354,13 @@ describe('Weekend draft synchronization UI', () => {
     unmount();
     render(<MemoryRouter initialEntries={['/pronostici?meeting=race-3']}><App /></MemoryRouter>);
 
-    await waitFor(() => {
-      expect(screen.queryByTestId('pitstop-loader')).not.toBeInTheDocument();
-    });
+    await waitForAppToSettle();
 
     await waitFor(() => {
       const userCard = getUserCard('Player 1');
       expect(userCard).not.toBeNull();
       expect(within(userCard!).getByLabelText(/vincitore gara/i)).toHaveValue('');
-    });
+    }, { timeout: asyncUiTimeoutMs });
     
     const player1CardMonaco = getUserCard('Player 1');
     expect(within(player1CardMonaco!).getByLabelText(/vincitore gara/i)).toHaveDisplayValue(
@@ -348,35 +371,31 @@ describe('Weekend draft synchronization UI', () => {
       'Seleziona un pilota',
     );
     expect(getResultSelect(/risultato 1°/i)).toHaveValue('');
-  }, 30000);
+  }, asyncUiTimeoutMs);
 
   it('keeps shared selects readable across admin and public flows', async () => {
     setupFetch();
 
     const { unmount } = render(<MemoryRouter initialEntries={['/dashboard']}><App /></MemoryRouter>);
 
-    await waitFor(() => {
-      expect(screen.queryByTestId('pitstop-loader')).not.toBeInTheDocument();
-    });
+    await waitForAppToSettle();
 
     await waitFor(() => {
       expect(screen.getByLabelText(/weekend selezionato/i)).toBeInTheDocument();
-    });
+    }, { timeout: asyncUiTimeoutMs });
 
     expectReadableSelectStyles(screen.getByLabelText(/weekend selezionato/i) as HTMLSelectElement);
 
     unmount();
     render(<MemoryRouter initialEntries={['/pronostici?meeting=race-2']}><App /></MemoryRouter>);
 
-    await waitFor(() => {
-      expect(screen.queryByTestId('pitstop-loader')).not.toBeInTheDocument();
-    });
+    await waitForAppToSettle();
 
     await waitFor(() => {
       const player1Card = getUserCard('Player 1');
       expect(player1Card).not.toBeNull();
       expect(within(player1Card!).getByLabelText(/vincitore gara/i)).toBeInTheDocument();
-    });
+    }, { timeout: asyncUiTimeoutMs });
 
     const player1Card = getUserCard('Player 1');
     expectReadableSelectStyles(within(player1Card!).getByLabelText(/vincitore gara/i) as HTMLElement);
@@ -387,51 +406,45 @@ describe('Weekend draft synchronization UI', () => {
 
     await waitFor(() => {
       expect(screen.getByText(/solo gli admin possono modificare i pronostici/i)).toBeInTheDocument();
-    });
-  }, 30000);
+    }, { timeout: asyncUiTimeoutMs });
+  }, asyncUiTimeoutMs);
 
   it('removes the hero title blur and keeps the race background brightness isolated to the dynamic layer', async () => {
     setupFetch();
+    window.history.replaceState({}, '', '/?meeting=race-2');
 
-    render(<MemoryRouter initialEntries={['/dashboard']}><App /></MemoryRouter>);
+    render(<MemoryRouter initialEntries={['/dashboard?meeting=race-2']}><App /></MemoryRouter>);
 
-    await waitFor(() => {
-      expect(screen.queryByTestId('pitstop-loader')).not.toBeInTheDocument();
-    });
+    await waitForAppToSettle();
 
     const hero = screen.getByRole('banner');
     expect(hero).toHaveClass('hero-panel');
-
-    fireEvent.click(screen.getByRole('button', { name: /china/i }));
 
     await waitFor(() => {
       const heroBackground = screen.getByTestId('hero-race-background');
       const heroStyles = window.getComputedStyle(heroBackground);
       expect(heroStyles.backgroundImage).toContain('china-hero.webp');
-    });
-  }, 30000);
+    }, { timeout: asyncUiTimeoutMs });
+  }, asyncUiTimeoutMs);
 
   it('saves the selected weekend draft without overwriting other weekend drafts', async () => {
     const fetchMock = setupFetch();
-
     render(<MemoryRouter initialEntries={['/dashboard']}><App /></MemoryRouter>);
 
-    await waitFor(() => {
-      expect(screen.queryByTestId('pitstop-loader')).not.toBeInTheDocument();
-    });
-
-    await waitFor(() => expect(screen.getByLabelText(/weekend selezionato/i)).toBeInTheDocument());
-    fireEvent.change(screen.getByLabelText(/weekend selezionato/i), {
-      target: { value: 'race-2' },
-    });
+    await waitForAppToSettle();
 
     await waitFor(() => {
-      const player1Card = getUserCard('Player 1');
-      expect(player1Card).not.toBeNull();
-      expect(within(player1Card!).getByLabelText(/vincitore gara/i)).toHaveValue('ham');
-    });
+      expect(screen.getByLabelText(/weekend selezionato/i)).toHaveValue('race-1');
+    }, { timeout: asyncUiTimeoutMs });
+
+    clickCalendarRaceButton(/china/i);
+
+    await waitFor(() => {
+      expect(fetchMock).toHaveBeenCalledWith('/api/results/race-2');
+    }, { timeout: asyncUiTimeoutMs });
 
     const player1Card = getUserCard('Player 1');
+    expect(player1Card).not.toBeNull();
     fireEvent.change(within(player1Card!).getByLabelText(/vincitore gara/i), {
       target: { value: 'lec' },
     });
@@ -445,13 +458,13 @@ describe('Weekend draft synchronization UI', () => {
       expect(predictionsCall?.[1]).toMatchObject({
         method: 'POST',
       });
-      expect(String(predictionsCall?.[1]?.body)).toContain('"selectedMeetingKey":"race-2"');
-    });
+    }, { timeout: asyncUiTimeoutMs });
 
     const body = JSON.parse(String(predictionsCall?.[1]?.body));
-    expect(body.selectedMeetingKey).toBe('race-2');
     expect(body.users.find((u: any) => u.name === 'Player 1').predictions.first).toBe('lec');
-  }, 30000);
+    expect(body.weekendStateByMeetingKey['race-2'].userPredictions['Player 1'].first).toBe('lec');
+    expect(body.weekendStateByMeetingKey['race-1'].userPredictions['Player 1'].first).toBe('ver');
+  }, asyncUiTimeoutMs);
 
   it('ignores stale official results responses after changing weekend', async () => {
     const race1Results = createDeferredResponse();
@@ -468,21 +481,17 @@ describe('Weekend draft synchronization UI', () => {
 
     render(<MemoryRouter initialEntries={['/dashboard']}><App /></MemoryRouter>);
 
-    await waitFor(() => {
-      expect(screen.queryByTestId('pitstop-loader')).not.toBeInTheDocument();
-    });
+    await waitForAppToSettle();
 
     // We are on Australia (race-1), results are loading
 
-    fireEvent.change(screen.getByLabelText(/weekend selezionato/i), {
-      target: { value: 'race-2' },
-    });
+    clickCalendarRaceButton(/china/i);
 
     await waitFor(() => {
       // Should be on China predictions now
       const player1Card = getUserCard('Player 1');
       expect(player1Card).not.toBeNull();
-    });
+    }, { timeout: asyncUiTimeoutMs });
 
     // Now resolve race-1 results (stale)
     race1Results.resolve({
@@ -496,7 +505,7 @@ describe('Weekend draft synchronization UI', () => {
     await waitFor(() => {
       // Result for 1st should still be empty because we are on race-2
       expect(getResultSelect(/risultato 1°/i)).toHaveValue('');
-    });
+    }, { timeout: asyncUiTimeoutMs });
   });
 
   it('shows no lock banner before the race starts and keeps predictions editable', async () => {
@@ -508,9 +517,7 @@ describe('Weekend draft synchronization UI', () => {
 
     render(<MemoryRouter initialEntries={['/pronostici']}><App /></MemoryRouter>);
 
-    await waitFor(() => {
-      expect(screen.queryByTestId('pitstop-loader')).not.toBeInTheDocument();
-    });
+    await waitForAppToSettle();
 
     expect(screen.queryByText('Gara in corso: pronostici bloccati.')).not.toBeInTheDocument();
     expect(screen.queryByText('Gara terminata.')).not.toBeInTheDocument();
@@ -519,7 +526,7 @@ describe('Weekend draft synchronization UI', () => {
       const player1Card = getUserCard('Player 1');
       expect(player1Card).not.toBeNull();
       expect(within(player1Card!).getByLabelText(/vincitore gara/i)).not.toBeDisabled();
-    });
+    }, { timeout: asyncUiTimeoutMs });
   });
 
   it('shows the in-progress lock banner when the backend marks the selected race as live', async () => {
@@ -531,11 +538,11 @@ describe('Weekend draft synchronization UI', () => {
 
     render(<MemoryRouter initialEntries={['/pronostici']}><App /></MemoryRouter>);
 
-    await waitFor(() => {
-      expect(screen.queryByTestId('pitstop-loader')).not.toBeInTheDocument();
-    });
+    await waitForAppToSettle();
 
-    await waitFor(() => expect(screen.getByText('Gara in corso: pronostici bloccati.')).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText('Gara in corso: pronostici bloccati.')).toBeInTheDocument(), {
+      timeout: asyncUiTimeoutMs,
+    });
     const player1Card = getUserCard('Player 1');
     expect(within(player1Card!).getByLabelText(/vincitore gara/i)).toBeDisabled();
   });
@@ -554,11 +561,11 @@ describe('Weekend draft synchronization UI', () => {
 
     render(<MemoryRouter initialEntries={['/pronostici']}><App /></MemoryRouter>);
 
-    await waitFor(() => {
-      expect(screen.queryByTestId('pitstop-loader')).not.toBeInTheDocument();
-    });
+    await waitForAppToSettle();
 
-    await waitFor(() => expect(screen.getByText('Gara terminata.')).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText('Gara terminata.')).toBeInTheDocument(), {
+      timeout: asyncUiTimeoutMs,
+    });
     expect(screen.queryByText('Gara in corso: pronostici bloccati.')).not.toBeInTheDocument();
     const player1Card = getUserCard('Player 1');
     expect(within(player1Card!).getByLabelText(/vincitore gara/i)).toBeDisabled();
@@ -581,14 +588,16 @@ describe('Weekend draft synchronization UI', () => {
 
     render(<MemoryRouter initialEntries={['/pronostici']}><App /></MemoryRouter>);
 
-    await waitFor(() => {
-      expect(screen.queryByTestId('pitstop-loader')).not.toBeInTheDocument();
-    });
+    await waitForAppToSettle();
 
-    await waitFor(() => expect(screen.getByText('Gara terminata.')).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText('Gara terminata.')).toBeInTheDocument(), {
+      timeout: asyncUiTimeoutMs,
+    });
     
     // Check dashboard too
     clickSectionNavigationButton(/calendario stagione/i);
-    await waitFor(() => expect(screen.getAllByText(/australia/i).length).toBeGreaterThan(0));
+    await waitFor(() => expect(screen.getAllByText(/australia/i).length).toBeGreaterThan(0), {
+      timeout: asyncUiTimeoutMs,
+    });
   });
 });

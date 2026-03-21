@@ -6,6 +6,7 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import AdminPage from '../src/pages/AdminPage';
 import AnalysisPage from '../src/pages/AnalysisPage';
 import StandingsPage from '../src/pages/StandingsPage';
+import { appConfig } from '../src/constants';
 import { appText } from '../src/uiText';
 import { createEmptyPrediction } from '../src/utils/game';
 import type {
@@ -26,6 +27,7 @@ const resultLabels: Record<PredictionKey, string> = {
   third: 'Risultato 3°',
   pole: 'Pole / sprint reale',
 };
+const { uiText } = appConfig;
 const predictionLabels: Record<PredictionKey, string> = {
   first: 'Vincitore gara',
   second: 'Secondo classificato',
@@ -98,10 +100,10 @@ describe('route page wrappers', () => {
       />,
     );
 
-    const passwordInput = screen.getByLabelText(appText.buttons.adminView);
+    const passwordInput = screen.getByLabelText(uiText.buttons.adminView);
     fireEvent.change(passwordInput, { target: { value: 'super-secret' } });
     fireEvent.keyDown(passwordInput, { key: 'Enter' });
-    fireEvent.click(screen.getByRole('button', { name: appText.buttons.adminView }));
+    fireEvent.click(screen.getByRole('button', { name: uiText.buttons.adminView }));
 
     expect(onAdminPasswordChange).toHaveBeenCalledWith('super-secret');
     expect(onAdminLogin).toHaveBeenCalledTimes(2);
@@ -147,7 +149,7 @@ describe('route page wrappers', () => {
     expect(screen.getByText('Completa i risultati')).toBeInTheDocument();
 
     fireEvent.change(screen.getByLabelText('Risultato 1°'), { target: { value: 'ver' } });
-    fireEvent.click(screen.getByRole('button', { name: appText.buttons.cancelEdit }));
+    fireEvent.click(screen.getByRole('button', { name: uiText.buttons.cancelEdit }));
 
     const tooltipWrapper = screen.getByText('Completa i risultati').closest('.tooltip-wrapper');
     expect(tooltipWrapper).not.toBeNull();
@@ -211,7 +213,7 @@ describe('route page wrappers', () => {
       />,
     );
 
-    expect(screen.getByText('Australia')).toBeInTheDocument();
+    expect(screen.getAllByText('Australia').length).toBeGreaterThanOrEqual(1);
     expect(screen.getByText('Monaco')).toBeInTheDocument();
     expect(screen.getByText('Max Verstappen')).toBeInTheDocument();
     expect(screen.getByTestId('user-points-trend')).toBeInTheDocument();

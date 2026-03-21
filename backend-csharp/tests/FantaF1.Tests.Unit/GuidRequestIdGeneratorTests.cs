@@ -10,7 +10,10 @@ public sealed class GuidRequestIdGeneratorTests
         var generator = new GuidRequestIdGenerator();
 
         var requestId = generator.Generate();
+        var anotherRequestId = generator.Generate();
 
         Assert.True(Guid.TryParse(requestId, out _));
+        Assert.True(Guid.TryParse(anotherRequestId, out _));
+        Assert.NotEqual(requestId, anotherRequestId);
     }
 }

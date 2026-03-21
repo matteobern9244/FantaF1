@@ -3,6 +3,7 @@ import {
   getSectionNavigationItems,
   getSectionNavigationLeafItems,
   isSectionNavigationGroup,
+  sectionNavigationDefinitions,
 } from '../src/utils/sectionNavigation';
 import { appText } from '../src/uiText';
 
@@ -45,5 +46,13 @@ describe('section navigation', () => {
     const leafLabels = getSectionNavigationLeafItems('admin').map((item) => item.label);
     expect(leafLabels).toContain(appText.shell.navigation.items.results);
     expect(leafLabels).toContain(appText.shell.navigation.items.seasonAnalysis);
+  });
+
+  it('identifies only grouped analysis entries as navigation groups', () => {
+    const groupEntry = sectionNavigationDefinitions.find((item) => item.kind === 'group');
+    const itemEntry = sectionNavigationDefinitions.find((item) => item.kind === 'item');
+
+    expect(groupEntry && isSectionNavigationGroup(groupEntry)).toBe(true);
+    expect(itemEntry && isSectionNavigationGroup(itemEntry)).toBe(false);
   });
 });
