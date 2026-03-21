@@ -141,12 +141,12 @@ public sealed class PortingDocumentationConsistencyTests
             StripAllWhitespace("**100% statements (2510 / 2510)**, **100% functions (213 / 213)**, **100% branches (1138 / 1138)**, and **100% lines (2510 / 2510)**"),
             agents,
             StringComparison.Ordinal);
-        Assert.Contains("-`3194/3194`lines", readme, StringComparison.Ordinal);
-        Assert.Contains("-`1793/1793`branches", readme, StringComparison.Ordinal);
-        Assert.Contains("-`539/539`methods", readme, StringComparison.Ordinal);
-        Assert.Contains(StripAllWhitespace("**100% line coverage (3194 / 3194)**"), agents, StringComparison.Ordinal);
-        Assert.Contains(StripAllWhitespace("**100% branch coverage (1793 / 1793)**"), agents, StringComparison.Ordinal);
-        Assert.Contains(StripAllWhitespace("**100% method coverage (539 / 539)**"), agents, StringComparison.Ordinal);
+        Assert.Contains("-`3292/3292`lines", readme, StringComparison.Ordinal);
+        Assert.Contains("-`1843/1843`branches", readme, StringComparison.Ordinal);
+        Assert.Contains("-`545/545`methods", readme, StringComparison.Ordinal);
+        Assert.Contains(StripAllWhitespace("**100% line coverage (3292 / 3292)**"), agents, StringComparison.Ordinal);
+        Assert.Contains(StripAllWhitespace("**100% branch coverage (1843 / 1843)**"), agents, StringComparison.Ordinal);
+        Assert.Contains(StripAllWhitespace("**100% method coverage (545 / 545)**"), agents, StringComparison.Ordinal);
     }
 
     [Fact]

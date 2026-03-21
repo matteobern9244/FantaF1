@@ -1415,6 +1415,66 @@ public sealed class SubphaseEightBootstrapTests
     }
 
     [Fact]
+    public async Task Official_calendar_sync_service_backfills_missing_historical_highlights_with_the_resolved_sky_race_page()
+    {
+        var config = CreatePortingAppConfig(expectedDrivers: 22, expectedWeekends: 1);
+        var repository = new SpyWeekendRepository
+        {
+            CachedWeekends =
+            [
+                new WeekendDocument(
+                    "1279",
+                    "Australia",
+                    "Australian Grand Prix 2026",
+                    1,
+                    "06 - 08 MAR",
+                    "https://www.formula1.com/en/racing/2026/australia",
+                    "hero-old.webp",
+                    "track-old.webp",
+                    false,
+                    "2026-03-06",
+                    "2026-03-08",
+                    "2026-03-08T04:00:00.000Z",
+                    [new WeekendSessionDocument("Race", "2026-03-08T04:00:00.000Z")],
+                    "",
+                    "",
+                    "",
+                    ""),
+            ],
+        };
+        var seasonHtml = """
+            <a href="/en/racing/2026/australia"><span>ROUND 1</span><span>06 - 08 MAR</span><span>Australia</span><span>FORMULA 1 AUSTRALIAN GRAND PRIX 2026</span></a>
+        """;
+        var service = new OfficialCalendarSyncService(
+            config,
+            repository,
+            new StubHighlightsLookupService(
+                shouldLookup: true,
+                result: new HighlightsLookupDocument(
+                    "https://sport.sky.it/formula-1/video/highlights/gp-australia",
+                    "2026-03-18T09:00:00.000Z",
+                    "found",
+                    "sky-race-page")),
+            new StubClock(new DateTimeOffset(2026, 03, 18, 10, 00, 00, TimeSpan.Zero)),
+            CreateHttpClient(new Dictionary<string, string>
+            {
+                [config.Calendar.SeasonUrl] = seasonHtml,
+                ["https://www.formula1.com/en/racing/2026/australia"] = """
+                    <title>Australia GP - F1 Race</title>
+                    <script>{"@type":"SportsEvent","name":"Race - Melbourne","startDate":"2026-03-08T04:00:00.000Z"}</script>
+                """,
+            }));
+
+        var result = await service.SyncAsync(CancellationToken.None);
+
+        var australia = Assert.Single(result);
+        Assert.Equal("https://sport.sky.it/formula-1/video/highlights/gp-australia", australia.HighlightsVideoUrl);
+        Assert.Equal("found", australia.HighlightsLookupStatus);
+        Assert.Equal("sky-race-page", australia.HighlightsLookupSource);
+        Assert.Equal("https://sport.sky.it/formula-1/video/highlights/gp-australia", Assert.Single(repository.WrittenWeekends).HighlightsVideoUrl);
+    }
+
+    [Fact]
     public async Task Official_calendar_sync_service_uses_the_injected_clock_for_highlights_lookup_gating()
     {
         var config = CreatePortingAppConfig(expectedDrivers: 22, expectedWeekends: 1);

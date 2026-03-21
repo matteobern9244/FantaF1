@@ -72,6 +72,12 @@ specialized **generalist** sub-agent as described below.
 14. Verify that the Pull Request configuration is correct before enabling merge
     automation. Confirm the title, body, labels, base branch, head branch,
     reviewers, assignees, and release metadata are accurate and complete.
+    - The Pull Request body must be suitable, specific, and clearly aligned
+      with the real work delivered in the branch; generic or vague
+      descriptions are not acceptable.
+    - `matteobern9244` must be assigned as assignee on the Pull Request.
+    - Pull Request labels must reflect the work actually performed and must not
+      include unrelated or speculative categories.
 15. Enable auto-merge on that Pull Request using the repository's configured
     merge method, without bypassing branch protection on `main`.
 16. Wait until the Pull Request is either merged by GitHub after all required

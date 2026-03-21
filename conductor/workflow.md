@@ -81,6 +81,11 @@ Quando l'utente autorizza esplicitamente il deploy (comandi `deploya` o
 5.  Commit e Push su branch di lavoro.
 6.  Creazione Pull Request verso il branch target (`main` o `staging`) con
     auto-merge abilitato.
+    - La descrizione della PR deve essere idonea, specifica e coerente con il
+      lavoro realmente svolto nel branch.
+    - `matteobern9244` deve essere impostato come assignee della PR.
+    - Le label della PR devono riflettere esclusivamente il lavoro
+      effettivamente svolto, senza categorie speculative o non pertinenti.
 7.  Creazione Tag e GitHub Release solo dopo il merge avvenuto con successo.
 
 ## 6. Sicurezza e Privacy

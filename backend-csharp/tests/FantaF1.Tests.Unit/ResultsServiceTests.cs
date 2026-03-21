@@ -353,6 +353,50 @@ public sealed class ResultsServiceTests
     }
 
     [Fact]
+    public async Task Results_service_repopulates_missing_historical_highlights_with_the_resolved_sky_race_page()
+    {
+        var weekendRepository = new StubWeekendRepository(
+        [
+            CreateWeekend(
+                "1279",
+                detailUrl: "https://www.formula1.com/en/racing/2026/australia",
+                startDate: "2026-03-06",
+                endDate: "2026-03-08",
+                raceStartTime: "2026-03-08T04:00:00Z"),
+        ]);
+        var sourceClient = new StubResultsSourceClient(new Dictionary<string, string>
+        {
+            ["https://www.formula1.com/en/results/2026/races/1279/australia/race-result"] =
+                "<table><tbody><tr><td>1</td><td>63</td><td>George Russell</td></tr><tr><td>2</td><td>12</td><td>Kimi Antonelli</td></tr><tr><td>3</td><td>16</td><td>Charles Leclerc</td></tr></tbody></table>",
+            ["https://www.formula1.com/en/results/2026/races/1279/australia/qualifying"] =
+                "<table><tbody><tr><td>1</td><td>63</td><td>George Russell</td></tr></tbody></table>",
+        });
+        var highlightsLookupService = new StubRaceHighlightsLookupService(
+            shouldLookup: true,
+            resolvedLookup: new HighlightsLookupDocument(
+                "https://sport.sky.it/formula-1/video/highlights/gp-australia",
+                "2026-03-18T09:00:00.000Z",
+                "found",
+                "sky-race-page"));
+        var service = new ResultsService(
+            weekendRepository,
+            sourceClient,
+            new RaceResultsCache(),
+            new FormulaOneResultsUrlBuilder(),
+            new OfficialResultsParser(),
+            new RacePhaseResolver(),
+            highlightsLookupService,
+            new StubClock(new DateTimeOffset(2026, 03, 18, 10, 00, 00, TimeSpan.Zero)));
+
+        var payload = await service.ReadAsync("1279", CancellationToken.None);
+
+        Assert.Equal("finished", payload.RacePhase);
+        Assert.Equal("https://sport.sky.it/formula-1/video/highlights/gp-australia", payload.HighlightsVideoUrl);
+        Assert.Equal("sky-race-page", weekendRepository.WrittenLookup?.HighlightsLookupSource);
+        Assert.Equal("https://sport.sky.it/formula-1/video/highlights/gp-australia", weekendRepository.Documents.Single().HighlightsVideoUrl);
+    }
+
+    [Fact]
     public async Task Results_service_uses_sprint_results_for_sprint_weekends_and_falls_back_to_persisted_highlights_on_lookup_failures()
     {
         var weekendRepository = new StubWeekendRepository(
