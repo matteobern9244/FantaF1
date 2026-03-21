@@ -1,21 +1,16 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import {
   CalendarDays,
   Flag,
-  ListChecks,
   ShieldCheck,
-  Save,
-  Trash2,
-  Trophy,
-  User,
   Timer,
+  Trophy,
   Zap,
   FastForward,
   Gauge,
-  BarChart3,
   LockKeyhole,
   Download,
-  Menu,
 } from 'lucide-react';
 import './App.css';
 import {
@@ -81,19 +76,18 @@ import {
   getDriverDisplayNameById,
   sortDriversBySurname,
 } from './utils/drivers';
-import { buildSeasonAnalytics, buildUserAnalytics, buildUserKpiSummaries, trackedFields } from './utils/analytics';
+import { buildSeasonAnalytics, buildUserAnalytics, buildUserKpiSummaries } from './utils/analytics';
 import { createSaveRequestError, getSaveErrorAlertMessage } from './utils/save';
 import { fetchOfficialResults, normalizeOfficialResultsResponse } from './utils/resultsApi';
 import { splitHeroTitle } from './utils/title';
 import { WeekendStateAssembler } from './utils/weekendStateService';
-import HistoryArchivePanel from './components/HistoryArchivePanel';
-import PublicGuidePanel from './components/PublicGuidePanel';
-import PublicStandingsPanel from './components/PublicStandingsPanel';
-import SeasonAnalysisPanel from './components/SeasonAnalysisPanel';
-import WeekendLivePanel from './components/WeekendLivePanel';
 import WeekendPulseHeroCard from './components/WeekendPulseHeroCard';
-import Sidebar from './components/Sidebar';
-import MobileOverlay from './components/MobileOverlay';
+import AppLayout from './components/AppLayout';
+import DashboardPage from './pages/DashboardPage';
+import PredictionsPage from './pages/PredictionsPage';
+import StandingsPage from './pages/StandingsPage';
+import AnalysisPage from './pages/AnalysisPage';
+import AdminPage from './pages/AdminPage';
 import { appText } from './uiText';
 import {
   getWeekendPredictionState,
@@ -233,6 +227,8 @@ function SessionIcon({ name, size = 14 }: { name: string; size?: number }) {
 
 /* v8 ignore start -- stateful UI shell is exercised through RTL and browser smoke tests */
 function App() {
+  const navigate = useNavigate();
+  const location = useLocation();
   const manualNavigationLockDurationMs = 900;
   const [users, setUsers] = useState<UserData[]>([]);
   const [history, setHistory] = useState<AppData['history']>([]);
@@ -395,24 +391,35 @@ function App() {
   }
 
   function navigateToSection(sectionId: string) {
-    const targetElement = document.getElementById(sectionId);
-    if (!targetElement) {
+    if (sectionId === 'admin-section' && !sessionState.isAdmin) {
+      handleOpenAdminLogin();
       return;
     }
 
-    if (navigationLockTimeoutRef.current !== null) {
-      window.clearTimeout(navigationLockTimeoutRef.current);
+    const leafItems = getSectionNavigationLeafItems(sessionState.isAdmin ? 'admin' : 'public');
+    const item = leafItems.find(i => i.id === sectionId);
+    
+    if (item) {
+      const [path] = item.route.split('#');
+      if (location.pathname !== path) {
+        navigate(item.route);
+      } else {
+        const targetElement = document.getElementById(sectionId);
+        if (targetElement) {
+          if (navigationLockTimeoutRef.current !== null) {
+            window.clearTimeout(navigationLockTimeoutRef.current);
+          }
+          manualNavigationTargetRef.current = sectionId;
+          navigationLockTimeoutRef.current = window.setTimeout(() => {
+            manualNavigationTargetRef.current = null;
+            navigationLockTimeoutRef.current = null;
+          }, manualNavigationLockDurationMs);
+          window.history.replaceState({}, '', buildHashUrl(sectionId));
+          scrollSectionIntoView(targetElement);
+          setActiveSectionId(sectionId);
+        }
+      }
     }
-
-    manualNavigationTargetRef.current = sectionId;
-    navigationLockTimeoutRef.current = window.setTimeout(() => {
-      manualNavigationTargetRef.current = null;
-      navigationLockTimeoutRef.current = null;
-    }, manualNavigationLockDurationMs);
-
-    window.history.replaceState({}, '', buildHashUrl(sectionId));
-    scrollSectionIntoView(targetElement);
-    setActiveSectionId(sectionId);
   }
 
   function handleOpenMobileNav() {
@@ -723,28 +730,102 @@ function App() {
     };
   }, [firstSectionId, loading, viewMode]);
 
+  const hydrateSelectedWeekendView = useCallback(
+    (nextMeetingKey: string, baseUsers: UserData[]) =>
+      weekendStateAssembler.hydrateSelectedWeekendView(
+        weekendStateByMeetingKey,
+        nextMeetingKey,
+        baseUsers,
+      ),
+    [weekendStateByMeetingKey],
+  );
+
+  // Unified URL and State synchronization
   useEffect(() => {
-    if (loading) {
-      return;
+    if (loading) return;
+
+    const params = new URLSearchParams(location.search);
+    const urlMeetingKey = params.get('meeting');
+    const urlViewMode = params.get('view') as ViewMode | null;
+
+    // Sync URL -> State (e.g. on back/forward or manual URL edit)
+    if (urlMeetingKey && urlMeetingKey !== selectedMeetingKey) {
+      const race = getRaceByMeetingKey(sortedCalendar, urlMeetingKey);
+      if (race) {
+        const nextMeeting = race.meetingKey;
+        const view = hydrateSelectedWeekendView(nextMeeting, users);
+        setSelectedMeetingKey(nextMeeting);
+        setGpName(race.grandPrixTitle || race.meetingName);
+        setUsers(view.users);
+        setRaceResults(view.raceResults);
+      }
     }
 
-    const params = new URLSearchParams(window.location.search);
-    params.set('meeting', selectedMeetingKey);
-    params.set('view', viewMode);
-    if (historyUserFilter !== 'all') {
-      params.set('historyUser', historyUserFilter);
-    } else {
-      params.delete('historyUser');
-    }
-    if (historySearch.trim()) {
-      params.set('historySearch', historySearch.trim());
-    } else {
-      params.delete('historySearch');
+    if (urlViewMode && urlViewMode !== viewMode) {
+      setViewMode(urlViewMode);
     }
 
-    const nextUrl = `${window.location.pathname}?${params.toString()}${window.location.hash}`;
-    window.history.replaceState({}, '', nextUrl);
-  }, [historySearch, historyUserFilter, loading, selectedMeetingKey, viewMode]);
+    // Sync State -> URL
+    let changed = false;
+    if (params.get('meeting') !== selectedMeetingKey) { params.set('meeting', selectedMeetingKey); changed = true; }
+    if (params.get('view') !== viewMode) { params.set('view', viewMode); changed = true; }
+    const currentHistoryUser = params.get('historyUser') ?? 'all';
+    if (currentHistoryUser !== historyUserFilter) {
+      if (historyUserFilter !== 'all') {
+        params.set('historyUser', historyUserFilter);
+      } else {
+        params.delete('historyUser');
+      }
+      changed = true;
+    }
+    const currentHistorySearch = params.get('historySearch') ?? '';
+    if (currentHistorySearch !== historySearch.trim()) {
+      if (historySearch.trim()) {
+        params.set('historySearch', historySearch.trim());
+      } else {
+        params.delete('historySearch');
+      }
+      changed = true;
+    }
+
+    if (changed) {
+      const nextSearch = `?${params.toString()}`;
+      if (location.search !== nextSearch) {
+        navigate({ pathname: location.pathname, search: nextSearch, hash: location.hash }, { replace: true });
+      }
+    }
+  }, [
+    historySearch,
+    historyUserFilter,
+    hydrateSelectedWeekendView,
+    loading,
+    location.hash,
+    location.pathname,
+    location.search,
+    navigate,
+    selectedMeetingKey,
+    sortedCalendar,
+    users,
+    viewMode,
+  ]);
+
+  // Sync Active Section ID to Route
+  useEffect(() => {
+    if (loading) return;
+    const leafItems = getSectionNavigationLeafItems(viewMode);
+    const currentPath = location.pathname;
+    const currentHash = location.hash.replace('#', '');
+    
+    const matchingItem = leafItems.find(item => {
+      const [itemPath, itemHash] = item.route.split('#');
+      if (currentHash) return itemPath === currentPath && itemHash === currentHash;
+      return itemPath === currentPath;
+    });
+
+    if (matchingItem && matchingItem.id !== activeSectionId) {
+      setActiveSectionId(matchingItem.id);
+    }
+  }, [location.pathname, location.hash, loading, viewMode, activeSectionId]);
 
   useEffect(() => {
     if (!selectedRace || editingSession) {
@@ -840,14 +921,6 @@ function App() {
         }
       : nextUser;
     });
-  }
-
-  function hydrateSelectedWeekendView(nextMeetingKey: string, baseUsers: UserData[]) {
-    return weekendStateAssembler.hydrateSelectedWeekendView(
-      weekendStateByMeetingKey,
-      nextMeetingKey,
-      baseUsers,
-    );
   }
 
   function resolveRaceFromRecord(record: AppData['history'][number]) {
@@ -947,6 +1020,10 @@ function App() {
     setGpName(nextRace?.grandPrixTitle ?? nextRace?.meetingName ?? '');
     setUsers(nextWeekendView.users);
     setRaceResults(nextWeekendView.raceResults);
+
+    const params = new URLSearchParams(location.search);
+    params.set('meeting', nextMeeting);
+    navigate(`/pronostici?${params.toString()}`);
   }
 
   function updatePrediction(userName: string, field: PredictionKey, value: string) {
@@ -1456,46 +1533,22 @@ function App() {
 
   /* v8 ignore next -- layout is exercised end-to-end via RTL and browser smoke tests */
   return (
-    <div className={`app-shell ${isSidebarCollapsed ? 'app-shell-sidebar-collapsed' : ''}`.trim()}>
-      <Sidebar
-        items={sectionNavigationItems}
-        activeId={activeSectionId}
-        onItemClick={navigateToSection}
-        isAdmin={sessionState.isAdmin}
-        viewMode={viewMode}
-        onViewModeToggle={handleToggleViewMode}
-        onLogout={handleAdminLogout}
-        onLogin={handleOpenAdminLogin}
-        onCollapseChange={setIsSidebarCollapsed}
-        onInstall={handleInstallApp}
-        showInstall={true}
-      />
-
-      {isMobileNavOpen && (
-        <MobileOverlay
-          items={sectionNavigationItems}
-          activeId={activeSectionId}
-          onItemClick={navigateToSection}
-          isAdmin={sessionState.isAdmin}
-          viewMode={viewMode}
-          onViewModeToggle={handleToggleViewMode}
-          onLogout={handleAdminLogout}
-          onLogin={handleOpenAdminLogin}
-          onClose={handleCloseMobileNav}
-          onInstall={handleInstallApp}
-          showInstall={true}
-        />
-      )}
-
-      <button
-        className="mobile-menu-trigger"
-        onClick={handleOpenMobileNav}
-        aria-label={appText.shell.navigation.openButton}
-        type="button"
-      >
-        <Menu size={24} />
-      </button>
-
+    <AppLayout
+      items={sectionNavigationItems}
+      activeId={activeSectionId}
+      onItemClick={navigateToSection}
+      isAdmin={sessionState.isAdmin}
+      viewMode={viewMode}
+      onViewModeToggle={handleToggleViewMode}
+      onLogout={handleAdminLogout}
+      onLogin={handleOpenAdminLogin}
+      isSidebarCollapsed={isSidebarCollapsed}
+      onCollapseChange={setIsSidebarCollapsed}
+      isMobileNavOpen={isMobileNavOpen}
+      onOpenMobileNav={handleOpenMobileNav}
+      onCloseMobileNav={handleCloseMobileNav}
+      onInstall={handleInstallApp}
+    >
       <header
         className="hero-panel"
       >
@@ -1674,413 +1727,102 @@ function App() {
 
       <main className="dashboard-grid">
         <section className="content-column">
-          <section className="calendar-panel nav-section" id="calendar-section">
-            <div className="section-title">
-              <Flag size={20} />
-              <h2>{uiText.headings.calendar}</h2>
-            </div>
-            {sortedCalendar.length === 0 ? (
-              <p className="empty-copy">{uiText.calendar.empty}</p>
-            ) : (
-              <>
-                <div className="race-selector">
-                  <label htmlFor="meeting-selector">{uiText.labels.selectedRace}</label>
-                  <select
-                    id="meeting-selector"
-                    value={selectedRace?.meetingKey ?? ''}
-                    onChange={(event) => handleRaceSelection(event.target.value)}
-                    disabled={Boolean(editingSession)}
-                  >
-                    {sortedCalendar.map((weekend) => (
-                      <option key={weekend.meetingKey} value={weekend.meetingKey}>
-                        {weekend.roundNumber}. {weekend.grandPrixTitle}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="calendar-strip">
-                  {sortedCalendar.map((weekend) => (
-                    <button
-                      key={weekend.meetingKey}
-                      className={`calendar-card interactive-surface ${
-                        weekend.meetingKey === selectedRace?.meetingKey ? 'selected' : ''
-                      } ${weekend.isSprintWeekend ? 'sprint' : ''}`}
-                      onClick={() => handleRaceSelection(weekend.meetingKey)}
-                      disabled={Boolean(editingSession)}
-                      type="button"
-                    >
-                      <span className="calendar-round">
-                        {uiText.labels.calendarRound} {weekend.roundNumber}
-                      </span>
-                      <strong>{weekend.meetingName}</strong>
-                      <span>{weekend.dateRangeLabel}</span>
-                      <span className={`calendar-badge ${weekend.isSprintWeekend ? 'sprint' : ''}`}>
-                        {weekend.isSprintWeekend
-                          ? uiText.labels.calendarSprint
-                          : uiText.calendar.raceBadge}
-                      </span>
-                    </button>
-                  ))}
-                </div>
-              </>
-            )}
-          </section>
-
-          {!isPublicView ? (
-          <section className="panel nav-section" id="predictions-section">
-            <div className="panel-head">
-              <div className="section-title">
-                <User size={20} />
-                <h2>
-                  {uiText.headings.predictionEntry}
-                </h2>
-              </div>
-            </div>
-
-            {selectedRacePhase === 'live' ? (
-              <p className="locked-banner">{uiText.calendar.raceInProgressLocked}</p>
-            ) : null}
-            {selectedRacePhase === 'finished' ? (
-              <p className="locked-banner">{uiText.calendar.raceFinished}</p>
-            ) : null}
-            {predictionResultsStatusMessage ? (
-              <p className="sidebar-note status-note">{predictionResultsStatusMessage}</p>
-            ) : null}
-
-            <div className="predictions-grid">
-              {users.map((user) => (
-                <article key={user.name} className="user-card interactive-surface">
-                  <div className="user-card-head">
-                    <h3>{user.name}</h3>
-                    <span className="points-preview">
-                      <span className="points-preview-label">{uiText.labels.potential}:</span>
-                        <span className="points-preview-value">
-                        {calculatePotentialPoints(user.predictions)}
-                        </span>
-                      <span className="points-preview-suffix">{uiText.pointsSuffix}</span>
-                    </span>
-                  </div>
-
-                  {predictionFieldOrder.map((field) => (
-                    <div key={`${user.name}-${field}`} className="field-row">
-                      <label htmlFor={`${user.name}-${field}`}>
-                        {predictionLabels[field]} ({points[field]} {uiText.pointsSuffix})
-                      </label>
-                      <select
-                        id={`${user.name}-${field}`}
-                        value={user.predictions[field]}
-                        onChange={(event) => updatePrediction(user.name, field, event.target.value)}
-                        disabled={predictionsLocked}
-                      >
-                        <option value="">{uiText.placeholders.driverSelect}</option>
-                        {sortedDrivers.map((driver) => (
-                          <option key={driver.id} value={driver.id}>
-                            {formatDriverDisplayName(driver.name)} ({driver.team})
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  ))}
-                </article>
-              ))}
-            </div>
-
-            <div className="stacked-actions">
-              <button
-                className="secondary-button"
-                onClick={clearAllPredictions}
-                type="button"
-                disabled={predictionsLocked || Boolean(editingSession)}
-              >
-                <Trash2 size={16} />
-                {uiText.buttons.clear}
-              </button>
-              <button
-                className="primary-button"
-                onClick={handleSavePredictions}
-                type="button"
-                disabled={predictionsLocked || Boolean(editingSession)}
-              >
-                <Save size={16} />
-                {uiText.buttons.savePredictions}
-              </button>
-            </div>
-          </section>
-          ) : (
-            <section className="panel public-readonly-panel nav-section" id="predictions-section">
-              <div className="section-title">
-                <User size={20} />
-                <h2>{uiText.headings.predictionEntry}</h2>
-              </div>
-              <p className="locked-banner">{uiText.history.publicReadonly}</p>
-              <div className="predictions-grid readonly-grid">
-                {users.map((user) => (
-                  <article key={`readonly-${user.name}`} className="user-card readonly-card interactive-surface">
-                    <div className="user-card-head">
-                      <h3>{user.name}</h3>
-                      <span className="points-preview">
-                        <span className="points-preview-label">{uiText.labels.potential}:</span>
-                        <span className="points-preview-value">
-                          {calculatePotentialPoints(user.predictions)}
-                        </span>
-                        <span className="points-preview-suffix">{uiText.pointsSuffix}</span>
-                      </span>
-                    </div>
-                    <div className="readonly-picks">
-                      {trackedFields.map((field) => (
-                        <div key={`readonly-${user.name}-${field}`} className="spotlight-row">
-                          <span>{predictionLabels[field]}</span>
-                          <strong>{getDriverDisplayNameById(drivers, user.predictions[field], uiText.placeholders.emptyOption)}</strong>
-                        </div>
-                      ))}
-                    </div>
-                  </article>
-                ))}
-              </div>
-            </section>
-          )}
-
-          {!isPublicView ? (
-          <section className="panel accent-panel nav-section" id="results-section">
-            <div className="section-title">
-              <ListChecks size={20} />
-              <h2>{uiText.headings.results}</h2>
-            </div>
-
-            {editingSession ? <p className="editing-banner">{uiText.history.editingLabel}</p> : null}
-
-            {selectedRace ? (
-              <div className="selected-race-banner">
-                <div className="selected-race-info">
-                  <span className="eyebrow">{uiText.labels.selectedRace}</span>
-                  <strong>{selectedRace.grandPrixTitle}</strong>
-                  <span>{selectedRace.dateRangeLabel}</span>
-                </div>
-                {renderSelectedRaceTrackMap()}
-              </div>
-            ) : (
-              <p className="empty-copy">{uiText.calendar.empty}</p>
-            )}
-
-            <div className="results-grid">
-              {predictionFieldOrder.map((field) => (
-                <div key={field} className="field-row">
-                  <label htmlFor={`result-${field}`}>{resultLabels[field]}</label>
-                  <select
-                    id={`result-${field}`}
-                    value={raceResults[field]}
-                    onChange={(event) => updateRaceResult(field, event.target.value)}
-                  >
-                    <option value="">{uiText.placeholders.emptyOption}</option>
-                    {sortedDrivers.map((driver) => (
-                      <option key={driver.id} value={driver.id}>
-                        {formatDriverDisplayName(driver.name)}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              ))}
-            </div>
-
-            <div className="results-actions">
-              {editingSession ? (
-                <button className="secondary-button" onClick={handleCancelEditRace} type="button">
-                  {uiText.buttons.cancelEdit}
-                </button>
-              ) : null}
-              <div
-                className={`tooltip-wrapper ${!canAssignPoints ? 'disabled-wrapper' : ''} ${showTooltip && !canAssignPoints ? 'show-tooltip' : ''}`}
-                onMouseEnter={() => setShowTooltip(true)}
-                onMouseLeave={() => setShowTooltip(false)}
-                onClick={() => {
-                  if (!canAssignPoints) {
-                    setShowTooltip(!showTooltip);
-                    setTimeout(() => setShowTooltip(false), 3000);
-                  }
-                }}
-              >
-                {!canAssignPoints && (
-                  <div className="tooltip-text">{disabledReason}</div>
-                )}
-                <button className="primary-button" onClick={calculateAndApplyPoints} type="button" disabled={!canAssignPoints}>
-                  {editingSession ? uiText.buttons.saveEditedRace : uiText.buttons.confirmResults}
-                </button>
-              </div>
-            </div>
-          </section>
-          ) : null}
-
-          <WeekendLivePanel
-            getDriverName={getWeekendLiveDriverName}
-            predictionFieldOrder={predictionFieldOrder}
-            predictionLabels={predictionLabels}
-            weekendComparison={weekendComparison}
-          />
-
-          <SeasonAnalysisPanel
-            analyticsEmptyLabel={uiText.history.analyticsEmpty}
-            emptyOptionLabel={uiText.placeholders.emptyOption}
-            predictionLabels={predictionLabels}
-            seasonAnalytics={seasonAnalytics}
-          />
-
-          <section className="panel analytics-panel nav-section" id="user-analytics-section">
-            <div className="section-title">
-              <BarChart3 size={20} />
-              <h2>{uiText.headings.userAnalytics}</h2>
-            </div>
-            {selectedAnalyticsSummary ? (
-              <>
-                <div className="analytics-summary-grid">
-                  <article className="analytics-card interactive-surface">
-                    <span className="analytics-label">{uiText.labels.bestWeekend}</span>
-                    <strong>{selectedAnalyticsSummary.bestWeekend?.gpName ?? uiText.history.unknownDriver}</strong>
-                    <small>
-                      {selectedAnalyticsSummary.bestWeekend?.points ?? 0} {uiText.pointsSuffix}
-                    </small>
-                  </article>
-                  <article className="analytics-card interactive-surface">
-                    <span className="analytics-label">{uiText.labels.worstWeekend}</span>
-                    <strong>{selectedAnalyticsSummary.worstWeekend?.gpName ?? uiText.history.unknownDriver}</strong>
-                    <small>
-                      {selectedAnalyticsSummary.worstWeekend?.points ?? 0} {uiText.pointsSuffix}
-                    </small>
-                  </article>
-                  <article className="analytics-card interactive-surface">
-                    <span className="analytics-label">{uiText.labels.mostPickedDriver}</span>
-                    <strong>{formatTrendDriver(selectedAnalyticsSummary.mostPickedDriverId)}</strong>
-                    <small>{selectedInsightsUserName}</small>
-                  </article>
-                </div>
-
-                <div className="analytics-columns">
-                  <div className="analytics-subpanel interactive-surface">
-                    <h3>{uiText.labels.fieldAccuracy}</h3>
-                    <div className="field-accuracy-list">
-                      {selectedAnalyticsSummary.fieldAccuracy.map((entry) => (
-                        <div key={`${selectedAnalyticsSummary.userName}-${entry.field}`} className="field-accuracy-row">
-                          <span>{predictionLabels[entry.field]}</span>
-                          <strong>{entry.accuracy}%</strong>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                  <div className="analytics-subpanel interactive-surface">
-                    <h3>{uiText.labels.pointsTrend}</h3>
-                    {selectedAnalyticsSummary.trend.length > 0 ? (
-                      <div className="trend-chart" data-testid="user-points-trend">
-                        {selectedAnalyticsSummary.trend.map((point) => {
-                          const maxTrendValue = Math.max(
-                            ...selectedAnalyticsSummary.trend.map((trendPoint) => trendPoint.points),
-                            1,
-                          );
-
-                          return (
-                            <div key={`${selectedAnalyticsSummary.userName}-${point.gpName}`} className="trend-bar-group">
-                              <div className="trend-bar-shell">
-                                <span
-                                  className="trend-bar"
-                                  style={{ height: `${Math.max((point.points / maxTrendValue) * 100, 8)}%` }}
-                                />
-                              </div>
-                              <strong>{point.points}</strong>
-                              <span>{point.gpName}</span>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    ) : (
-                      <p className="empty-copy">{uiText.history.analyticsEmpty}</p>
-                    )}
-                  </div>
-                </div>
-              </>
-            ) : (
-              <p className="empty-copy">{uiText.history.analyticsEmpty}</p>
-            )}
-          </section>
-
-          <section className="panel nav-section" id="user-kpi-section">
-            <div className="panel-head">
-              <div className="section-title">
-                <BarChart3 size={20} />
-                <h2>{uiText.headings.userKpi}</h2>
-              </div>
-              <div className="insights-picker">
-                <label htmlFor="insights-user-selector">{uiText.labels.userKpiSelector}</label>
-                <select
-                  id="insights-user-selector"
-                  value={selectedInsightsUserName}
-                  onChange={(event) => setSelectedInsightsUser(event.target.value)}
-                >
-                  {users.map((user) => (
-                    <option key={`insights-${user.name}`} value={user.name}>
-                      {user.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-            {selectedKpiSummary ? (
-              <div className="kpi-grid" data-testid="user-kpi-dashboard">
-                <article className="kpi-card interactive-surface">
-                  <strong>{selectedKpiSummary.seasonPoints}</strong>
-                  <span>{uiText.labels.seasonPoints}</span>
-                </article>
-                <article className="kpi-card interactive-surface">
-                  <strong>{formatAverageValue(selectedKpiSummary.averagePosition, 1)}</strong>
-                  <span>{uiText.labels.averagePosition}</span>
-                </article>
-                <article className="kpi-card interactive-surface">
-                  <strong>{selectedKpiSummary.poleAccuracy}%</strong>
-                  <span>{uiText.labels.poleAccuracy}</span>
-                </article>
-                <article className="kpi-card interactive-surface">
-                  <strong>{formatAverageValue(selectedKpiSummary.averagePointsPerRace, 2)}</strong>
-                  <span>{uiText.labels.averagePointsPerRace}</span>
-                </article>
-              </div>
-            ) : (
-              <p className="empty-copy">{uiText.history.analyticsEmpty}</p>
-            )}
-          </section>
-
-          {isPublicView ? (
-            <PublicStandingsPanel
-              constructorStandings={standings.constructorStandings}
-              driverStandings={standings.driverStandings}
-              updatedAt={standings.updatedAt}
-            />
-          ) : null}
-
-          <HistoryArchivePanel
-            editingSession={editingSession}
-            expandedHistoryKey={expandedHistoryKey}
-            filteredHistoryEntries={filteredHistoryEntries}
-            getHistoryFieldHitLabel={getHistoryFieldHitLabel}
-            getHistoryKey={getExpandedHistoryKey}
-            historyEmptyLabel={uiText.history.empty}
-            historySearch={historySearch}
-            historyUserFilter={historyUserFilter}
-            isPublicView={isPublicView}
-            onDeleteHistoryRace={handleDeleteHistoryRace}
-            onEditHistoryRace={handleEditHistoryRace}
-            onHistorySearchChange={setHistorySearch}
-            onHistoryUserFilterChange={setHistoryUserFilter}
-            onToggleExpanded={setExpandedHistoryKey}
-            pointsSuffix={uiText.pointsSuffix}
-            predictionFieldOrder={predictionFieldOrder}
-            predictionLabels={predictionLabels}
-            resolveHistoryPodium={getHistoryResultsPodium}
-            unknownDriverLabel={uiText.history.unknownDriver}
-            userDisplayNameForWinner={getHistoryWinnerDriverName}
-            users={users}
-          />
-
-          {isPublicView ? (
-            <PublicGuidePanel />
-          ) : null}
+          <Routes>
+            <Route path="/" element={<Navigate to="/dashboard" replace />} />
+            <Route path="/dashboard" element={
+              <DashboardPage
+                sortedCalendar={sortedCalendar}
+                selectedRace={selectedRace}
+                handleRaceSelection={handleRaceSelection}
+                editingSession={editingSession}
+                getWeekendLiveDriverName={getWeekendLiveDriverName}
+                predictionFieldOrder={predictionFieldOrder}
+                predictionLabels={predictionLabels}
+                weekendComparison={weekendComparison}
+                isPublicView={isPublicView}
+              />
+            } />
+            <Route path="/pronostici" element={
+              <PredictionsPage
+                isPublicView={isPublicView}
+                selectedRacePhase={selectedRacePhase}
+                predictionResultsStatusMessage={predictionResultsStatusMessage}
+                users={users}
+                calculatePotentialPoints={calculatePotentialPoints}
+                predictionFieldOrder={predictionFieldOrder}
+                predictionLabels={predictionLabels}
+                updatePrediction={updatePrediction}
+                predictionsLocked={predictionsLocked}
+                sortedDrivers={sortedDrivers}
+                drivers={drivers}
+                clearAllPredictions={clearAllPredictions}
+                handleSavePredictions={handleSavePredictions}
+                editingSession={editingSession}
+                resultLabels={resultLabels}
+                raceResults={raceResults}
+                updateRaceResult={updateRaceResult}
+              />
+            } />
+            <Route path="/classifiche" element={
+              <StandingsPage
+                isPublicView={isPublicView}
+                standings={standings}
+                editingSession={editingSession}
+                expandedHistoryKey={expandedHistoryKey}
+                filteredHistoryEntries={filteredHistoryEntries}
+                getHistoryFieldHitLabel={getHistoryFieldHitLabel}
+                getHistoryKey={getExpandedHistoryKey}
+                historySearch={historySearch}
+                historyUserFilter={historyUserFilter}
+                onDeleteHistoryRace={handleDeleteHistoryRace}
+                onEditHistoryRace={handleEditHistoryRace}
+                onHistorySearchChange={setHistorySearch}
+                onHistoryUserFilterChange={setHistoryUserFilter}
+                onToggleExpanded={setExpandedHistoryKey}
+                predictionFieldOrder={predictionFieldOrder}
+                predictionLabels={predictionLabels}
+                resolveHistoryPodium={getHistoryResultsPodium}
+                userDisplayNameForWinner={getHistoryWinnerDriverName}
+                users={users}
+              />
+            } />
+            <Route path="/analisi" element={
+              <AnalysisPage
+                seasonAnalytics={seasonAnalytics}
+                predictionLabels={predictionLabels}
+                selectedAnalyticsSummary={selectedAnalyticsSummary}
+                formatTrendDriver={formatTrendDriver}
+                selectedInsightsUserName={selectedInsightsUserName}
+                formatAverageValue={formatAverageValue}
+                selectedKpiSummary={selectedKpiSummary}
+                users={users}
+                onSelectedInsightsUserChange={setSelectedInsightsUser}
+              />
+            } />
+            <Route path="/admin" element={
+              <AdminPage
+                sessionState={sessionState}
+                adminPassword={adminPassword}
+                onAdminPasswordChange={setAdminPassword}
+                onAdminLogin={handleAdminLogin}
+                adminLoginError={adminLoginError}
+                editingSession={editingSession}
+                selectedRace={selectedRace}
+                renderSelectedRaceTrackMap={renderSelectedRaceTrackMap}
+                predictionFieldOrder={predictionFieldOrder}
+                resultLabels={resultLabels}
+                raceResults={raceResults}
+                onUpdateRaceResult={updateRaceResult}
+                sortedDrivers={sortedDrivers}
+                onCancelEditRace={handleCancelEditRace}
+                canAssignPoints={canAssignPoints}
+                showTooltip={showTooltip}
+                onShowTooltipChange={setShowTooltip}
+                disabledReason={disabledReason}
+                onCalculateAndApplyPoints={calculateAndApplyPoints}
+              />
+            } />
+          </Routes>
         </section>
       </main>
 
@@ -2157,7 +1899,7 @@ function App() {
         <p>{uiText.footer}</p>
         <p className="app-version">v{appVersion}</p>
       </footer>
-    </div>
+    </AppLayout>
   );
 }
 

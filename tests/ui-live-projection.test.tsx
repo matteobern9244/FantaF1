@@ -4,6 +4,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import React from 'react';
+import { MemoryRouter } from 'react-router-dom';
 import App from '../src/App';
 
 const originalConsoleError = console.error;
@@ -218,15 +219,18 @@ function mockAppFetches({
 }
 
 function getUserCard(name: string) {
-  return screen.getByRole('heading', { name }).closest('article');
+  return screen.getAllByRole('heading', { name }).find(h => h.tagName === 'H3')?.closest('article');
 }
 
 function getProjectionValue(name: string) {
-  return getUserCard(name)?.querySelector('.points-preview-value')?.textContent?.trim();
+  const card = getUserCard(name);
+  return card?.querySelector('.points-preview-value')?.textContent?.trim();
 }
 
 function getLiveRows() {
-  return Array.from(document.querySelectorAll('.live-row')).map((row) => ({
+  const liveList = document.querySelector('.live-list');
+  if (!liveList) return [];
+  return Array.from(liveList.querySelectorAll('.live-row')).map((row) => ({
     name: row.querySelector('span')?.textContent?.trim(),
     score: row.querySelector('.live-score-value')?.textContent?.trim(),
   }));
@@ -243,7 +247,6 @@ function queryOpenPredictionsStrip() {
 describe('Live projection UI', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    window.history.replaceState({}, '', '/');
     vi.spyOn(window, 'open').mockImplementation(() => null);
     vi.spyOn(console, 'error').mockImplementation((message?: unknown, ...optionalParams: unknown[]) => {
       if (typeof message === 'string' && message.includes('not wrapped in act')) {
@@ -261,7 +264,7 @@ describe('Live projection UI', () => {
       },
     });
 
-    render(<App />);
+    render(<MemoryRouter initialEntries={['/pronostici']}><App /></MemoryRouter>);
 
     await waitFor(() => {
       expect(screen.queryByTestId('pitstop-loader')).not.toBeInTheDocument();
@@ -293,7 +296,7 @@ describe('Live projection UI', () => {
       },
     });
 
-    render(<App />);
+    render(<MemoryRouter initialEntries={['/dashboard']}><App /></MemoryRouter>);
 
     const highlightsButton = await screen.findByRole(
       'button',
@@ -325,11 +328,11 @@ describe('Live projection UI', () => {
       },
     });
 
-    render(<App />);
+    render(<MemoryRouter initialEntries={['/dashboard']}><App /></MemoryRouter>);
 
     await screen.findByRole('button', { name: /guarda highlights/i }, { timeout: 30000 });
 
-    fireEvent.change(document.getElementById('meeting-selector') as HTMLSelectElement, {
+    fireEvent.change(screen.getByLabelText(/weekend selezionato/i), {
       target: { value: 'race-2' },
     });
 
@@ -355,7 +358,7 @@ describe('Live projection UI', () => {
       },
     });
 
-    render(<App />);
+    render(<MemoryRouter initialEntries={['/dashboard']}><App /></MemoryRouter>);
 
     await screen.findByRole('button', { name: /guarda highlights/i }, { timeout: 30000 });
 
@@ -380,7 +383,7 @@ describe('Live projection UI', () => {
       },
     });
 
-    render(<App />);
+    render(<MemoryRouter initialEntries={['/dashboard']}><App /></MemoryRouter>);
 
     await waitFor(() => {
       expect(screen.queryByTestId('pitstop-loader')).not.toBeInTheDocument();
@@ -417,7 +420,7 @@ describe('Live projection UI', () => {
       },
     });
 
-    render(<App />);
+    render(<MemoryRouter initialEntries={['/dashboard']}><App /></MemoryRouter>);
 
     const disabledButton = await screen.findByRole('button', {
       name: /highlights non presenti/i,
@@ -436,7 +439,7 @@ describe('Live projection UI', () => {
       },
     });
 
-    render(<App />);
+    render(<MemoryRouter initialEntries={['/dashboard']}><App /></MemoryRouter>);
 
     const disabledButton = await screen.findByRole('button', {
       name: /highlights non presenti/i,
@@ -456,7 +459,7 @@ describe('Live projection UI', () => {
       },
     });
 
-    render(<App />);
+    render(<MemoryRouter initialEntries={['/dashboard']}><App /></MemoryRouter>);
 
     const disabledButton = await screen.findByRole('button', {
       name: /highlights non presenti/i,
@@ -476,7 +479,7 @@ describe('Live projection UI', () => {
       },
     });
 
-    render(<App />);
+    render(<MemoryRouter initialEntries={['/dashboard']}><App /></MemoryRouter>);
 
     await waitFor(() => {
       expect(screen.queryByRole('button', { name: /highlights/i })).not.toBeInTheDocument();
@@ -490,7 +493,7 @@ describe('Live projection UI', () => {
       },
     });
 
-    render(<App />);
+    render(<MemoryRouter initialEntries={['/pronostici']}><App /></MemoryRouter>);
 
     await waitFor(() => {
       expect(screen.queryByTestId('pitstop-loader')).not.toBeInTheDocument();
@@ -508,11 +511,18 @@ describe('Live projection UI', () => {
     expect(getProjectionValue('Matteo')).toBe('1');
     expect(getProjectionValue('Fabio')).toBe('0');
     expect(getProjectionValue('Adriano')).toBe('1');
-    expect(getLiveRows()).toEqual([
-      { name: 'Fabio', score: '12' },
-      { name: 'Matteo', score: '11' },
-      { name: 'Adriano', score: '7' },
-    ]);
+    
+    // Go to dashboard for live rows
+    fireEvent.click(screen.getAllByRole('button', { name: /calendario stagione/i })[0]);
+    
+    await waitFor(() => {
+      expect(getLiveRows()).toEqual([
+        { name: 'Fabio', score: '12' },
+        { name: 'Matteo', score: '11' },
+        { name: 'Adriano', score: '7' },
+      ]);
+    });
+    
     const selectedRaceHeroCard = getSelectedRaceHeroCard();
     expect(selectedRaceHeroCard).not.toBeNull();
     expect(within(selectedRaceHeroCard as HTMLElement).getByText('Oscar Piastri')).toBeInTheDocument();
@@ -532,7 +542,7 @@ describe('Live projection UI', () => {
       },
     });
 
-    render(<App />);
+    render(<MemoryRouter initialEntries={['/pronostici']}><App /></MemoryRouter>);
 
     await waitFor(() => {
       expect(screen.queryByTestId('pitstop-loader')).not.toBeInTheDocument();
@@ -548,11 +558,17 @@ describe('Live projection UI', () => {
       expect(getProjectionValue('Adriano')).toBe('11');
     });
 
-    expect(getLiveRows()).toEqual([
-      { name: 'Matteo', score: '18' },
-      { name: 'Adriano', score: '17' },
-      { name: 'Fabio', score: '14' },
-    ]);
+    // Go to dashboard for live rows
+    fireEvent.click(screen.getAllByRole('button', { name: /calendario stagione/i })[0]);
+
+    await waitFor(() => {
+      expect(getLiveRows()).toEqual([
+        { name: 'Matteo', score: '18' },
+        { name: 'Adriano', score: '17' },
+        { name: 'Fabio', score: '14' },
+      ]);
+    });
+    
     expect(
       screen.queryByText(/nessun risultato ufficiale disponibile ancora/i),
     ).not.toBeInTheDocument();
@@ -573,7 +589,7 @@ describe('Live projection UI', () => {
       },
     });
 
-    render(<App />);
+    render(<MemoryRouter initialEntries={['/dashboard']}><App /></MemoryRouter>);
 
     await waitFor(() => {
       expect(screen.queryByTestId('pitstop-loader')).not.toBeInTheDocument();
@@ -599,14 +615,23 @@ describe('Live projection UI', () => {
     });
 
     expect(screen.queryByText(/nessun risultato ufficiale disponibile ancora/i)).not.toBeInTheDocument();
-    expect(getProjectionValue('Matteo')).toBe('0');
-    expect(getProjectionValue('Fabio')).toBe('1');
-    expect(getProjectionValue('Adriano')).toBe('0');
-    expect(getLiveRows()).toEqual([
-      { name: 'Fabio', score: '13' },
-      { name: 'Matteo', score: '10' },
-      { name: 'Adriano', score: '6' },
-    ]);
+    
+    await waitFor(() => {
+      expect(getProjectionValue('Matteo')).toBe('0');
+      expect(getProjectionValue('Fabio')).toBe('1');
+      expect(getProjectionValue('Adriano')).toBe('0');
+    });
+    
+    // Go back to dashboard for live rows
+    fireEvent.click(screen.getAllByRole('button', { name: /calendario stagione/i })[0]);
+
+    await waitFor(() => {
+      expect(getLiveRows()).toEqual([
+        { name: 'Fabio', score: '13' },
+        { name: 'Matteo', score: '10' },
+        { name: 'Adriano', score: '6' },
+      ]);
+    });
     expect(queryOpenPredictionsStrip()).not.toBeInTheDocument();
 
     fireEvent.change(screen.getByLabelText(/weekend selezionato/i), {
@@ -630,7 +655,7 @@ describe('Live projection UI', () => {
       },
     });
 
-    render(<App />);
+    render(<MemoryRouter initialEntries={['/dashboard']}><App /></MemoryRouter>);
 
     await waitFor(() => {
       expect(screen.queryByTestId('pitstop-loader')).not.toBeInTheDocument();
@@ -687,7 +712,7 @@ describe('Live projection UI', () => {
       return Promise.reject(new Error(`Unhandled fetch to ${url}`));
     });
 
-    render(<App />);
+    render(<MemoryRouter initialEntries={['/pronostici']}><App /></MemoryRouter>);
 
     await waitFor(() => {
       expect(screen.queryByTestId('pitstop-loader')).not.toBeInTheDocument();
@@ -756,7 +781,7 @@ describe('Live projection UI', () => {
       return Promise.reject(new Error(`Unhandled fetch to ${url}`));
     });
 
-    render(<App />);
+    render(<MemoryRouter initialEntries={['/dashboard']}><App /></MemoryRouter>);
 
     await waitFor(() => {
       expect(screen.queryByTestId('pitstop-loader')).not.toBeInTheDocument();

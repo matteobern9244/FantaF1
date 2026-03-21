@@ -4,8 +4,8 @@ Cronologia sintetica delle release documentate del progetto Fanta Formula 1.
 
 ## [Unreleased]
 
-- **Deploya Final Branch Reconciliation**: il protocollo `deploya` documenta
-  ora il riallineamento finale post-merge di `staging` e `develop` allo SHA di
+- **Deploya Final Branch Reconciliation**: il protocollo `deploya` documenta ora
+  il riallineamento finale post-merge di `staging` e `develop` allo SHA di
   `main`, con abbassamento temporaneo e successivo ripristino della protection
   di `staging`, mantenendo invariato `deploya-staging`.
 
@@ -17,8 +17,9 @@ Cronologia sintetica delle release documentate del progetto Fanta Formula 1.
   (`gp-australia`, `gp-giappone`, alias canonici inclusi) per recuperare e
   persistere gli highlights mancanti delle gare concluse come `1279`, sia nel
   sync ufficiale sia nel lookup on-demand di `GET /api/results/:meetingKey`.
-- **Documentazione Runtime Riallineata alla Produzione Reale**: [README.md](/Users/matteobernardini/code/FantaF1/README.md)
-  punta ora alla produzione live corretta
+- **Documentazione Runtime Riallineata alla Produzione Reale**:
+  [README.md](/Users/matteobernardini/code/FantaF1/README.md) punta ora alla
+  produzione live corretta
   [fantaf1-w69n.onrender.com](https://fantaf1-w69n.onrender.com).
 - **Skill Gemini Deploy Uniformate in Inglese**: le skill
   [fantaf1-deploy](/Users/matteobernardini/code/FantaF1/.gemini/skills/fantaf1-deploy/SKILL.md)
@@ -43,11 +44,11 @@ Cronologia sintetica delle release documentate del progetto Fanta Formula 1.
   `Deep-dive KPI dashboard` e `User KPI Dashboard`; la precedente label
   `Analisi stagione` e' stata rinominata in `Stagione attuale` anche nel
   pannello dashboard corrispondente.
-- **Sidebar e Overlay Rifiniti Contro Clipping e Ambiguita' Visive**: la
-  sidebar desktop usa ora una larghezza leggermente maggiore e lascia margine
-  utile ai bordi delle voci attive; sia desktop sia mobile introducono inoltre
-  uno stacco visivo esplicito tra il gruppo `Analisi` e la successiva voce
-  `Storico gare`, cosi' il raggruppamento del submenu resta chiaro.
+- **Sidebar e Overlay Rifiniti Contro Clipping e Ambiguita' Visive**: la sidebar
+  desktop usa ora una larghezza leggermente maggiore e lascia margine utile ai
+  bordi delle voci attive; sia desktop sia mobile introducono inoltre uno stacco
+  visivo esplicito tra il gruppo `Analisi` e la successiva voce `Storico gare`,
+  cosi' il raggruppamento del submenu resta chiaro.
 - **Parita' Windows per il Tool di Pulizia Chrome**: aggiunto
   [clean_google_chrome.bat](/Users/matteobernardini/code/FantaF1/clean_google_chrome.bat)
   come equivalente Windows di `clean_google_chrome.command`, con verifica
@@ -67,30 +68,33 @@ Cronologia sintetica delle release documentate del progetto Fanta Formula 1.
 - **CI/CD Post-Merge Health Riallineato ai Secret Render Reali**: il workflow
   [post-merge-health.yml](/Users/matteobernardini/code/FantaF1/.github/workflows/post-merge-health.yml)
   seleziona ora il secret corretto in base al branch mergiato
-  (`RENDER_STAGING_HEALTHCHECK_URL` per `staging`,
-  `RENDER_HEALTHCHECK_URL` per `main`), mantenendo invariato il secret storico
-  di produzione e documentando per lo staging l'endpoint health completo
+  (`RENDER_STAGING_HEALTHCHECK_URL` per `staging`, `RENDER_HEALTHCHECK_URL` per
+  `main`), mantenendo invariato il secret storico di produzione e documentando
+  per lo staging l'endpoint health completo
   `https://fantaf1-staging.onrender.com/api/health`.
-- **Documentazione Deploy e Workflow Riallineata**: [README.md](/Users/matteobernardini/code/FantaF1/README.md)
-  documenta ora in modo esplicito i trigger `deploya-staging` (`develop ->
-  staging`) e `deploya` (`staging -> main`), i gate reali di `pr-ci` e i secret
-  opzionali corretti per i controlli Render post-merge.
-- **Audit CI/CD Remoto Verificato**: la branch protection GitHub reale di
-  `main` e `staging` e' stata ricontrollata via API; i required status checks
-  attivi restano `lint`, `build`, `responsive-dev` e `smoke-ci-db`, mentre i
-  job `format-csharp`, `build-csharp` e `test-csharp` continuano a essere
-  eseguiti dal workflow PR senza risultare ancora required a livello remoto.
+- **Documentazione Deploy e Workflow Riallineata**:
+  [README.md](/Users/matteobernardini/code/FantaF1/README.md) documenta ora in
+  modo esplicito i trigger `deploya-staging` (`develop -> staging`) e `deploya`
+  (`staging -> main`), i gate reali di `pr-ci` e i secret opzionali corretti per
+  i controlli Render post-merge.
+- **Audit CI/CD Remoto Verificato**: la branch protection GitHub reale di `main`
+  e `staging` e' stata ricontrollata via API; i required status checks attivi
+  restano `lint`, `build`, `responsive-dev` e `smoke-ci-db`, mentre i job
+  `format-csharp`, `build-csharp` e `test-csharp` continuano a essere eseguiti
+  dal workflow PR senza risultare ancora required a livello remoto.
 - **Gate `format-csharp` Ripristinato Verde**: corretto un difetto di
-  formattazione in un test backend che faceva fallire `dotnet format
-  --verify-no-changes`, riportando il gate C# in uno stato coerente con la CI.
+  formattazione in un test backend che faceva fallire
+  `dotnet format --verify-no-changes`, riportando il gate C# in uno stato
+  coerente con la CI.
 - **Hardening UTC del Lookup Highlights e del Backfill Calendario**: il path
   autorevole C# usa ora gating temporale coerente in `UTC` per stabilire quando
   una gara e' realmente conclusa, eliminando i casi in cui locale e
   staging/produzione potevano divergere sul bootstrap highlights.
-- **Persistenza Highlights Definitivamente Append-Only**: `MongoWeekendRepository`
-  e il merge calendario preservano un `highlightsVideoUrl` gia' valido anche se
-  un lookup successivo ritorna `missing` o se metadati persistiti parziali sono
-  nulli, impedendo la rimozione silenziosa dei link storici.
+- **Persistenza Highlights Definitivamente Append-Only**:
+  `MongoWeekendRepository` e il merge calendario preservano un
+  `highlightsVideoUrl` gia' valido anche se un lookup successivo ritorna
+  `missing` o se metadati persistiti parziali sono nulli, impedendo la rimozione
+  silenziosa dei link storici.
 - **Riconciliazione Calendario F1 Rafforzata**: il sync ufficiale conserva gli
   highlights gia' persistiti anche quando `f1.com` cambia slug o URL della
   stessa gara, usando round e date come ulteriore chiave di riconciliazione per
@@ -126,9 +130,9 @@ Cronologia sintetica delle release documentate del progetto Fanta Formula 1.
 - **TDD Regressivo sui Launcher Locali**: aggiunti test di parita' per garantire
   che i launcher macOS e Windows eseguano la stessa sequenza di validazione e
   utilizzino le stesse variabili d'ambiente core.
-- **Ripristino Certificazione Coverage 100% Full-Stack**: completata la copertura
-  dei nuovi repository MongoDB e dei mapping protetti nel backend C# tramite
-  unit test mirati; riallineate le baseline documentali in `AGENTS.md` e
+- **Ripristino Certificazione Coverage 100% Full-Stack**: completata la
+  copertura dei nuovi repository MongoDB e dei mapping protetti nel backend C#
+  tramite unit test mirati; riallineate le baseline documentali in `AGENTS.md` e
   `README.md` ai valori reali verificati (5489 lines repository-wide, 3088 lines
   backend-only).
 - **Hardening Workspace Conductor**: completata l'archiviazione massiva di tutti

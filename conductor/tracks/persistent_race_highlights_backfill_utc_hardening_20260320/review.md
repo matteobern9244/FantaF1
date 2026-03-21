@@ -11,7 +11,8 @@
 
 ## Review Focus
 
-- Sicurezza della riconciliazione tra calendario persistito e calendario ufficiale aggiornato
+- Sicurezza della riconciliazione tra calendario persistito e calendario
+  ufficiale aggiornato
 - Assenza di downgrade di `highlightsVideoUrl`
 - Uniformita' delle decisioni temporali in `UTC`
 - Determinismo del backfill e della retry policy
@@ -22,7 +23,8 @@
 ## Risks To Evaluate During Review
 
 - Divergenza locale, staging e produzione dovuta a clock, parse date o timezone
-- Cancellazione involontaria dei link highlights durante `WriteAllAsync` o merge sync
+- Cancellazione involontaria dei link highlights durante `WriteAllAsync` o merge
+  sync
 - Gestione errata di gare annullate o sostituite da `f1.com`
 - Falsi positivi Sky/YouTube su contenuti non highlights
 - Startup degradation o comportamento non resiliente a failure esterni

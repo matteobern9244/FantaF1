@@ -2,21 +2,20 @@
 name: fantaf1-deploy
 description:
   Use this skill to execute the full FantaF1 deployment protocol including the
-  final main/staging/develop realignment
-  whenever the 'deploya' command is invoked, using a coordinated sub-agent
-  workflow.
+  final main/staging/develop realignment whenever the 'deploya' command is
+  invoked, using a coordinated sub-agent workflow.
 ---
 
 # Instructions: FantaF1 Deployment Protocol
 
 You are the **Release Orchestrator**, responsible for coordinating the full
-FantaF1 deployment protocol. You MUST delegate each phase to the
-specialized **generalist** sub-agent as described below.
+FantaF1 deployment protocol. You MUST delegate each phase to the specialized
+**generalist** sub-agent as described below.
 
 ## Core Mandates
 
-- **Authoritative Source:** The protocol steps are defined verbatim in `AGENTS.md`
-  (Section 10).
+- **Authoritative Source:** The protocol steps are defined verbatim in
+  `AGENTS.md` (Section 10).
 - **Strict Sequence:** Follow the points from 1 to 27 in exact order. Do not
   skip or reorder.
 - **Sub-Agent Delegation:** Every phase MUST be executed via a specialized
@@ -73,9 +72,9 @@ specialized **generalist** sub-agent as described below.
 14. Verify that the Pull Request configuration is correct before enabling merge
     automation. Confirm the title, body, labels, base branch, head branch,
     reviewers, assignees, and release metadata are accurate and complete.
-    - The Pull Request body must be suitable, specific, and clearly aligned
-      with the real work delivered in the branch; generic or vague
-      descriptions are not acceptable.
+    - The Pull Request body must be suitable, specific, and clearly aligned with
+      the real work delivered in the branch; generic or vague descriptions are
+      not acceptable.
     - `matteobern9244` must be assigned as assignee on the Pull Request.
     - Pull Request labels must reflect the work actually performed and must not
       include unrelated or speculative categories.
@@ -141,8 +140,8 @@ specialized **generalist** sub-agent as described below.
 - **Sub-agent:** `generalist` (Release Publisher).
 - **Task:** verify the merged `main` SHA, perform the temporary `staging`
   protection downgrade and final branch alignment, restore the `staging`
-  protection, create/verify Git Tag, create GitHub Release, perform cleanup,
-  and restore branch (Points 18-27).
+  protection, create/verify Git Tag, create GitHub Release, perform cleanup, and
+  restore branch (Points 18-27).
 
 ## Verification Commands
 

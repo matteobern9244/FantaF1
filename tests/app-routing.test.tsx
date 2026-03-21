@@ -3,9 +3,10 @@
  */
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
 import App from '../src/App';
 import React from 'react';
-import { MemoryRouter } from 'react-router-dom';
+import appConfig from '../config/app-config.json';
 
 // Mock matchMedia for responsive UI components
 Object.defineProperty(window, 'matchMedia', {
@@ -14,15 +15,15 @@ Object.defineProperty(window, 'matchMedia', {
     matches: false,
     media: query,
     onchange: null,
-    addListener: vi.fn(), // deprecated
-    removeListener: vi.fn(), // deprecated
+    addListener: vi.fn(),
+    removeListener: vi.fn(),
     addEventListener: vi.fn(),
     removeEventListener: vi.fn(),
     dispatchEvent: vi.fn(),
   })),
 });
 
-describe('App Frontend Integration', () => {
+describe('App Routing (MPA-like)', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     
@@ -74,22 +75,53 @@ describe('App Frontend Integration', () => {
     });
   });
 
-  it('renders the initial loading state', async () => {
-    render(<MemoryRouter initialEntries={['/dashboard']}><App /></MemoryRouter>);
-    expect(screen.getByTestId('pitstop-loader')).toBeInTheDocument();
-    expect(screen.getByAltText('FantaF1 splash logo')).toBeInTheDocument();
-    expect(screen.queryByAltText('Pitstop mechanic')).not.toBeInTheDocument();
-    expect(screen.queryByAltText('Spinning tire')).not.toBeInTheDocument();
-  });
+  const renderWithRouter = (initialRoute = '/') => {
+    return render(
+      <MemoryRouter initialEntries={[initialRoute]}>
+        <App />
+      </MemoryRouter>
+    );
+  };
 
-  it('renders the app title and hero after data is loaded', async () => {
-    render(<MemoryRouter initialEntries={['/dashboard']}><App /></MemoryRouter>);
-    
+  it('renders Dashboard overview on /dashboard', async () => {
+    renderWithRouter('/dashboard');
     await waitFor(() => {
       expect(screen.queryByTestId('pitstop-loader')).not.toBeInTheDocument();
     });
-
-    // Check for hero title presence in the main heading
     expect(screen.getByRole('heading', { name: /Fanta Formula 1/i })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: new RegExp(appConfig.uiText.headings.calendar, 'i') })).toBeInTheDocument();
+  });
+
+  it('renders Predictions view on /pronostici', async () => {
+    renderWithRouter('/pronostici');
+    await waitFor(() => {
+      expect(screen.queryByTestId('pitstop-loader')).not.toBeInTheDocument();
+    });
+    expect(screen.getByRole('heading', { name: /Pronostici dei giocatori/i })).toBeInTheDocument();
+  });
+
+  it('renders Standings view on /classifiche', async () => {
+    renderWithRouter('/classifiche');
+    await waitFor(() => {
+      expect(screen.queryByTestId('pitstop-loader')).not.toBeInTheDocument();
+    });
+    expect(screen.getByRole('heading', { name: /Storico gare/i })).toBeInTheDocument();
+  });
+
+  it('renders Analysis view on /analisi', async () => {
+    renderWithRouter('/analisi');
+    await waitFor(() => {
+      expect(screen.queryByTestId('pitstop-loader')).not.toBeInTheDocument();
+    });
+    expect(screen.getByRole('heading', { name: /Stagione attuale/i })).toBeInTheDocument();
+  });
+
+  it('renders Admin view on /admin', async () => {
+    renderWithRouter('/admin');
+    await waitFor(() => {
+      expect(screen.queryByTestId('pitstop-loader')).not.toBeInTheDocument();
+    });
+    // Since our mock session is admin, it should show admin content (Results)
+    expect(screen.getByRole('heading', { name: new RegExp(appConfig.uiText.headings.results, 'i') })).toBeInTheDocument();
   });
 });

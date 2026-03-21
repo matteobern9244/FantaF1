@@ -7,6 +7,12 @@ import type {
 } from '../types';
 import { createEmptyPrediction } from './game';
 
+type LegacyWeekendUserShape = Pick<UserData, 'name' | 'predictions'>;
+
+type WeekendStateInput = Partial<WeekendPredictionState> & {
+  users?: LegacyWeekendUserShape[] | null;
+};
+
 function clonePrediction(prediction?: Partial<Prediction> | null): Prediction {
   return {
     first: typeof prediction?.first === 'string' ? prediction.first : '',
@@ -24,9 +30,16 @@ function createEmptyWeekendPredictionState(): WeekendPredictionState {
 }
 
 function cloneWeekendPredictionState(
-  weekendState?: Partial<WeekendPredictionState> | null,
+  weekendState?: WeekendStateInput | null,
 ): WeekendPredictionState {
-  const entries = Object.entries(weekendState?.userPredictions ?? {}).map(([userName, prediction]) => [
+  const normalizedUserPredictions =
+    weekendState?.userPredictions ??
+    Object.fromEntries(
+      (weekendState?.users ?? [])
+        .filter((user): user is LegacyWeekendUserShape => typeof user?.name === 'string' && user.name.trim().length > 0)
+        .map((user) => [user.name, clonePrediction(user.predictions)]),
+    );
+  const entries = Object.entries(normalizedUserPredictions).map(([userName, prediction]) => [
     userName,
     clonePrediction(prediction),
   ]);

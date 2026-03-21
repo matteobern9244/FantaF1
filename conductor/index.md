@@ -1,22 +1,32 @@
 # Conductor Index
 
-This file is the prompt-first navigation index for the Conductor workspace in this repository.
+This file is the prompt-first navigation index for the Conductor workspace in
+this repository.
 
 ## Active Tracks
+
+## refactor_spa_to_multi_page_app_pwa_20260321 - Refactoring dell'intera applicazione da SPA a App Multi-Pagina (PWA) con routing reale, navigazione mobile ottimizzata (Bottom Tab Bar) e notifiche push
+
+- Status: `in_progress`
+- Phase: `in_progress`
+- Active task: Stabilizzare routing e layout della Fase 1 e riallineare gli artefatti Conductor del branch.
+- Path: `conductor/tracks/refactor_spa_to_multi_page_app_pwa_20260321`
 
 ## persistent_race_highlights_backfill_utc_hardening_20260320 - Persistenza definitiva highlights per gara con backfill ufficiale F1, matching Sky/YouTube e hardening UTC su Render
 
 - Status: `completed`
 - Phase: `completed`
 - Active task: Track fully complete.
-- Path: `conductor/tracks/persistent_race_highlights_backfill_utc_hardening_20260320`
+- Path:
+  `conductor/tracks/persistent_race_highlights_backfill_utc_hardening_20260320`
 
 ## track-002 - Riordinare il menu e le voci dashboard con sottomenu Analisi per KPI e coerenza desktop/mobile/PWA
 
 - Status: `completed`
 - Phase: `completed`
 - Active task: Track completed with full validation and 100% coverage.
-- Path: `conductor/tracks/track-002-riordinare-il-menu-e-le-voci-dashboard-con-sottomenu-analisi-per-kpi-e-coerenza-desktop-mobile-pwa`
+- Path:
+  `conductor/tracks/track-002-riordinare-il-menu-e-le-voci-dashboard-con-sottomenu-analisi-per-kpi-e-coerenza-desktop-mobile-pwa`
 
 ## Archived Tracks
 
@@ -234,7 +244,8 @@ This file is the prompt-first navigation index for the Conductor workspace in th
 
 - Status: `completed`
 - Phase: `completed`
-- Active task: Implementation, coverage, responsive verification, and production-like preview checks completed without commit or push.
+- Active task: Implementation, coverage, responsive verification, and
+  production-like preview checks completed without commit or push.
 - Path: `conductor/tracks/stabilize_highlights_persistence_20260318`
 
 ## streamline_core_docs_20260318 - Streamline core documentation (GEMINI.md & AGENTS.md)
@@ -256,7 +267,8 @@ This file is the prompt-first navigation index for the Conductor workspace in th
 - Status: `archived`
 - Phase: `archived`
 - Active task: Completed
-- Path: `conductor/archive/track-001-fix-mobile-menu-readability-and-scroll-affordance`
+- Path:
+  `conductor/archive/track-001-fix-mobile-menu-readability-and-scroll-affordance`
 
 ## ui_menu_rework_20260315 - UI Menu Rework
 
@@ -316,6 +328,9 @@ This file is the prompt-first navigation index for the Conductor workspace in th
 
 ## Notes
 
-- `product.md`, `product-guidelines.md`, and `tech-stack.md` define the shared project context.
-- Each track owns its own `index.md`, `metadata.json`, `spec.md`, `plan.md`, `review.md`, and `verify.md`.
-- `tracks.md` is kept as a compact summary view for compatibility, but `index.md` is the primary workspace index.
+- `product.md`, `product-guidelines.md`, and `tech-stack.md` define the shared
+  project context.
+- Each track owns its own `index.md`, `metadata.json`, `spec.md`, `plan.md`,
+  `review.md`, and `verify.md`.
+- `tracks.md` is kept as a compact summary view for compatibility, but
+  `index.md` is the primary workspace index.

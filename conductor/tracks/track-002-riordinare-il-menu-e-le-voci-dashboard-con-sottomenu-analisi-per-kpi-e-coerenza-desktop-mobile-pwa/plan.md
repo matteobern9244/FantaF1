@@ -12,13 +12,15 @@ la parita' tra desktop, mobile e PWA senza regressioni.
 - Execute implementation with explicit TDD phases: red, green, refactor.
 - Update track progress as phases and numbered steps move forward.
 - Record meaningful verification checkpoints in `verify.md`.
-- Treat the end of a phase as the standard commit boundary unless the approved workflow says otherwise.
+- Treat the end of a phase as the standard commit boundary unless the approved
+  workflow says otherwise.
 - Do not commit or push for this track unless the user later changes the policy.
 
 ## Phase 1: Spec
 
 - [x] Step 1. Draft and confirm the spec
-- [x] Step 2. Capture the dedicated branch context `change-menu-options-dashboard`
+- [x] Step 2. Capture the dedicated branch context
+      `change-menu-options-dashboard`
 - [x] Step 3. Freeze the requested menu order and submenu scope in `spec.md`
 
 ## Phase 2: Discovery And Design

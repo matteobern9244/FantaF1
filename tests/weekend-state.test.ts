@@ -142,6 +142,36 @@ describe('weekendState utils', () => {
     expect(hydrated.weekendStateByMeetingKey?.['race-1'].raceResults.pole).toBe('nor');
   });
 
+  it('normalizes legacy weekend entries that still store users arrays', () => {
+    const normalized = normalizeWeekendStateByMeetingKey({
+      'race-1': {
+        users: [
+          {
+            name: 'Player 1',
+            points: 0,
+            predictions: { first: 'ver', second: '', third: '', pole: '' },
+          },
+          {
+            name: 'Player 2',
+            points: 0,
+            predictions: { first: 'ham', second: '', third: '', pole: '' },
+          },
+        ],
+        raceResults: { first: '', second: '', third: 'lec', pole: 'nor' },
+      },
+    } as unknown as WeekendStateByMeetingKey);
+
+    expect(normalized).toEqual({
+      'race-1': {
+        userPredictions: {
+          'Player 1': { first: 'ver', second: '', third: '', pole: '' },
+          'Player 2': { first: 'ham', second: '', third: '', pole: '' },
+        },
+        raceResults: { first: '', second: '', third: 'lec', pole: 'nor' },
+      },
+    });
+  });
+
   it('returns an empty draft for unknown or blank meetings', () => {
     expect(getWeekendPredictionState({}, '')).toEqual(createEmptyWeekendPredictionState());
     expect(getWeekendPredictionState({}, 'missing')).toEqual(createEmptyWeekendPredictionState());

@@ -4,6 +4,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import React from 'react';
+import { MemoryRouter } from 'react-router-dom';
 import App from '../src/App';
 
 Object.defineProperty(window, 'matchMedia', {
@@ -84,7 +85,7 @@ describe('Admin login UI', () => {
       return Promise.reject(new Error(`Unhandled fetch to ${url}`));
     });
 
-    render(<App />);
+    render(<MemoryRouter initialEntries={['/dashboard']}><App /></MemoryRouter>);
 
     await waitFor(() => {
       expect(screen.queryByTestId('pitstop-loader')).not.toBeInTheDocument();

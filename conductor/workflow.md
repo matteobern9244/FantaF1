@@ -35,7 +35,7 @@ Per ogni task, l'agente deve:
     - **REFACTOR:** Pulire il codice mantenendo i test verdi e la copertura al
       100%.
 4.  **Validazione:**
-    - Eseguire `conductor-compliance-audit` per verificare l'aderenza ai
+    - Eseguire `compliance-audit-orchestrator` per verificare l'aderenza ai
       principi di ingegneria (TDD, DI, UoW, Repository Pattern).
     - Eseguire `npm run lint`, `npm run test`, `npm run test:ui-responsive` (o
       il comando `check viste`).
@@ -53,9 +53,8 @@ Per ogni task, l'agente deve:
   l'integrità della persistenza.
 - **Deploy Staging:** Il comando `deploya-staging` avvia il protocollo a 23
   punti per il merge da `develop` a `staging`.
-- **Deploy Produzione:** Il comando `deploya` avvia il protocollo a 23 punti
-  per il merge da `staging` a `main`.
-
+- **Deploy Produzione:** Il comando `deploya` avvia il protocollo a 23 punti per
+  il merge da `staging` a `main`.
 
 ## 4. Gestione Git e Commit
 
@@ -90,8 +89,8 @@ Quando l'utente autorizza esplicitamente il deploy (comandi `deploya` o
     finale di `main`, abbassare temporaneamente la protection di `staging`,
     riallineare `staging` e `develop` allo SHA finale di `main` e ripristinare
     subito la protection originaria di `staging`.
-8.  Creazione Tag e GitHub Release solo dopo il merge avvenuto con successo e
-    il riallineamento finale dei branch richiesto da `deploya`.
+8.  Creazione Tag e GitHub Release solo dopo il merge avvenuto con successo e il
+    riallineamento finale dei branch richiesto da `deploya`.
 
 ## 6. Sicurezza e Privacy
 

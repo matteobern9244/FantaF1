@@ -4,53 +4,152 @@ This file is the compact summary view of Conductor tracks in this repository.
 
 ## Active Tracks
 
-- `persistent_race_highlights_backfill_utc_hardening_20260320` | Persistenza definitiva highlights per gara con backfill ufficiale F1, matching Sky/YouTube e hardening UTC su Render | `completed` | phase `completed` | Track fully complete. | `conductor/tracks/persistent_race_highlights_backfill_utc_hardening_20260320`
-- `track-002` | Riordinare il menu e le voci dashboard con sottomenu Analisi per KPI e coerenza desktop/mobile/PWA | `completed` | phase `completed` | Track completed with full validation and 100% coverage. | `conductor/tracks/track-002-riordinare-il-menu-e-le-voci-dashboard-con-sottomenu-analisi-per-kpi-e-coerenza-desktop-mobile-pwa`
+- `refactor_spa_to_multi_page_app_pwa_20260321` | Refactoring dell'intera
+  applicazione da SPA a App Multi-Pagina (PWA) con routing reale, navigazione
+  mobile ottimizzata (Bottom Tab Bar) e notifiche push | `in-progress` | phase `in-progress` |
+  Stabilizzare routing e layout della Fase 1 e riallineare gli artefatti
+  Conductor del branch. |
+  `conductor/tracks/refactor_spa_to_multi_page_app_pwa_20260321`
+- `persistent_race_highlights_backfill_utc_hardening_20260320` | Persistenza
+  definitiva highlights per gara con backfill ufficiale F1, matching Sky/YouTube
+  e hardening UTC su Render | `completed` | phase `completed` | Track fully
+  complete. |
+  `conductor/tracks/persistent_race_highlights_backfill_utc_hardening_20260320`
+- `track-002` | Riordinare il menu e le voci dashboard con sottomenu Analisi per
+  KPI e coerenza desktop/mobile/PWA | `completed` | phase `completed` | Track
+  completed with full validation and 100% coverage. |
+  `conductor/tracks/track-002-riordinare-il-menu-e-le-voci-dashboard-con-sottomenu-analisi-per-kpi-e-coerenza-desktop-mobile-pwa`
 
 ## Archived Tracks
 
-- `achieve_100_coverage_20260314` | Certificazione Copertura Test 100% (Frontend, Node, C#) | `archived` | phase `archived` | Archived | `conductor/archive/achieve_100_coverage_20260314`
-- `archive_completed_tasks_20260314` | eliminare tutti i task effettuati e completi all'interno della folder conductor | `archived` | phase `archived` | Archived | `conductor/archive/archive_completed_tasks_20260314`
-- `backup_production_db_20260314` | Full dump of production database 'fantaf1' before Phase 11 | `archived` | phase `archived` | Archived | `conductor/archive/backup_production_db_20260314`
-- `build_verify_launch_20260314` | Build completa, verifica e lancio locale | `archived` | phase `archived` | Archived | `conductor/archive/build_verify_launch_20260314`
-- `cleanup_atlas_databases_20260314` | Analisi e Pulizia Database MongoDB Atlas | `archived` | phase `archived` | Archived | `conductor/archive/cleanup_atlas_databases_20260314`
-- `create_env_config_20260314` | Creazione e configurazione file .env locale | `archived` | phase `archived` | Archived | `conductor/archive/create_env_config_20260314`
-- `csharp_backend_migration_20260314` | Rimuovere completamente il backend Node.js, mantenendo solo il backend C# come backend ufficiale, la parte frontend e i file vitali dell'applicazione, garantendo la piena funzionalità e la copertura del 100% senza regressioni in locale e in produzione per render.com (ambiente staging). | `archived` | phase `archived` | Archived | `conductor/archive/csharp_backend_migration_20260314`
-- `deploya_staging_20260319` | Implementare un comando 'deploya-staging' e una skill 'fantaf1_deploy_staging' per automatizzare il deploy verso 'staging' partendo da 'develop'. | `completed` | phase `completed` | Completed | `conductor/archive/deploya_staging_20260319`
-- `enforce_versioning_rule_20260314` | enforce versioning rule 20260314 | `archived` | phase `archived` | Archived | `conductor/archive/enforce_versioning_rule_20260314`
-- `fix-dropdowns` | fix-dropdowns | `archived` | phase `archived` | Archived | `conductor/archive/fix-dropdowns`
-- `fix-scroll-performance` | fix-scroll-performance | `archived` | phase `archived` | Archived | `conductor/archive/fix-scroll-performance`
-- `fix_docker_build_error_20260315` | Fix Docker build error on Render staging due to missing /backend directory in backend-csharp/Dockerfile. | `archived` | phase `archived` | Archived | `conductor/archive/fix_docker_build_error_20260315`
-- `fix_highlights_lookup_20260315` | Fix Highlights Lookup Availability | `archived` | phase `archived` | Completed | `conductor/archive/fix_highlights_lookup_20260315`
-- `fix_local_backend_startup_failure_20260314` | Fix fallimento avvio backend locale durante preflight | `archived` | phase `archived` | Archived | `conductor/archive/fix_local_backend_startup_failure_20260314`
-- `fix_local_startup_20260315` | Fix Local Startup | `archived` | phase `archived` | No active task | `conductor/archive/fix_local_startup_20260315`
-- `fix_menu_focus_navigation_20260315` | Fix Menu Focus And Active Navigation | `archived` | phase `archived` | Completed | `conductor/archive/fix_menu_focus_navigation_20260315`
-- `fix_menu_third_item_focus_20260315` | Fix Menu Third Item Focus | `archived` | phase `archived` | Completed | `conductor/archive/fix_menu_third_item_focus_20260315`
-- `fix_multi_race_highlights_20260315` | Fix Multi Race Highlights | `archived` | phase `archived` | Completed | `conductor/archive/fix_multi_race_highlights_20260315`
-- `fix_render_dockerfile_not_found_20260315` | Fix Render Dockerfile not found error by clean rewrite and verification. | `archived` | phase `archived` | Archived | `conductor/archive/fix_render_dockerfile_not_found_20260315`
-- `fix_render_staging_deploy_definitive_20260315` | Definitive fix for Render staging deploy error: '/backend' not found. | `archived` | phase `archived` | Archived | `conductor/archive/fix_render_staging_deploy_definitive_20260315`
-- `fix_startup_command_20260317` | Execute test cycles and fix startup script | `archived` | phase `archived` | Completed | `conductor/archive/fix_startup_command_20260317`
-- `integrate_dotnet_format_20260314` | Integrazione dotnet format nel workflow C# e CI/CD | `archived` | phase `archived` | Archived | `conductor/archive/integrate_dotnet_format_20260314`
-- `investigate_highlights_algorithm_20260317` | Investigation plan for the "HIGHLIGHTS" algorithm | `archived` | phase `archived` | Archived | `conductor/archive/investigate_highlights_algorithm_20260317`
-- `merge_develop_into_staging_release_20260315` | Merge Develop Into Staging Release | `archived` | phase `archived` | Completed | `conductor/archive/merge_develop_into_staging_release_20260315`
-- `porting_csharp_phase_10_20260314` | Docker Render Staging and Atlas Operationalization (Phase 10) for C# Backend Port | `archived` | phase `archived` | Archived | `conductor/archive/porting_csharp_phase_10_20260314`
-- `protect_staging_branch_20260318` | proteggere il branch 'staging' a livello di github in modo identico a come è protetto il branch 'main' | `completed` | phase `completed` | Completed | `conductor/tracks/protect_staging_branch_20260318`
-- `restaylyng_menu_mobile_20260316` | Mobile Menu Restyling | `archived` | phase `archived` | No active task | `conductor/archive/restaylyng-menu-mobile`
-- `restore_prod_to_staging_20260314` | Restore production database dump to staging for testing | `archived` | phase `archived` | Archived | `conductor/archive/restore_prod_to_staging_20260314`
-- `setup_dotnet10_20260314` | setup dotnet10 20260314 | `archived` | phase `archived` | Archived | `conductor/archive/setup_dotnet10_20260314`
-- `setup_mongodb_tooling_20260314` | Install MongoDB Database Tools and mongosh via Homebrew | `archived` | phase `archived` | Archived | `conductor/archive/setup_mongodb_tooling_20260314`
-- `stabilize_highlights_persistence_20260318` | Persistenza Definitiva Highlights Per Gara | `completed` | phase `completed` | Implementation, coverage, responsive verification, and production-like preview checks completed without commit or push. | `conductor/tracks/stabilize_highlights_persistence_20260318`
-- `streamline_core_docs_20260318` | Streamline core documentation (GEMINI.md & AGENTS.md) | `new` | phase `new` | No active task | `conductor/tracks/streamline_core_docs_20260318`
-- `sync_branch_rules_20260319` | Verificare le rules su github per il branch 'main', NON FARE NESSUNA MODIFICA alle rules di eper 'main' ma applicarle anche al branch 'staging' | `completed` | phase `completed` | Completed | `conductor/archive/sync_branch_rules_20260319`
-- `track-001` | Fix Mobile Menu Readability And Scroll Affordance | `archived` | phase `archived` | Completed | `conductor/archive/track-001-fix-mobile-menu-readability-and-scroll-affordance`
-- `ui_menu_rework_20260315` | UI Menu Rework | `archived` | phase `archived` | Completed and archived | `conductor/archive/ui_menu_rework_20260315`
-- `verify-subphase-07` | verify-subphase-07 | `archived` | phase `archived` | Archived | `conductor/archive/verify-subphase-07`
-- `verify_after_clean_20260314` | Verify Build and Tests after git clean -fdx | `archived` | phase `archived` | Archived | `conductor/archive/verify_after_clean_20260314`
-- `verify_csharp_porting_20260314` | Verifica Anti-Regressione Porting C# (Fase 1-9) | `archived` | phase `archived` | Archived | `conductor/archive/verify_csharp_porting_20260314`
-- `verify_docker_dotnet10_20260314` | verify docker dotnet10 20260314 | `archived` | phase `archived` | Archived | `conductor/archive/verify_docker_dotnet10_20260314`
-- `verify_docker_staging_local_20260315` | Local verification of Docker build and staging simulation. | `archived` | phase `archived` | Archived | `conductor/archive/verify_docker_staging_local_20260315`
-- `verify_workflow_20260314` | Verifica e certificazione della copertura test al 100% e dell'integrità del workflow Conductor | `archived` | phase `archived` | Archived | `conductor/archive/verify_workflow_20260314`
-- `windows_startup_script_20260319` | Creare un file start_fantaf1.bat che deve essere equivalente al file start_fantaf1.command | `completed` | phase `completed` | Completed | `conductor/archive/windows_startup_script_20260319`
+- `achieve_100_coverage_20260314` | Certificazione Copertura Test 100%
+  (Frontend, Node, C#) | `archived` | phase `archived` | Archived |
+  `conductor/archive/achieve_100_coverage_20260314`
+- `archive_completed_tasks_20260314` | eliminare tutti i task effettuati e
+  completi all'interno della folder conductor | `archived` | phase `archived` |
+  Archived | `conductor/archive/archive_completed_tasks_20260314`
+- `backup_production_db_20260314` | Full dump of production database 'fantaf1'
+  before Phase 11 | `archived` | phase `archived` | Archived |
+  `conductor/archive/backup_production_db_20260314`
+- `build_verify_launch_20260314` | Build completa, verifica e lancio locale |
+  `archived` | phase `archived` | Archived |
+  `conductor/archive/build_verify_launch_20260314`
+- `cleanup_atlas_databases_20260314` | Analisi e Pulizia Database MongoDB Atlas
+  | `archived` | phase `archived` | Archived |
+  `conductor/archive/cleanup_atlas_databases_20260314`
+- `create_env_config_20260314` | Creazione e configurazione file .env locale |
+  `archived` | phase `archived` | Archived |
+  `conductor/archive/create_env_config_20260314`
+- `csharp_backend_migration_20260314` | Rimuovere completamente il backend
+  Node.js, mantenendo solo il backend C# come backend ufficiale, la parte
+  frontend e i file vitali dell'applicazione, garantendo la piena funzionalità e
+  la copertura del 100% senza regressioni in locale e in produzione per
+  render.com (ambiente staging). | `archived` | phase `archived` | Archived |
+  `conductor/archive/csharp_backend_migration_20260314`
+- `deploya_staging_20260319` | Implementare un comando 'deploya-staging' e una
+  skill 'fantaf1_deploy_staging' per automatizzare il deploy verso 'staging'
+  partendo da 'develop'. | `completed` | phase `completed` | Completed |
+  `conductor/archive/deploya_staging_20260319`
+- `enforce_versioning_rule_20260314` | enforce versioning rule 20260314 |
+  `archived` | phase `archived` | Archived |
+  `conductor/archive/enforce_versioning_rule_20260314`
+- `fix-dropdowns` | fix-dropdowns | `archived` | phase `archived` | Archived |
+  `conductor/archive/fix-dropdowns`
+- `fix-scroll-performance` | fix-scroll-performance | `archived` | phase
+  `archived` | Archived | `conductor/archive/fix-scroll-performance`
+- `fix_docker_build_error_20260315` | Fix Docker build error on Render staging
+  due to missing /backend directory in backend-csharp/Dockerfile. | `archived` |
+  phase `archived` | Archived |
+  `conductor/archive/fix_docker_build_error_20260315`
+- `fix_highlights_lookup_20260315` | Fix Highlights Lookup Availability |
+  `archived` | phase `archived` | Completed |
+  `conductor/archive/fix_highlights_lookup_20260315`
+- `fix_local_backend_startup_failure_20260314` | Fix fallimento avvio backend
+  locale durante preflight | `archived` | phase `archived` | Archived |
+  `conductor/archive/fix_local_backend_startup_failure_20260314`
+- `fix_local_startup_20260315` | Fix Local Startup | `archived` | phase
+  `archived` | No active task | `conductor/archive/fix_local_startup_20260315`
+- `fix_menu_focus_navigation_20260315` | Fix Menu Focus And Active Navigation |
+  `archived` | phase `archived` | Completed |
+  `conductor/archive/fix_menu_focus_navigation_20260315`
+- `fix_menu_third_item_focus_20260315` | Fix Menu Third Item Focus | `archived`
+  | phase `archived` | Completed |
+  `conductor/archive/fix_menu_third_item_focus_20260315`
+- `fix_multi_race_highlights_20260315` | Fix Multi Race Highlights | `archived`
+  | phase `archived` | Completed |
+  `conductor/archive/fix_multi_race_highlights_20260315`
+- `fix_render_dockerfile_not_found_20260315` | Fix Render Dockerfile not found
+  error by clean rewrite and verification. | `archived` | phase `archived` |
+  Archived | `conductor/archive/fix_render_dockerfile_not_found_20260315`
+- `fix_render_staging_deploy_definitive_20260315` | Definitive fix for Render
+  staging deploy error: '/backend' not found. | `archived` | phase `archived` |
+  Archived | `conductor/archive/fix_render_staging_deploy_definitive_20260315`
+- `fix_startup_command_20260317` | Execute test cycles and fix startup script |
+  `archived` | phase `archived` | Completed |
+  `conductor/archive/fix_startup_command_20260317`
+- `integrate_dotnet_format_20260314` | Integrazione dotnet format nel workflow
+  C# e CI/CD | `archived` | phase `archived` | Archived |
+  `conductor/archive/integrate_dotnet_format_20260314`
+- `investigate_highlights_algorithm_20260317` | Investigation plan for the
+  "HIGHLIGHTS" algorithm | `archived` | phase `archived` | Archived |
+  `conductor/archive/investigate_highlights_algorithm_20260317`
+- `merge_develop_into_staging_release_20260315` | Merge Develop Into Staging
+  Release | `archived` | phase `archived` | Completed |
+  `conductor/archive/merge_develop_into_staging_release_20260315`
+- `porting_csharp_phase_10_20260314` | Docker Render Staging and Atlas
+  Operationalization (Phase 10) for C# Backend Port | `archived` | phase
+  `archived` | Archived | `conductor/archive/porting_csharp_phase_10_20260314`
+- `protect_staging_branch_20260318` | proteggere il branch 'staging' a livello
+  di github in modo identico a come è protetto il branch 'main' | `completed` |
+  phase `completed` | Completed |
+  `conductor/tracks/protect_staging_branch_20260318`
+- `restaylyng_menu_mobile_20260316` | Mobile Menu Restyling | `archived` | phase
+  `archived` | No active task | `conductor/archive/restaylyng-menu-mobile`
+- `restore_prod_to_staging_20260314` | Restore production database dump to
+  staging for testing | `archived` | phase `archived` | Archived |
+  `conductor/archive/restore_prod_to_staging_20260314`
+- `setup_dotnet10_20260314` | setup dotnet10 20260314 | `archived` | phase
+  `archived` | Archived | `conductor/archive/setup_dotnet10_20260314`
+- `setup_mongodb_tooling_20260314` | Install MongoDB Database Tools and mongosh
+  via Homebrew | `archived` | phase `archived` | Archived |
+  `conductor/archive/setup_mongodb_tooling_20260314`
+- `stabilize_highlights_persistence_20260318` | Persistenza Definitiva
+  Highlights Per Gara | `completed` | phase `completed` | Implementation,
+  coverage, responsive verification, and production-like preview checks
+  completed without commit or push. |
+  `conductor/tracks/stabilize_highlights_persistence_20260318`
+- `streamline_core_docs_20260318` | Streamline core documentation (GEMINI.md &
+  AGENTS.md) | `new` | phase `new` | No active task |
+  `conductor/tracks/streamline_core_docs_20260318`
+- `sync_branch_rules_20260319` | Verificare le rules su github per il branch
+  'main', NON FARE NESSUNA MODIFICA alle rules di eper 'main' ma applicarle
+  anche al branch 'staging' | `completed` | phase `completed` | Completed |
+  `conductor/archive/sync_branch_rules_20260319`
+- `track-001` | Fix Mobile Menu Readability And Scroll Affordance | `archived` |
+  phase `archived` | Completed |
+  `conductor/archive/track-001-fix-mobile-menu-readability-and-scroll-affordance`
+- `ui_menu_rework_20260315` | UI Menu Rework | `archived` | phase `archived` |
+  Completed and archived | `conductor/archive/ui_menu_rework_20260315`
+- `verify-subphase-07` | verify-subphase-07 | `archived` | phase `archived` |
+  Archived | `conductor/archive/verify-subphase-07`
+- `verify_after_clean_20260314` | Verify Build and Tests after git clean -fdx |
+  `archived` | phase `archived` | Archived |
+  `conductor/archive/verify_after_clean_20260314`
+- `verify_csharp_porting_20260314` | Verifica Anti-Regressione Porting C# (Fase
+  1-9) | `archived` | phase `archived` | Archived |
+  `conductor/archive/verify_csharp_porting_20260314`
+- `verify_docker_dotnet10_20260314` | verify docker dotnet10 20260314 |
+  `archived` | phase `archived` | Archived |
+  `conductor/archive/verify_docker_dotnet10_20260314`
+- `verify_docker_staging_local_20260315` | Local verification of Docker build
+  and staging simulation. | `archived` | phase `archived` | Archived |
+  `conductor/archive/verify_docker_staging_local_20260315`
+- `verify_workflow_20260314` | Verifica e certificazione della copertura test al
+  100% e dell'integrità del workflow Conductor | `archived` | phase `archived` |
+  Archived | `conductor/archive/verify_workflow_20260314`
+- `windows_startup_script_20260319` | Creare un file start_fantaf1.bat che deve
+  essere equivalente al file start_fantaf1.command | `completed` | phase
+  `completed` | Completed | `conductor/archive/windows_startup_script_20260319`
 
 ## Notes
 

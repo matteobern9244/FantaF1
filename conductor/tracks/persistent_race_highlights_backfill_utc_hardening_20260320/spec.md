@@ -2,8 +2,8 @@
 
 ## Problem Summary
 
-- Gli highlights gara oggi possono risultare visibili in locale ma non in staging
-  o produzione su Render.
+- Gli highlights gara oggi possono risultare visibili in locale ma non in
+  staging o produzione su Render.
 - La divergenza suggerisce un rischio concreto nella logica temporale (`UTC`,
   gating del lookup, TTL `missing`, startup order, parse date).
 - Il sistema deve salvare in modo permanente nel database i link highlights per

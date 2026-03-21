@@ -2,27 +2,28 @@
 
 ## Request
 
-Riordinare il menu e le voci dashboard con sottomenu Analisi per KPI e coerenza desktop/mobile/PWA
+Riordinare il menu e le voci dashboard con sottomenu Analisi per KPI e coerenza
+desktop/mobile/PWA
 
 ## Track
 
 - Id: `track-002`
-- Title: Riordinare il menu e le voci dashboard con sottomenu Analisi per KPI e coerenza desktop/mobile/PWA
+- Title: Riordinare il menu e le voci dashboard con sottomenu Analisi per KPI e
+  coerenza desktop/mobile/PWA
 
 ## Goal
 
-Rendere il menu di navigazione e l'ordine delle sezioni dashboard coerenti con il
-nuovo ordine richiesto dall'utente, introducendo un sottomenu `Analisi` che
+Rendere il menu di navigazione e l'ordine delle sezioni dashboard coerenti con
+il nuovo ordine richiesto dall'utente, introducendo un sottomenu `Analisi` che
 contiene solo `Deep-dive KPI dashboard` e `User KPI Dashboard`, mantenendo la
 stessa esperienza su desktop browser, mobile browser e PWA.
 
 ## Success Criteria
 
-- In vista desktop il menu mostra nell'ordine:
-  `Calendario stagione`, `Pronostici dei giocatori`, `Weekend Pulse`,
-  `Analisi stagione`, `Analisi` > `Deep-dive KPI dashboard`,
-  `User KPI Dashboard`, `Classifiche reali`, `Storico gare`,
-  `Come funziona`.
+- In vista desktop il menu mostra nell'ordine: `Calendario stagione`,
+  `Pronostici dei giocatori`, `Weekend Pulse`, `Analisi stagione`, `Analisi` >
+  `Deep-dive KPI dashboard`, `User KPI Dashboard`, `Classifiche reali`,
+  `Storico gare`, `Come funziona`.
 - In vista mobile/PWA il menu overlay mostra la stessa gerarchia e lo stesso
   ordine.
 - Il contenuto dashboard segue lo stesso ordine riflesso nella pagina, non solo
@@ -36,10 +37,14 @@ stessa esperienza su desktop browser, mobile browser e PWA.
 
 ## In Scope
 
-- Navigazione sezioni in [src/utils/sectionNavigation.ts](/Users/matteobernardini/code/FantaF1/src/utils/sectionNavigation.ts)
-- Rendering menu desktop in [src/components/Sidebar.tsx](/Users/matteobernardini/code/FantaF1/src/components/Sidebar.tsx)
-- Rendering menu mobile/PWA in [src/components/MobileOverlay.tsx](/Users/matteobernardini/code/FantaF1/src/components/MobileOverlay.tsx)
-- Eventuale ordine di rendering delle sezioni dashboard in [src/App.tsx](/Users/matteobernardini/code/FantaF1/src/App.tsx)
+- Navigazione sezioni in
+  [src/utils/sectionNavigation.ts](/Users/matteobernardini/code/FantaF1/src/utils/sectionNavigation.ts)
+- Rendering menu desktop in
+  [src/components/Sidebar.tsx](/Users/matteobernardini/code/FantaF1/src/components/Sidebar.tsx)
+- Rendering menu mobile/PWA in
+  [src/components/MobileOverlay.tsx](/Users/matteobernardini/code/FantaF1/src/components/MobileOverlay.tsx)
+- Eventuale ordine di rendering delle sezioni dashboard in
+  [src/App.tsx](/Users/matteobernardini/code/FantaF1/src/App.tsx)
 - Test frontend per sidebar, overlay mobile, roadmap/dashboard e responsive
 - Aggiornamento artefatti Conductor del track
 
@@ -54,7 +59,8 @@ stessa esperienza su desktop browser, mobile browser e PWA.
 
 ## Constraints
 
-- Applicare integralmente [AGENTS.md](/Users/matteobernardini/code/FantaF1/AGENTS.md)
+- Applicare integralmente
+  [AGENTS.md](/Users/matteobernardini/code/FantaF1/AGENTS.md)
 - TDD obbligatoria `RED -> GREEN -> REFACTOR`
 - Coverage totale al 100% da preservare
 - Nessun commit

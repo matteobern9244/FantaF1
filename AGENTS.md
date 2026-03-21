@@ -513,9 +513,9 @@ after `staging -> main`.
    proceed.
 2. Run a dry-run summary before any mutating action. Show the computed next
    version, the files expected to change, the validations that will run, the
-   Pull Request target (`main` for `deploya`, `staging` for
-   `deploya-staging`), and any tag/release names that would be created. Do not
-   commit, push, tag, or release during the dry-run phase.
+   Pull Request target (`main` for `deploya`, `staging` for `deploya-staging`),
+   and any tag/release names that would be created. Do not commit, push, tag, or
+   release during the dry-run phase.
 3. Determine the correct next application version and bump it consistently
    across the repository wherever needed.
 4. Verify the version bump diff is coherent across `package.json`,

@@ -221,8 +221,8 @@ Il backend sanitizza sempre lo stato prima di persisterlo.
 - calendario: Formula1.com
 - standings: Formula1.com
 - risultati weekend: Formula1.com
-- highlights gara: feed YouTube Sky Sport F1, playlist del canale
-  `@skysportf1`, ricerca nel canale YouTube Sky Sport F1 e fallback
+- highlights gara: feed YouTube Sky Sport F1, playlist del canale `@skysportf1`,
+  ricerca nel canale YouTube Sky Sport F1 e fallback
   `sport.sky.it/formula-1/video/highlights`
 
 Se un sync fallisce, il backend prova a usare la cache MongoDB gia' disponibile
@@ -461,10 +461,14 @@ impedire mutazioni dei database condivisi.
 
 ### Launcher canonico
 
-- [start_fantaf1.command](/Users/matteobernardini/code/FantaF1/start_fantaf1.command) (macOS/Linux)
-- [start_fantaf1.bat](/Users/matteobernardini/code/FantaF1/start_fantaf1.bat) (Windows)
-- [clean_google_chrome.command](/Users/matteobernardini/code/FantaF1/clean_google_chrome.command) (macOS/Linux)
-- [clean_google_chrome.bat](/Users/matteobernardini/code/FantaF1/clean_google_chrome.bat) (Windows)
+- [start_fantaf1.command](/Users/matteobernardini/code/FantaF1/start_fantaf1.command)
+  (macOS/Linux)
+- [start_fantaf1.bat](/Users/matteobernardini/code/FantaF1/start_fantaf1.bat)
+  (Windows)
+- [clean_google_chrome.command](/Users/matteobernardini/code/FantaF1/clean_google_chrome.command)
+  (macOS/Linux)
+- [clean_google_chrome.bat](/Users/matteobernardini/code/FantaF1/clean_google_chrome.bat)
+  (Windows)
 
 Quando un task richiede di `avviare l'app`, questo e' il solo entrypoint
 canonico. Il launcher esegue una serie di controlli pre-volo obbligatori:
@@ -479,8 +483,8 @@ canonico. Il launcher esegue una serie di controlli pre-volo obbligatori:
 
 ### Note operative UI recenti
 
-- il gruppo `Analisi` nel menu e nella dashboard contiene ora `Stagione attuale`,
-  `Deep-dive KPI dashboard` e `User KPI Dashboard`
+- il gruppo `Analisi` nel menu e nella dashboard contiene ora
+  `Stagione attuale`, `Deep-dive KPI dashboard` e `User KPI Dashboard`
 - `Stagione attuale` sostituisce la precedente label `Analisi stagione`
 - la sidebar desktop usa una larghezza leggermente maggiore per evitare clipping
   dei bordi attivi
@@ -661,8 +665,7 @@ Healthcheck post-merge:
 - se il secret dell'ambiente relativo non e' configurato, il job salta in modo
   esplicito senza mascherare l'assenza del controllo
 - `RENDER_STAGING_HEALTHCHECK_URL` deve contenere l'endpoint health completo
-  dello staging, ad esempio
-  `https://fantaf1-staging.onrender.com/api/health`
+  dello staging, ad esempio `https://fantaf1-staging.onrender.com/api/health`
 
 Trigger operativi documentati:
 

@@ -3,7 +3,8 @@
 - Status: `spec`
 - Phase: `spec`
 - Active task: Draft and confirm the track spec
-- Path: `conductor/tracks/track-002-riordinare-il-menu-e-le-voci-dashboard-con-sottomenu-analisi-per-kpi-e-coerenza-desktop-mobile-pwa`
+- Path:
+  `conductor/tracks/track-002-riordinare-il-menu-e-le-voci-dashboard-con-sottomenu-analisi-per-kpi-e-coerenza-desktop-mobile-pwa`
 
 ## Files
 
