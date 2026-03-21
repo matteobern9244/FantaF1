@@ -309,6 +309,7 @@ function clickCalendarRaceButton(label: RegExp) {
   }
 
   fireEvent.click(within(calendarSection).getByRole('button', { name: label }));
+  clickSectionNavigationButton(/pronostici dei giocatori/i);
 }
 
 async function waitForAppToSettle() {
@@ -340,7 +341,9 @@ describe('Weekend draft synchronization UI', () => {
       expect(screen.getByLabelText(/weekend selezionato/i)).toHaveValue('race-1');
     }, { timeout: asyncUiTimeoutMs });
 
-    clickCalendarRaceButton(/china/i);
+    fireEvent.change(screen.getByLabelText(/weekend selezionato/i), {
+      target: { value: 'race-2' },
+    });
 
     await waitFor(() => {
       const userCard = getUserCard('Player 1');
@@ -439,7 +442,9 @@ describe('Weekend draft synchronization UI', () => {
       expect(screen.getByLabelText(/weekend selezionato/i)).toHaveValue('race-1');
     }, { timeout: asyncUiTimeoutMs });
 
-    clickCalendarRaceButton(/china/i);
+    fireEvent.change(screen.getByLabelText(/weekend selezionato/i), {
+      target: { value: 'race-2' },
+    });
 
     await waitFor(() => {
       expect(fetchMock).toHaveBeenCalledWith('/api/results/race-2');
@@ -487,7 +492,9 @@ describe('Weekend draft synchronization UI', () => {
 
     // We are on Australia (race-1), results are loading
 
-    clickCalendarRaceButton(/china/i);
+    fireEvent.change(screen.getByLabelText(/weekend selezionato/i), {
+      target: { value: 'race-2' },
+    });
 
     await waitFor(() => {
       // Should be on China predictions now
