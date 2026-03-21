@@ -301,6 +301,8 @@ function clickSectionNavigationButton(label: RegExp) {
 }
 
 function clickCalendarRaceButton(label: RegExp) {
+  clickSectionNavigationButton(/calendario stagione/i);
+
   const calendarSection = screen.getByRole('heading', { name: /calendario stagione/i }).closest('section');
   if (!calendarSection) {
     throw new Error('Calendar section not found');
