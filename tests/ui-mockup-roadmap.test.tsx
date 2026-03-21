@@ -756,6 +756,33 @@ describe('Mockup roadmap UI features', () => {
     expect(scrollTo).toHaveBeenCalled();
   });
 
+  it('scrolls to the requested section when navigation changes both route and hash', async () => {
+    setupFetch();
+    const scrollTo = vi.fn();
+    Object.defineProperty(window, 'scrollTo', {
+      configurable: true,
+      value: scrollTo,
+    });
+
+    render(<MemoryRouter initialEntries={['/dashboard']}><App /></MemoryRouter>);
+
+    await waitFor(() => {
+      expect(screen.queryByTestId('pitstop-loader')).not.toBeInTheDocument();
+    });
+
+    const navigation = screen.getByRole('navigation', { name: appText.shell.navigation.ariaLabel });
+    fireEvent.click(within(navigation).getByRole('button', { name: appText.shell.navigation.items.userAnalytics }));
+
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: appText.headings.userAnalytics })).toBeInTheDocument();
+    });
+
+    await waitFor(() => {
+      expect(within(navigation).getByRole('button', { name: appText.shell.navigation.items.userAnalytics })).toHaveClass('active');
+    });
+    expect(scrollTo).toHaveBeenCalled();
+  });
+
   it('opens the mobile menu with the localized trigger, locks scroll, and closes after switching view', async () => {
     setupFetch();
     mockMediaMatches({ '(max-width: 767px)': true });

@@ -138,9 +138,9 @@ interface ToastState {
   tone: ToastTone;
 }
 
-function buildHashUrl(hash: string) {
+function buildLocationHash(hash: string) {
   const normalizedHash = hash.trim().replace(/^#/, '');
-  return `${window.location.pathname}${window.location.search}#${normalizedHash}`;
+  return normalizedHash ? `#${normalizedHash}` : '';
 }
 
 function getNavigationAnchorOffset() {
@@ -276,9 +276,10 @@ function App() {
   const [activeSectionId, setActiveSectionId] = useState('');
   const selectedMeetingKeyRef = useRef(selectedMeetingKey);
   const toastTimeoutRef = useRef<number | null>(null);
-  const initialHashHandledRef = useRef(false);
+  const handledHashLocationRef = useRef('');
   const navigationLockTimeoutRef = useRef<number | null>(null);
   const manualNavigationTargetRef = useRef<string | null>(null);
+  const pendingPathnameRef = useRef<string | null>(null);
 
   // Derived state (declared before effects to avoid TS errors)
   const sortedDrivers = sortDriversBySurname(drivers, driversSource.sortLocale);
@@ -371,6 +372,12 @@ function App() {
   }, [selectedMeetingKey]);
 
   useEffect(() => {
+    if (pendingPathnameRef.current && location.pathname === pendingPathnameRef.current) {
+      pendingPathnameRef.current = null;
+    }
+  }, [location.pathname]);
+
+  useEffect(() => {
     setSelectedRacePhase(raceLocked ? 'live' : 'open');
   }, [raceLocked, selectedRace?.meetingKey]);
 
@@ -390,6 +397,18 @@ function App() {
     }, 3200);
   }
 
+  function scheduleManualNavigation(sectionId: string) {
+    if (navigationLockTimeoutRef.current !== null) {
+      window.clearTimeout(navigationLockTimeoutRef.current);
+    }
+
+    manualNavigationTargetRef.current = sectionId;
+    navigationLockTimeoutRef.current = window.setTimeout(() => {
+      manualNavigationTargetRef.current = null;
+      navigationLockTimeoutRef.current = null;
+    }, manualNavigationLockDurationMs);
+  }
+
   function navigateToSection(sectionId: string) {
     if (sectionId === 'admin-section' && !sessionState.isAdmin) {
       handleOpenAdminLogin();
@@ -398,25 +417,29 @@ function App() {
 
     const leafItems = getSectionNavigationLeafItems(sessionState.isAdmin ? 'admin' : 'public');
     const item = leafItems.find(i => i.id === sectionId);
-    
+
     if (item) {
       const [path] = item.route.split('#');
+      const nextHash = buildLocationHash(sectionId);
+
       if (location.pathname !== path) {
+        handledHashLocationRef.current = '';
+        scheduleManualNavigation(sectionId);
+        setActiveSectionId(sectionId);
         navigate(item.route);
       } else {
         const targetElement = document.getElementById(sectionId);
+
+        scheduleManualNavigation(sectionId);
+        setActiveSectionId(sectionId);
+        navigate(
+          { pathname: location.pathname, search: location.search, hash: nextHash },
+          { replace: true },
+        );
+
         if (targetElement) {
-          if (navigationLockTimeoutRef.current !== null) {
-            window.clearTimeout(navigationLockTimeoutRef.current);
-          }
-          manualNavigationTargetRef.current = sectionId;
-          navigationLockTimeoutRef.current = window.setTimeout(() => {
-            manualNavigationTargetRef.current = null;
-            navigationLockTimeoutRef.current = null;
-          }, manualNavigationLockDurationMs);
-          window.history.replaceState({}, '', buildHashUrl(sectionId));
+          handledHashLocationRef.current = `${location.pathname}${nextHash}`;
           scrollSectionIntoView(targetElement);
-          setActiveSectionId(sectionId);
         }
       }
     }
@@ -624,26 +647,31 @@ function App() {
   }, []);
 
   useEffect(() => {
-    if (loading || initialHashHandledRef.current) {
+    if (loading) {
       return;
     }
 
-    const targetId = window.location.hash.replace(/^#/, '');
+    const targetId = location.hash.replace(/^#/, '');
     if (!targetId) {
-      initialHashHandledRef.current = true;
+      handledHashLocationRef.current = '';
       return;
     }
 
     const targetElement = document.getElementById(targetId);
     if (!targetElement) {
-      initialHashHandledRef.current = true;
       return;
     }
 
-    scrollSectionIntoView(targetElement, 'auto');
+    const currentHashLocation = `${location.pathname}${location.hash}`;
+    if (handledHashLocationRef.current === currentHashLocation) {
+      return;
+    }
+
+    const scrollBehavior = manualNavigationTargetRef.current === targetId ? 'smooth' : 'auto';
+    scrollSectionIntoView(targetElement, scrollBehavior);
     setActiveSectionId(targetId);
-    initialHashHandledRef.current = true;
-  }, [loading, viewMode]);
+    handledHashLocationRef.current = currentHashLocation;
+  }, [loading, location.hash, location.pathname, viewMode]);
 
   useEffect(() => {
     const effectSectionNavigationLeafItems = getSectionNavigationLeafItems(viewMode);
@@ -652,7 +680,7 @@ function App() {
       return;
     }
 
-    const hashSectionId = window.location.hash.replace(/^#/, '');
+    const hashSectionId = location.hash.replace(/^#/, '');
     const fallbackSectionId = hashSectionId || firstSectionId;
     setActiveSectionId((currentActiveSectionId) => {
       const isCurrentSectionVisible = effectSectionNavigationLeafItems.some(
@@ -728,7 +756,7 @@ function App() {
     return () => {
       sectionObserver.disconnect();
     };
-  }, [firstSectionId, loading, viewMode]);
+  }, [firstSectionId, loading, location.hash, viewMode]);
 
   const hydrateSelectedWeekendView = useCallback(
     (nextMeetingKey: string, baseUsers: UserData[]) =>
@@ -747,6 +775,8 @@ function App() {
     const params = new URLSearchParams(location.search);
     const urlMeetingKey = params.get('meeting');
     const urlViewMode = params.get('view') as ViewMode | null;
+    const normalizedPathname = location.pathname === '/' ? '/dashboard' : location.pathname;
+    const targetPathname = pendingPathnameRef.current ?? normalizedPathname;
 
     // Sync URL -> State (e.g. on back/forward or manual URL edit)
     if (urlMeetingKey && urlMeetingKey !== selectedMeetingKey) {
@@ -790,9 +820,11 @@ function App() {
 
     if (changed) {
       const nextSearch = `?${params.toString()}`;
-      if (location.search !== nextSearch) {
-        navigate({ pathname: location.pathname, search: nextSearch, hash: location.hash }, { replace: true });
+      if (location.pathname !== targetPathname || location.search !== nextSearch) {
+        navigate({ pathname: targetPathname, search: nextSearch, hash: location.hash }, { replace: true });
       }
+    } else if (location.pathname !== targetPathname) {
+      navigate({ pathname: targetPathname, search: location.search, hash: location.hash }, { replace: true });
     }
   }, [
     historySearch,
@@ -1023,6 +1055,7 @@ function App() {
 
     const params = new URLSearchParams(location.search);
     params.set('meeting', nextMeeting);
+    pendingPathnameRef.current = '/pronostici';
     navigate(`/pronostici?${params.toString()}`);
   }
 
@@ -1847,6 +1880,8 @@ function App() {
                 type="password"
                 value={adminPassword}
                 onChange={(event) => setAdminPassword(event.target.value)}
+                onKeyDown={(event) => event.key === 'Enter' && handleAdminLogin()}
+                autoFocus
               />
             </div>
             {adminLoginError ? <p className="locked-banner">{adminLoginError}</p> : null}

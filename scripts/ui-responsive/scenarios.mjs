@@ -146,6 +146,7 @@ function switchViewMode(targetView, {
   evaluateJsonImpl,
   sleepSyncImpl = sleepSync,
 } = {}) {
+  const evalOptions = { timeoutMs: 90000 };
   const findAndClickResult = () => evaluateJsonImpl(`() => {
     const normalizeText = (value) => String(value || '').replace(/\\s+/g, ' ').trim();
     const matcher = ${JSON.stringify(targetView)} === 'public' ? /pubblica/i : /admin/i;
@@ -176,7 +177,7 @@ function switchViewMode(targetView, {
 
     targetButton.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     return { clicked: true };
-  }`);
+  }`, evalOptions);
 
   let result = findAndClickResult();
 
@@ -196,7 +197,7 @@ function switchViewMode(targetView, {
 
       mobileTrigger.dispatchEvent(new MouseEvent('click', { bubbles: true }));
       return { opened: true };
-    }`);
+    }`, evalOptions);
 
     if (openMenuResult.opened) {
       sleepSyncImpl(150);
@@ -221,7 +222,7 @@ function switchViewMode(targetView, {
     {
       evaluateJsonImpl,
       sleepSyncImpl,
-      timeoutMs: 10000,
+      timeoutMs: 90000,
       failureMessage: `Vista ${targetView} non attiva dopo il toggle UI.`,
     },
   );

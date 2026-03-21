@@ -65,6 +65,15 @@ describe('Minimal Routing Test', () => {
     expect(screen.getByRole('heading', { name: /calendario stagione/i })).toBeInTheDocument();
   });
 
+  it('redirects the root route with query parameters to the dashboard content', async () => {
+    render(<MemoryRouter initialEntries={['/?meeting=1281&view=admin']}><App /></MemoryRouter>);
+    await waitFor(() => expect(screen.queryByTestId('pitstop-loader')).not.toBeInTheDocument());
+
+    await waitFor(() => {
+      expect(screen.getByRole('heading', { name: /calendario stagione/i })).toBeInTheDocument();
+    });
+  });
+
   it('exposes the pronostici navigation entry in the shell', async () => {
     render(<MemoryRouter initialEntries={['/dashboard']}><App /></MemoryRouter>);
     await waitFor(() => expect(screen.queryByTestId('pitstop-loader')).not.toBeInTheDocument());

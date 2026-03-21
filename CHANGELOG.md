@@ -4,6 +4,22 @@ Cronologia sintetica delle release documentate del progetto Fanta Formula 1.
 
 ## [Unreleased]
 
+- **Routing Multi-Page Stabilizzato Senza Perdita di Stato URL**: la shell
+  React usa ora rotte client-side dedicate (`/dashboard`, `/pronostici`,
+  `/classifiche`, `/analisi`, `/admin`), normalizza gli ingressi legacy su `/`
+  verso `/dashboard` e mantiene coerenti query params e navigazione a sezione
+  anche quando route e hash cambiano insieme.
+- **Bottom Tab Bar Mobile Resa Operativa e Coerente con la Sidebar**: la shell
+  mobile espone ora una barra fissa in basso per dashboard, pronostici,
+  classifiche/storico e analisi, con stato attivo corretto anche per le
+  sottosezioni analytics e senza rompere overlay, toggle admin/public o CTA
+  installazione.
+- **Hardening TDD di Routing, Detector Responsive e Test Navigation**: aggiunti
+  regression test per redirect root-with-query, submit admin via `Enter`,
+  scroll cross-route verso sezioni hashate e detector responsive della vista
+  admin `/pronostici`; rimossi inoltre il componente morto
+  `src/components/AdminLogin.tsx` e la dipendenza obsoleta
+  `@types/react-router-dom`.
 - **Deploya Final Branch Reconciliation**: il protocollo `deploya` documenta ora
   il riallineamento finale post-merge di `staging` e `develop` allo SHA di
   `main`, con abbassamento temporaneo e successivo ripristino della protection

@@ -9,15 +9,16 @@ import { appText } from '../src/uiText';
 
 describe('Sidebar Component', () => {
   const mockItems: SectionNavigationEntry[] = [
-    { kind: 'item', id: 'calendar-section', label: 'Calendar' },
+    { kind: 'item', id: 'calendar-section', route: '/dashboard#calendar-section', label: 'Calendar', viewModes: ['public', 'admin'] },
     {
       kind: 'group',
       id: 'analysis-group',
       label: 'Analisi',
+      viewModes: ['public', 'admin'],
       children: [
-        { kind: 'item', id: 'season-analysis', label: 'Stagione attuale' },
-        { kind: 'item', id: 'user-analytics-section', label: 'Deep-dive KPI dashboard' },
-        { kind: 'item', id: 'user-kpi-section', label: 'User KPI Dashboard' },
+        { kind: 'item', id: 'season-analysis', route: '/analisi#season-analysis', label: 'Stagione attuale', viewModes: ['public', 'admin'] },
+        { kind: 'item', id: 'user-analytics-section', route: '/analisi#user-analytics-section', label: 'Deep-dive KPI dashboard', viewModes: ['public', 'admin'] },
+        { kind: 'item', id: 'user-kpi-section', route: '/analisi#user-kpi-section', label: 'User KPI Dashboard', viewModes: ['public', 'admin'] },
       ],
     },
   ];
@@ -75,7 +76,7 @@ describe('Sidebar Component', () => {
   it('uses fallback icon for unknown items', () => {
     const customItems = [
       ...mockItems,
-      { kind: 'item', id: 'unknown-id' as any, label: 'Unknown' },
+      { kind: 'item', id: 'unknown-id' as any, route: '/unknown#unknown-id', label: 'Unknown', viewModes: ['public', 'admin'] },
     ];
     render(<Sidebar {...defaultProps} items={customItems} />);
     expect(screen.getByText('Unknown')).toBeInTheDocument();
@@ -83,13 +84,14 @@ describe('Sidebar Component', () => {
 
   it('uses fallback icon for unknown child items inside the Analisi group', () => {
     const customItems: SectionNavigationEntry[] = [
-      { kind: 'item', id: 'calendar-section', label: 'Calendar' },
+      { kind: 'item', id: 'calendar-section', route: '/dashboard#calendar-section', label: 'Calendar', viewModes: ['public', 'admin'] },
       {
         kind: 'group',
         id: 'analysis-group',
         label: 'Analisi',
+        viewModes: ['public', 'admin'],
         children: [
-          { kind: 'item', id: 'unknown-id' as SectionNavigationId, label: 'Unknown child' },
+          { kind: 'item', id: 'unknown-id' as SectionNavigationId, route: '/analisi#unknown-id', label: 'Unknown child', viewModes: ['public', 'admin'] },
         ],
       },
     ];

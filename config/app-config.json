@@ -451,6 +451,7 @@
     "navigation": {
       "calendar": "Calendario stagione",
       "analysisGroup": "Analisi",
+      "bottomTabBar": "Barra di navigazione mobile",
       "userKpi": "User KPI Dashboard",
       "userAnalytics": "Deep-dive KPI dashboard",
       "publicStandings": "Classifiche reali",

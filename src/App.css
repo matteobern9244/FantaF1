@@ -2463,6 +2463,76 @@ select:disabled {
   margin: 32px 0;
 }
 
+.bottom-tab-bar {
+  position: fixed;
+  left: 16px;
+  right: 16px;
+  bottom: max(16px, env(safe-area-inset-bottom));
+  z-index: 880;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  padding: 10px;
+  border-radius: 20px;
+  background: rgba(10, 11, 19, 0.92);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: var(--shadow-lg);
+}
+
+.bottom-tab-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 62px;
+  padding: 8px 6px;
+  border-radius: 16px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: rgba(248, 250, 252, 0.82);
+  font: inherit;
+  transition:
+    background-color var(--sidebar-transition-duration) var(--sidebar-transition-easing),
+    border-color var(--sidebar-transition-duration) var(--sidebar-transition-easing),
+    color var(--sidebar-transition-duration) var(--sidebar-transition-easing),
+    transform var(--sidebar-transition-duration) var(--sidebar-transition-easing);
+}
+
+.bottom-tab-item:hover,
+.bottom-tab-item:focus-visible {
+  transform: translateY(-1px);
+  color: var(--ink);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.bottom-tab-item:focus-visible {
+  outline: 2px solid rgba(225, 6, 0, 0.45);
+  outline-offset: 2px;
+}
+
+.bottom-tab-item.active,
+.bottom-tab-item[aria-current='page'] {
+  color: var(--ink);
+  background: var(--sidebar-item-active-bg);
+  border-color: rgba(225, 6, 0, 0.28);
+}
+
+.bottom-tab-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.bottom-tab-label {
+  font-size: 0.71rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-align: center;
+  line-height: 1.15;
+}
+
 /* Adjust App Layout for Sidebar */
 @media (min-width: 1200px) {
   .app-shell {
@@ -2518,6 +2588,10 @@ select:disabled {
     display: none;
   }
 
+  .app-shell {
+    padding-bottom: calc(112px + env(safe-area-inset-bottom));
+  }
+
   .hero-panel {
     margin-top: 60px; /* Space for mobile trigger */
   }
@@ -2530,7 +2604,8 @@ select:disabled {
   .sidebar-item,
   .mobile-nav-overlay,
   .mobile-nav-item,
-  .mobile-menu-trigger {
+  .mobile-menu-trigger,
+  .bottom-tab-item {
     animation: none;
     transition: none;
   }

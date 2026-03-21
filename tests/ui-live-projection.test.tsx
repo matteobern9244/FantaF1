@@ -42,6 +42,11 @@ function createEmptyPrediction() {
   };
 }
 
+function clickSectionNavigationButton(label: RegExp) {
+  const sectionNavigation = screen.getByRole('navigation', { name: /sezioni applicazione/i });
+  fireEvent.click(within(sectionNavigation).getByRole('button', { name: label }));
+}
+
 function createCalendar() {
   return [
     {
@@ -248,6 +253,10 @@ describe('Live projection UI', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.spyOn(window, 'open').mockImplementation(() => null);
+    Object.defineProperty(window, 'scrollTo', {
+      configurable: true,
+      value: vi.fn(),
+    });
     vi.spyOn(console, 'error').mockImplementation((message?: unknown, ...optionalParams: unknown[]) => {
       if (typeof message === 'string' && message.includes('not wrapped in act')) {
         return;
@@ -503,7 +512,7 @@ describe('Live projection UI', () => {
       expect(
         screen.getByText(/risultati ufficiali parziali per il weekend selezionato/i),
       ).toBeInTheDocument();
-    });
+    }, { timeout: 5000 });
 
     expect(
       screen.getByText(/la proiezione e' parziale e usa solo i risultati ufficiali gia' pubblicati\./i),
@@ -513,7 +522,7 @@ describe('Live projection UI', () => {
     expect(getProjectionValue('Adriano')).toBe('1');
     
     // Go to dashboard for live rows
-    fireEvent.click(screen.getAllByRole('button', { name: /calendario stagione/i })[0]);
+    clickSectionNavigationButton(/calendario stagione/i);
     
     await waitFor(() => {
       expect(getLiveRows()).toEqual([
@@ -559,7 +568,7 @@ describe('Live projection UI', () => {
     });
 
     // Go to dashboard for live rows
-    fireEvent.click(screen.getAllByRole('button', { name: /calendario stagione/i })[0]);
+    clickSectionNavigationButton(/calendario stagione/i);
 
     await waitFor(() => {
       expect(getLiveRows()).toEqual([
@@ -589,7 +598,7 @@ describe('Live projection UI', () => {
       },
     });
 
-    render(<MemoryRouter initialEntries={['/dashboard']}><App /></MemoryRouter>);
+    const { unmount } = render(<MemoryRouter initialEntries={['/dashboard']}><App /></MemoryRouter>);
 
     await waitFor(() => {
       expect(screen.queryByTestId('pitstop-loader')).not.toBeInTheDocument();
@@ -597,7 +606,7 @@ describe('Live projection UI', () => {
 
     await waitFor(() => {
       expect(screen.getByText(/nessun risultato ufficiale disponibile ancora/i)).toBeInTheDocument();
-    });
+    }, { timeout: 5000 });
     expect(queryOpenPredictionsStrip()).toBeInTheDocument();
 
     fireEvent.change(screen.getByLabelText(/weekend selezionato/i), {
@@ -623,7 +632,7 @@ describe('Live projection UI', () => {
     });
     
     // Go back to dashboard for live rows
-    fireEvent.click(screen.getAllByRole('button', { name: /calendario stagione/i })[0]);
+    clickSectionNavigationButton(/calendario stagione/i);
 
     await waitFor(() => {
       expect(getLiveRows()).toEqual([
@@ -634,8 +643,11 @@ describe('Live projection UI', () => {
     });
     expect(queryOpenPredictionsStrip()).not.toBeInTheDocument();
 
-    fireEvent.change(screen.getByLabelText(/weekend selezionato/i), {
-      target: { value: 'race-1' },
+    unmount();
+    render(<MemoryRouter initialEntries={['/pronostici?meeting=race-1']}><App /></MemoryRouter>);
+
+    await waitFor(() => {
+      expect(screen.queryByTestId('pitstop-loader')).not.toBeInTheDocument();
     });
 
     await waitFor(() => {

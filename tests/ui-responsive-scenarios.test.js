@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { buildResponsiveScenarios } from '../scripts/ui-responsive/scenarios.mjs';
+import { buildResponsiveScenarios, switchViewMode } from '../scripts/ui-responsive/scenarios.mjs';
 
 describe('responsive UI scenarios', () => {
   it('builds the ordered scenario list with deterministic optional skips', async () => {
@@ -86,5 +86,28 @@ describe('responsive UI scenarios', () => {
     expect(shared.scrollAwayFromHeader).toHaveBeenCalledTimes(1);
     expect(shared.switchWeekend).not.toHaveBeenCalled();
     expect(shared.selectSprintWeekend).not.toHaveBeenCalled();
+  });
+
+  it('uses an extended Playwright eval timeout when toggling the view mode', () => {
+    const evaluateJsonImpl = vi
+      .fn()
+      .mockReturnValueOnce({ clicked: true })
+      .mockReturnValueOnce(true);
+
+    switchViewMode('public', {
+      evaluateJsonImpl,
+      sleepSyncImpl: vi.fn(),
+    });
+
+    expect(evaluateJsonImpl).toHaveBeenNthCalledWith(
+      1,
+      expect.stringContaining('const matcher = "public"'),
+      expect.objectContaining({ timeoutMs: 90000 }),
+    );
+    expect(evaluateJsonImpl).toHaveBeenNthCalledWith(
+      2,
+      expect.stringContaining('return "public" === \'public\' ? !isAdmin : isAdmin;'),
+      expect.objectContaining({ timeoutMs: 90000 }),
+    );
   });
 });

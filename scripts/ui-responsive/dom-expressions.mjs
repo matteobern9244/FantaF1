@@ -132,6 +132,7 @@ const inspectStateExpression = `() => {
     .find((button) => /installa applicazione/i.test(normalizeText(button.textContent)));
 
   return {
+    routePath: window.location.pathname,
     viewport: { width: viewportWidth, height: viewportHeight },
     mainSections: {
       hero: Boolean(document.querySelector('.hero-panel')),
@@ -201,7 +202,9 @@ const inspectStateExpression = `() => {
       })(),
       readonlyBannerPresent: Boolean(document.querySelector('.public-readonly-panel .locked-banner')),
       adminLoginPresent: Boolean(document.querySelector('.auth-overlay')),
-      adminControlsPresent: Boolean(document.querySelector('.accent-panel .results-grid')),
+      adminControlsPresent:
+        Boolean(document.querySelector('.accent-panel .results-grid')) ||
+        Boolean(document.querySelector('#predictions-section .stacked-actions .primary-button')),
       publicControlsPresent: Boolean(document.querySelector('.public-readonly-panel')),
     },
     interactiveSurfaces: {

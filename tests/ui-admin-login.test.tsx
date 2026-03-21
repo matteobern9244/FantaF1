@@ -116,4 +116,77 @@ describe('Admin login UI', () => {
     expect(await screen.findByText('Invalid password')).toBeInTheDocument();
     expect(screen.queryByText('Impossibile salvare i dati.')).not.toBeInTheDocument();
   }, 30000);
+
+  it('focuses the admin password field and submits with Enter from the modal', async () => {
+    const fetchMock = global.fetch as ReturnType<typeof vi.fn>;
+
+    fetchMock.mockImplementation((url: string) => {
+      if (url.includes('/api/admin/session')) {
+        return Promise.resolve(createJsonResponse({ isAdmin: true, defaultViewMode: 'admin' }));
+      }
+
+      if (url.includes('/api/session')) {
+        return Promise.resolve(createJsonResponse({ isAdmin: false, defaultViewMode: 'public' }));
+      }
+
+      if (url.includes('/api/health')) {
+        return Promise.resolve(createJsonResponse({ status: 'ok', environment: 'development' }));
+      }
+
+      if (url.includes('/api/data')) {
+        return Promise.resolve(
+          createJsonResponse({
+            users: [],
+            history: [],
+            gpName: '',
+            raceResults: {},
+            selectedMeetingKey: '',
+            weekendStateByMeetingKey: {},
+          }),
+        );
+      }
+
+      if (url.includes('/api/drivers')) {
+        return Promise.resolve(createJsonResponse([]));
+      }
+
+      if (url.includes('/api/calendar')) {
+        return Promise.resolve(createJsonResponse([]));
+      }
+
+      if (url.includes('/api/standings')) {
+        return Promise.resolve(
+          createJsonResponse({ driverStandings: [], constructorStandings: [], updatedAt: '' }),
+        );
+      }
+
+      return Promise.reject(new Error(`Unhandled fetch to ${url}`));
+    });
+
+    render(<MemoryRouter initialEntries={['/dashboard']}><App /></MemoryRouter>);
+
+    await waitFor(() => {
+      expect(screen.queryByTestId('pitstop-loader')).not.toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getAllByRole('button', { name: /admin/i })[0]);
+
+    const passwordInput = await screen.findByLabelText("Modalita' admin");
+    expect(passwordInput).toHaveFocus();
+
+    fireEvent.change(passwordInput, {
+      target: { value: 'correct-password' },
+    });
+    fireEvent.keyDown(passwordInput, { key: 'Enter' });
+
+    await waitFor(() => {
+      expect(fetchMock).toHaveBeenCalledWith(
+        '/api/admin/session',
+        expect.objectContaining({
+          method: 'POST',
+          body: JSON.stringify({ password: 'correct-password' }),
+        }),
+      );
+    });
+  }, 30000);
 });

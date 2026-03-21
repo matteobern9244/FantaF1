@@ -483,6 +483,16 @@ canonico. Il launcher esegue una serie di controlli pre-volo obbligatori:
 
 ### Note operative UI recenti
 
+- la shell frontend usa ora routing client-side esplicito per `/dashboard`,
+  `/pronostici`, `/classifiche`, `/analisi` e `/admin`, mantenendo condivisibili
+  via URL i parametri `meeting`, `view`, `historyUser` e `historySearch`
+- gli ingressi legacy su `/` con query string vengono normalizzati a
+  `/dashboard` senza perdere lo stato richiesto nell'URL
+- in mobile la shell mostra una bottom tab bar fissa per dashboard,
+  pronostici, area classifiche/storico e analisi; la voce standings usa
+  `Classifiche reali` in public e `Storico gare` in admin, mentre l'overlay
+  resta disponibile per la navigazione completa, il toggle admin/public e la
+  CTA installazione
 - il gruppo `Analisi` nel menu e nella dashboard contiene ora
   `Stagione attuale`, `Deep-dive KPI dashboard` e `User KPI Dashboard`
 - `Stagione attuale` sostituisce la precedente label `Analisi stagione`
@@ -492,6 +502,8 @@ canonico. Il launcher esegue una serie di controlli pre-volo obbligatori:
   gruppo `Analisi` e la successiva voce `Storico gare`
 - i bordi delle voci attive restano interamente visibili sia in desktop sia in
   mobile/PWA
+- gli script di verifica responsive/browser sono stati riallineati alla shell
+  multi-route, con validazioni route-aware sulle sezioni realmente visibili
 
 ### Tool locale di pulizia Chrome
 
