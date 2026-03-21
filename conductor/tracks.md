@@ -102,7 +102,7 @@ This file is the compact summary view of Conductor tracks in this repository.
 - `protect_staging_branch_20260318` | proteggere il branch 'staging' a livello
   di github in modo identico a come è protetto il branch 'main' | `completed` |
   phase `completed` | Completed |
-  `conductor/tracks/protect_staging_branch_20260318`
+  `conductor/archive/protect_staging_branch_20260318`
 - `restaylyng_menu_mobile_20260316` | Mobile Menu Restyling | `archived` | phase
   `archived` | No active task | `conductor/archive/restaylyng-menu-mobile`
 - `restore_prod_to_staging_20260314` | Restore production database dump to
@@ -117,10 +117,10 @@ This file is the compact summary view of Conductor tracks in this repository.
   Highlights Per Gara | `completed` | phase `completed` | Implementation,
   coverage, responsive verification, and production-like preview checks
   completed without commit or push. |
-  `conductor/tracks/stabilize_highlights_persistence_20260318`
+  `conductor/archive/stabilize_highlights_persistence_20260318`
 - `streamline_core_docs_20260318` | Streamline core documentation (GEMINI.md &
-  AGENTS.md) | `new` | phase `new` | No active task |
-  `conductor/tracks/streamline_core_docs_20260318`
+  AGENTS.md) | `archived` | phase `archived` | Archived |
+  `conductor/archive/streamline_core_docs_20260318`
 - `sync_branch_rules_20260319` | Verificare le rules su github per il branch
   'main', NON FARE NESSUNA MODIFICA alle rules di eper 'main' ma applicarle
   anche al branch 'staging' | `completed` | phase `completed` | Completed |

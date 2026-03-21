@@ -110,9 +110,9 @@ check_mongodb() {
   fi
 
   echo "Tentativo di connessione a MongoDB..."
-  if ! node -e "
+  if ! MONGODB_URI=\"$uri\" node -e "
     import { MongoClient } from 'mongodb';
-    const uri = '$uri';
+    const uri = process.env.MONGODB_URI;
     const client = new MongoClient(uri, { serverSelectionTimeoutMS: 5000 });
     try {
       await client.connect();

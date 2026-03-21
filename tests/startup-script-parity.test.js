@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 import fs from 'node:fs';
 import path from 'node:path';
 import { expect, test, describe } from 'vitest';
@@ -43,5 +44,12 @@ describe('Startup Scripts Parity', () => {
     // Check for final handover
     expect(commandContent).toContain('node ./scripts/dev-launcher.mjs');
     expect(batContent).toContain('node ./scripts/dev-launcher.mjs');
+  });
+
+  test('the Windows launcher preserves MongoDB URIs with embedded equals signs', () => {
+    const batContent = fs.readFileSync(batPath, 'utf8');
+
+    expect(batContent).toContain('tokens=1* delims==');
+    expect(batContent).toContain('set "MONGODB_URI=%%b"');
   });
 });

@@ -775,6 +775,8 @@ function App() {
     const params = new URLSearchParams(location.search);
     const urlMeetingKey = params.get('meeting');
     const urlViewMode = params.get('view') as ViewMode | null;
+    const urlHistoryUser = params.get('historyUser') ?? 'all';
+    const urlHistorySearch = params.get('historySearch')?.trim() ?? '';
     const normalizedPathname = location.pathname === '/' ? '/dashboard' : location.pathname;
     const targetPathname = pendingPathnameRef.current ?? normalizedPathname;
 
@@ -791,8 +793,27 @@ function App() {
       }
     }
 
-    if (urlViewMode && urlViewMode !== viewMode) {
-      setViewMode(urlViewMode);
+    const resolvedUrlViewMode =
+      urlViewMode === 'public'
+        ? 'public'
+        : urlViewMode === 'admin' && sessionState.isAdmin
+          ? 'admin'
+          : null;
+
+    if (resolvedUrlViewMode && resolvedUrlViewMode !== viewMode) {
+      setViewMode(resolvedUrlViewMode);
+    }
+
+    if (urlHistoryUser !== historyUserFilter) {
+      const nextHistoryUser =
+        urlHistoryUser === 'all' || users.some((user) => user.name === urlHistoryUser)
+          ? urlHistoryUser
+          : 'all';
+      setHistoryUserFilter(nextHistoryUser);
+    }
+
+    if (urlHistorySearch !== historySearch.trim()) {
+      setHistorySearch(urlHistorySearch);
     }
 
     // Sync State -> URL

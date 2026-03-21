@@ -16,7 +16,7 @@ if not exist ".env" (
 )
 
 echo ==^> Verifico MongoDB
-for /f "tokens=2 delays==" %%a in ('findstr "^MONGODB_URI=" .env') do set MONGODB_URI=%%a
+for /f "tokens=1* delims==" %%a in ('findstr "^MONGODB_URI=" .env') do set "MONGODB_URI=%%b"
 
 if "%MONGODB_URI%"=="" (
     echo ERRORE: MONGODB_URI non trovata nel file .env.

@@ -17,7 +17,7 @@ test suites for both Node.js and .NET stacks.
 
 **Files:**
 
-- Modify: `conductor/tracks/verify_after_clean_20260314/metadata.json`
+- Modify: `conductor/archive/verify_after_clean_20260314/metadata.json`
 
 - [ ] **Step 1: Restore Node.js dependencies**
   - Run: `npm install`
@@ -57,7 +57,7 @@ test suites for both Node.js and .NET stacks.
 
 **Files:**
 
-- Modify: `conductor/tracks/verify_after_clean_20260314/metadata.json`
+- Modify: `conductor/archive/verify_after_clean_20260314/metadata.json`
 - Modify: `conductor/tracks.md`
 
 - [ ] **Step 1: Update track metadata to 'completed'**

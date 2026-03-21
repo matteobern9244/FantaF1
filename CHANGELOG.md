@@ -4,6 +4,20 @@ Cronologia sintetica delle release documentate del progetto Fanta Formula 1.
 
 ## [Unreleased]
 
+- **Launcher Locali e Test di Parita' Rafforzati**: `start_fantaf1.command`
+  usa ora `MONGODB_URI` via ambiente nel preflight MongoDB, mentre
+  `start_fantaf1.bat` preserva correttamente URI contenenti `=`; i test
+  launcher sono stati riallineati per verificare questa parita' senza
+  includere `test:ui-responsive` nel flusso monitorato del launcher.
+- **Workspace Conductor Riallineato sui Percorsi Archiviati**: corretti i
+  riferimenti residui a track archiviate in `conductor/index.md`,
+  `conductor/tracks.md` e nei metadata/piani archiviati, mantenendo il workspace
+  coerente con la struttura `conductor/archive`.
+- **Stabilizzazione TDD di Setup e Suite UI Critiche**: `tests/setup.ts`,
+  `tests/ui-weekend-state.test.tsx`, `tests/ui-live-projection.test.tsx`,
+  `tests/app-routing.test.tsx` e `tests/ui-mockup-roadmap.test.tsx` sono stati
+  riallineati per ridurre bleed tra suite, fragilita' sui branch public/admin e
+  instabilita' della navigation shell mobile/route-aware.
 - **Routing Multi-Page Stabilizzato Senza Perdita di Stato URL**: la shell
   React usa ora rotte client-side dedicate (`/dashboard`, `/pronostici`,
   `/classifiche`, `/analisi`, `/admin`), normalizza gli ingressi legacy su `/`

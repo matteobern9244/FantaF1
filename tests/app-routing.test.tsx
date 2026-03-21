@@ -240,7 +240,13 @@ describe('App Routing (MPA-like)', () => {
     const predictionsTab = within(bottomTabBar).getByRole('button', {
       name: new RegExp(appText.shell.navigation.items.predictions, 'i'),
     });
-    expect(predictionsTab).toHaveAttribute('aria-current', 'page');
+    await waitFor(() => {
+      expect(
+        within(bottomTabBar).getByRole('button', {
+          name: new RegExp(appText.shell.navigation.items.predictions, 'i'),
+        }),
+      ).toHaveAttribute('aria-current', 'page');
+    });
     expect(within(bottomTabBar).getByRole('button', {
       name: /calendario stagione/i,
     })).toBeInTheDocument();

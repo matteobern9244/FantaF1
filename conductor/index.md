@@ -210,7 +210,7 @@ this repository.
 - Status: `completed`
 - Phase: `completed`
 - Active task: Completed
-- Path: `conductor/tracks/protect_staging_branch_20260318`
+- Path: `conductor/archive/protect_staging_branch_20260318`
 
 ## restaylyng_menu_mobile_20260316 - Mobile Menu Restyling
 
@@ -246,14 +246,14 @@ this repository.
 - Phase: `completed`
 - Active task: Implementation, coverage, responsive verification, and
   production-like preview checks completed without commit or push.
-- Path: `conductor/tracks/stabilize_highlights_persistence_20260318`
+- Path: `conductor/archive/stabilize_highlights_persistence_20260318`
 
 ## streamline_core_docs_20260318 - Streamline core documentation (GEMINI.md & AGENTS.md)
 
-- Status: `new`
-- Phase: `new`
-- Active task: No active task
-- Path: `conductor/tracks/streamline_core_docs_20260318`
+- Status: `archived`
+- Phase: `archived`
+- Active task: Archived
+- Path: `conductor/archive/streamline_core_docs_20260318`
 
 ## sync_branch_rules_20260319 - Verificare le rules su github per il branch 'main', NON FARE NESSUNA MODIFICA alle rules di eper 'main' ma applicarle anche al branch 'staging'
 

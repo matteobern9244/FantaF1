@@ -270,8 +270,17 @@ function setupFetch({
   return fetchMock;
 }
 
+function getPredictionsSection() {
+  return document.getElementById('predictions-section');
+}
+
 function getUserCard(userName: string) {
-  const headings = screen.queryAllByRole('heading', { name: userName });
+  const predictionsSection = getPredictionsSection();
+  if (!predictionsSection) {
+    return null;
+  }
+
+  const headings = within(predictionsSection).queryAllByRole('heading', { name: userName });
   const h3 = headings.find(h => h.tagName === 'H3');
   return h3?.closest('article') || null;
 }
@@ -286,7 +295,12 @@ function getPredictionSelect(userName: string, label: string | RegExp) {
 }
 
 function getResultSelect(label: string | RegExp) {
-  return screen.queryByLabelText(label) as HTMLSelectElement | null;
+  const predictionsSection = getPredictionsSection();
+  if (!predictionsSection) {
+    return null;
+  }
+
+  return within(predictionsSection).queryByLabelText(label) as HTMLSelectElement | null;
 }
 
 function expectReadableSelectStyles(element: HTMLElement) {
@@ -298,18 +312,6 @@ function expectReadableSelectStyles(element: HTMLElement) {
 function clickSectionNavigationButton(label: RegExp) {
   const sectionNavigation = screen.getByRole('navigation', { name: /sezioni applicazione/i });
   fireEvent.click(within(sectionNavigation).getByRole('button', { name: label }));
-}
-
-function clickCalendarRaceButton(label: RegExp) {
-  clickSectionNavigationButton(/calendario stagione/i);
-
-  const calendarSection = screen.getByRole('heading', { name: /calendario stagione/i }).closest('section');
-  if (!calendarSection) {
-    throw new Error('Calendar section not found');
-  }
-
-  fireEvent.click(within(calendarSection).getByRole('button', { name: label }));
-  clickSectionNavigationButton(/pronostici dei giocatori/i);
 }
 
 async function waitForAppToSettle() {
@@ -328,35 +330,32 @@ describe('Weekend draft synchronization UI', () => {
     vi.spyOn(window, 'alert').mockImplementation(() => {});
   });
 
-  it(
-    'updates predictions and weekend results when changing the selected race and shows placeholders for empty drafts',
-    async () => {
-    setupFetch();
+  it('loads the selected weekend predictions and official results for race-2', async () => {
+    const fetchMock = setupFetch();
 
-    const { unmount } = render(<MemoryRouter initialEntries={['/dashboard']}><App /></MemoryRouter>);
+    render(<MemoryRouter initialEntries={['/pronostici?meeting=race-2']}><App /></MemoryRouter>);
 
     await waitForAppToSettle();
 
     await waitFor(() => {
-      expect(screen.getByLabelText(/weekend selezionato/i)).toHaveValue('race-1');
+      expect(fetchMock).toHaveBeenCalledWith('/api/results/race-2');
     }, { timeout: asyncUiTimeoutMs });
-
-    fireEvent.change(screen.getByLabelText(/weekend selezionato/i), {
-      target: { value: 'race-2' },
-    });
 
     await waitFor(() => {
       const userCard = getUserCard('Player 1');
       expect(userCard).not.toBeNull();
       expect(within(userCard!).getByLabelText(/vincitore gara/i)).toHaveValue('ham');
-    });
-    
+    }, { timeout: asyncUiTimeoutMs });
+
     const player2Card = getUserCard('Player 2');
     expect(within(player2Card!).getByLabelText(/vincitore gara/i)).toHaveValue('nor');
     expect(getResultSelect(/risultato 1°/i)).toHaveValue('ham');
     expect(getResultSelect(/pole \/ sprint reale/i)).toHaveValue('pia');
+  }, asyncUiTimeoutMs);
 
-    unmount();
+  it('shows placeholders for empty drafts on weekends without saved predictions', async () => {
+    setupFetch();
+
     render(<MemoryRouter initialEntries={['/pronostici?meeting=race-3']}><App /></MemoryRouter>);
 
     await waitForAppToSettle();
@@ -378,7 +377,7 @@ describe('Weekend draft synchronization UI', () => {
     expect(getResultSelect(/risultato 1°/i)).toHaveValue('');
   }, asyncUiTimeoutMs);
 
-  it('keeps shared selects readable across admin and public flows', async () => {
+  it('keeps shared selects readable on the dashboard and predictions screens', async () => {
     setupFetch();
 
     const { unmount } = render(<MemoryRouter initialEntries={['/dashboard']}><App /></MemoryRouter>);
@@ -405,8 +404,15 @@ describe('Weekend draft synchronization UI', () => {
     const player1Card = getUserCard('Player 1');
     expectReadableSelectStyles(within(player1Card!).getByLabelText(/vincitore gara/i) as HTMLElement);
     expectReadableSelectStyles(getResultSelect(/risultato 1°/i));
+  }, asyncUiTimeoutMs);
 
-    // Toggle to public view
+  it('shows the public-view banner after toggling from predictions', async () => {
+    setupFetch();
+
+    render(<MemoryRouter initialEntries={['/pronostici?meeting=race-2']}><App /></MemoryRouter>);
+
+    await waitForAppToSettle();
+
     fireEvent.click(screen.getAllByRole('button', { name: /pubblica/i })[0]);
 
     await waitFor(() => {
@@ -434,20 +440,15 @@ describe('Weekend draft synchronization UI', () => {
 
   it('saves the selected weekend draft without overwriting other weekend drafts', async () => {
     const fetchMock = setupFetch();
-    render(<MemoryRouter initialEntries={['/dashboard']}><App /></MemoryRouter>);
+    render(<MemoryRouter initialEntries={['/pronostici?meeting=race-2']}><App /></MemoryRouter>);
 
     await waitForAppToSettle();
 
     await waitFor(() => {
-      expect(screen.getByLabelText(/weekend selezionato/i)).toHaveValue('race-1');
-    }, { timeout: asyncUiTimeoutMs });
-
-    fireEvent.change(screen.getByLabelText(/weekend selezionato/i), {
-      target: { value: 'race-2' },
-    });
-
-    await waitFor(() => {
       expect(fetchMock).toHaveBeenCalledWith('/api/results/race-2');
+      const loadedPlayer1Card = getUserCard('Player 1');
+      expect(loadedPlayer1Card).not.toBeNull();
+      expect(within(loadedPlayer1Card!).getByLabelText(/vincitore gara/i)).toHaveValue('ham');
     }, { timeout: asyncUiTimeoutMs });
 
     const player1Card = getUserCard('Player 1');
@@ -455,6 +456,12 @@ describe('Weekend draft synchronization UI', () => {
     fireEvent.change(within(player1Card!).getByLabelText(/vincitore gara/i), {
       target: { value: 'lec' },
     });
+
+    await waitFor(() => {
+      const updatedPlayer1Card = getUserCard('Player 1');
+      expect(updatedPlayer1Card).not.toBeNull();
+      expect(within(updatedPlayer1Card!).getByLabelText(/vincitore gara/i)).toHaveValue('lec');
+    }, { timeout: asyncUiTimeoutMs });
 
     fireEvent.click(screen.getByRole('button', { name: /salva dati inseriti/i }));
 
@@ -479,7 +486,7 @@ describe('Weekend draft synchronization UI', () => {
 
     appData.weekendStateByMeetingKey['race-2'].raceResults = createEmptyPrediction();
 
-    setupFetch({
+    const fetchMock = setupFetch({
       appData,
       resultHandlers: {
         'race-1': () => race1Results.promise,
@@ -492,14 +499,13 @@ describe('Weekend draft synchronization UI', () => {
 
     // We are on Australia (race-1), results are loading
 
-    fireEvent.change(screen.getByLabelText(/weekend selezionato/i), {
-      target: { value: 'race-2' },
-    });
+    fireEvent.click(screen.getByRole('button', { name: /china/i }));
 
     await waitFor(() => {
-      // Should be on China predictions now
+      expect(fetchMock).toHaveBeenCalledWith('/api/results/race-2');
       const player1Card = getUserCard('Player 1');
       expect(player1Card).not.toBeNull();
+      expect(within(player1Card!).getByLabelText(/vincitore gara/i)).toHaveValue('ham');
     }, { timeout: asyncUiTimeoutMs });
 
     // Now resolve race-1 results (stale)
@@ -515,7 +521,7 @@ describe('Weekend draft synchronization UI', () => {
       // Result for 1st should still be empty because we are on race-2
       expect(getResultSelect(/risultato 1°/i)).toHaveValue('');
     }, { timeout: asyncUiTimeoutMs });
-  });
+  }, asyncUiTimeoutMs);
 
   it('shows no lock banner before the race starts and keeps predictions editable', async () => {
     setupFetch({

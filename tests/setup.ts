@@ -33,6 +33,10 @@ class DefaultIntersectionObserver implements IntersectionObserver {
 }
 
 function applyDefaultBrowserMocks() {
+  if (typeof window === 'undefined') {
+    return;
+  }
+
   Object.defineProperty(window, 'matchMedia', {
     configurable: true,
     writable: true,
@@ -62,9 +66,11 @@ resetGlobalFetchMock();
 afterEach(() => {
   cleanup();
   vi.clearAllMocks();
-  window.history.replaceState({}, '', '/');
-  window.localStorage.clear();
-  window.sessionStorage.clear();
+  if (typeof window !== 'undefined') {
+    window.history.replaceState({}, '', '/');
+    window.localStorage.clear();
+    window.sessionStorage.clear();
+  }
   applyDefaultBrowserMocks();
   resetGlobalFetchMock();
 });

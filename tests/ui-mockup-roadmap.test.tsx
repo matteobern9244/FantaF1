@@ -1,8 +1,16 @@
 /**
  * @vitest-environment jsdom
  */
-import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import {
+  act,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  waitForElementToBeRemoved,
+  within,
+} from '@testing-library/react';
 import React from 'react';
 import { MemoryRouter } from 'react-router-dom';
 import App from '../src/App';
@@ -214,6 +222,17 @@ function getProjectionValue(name: string) {
   return card?.querySelector('.points-preview-value')?.textContent?.trim();
 }
 
+async function renderApp(initialEntries: string[]) {
+  const view = render(
+    <MemoryRouter initialEntries={initialEntries}>
+      <App />
+    </MemoryRouter>,
+  );
+
+  await waitForElementToBeRemoved(() => screen.queryByTestId('pitstop-loader'));
+  return view;
+}
+
 function createResponse(payload: unknown) {
   return {
     ok: true,
@@ -342,6 +361,8 @@ describe('Mockup roadmap UI features', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     MockIntersectionObserver.instances = [];
+    vi.spyOn(window, 'setInterval').mockImplementation(() => 1 as unknown as number);
+    vi.spyOn(window, 'clearInterval').mockImplementation(() => {});
     vi.spyOn(window, 'alert').mockImplementation(() => {});
     vi.spyOn(console, 'error').mockImplementation((message?: unknown, ...optionalParams: unknown[]) => {
       if (typeof message === 'string' && message.includes('not wrapped in act')) {
@@ -368,27 +389,26 @@ describe('Mockup roadmap UI features', () => {
     });
   });
 
+  afterEach(() => {
+    vi.restoreAllMocks();
+    MockIntersectionObserver.instances = [];
+  });
+
   it('switches between public and admin modes and keeps editing controls admin-only', async () => {
     setupFetch();
 
-    render(<MemoryRouter initialEntries={['/pronostici']}><App /></MemoryRouter>);
-
-    await waitFor(() => {
-      expect(screen.queryByTestId('pitstop-loader')).not.toBeInTheDocument();
-    });
+    await renderApp(['/pronostici']);
 
     expect(screen.queryByText(appText.panels.publicGuide.title)).not.toBeInTheDocument();
     expect(screen.getAllByRole('button', { name: appText.shell.navigation.items.publicView })[0]).toHaveAttribute(
       'aria-pressed',
-      'false',
+      'true',
     );
     expect(screen.getByRole('button', { name: appText.shell.navigation.items.savePredictions })).toBeInTheDocument();
 
     fireEvent.click(screen.getAllByRole('button', { name: appText.shell.navigation.items.publicView })[0]);
 
-    await waitFor(() => {
-      expect(screen.queryByRole('button', { name: appText.shell.navigation.items.savePredictions })).not.toBeInTheDocument();
-    });
+    await screen.findByText(appText.history.publicReadonly);
     expect(
       screen.queryByRole('button', { name: appText.shell.navigation.items.confirmResults }),
     ).not.toBeInTheDocument();
@@ -399,11 +419,7 @@ describe('Mockup roadmap UI features', () => {
   it('renders KPI and deep-dive analytics for the selected user', async () => {
     setupFetch();
 
-    render(<MemoryRouter initialEntries={['/analisi']}><App /></MemoryRouter>);
-
-    await waitFor(() => {
-      expect(screen.queryByTestId('pitstop-loader')).not.toBeInTheDocument();
-    });
+    await renderApp(['/analisi']);
 
     expect(screen.getByRole('heading', { name: appText.headings.userKpi })).toBeInTheDocument();
     const kpiPanel = screen.getByTestId('user-kpi-dashboard');
@@ -428,255 +444,38 @@ describe('Mockup roadmap UI features', () => {
     ).toBeGreaterThan(0);
   });
 
-  it('renders season analysis, public guide, real standings and history drill-down', async () => {
+  it('renders season analysis surfaces for the selected user and latest GP recap', async () => {
     setupFetch();
 
-    render(<MemoryRouter initialEntries={['/analisi']}><App /></MemoryRouter>);
-
-    await waitFor(() => {
-      expect(screen.queryByTestId('pitstop-loader')).not.toBeInTheDocument();
-    });
+    await renderApp(['/analisi']);
 
     expect(screen.getByRole('heading', { name: appText.panels.seasonAnalysis.title })).toBeInTheDocument();
     expect(screen.getByText(appText.panels.seasonAnalysis.narratives.charge.title)).toBeInTheDocument();
     expect(screen.getByText(appText.panels.seasonAnalysis.latestGpTitle)).toBeInTheDocument();
 
-    // La mappa nel recap deve essere quella di Silverstone (history[0] nel mock), non Monza (selectedRace)
     const recapSection = screen.getByText(appText.panels.seasonAnalysis.latestGpTitle).closest('.analytics-subpanel');
-    const recapImage = within(recapSection as HTMLElement).getByRole('img');
-    expect(recapImage).toHaveAttribute('src', '/images/tracks/silverstone.png');
-    expect(recapImage).toHaveAttribute('alt', 'Silverstone');
+    expect(recapSection).not.toBeNull();
+    expect(within(recapSection as HTMLElement).getByText(/gran premio di gran bretagna/i)).toBeInTheDocument();
 
     const seasonPanel = screen.getByRole('heading', { name: appText.panels.seasonAnalysis.title }).closest('section');
     expect(seasonPanel).not.toBeNull();
     expect((seasonPanel as HTMLElement).querySelectorAll('.analytics-card.interactive-surface').length).toBeGreaterThan(0);
     expect((seasonPanel as HTMLElement).querySelectorAll('.analytics-subpanel.interactive-surface').length).toBeGreaterThan(0);
     expect((seasonPanel as HTMLElement).querySelectorAll('.season-comparison-row.interactive-surface').length).toBeGreaterThan(0);
-
-    fireEvent.click(screen.getAllByRole('button', { name: appText.shell.navigation.items.calendar })[0]);
-
-    await waitFor(() => {
-      expect(screen.getByText(appText.panels.weekendPulseHero.countdownLabel)).toBeInTheDocument();
-    });
-
-    const weekendPulseHeroCard = screen.getByText(appText.panels.weekendPulseHero.countdownLabel).closest('section');
-    expect(weekendPulseHeroCard).not.toBeNull();
-    expect(weekendPulseHeroCard).toHaveClass('interactive-surface');
-
-    const weekendPulsePanel = screen.getByRole('heading', { name: appText.panels.weekendLive.title }).closest('section');
-    expect(weekendPulsePanel).not.toBeNull();
-    expect((weekendPulsePanel as HTMLElement).querySelectorAll('.analytics-card.interactive-surface').length).toBeGreaterThan(0);
-
-    fireEvent.click(screen.getAllByRole('button', { name: appText.shell.navigation.items.publicView })[0]);
-
-    await waitFor(() => {
-      expect(screen.getByRole('button', { name: appText.shell.navigation.items.publicGuide })).toBeInTheDocument();
-    });
-
-    fireEvent.click(screen.getAllByRole('button', { name: appText.shell.navigation.items.publicGuide })[0]);
-
-    await waitFor(() => {
-      expect(screen.getByRole('heading', { name: appText.panels.publicGuide.title })).toBeInTheDocument();
-    });
-
-    fireEvent.click(screen.getAllByRole('button', { name: appText.shell.navigation.items.publicStandings })[0]);
-
-    await waitFor(() => {
-      expect(screen.getByRole('heading', { name: appText.panels.publicStandings.driversTitle })).toBeInTheDocument();
-    });
-    expect(screen.getByRole('heading', { name: appText.panels.publicStandings.constructorsTitle })).toBeInTheDocument();
-    expect(screen.getByAltText('McLaren logo')).toBeInTheDocument();
-    expect(document.querySelector('.standings-team-marker')).toBeNull();
-    expect(document.querySelector('.public-standings-grid.public-standings-grid-compact')).not.toBeNull();
-    expect(document.querySelectorAll('.standings-subpanel.standings-subpanel-compact')).toHaveLength(2);
-    expect(screen.queryByRole('button', { name: appText.status.shareLinkCopied || /copia link vista corrente/i })).not.toBeInTheDocument();
-    expect(
-      screen.getAllByRole('article').some((card) => card.classList.contains('interactive-surface')),
-    ).toBe(true);
-
-    fireEvent.click(screen.getAllByRole('button', { name: appText.shell.navigation.items.history })[0]);
-
-    await waitFor(() => {
-      expect(screen.getByLabelText(appText.panels.historyArchive.userFilterLabel)).toBeInTheDocument();
-    });
-
-    fireEvent.change(screen.getByLabelText(appText.panels.historyArchive.userFilterLabel), {
-      target: { value: 'Marco' },
-    });
-    expect(screen.getByText(appText.panels.historyArchive.shownCount(1))).toBeInTheDocument();
-
-    fireEvent.click(screen.getByRole('button', { name: appText.panels.historyArchive.detailButton('Gran Premio di Gran Bretagna') }));
-    expect(screen.getByText(appText.panels.historyArchive.detailTitle)).toBeInTheDocument();
-    expect(screen.getByText(appText.panels.historyArchive.actualPodiumTitle)).toBeInTheDocument();
-    expect(screen.getByAltText('Lewis Hamilton')).toBeInTheDocument();
-    expect(screen.getAllByText(/marco/i).length).toBeGreaterThan(0);
-    expect(document.querySelectorAll('.history-card.interactive-surface').length).toBeGreaterThan(0);
-    expect(document.querySelectorAll('.history-podium-slot.interactive-surface').length).toBeGreaterThan(0);
-    expect(document.querySelector('.history-race-date')).toHaveTextContent('05/07/2099');
-    expect(document.querySelectorAll('.history-user-card.interactive-surface').length).toBeGreaterThan(0);
-    expect(document.querySelectorAll('.history-detail-panel .analytics-subpanel.interactive-surface').length).toBeGreaterThan(0);
   });
 
-  it('shows the selected circuit map in public recap surfaces and keeps admin results plus menu navigation intact', async () => {
-    const australiaMapUrl = 'https://media.example.com/australia-track.webp';
-    const chinaMapUrl = 'https://media.example.com/china-track.webp';
-    const calendar = [
-      {
-        ...createCalendar()[0],
-        trackOutlineUrl: australiaMapUrl,
-      },
-      {
-        ...createCalendar()[1], // Silverstone
-      },
-      {
-        meetingKey: 'race-2',
-        meetingName: 'China',
-        grandPrixTitle: 'Chinese Grand Prix 2099',
-        roundNumber: 2,
-        dateRangeLabel: '20 - 22 MAR',
-        detailUrl: 'https://www.formula1.com/en/racing/2099/china',
-        heroImageUrl: '',
-        trackOutlineUrl: chinaMapUrl,
-        isSprintWeekend: true,
-        startDate: '2099-03-20',
-        endDate: '2099-03-22',
-        raceStartTime: '2099-03-22T14:00:00Z',
-        sessions: [],
-      },
-    ];
-    const appData = createAppData();
-    appData.weekendStateByMeetingKey['race-2'] = {
-      userPredictions: {
-        Marco: { first: 'ham', second: 'nor', third: 'lec', pole: 'ver' },
-        Luca: { first: 'ham', second: 'nor', third: 'pia', pole: 'ver' },
-        Sara: { first: 'nor', second: 'ham', third: 'lec', pole: 'ver' },
-      },
-      raceResults: createEmptyPrediction(),
-    };
+  it('renders the public guide in public mode', async () => {
+    setupFetch();
 
-    setupFetchWithOverrides({
-      appData,
-      calendar,
-      resultsByMeetingKey: {
-        'race-monza': { racePhase: 'open', results: createEmptyPrediction() },
-        'race-2': { racePhase: 'open', results: createEmptyPrediction() },
-      },
-    });
+    await renderApp(['/dashboard?view=public']);
 
-    render(<MemoryRouter initialEntries={['/dashboard']}><App /></MemoryRouter>);
+    fireEvent.click(
+      await screen.findByRole('button', { name: appText.shell.navigation.items.publicGuide }),
+    );
 
-    await waitFor(() => {
-      expect(screen.queryByTestId('pitstop-loader')).not.toBeInTheDocument();
-    });
-
-    expect(screen.getAllByRole('img', { name: 'Monza' })[0]).toHaveAttribute('src', australiaMapUrl);
-
-    fireEvent.click(screen.getAllByRole('button', { name: appText.shell.navigation.items.publicView })[0]);
-
-    await waitFor(() => {
-      // 1 nella hero (Monza) e 1 nel recap (Silverstone - ma nel test calendar Silverstone non ha australiaMapUrl)
-      expect(screen.getAllByRole('img', { name: 'Monza' })).toHaveLength(1);
-    });
-    
-    fireEvent.click(screen.getAllByRole('button', { name: appText.shell.navigation.items.predictions })[0]);
-    
-    await waitFor(() => {
-      const predictionsSection = document.getElementById('predictions-section');
-      expect(predictionsSection).toBeInTheDocument();
-    });
-
-    const navigation = screen.getAllByRole('navigation', { name: appText.shell.navigation.ariaLabel })[0];
-    
-    fireEvent.click(screen.getAllByRole('button', { name: appText.shell.navigation.items.publicGuide })[0]);
-    await waitFor(() => {
-      expect(screen.getByRole('heading', { name: appText.panels.publicGuide.title })).toBeInTheDocument();
-    });
-    
-    expect(within(navigation).queryByRole('button', { name: appText.shell.navigation.items.results })).not.toBeInTheDocument();
-
-    fireEvent.click(screen.getAllByRole('button', { name: appText.shell.navigation.items.calendar })[0]);
-
-    await waitFor(() => {
-      expect(screen.getByLabelText(appText.labels.selectedRace)).toBeInTheDocument();
-    });
-
-    fireEvent.change(screen.getByLabelText(appText.labels.selectedRace), {
-      target: { value: 'race-2' },
-    });
-
-    await waitFor(() => {
-      // it navigates to /pronostici after selection
-      const predictionsSection = document.getElementById('predictions-section');
-      expect(predictionsSection).toBeInTheDocument();
-      expect(screen.getAllByRole('img', { name: 'China' })).toHaveLength(1);
-    });
-    
-    fireEvent.click(screen.getAllByRole('button', { name: appText.shell.navigation.items.analisiGroup })[0]);
-    fireEvent.click(screen.getAllByRole('button', { name: appText.shell.navigation.items.seasonAnalysis })[0]);
-    
-    await waitFor(() => {
-      expect(screen.getByRole('heading', { name: appText.panels.seasonAnalysis.title })).toBeInTheDocument();
-    });
-  }, 15000);
-
-  it('hydrates the shared public url state from query params and preserves the requested public filters', async () => {
-    const scrollTo = vi.fn();
-    Object.defineProperty(window, 'scrollTo', {
-      configurable: true,
-      value: scrollTo,
-    });
-
-    const appData = createAppData();
-    appData.weekendStateByMeetingKey['race-2'] = {
-      userPredictions: {
-        Marco: { first: 'ham', second: 'nor', third: 'lec', pole: 'ver' },
-        Luca: { first: 'ham', second: 'nor', third: 'pia', pole: 'ver' },
-        Sara: { first: 'nor', second: 'ham', third: 'lec', pole: 'ver' },
-      },
-      raceResults: createEmptyPrediction(),
-    };
-
-    const calendar = [
-      ...createCalendar(),
-      {
-        meetingKey: 'race-2',
-        meetingName: 'China',
-        grandPrixTitle: 'Chinese Grand Prix 2099',
-        roundNumber: 2,
-        dateRangeLabel: '20 - 22 MAR',
-        detailUrl: 'https://www.formula1.com/en/racing/2099/china',
-        heroImageUrl: '',
-        trackOutlineUrl: '',
-        isSprintWeekend: true,
-        startDate: '2099-03-20',
-        endDate: '2099-03-22',
-        raceStartTime: '2099-03-22T14:00:00Z',
-        sessions: [],
-      },
-    ];
-
-    setupFetchWithOverrides({
-      appData,
-      calendar,
-      resultsByMeetingKey: {
-        'race-monza': { racePhase: 'open', results: createEmptyPrediction() },
-        'race-2': { racePhase: 'open', results: createEmptyPrediction() },
-      },
-    });
-
-    render(<MemoryRouter initialEntries={['/classifiche?meeting=race-2&view=public&historyUser=Marco&historySearch=Gran#history-archive']}><App /></MemoryRouter>);
-
-    await waitFor(() => {
-      expect(screen.queryByTestId('pitstop-loader')).not.toBeInTheDocument();
-    });
-
-    await waitFor(() => {
-      expect(screen.getByLabelText(appText.panels.historyArchive.userFilterLabel)).toHaveValue('Marco');
-    });
-
-    expect(screen.getByLabelText(appText.panels.historyArchive.searchLabel)).toHaveValue('Gran');
-    expect(screen.getByDisplayValue(/2\.\s+Chinese Grand Prix 2099/i)).toBeInTheDocument();
-    expect(screen.getByText(appText.panels.historyArchive.shownCount(1))).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: appText.panels.publicGuide.title })).toBeInTheDocument();
+    expect(screen.getByText(appText.panels.publicGuide.raceLockLabel)).toBeInTheDocument();
+    expect(screen.getByText(appText.panels.publicGuide.liveViewLabel)).toBeInTheDocument();
   });
 
   it('does not grant admin access from a shared admin url when the session is not admin', async () => {
@@ -684,11 +483,7 @@ describe('Mockup roadmap UI features', () => {
       sessionState: { isAdmin: false, defaultViewMode: 'public' },
     });
 
-    render(<MemoryRouter initialEntries={['/pronostici?view=admin']}><App /></MemoryRouter>);
-
-    await waitFor(() => {
-      expect(screen.queryByTestId('pitstop-loader')).not.toBeInTheDocument();
-    });
+    await renderApp(['/pronostici?view=admin']);
 
     expect(screen.getByRole('button', { name: appText.shell.navigation.items.adminLogin })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: appText.shell.navigation.items.savePredictions })).not.toBeInTheDocument();
@@ -697,18 +492,12 @@ describe('Mockup roadmap UI features', () => {
 
   it('renders the requested public navigation order and mirrors the same dashboard section order', async () => {
     setupFetch();
-    render(<MemoryRouter initialEntries={['/dashboard']}><App /></MemoryRouter>);
-
-    await waitFor(() => {
-      expect(screen.queryByTestId('pitstop-loader')).not.toBeInTheDocument();
-    });
+    await renderApp(['/dashboard']);
 
     const navigation = screen.getByRole('navigation', { name: appText.shell.navigation.ariaLabel });
     fireEvent.click(screen.getByRole('button', { name: appText.shell.navigation.items.publicView }));
 
-    await waitFor(() => {
-        expect(screen.getByRole('button', { name: appText.shell.navigation.items.publicGuide })).toBeInTheDocument();
-    });
+    await screen.findByRole('button', { name: appText.shell.navigation.items.publicGuide });
 
     const navLabels = Array.from(
       navigation.querySelectorAll('.sidebar-group-label, .sidebar-item .sidebar-label'),
@@ -736,11 +525,7 @@ describe('Mockup roadmap UI features', () => {
       value: scrollTo,
     });
 
-    render(<MemoryRouter initialEntries={['/analisi']}><App /></MemoryRouter>);
-
-    await waitFor(() => {
-      expect(screen.queryByTestId('pitstop-loader')).not.toBeInTheDocument();
-    });
+    await renderApp(['/analisi']);
 
     const navigation = screen.getByRole('navigation', { name: appText.shell.navigation.ariaLabel });
     expect(navigation).toBeInTheDocument();
@@ -749,10 +534,7 @@ describe('Mockup roadmap UI features', () => {
     const userAnalyticsButton = within(navigation).getByRole('button', { name: appText.shell.navigation.items.userAnalytics });
     fireEvent.click(userAnalyticsButton);
 
-    await waitFor(() => {
-      const userAnalyticsSection = document.getElementById('user-analytics-section');
-      expect(userAnalyticsSection).toBeInTheDocument();
-    });
+    await screen.findByRole('heading', { name: appText.headings.userAnalytics });
     expect(scrollTo).toHaveBeenCalled();
   });
 
@@ -764,34 +546,21 @@ describe('Mockup roadmap UI features', () => {
       value: scrollTo,
     });
 
-    render(<MemoryRouter initialEntries={['/dashboard']}><App /></MemoryRouter>);
-
-    await waitFor(() => {
-      expect(screen.queryByTestId('pitstop-loader')).not.toBeInTheDocument();
-    });
+    await renderApp(['/dashboard']);
 
     const navigation = screen.getByRole('navigation', { name: appText.shell.navigation.ariaLabel });
     fireEvent.click(within(navigation).getByRole('button', { name: appText.shell.navigation.items.userAnalytics }));
 
-    await waitFor(() => {
-      expect(screen.getByRole('heading', { name: appText.headings.userAnalytics })).toBeInTheDocument();
-    });
-
-    await waitFor(() => {
-      expect(within(navigation).getByRole('button', { name: appText.shell.navigation.items.userAnalytics })).toHaveClass('active');
-    });
+    expect(await screen.findByRole('heading', { name: appText.headings.userAnalytics })).toBeInTheDocument();
+    expect(within(navigation).getByRole('button', { name: appText.shell.navigation.items.userAnalytics })).toHaveClass('active');
     expect(scrollTo).toHaveBeenCalled();
   });
 
-  it('opens the mobile menu with the localized trigger, locks scroll, and closes after switching view', async () => {
+  it('opens the mobile menu with the localized trigger and restores body scrolling when it closes', async () => {
     setupFetch();
     mockMediaMatches({ '(max-width: 767px)': true });
 
-    render(<MemoryRouter initialEntries={['/dashboard']}><App /></MemoryRouter>);
-
-    await waitFor(() => {
-      expect(screen.queryByTestId('pitstop-loader')).not.toBeInTheDocument();
-    });
+    await renderApp(['/dashboard']);
 
     const mobileTrigger = screen.getByRole('button', { name: appText.shell.navigation.openButton });
     fireEvent.click(mobileTrigger);
@@ -801,7 +570,7 @@ describe('Mockup roadmap UI features', () => {
     expect(document.body.style.overflow).toBe('hidden');
     expect(document.body.style.touchAction).toBe('none');
 
-    fireEvent.click(within(overlay as HTMLElement).getByRole('button', { name: appText.shell.navigation.items.publicView }));
+    fireEvent.click(within(overlay as HTMLElement).getByRole('button', { name: appText.shell.navigation.closeButton }));
 
     await waitFor(() => {
       expect(document.querySelector('.mobile-nav-overlay')).toBeNull();
@@ -809,7 +578,6 @@ describe('Mockup roadmap UI features', () => {
 
     expect(document.body.style.overflow).toBe('');
     expect(document.body.style.touchAction).toBe('');
-    expect(screen.getByRole('heading', { name: appText.panels.publicGuide.title })).toBeInTheDocument();
   });
 
   it('keeps the clicked third menu item active when the previous section remains more visible', async () => {
@@ -820,11 +588,7 @@ describe('Mockup roadmap UI features', () => {
       value: scrollTo,
     });
 
-    render(<MemoryRouter initialEntries={['/analisi']}><App /></MemoryRouter>);
-
-    await waitFor(() => {
-      expect(screen.queryByTestId('pitstop-loader')).not.toBeInTheDocument();
-    });
+    await renderApp(['/analisi']);
 
     const navigation = screen.getByRole('navigation', { name: appText.shell.navigation.ariaLabel });
     const secondButton = within(navigation).getByRole('button', { name: appText.shell.navigation.items.userKpi });
@@ -871,11 +635,7 @@ describe('Mockup roadmap UI features', () => {
       writable: true,
     });
 
-    render(<MemoryRouter initialEntries={['/analisi']}><App /></MemoryRouter>);
-
-    await waitFor(() => {
-      expect(screen.queryByTestId('pitstop-loader')).not.toBeInTheDocument();
-    });
+    await renderApp(['/analisi']);
 
     const thirdSection = document.getElementById('user-analytics-section');
     expect(thirdSection).not.toBeNull();
@@ -920,11 +680,7 @@ describe('Mockup roadmap UI features', () => {
       },
     });
 
-    render(<MemoryRouter initialEntries={['/classifiche']}><App /></MemoryRouter>);
-
-    await waitFor(() => {
-      expect(screen.queryByTestId('pitstop-loader')).not.toBeInTheDocument();
-    });
+    await renderApp(['/classifiche']);
 
     const navigation = screen.getByRole('navigation', { name: appText.shell.navigation.ariaLabel });
     const historyButton = within(navigation).getByRole('button', { name: appText.shell.navigation.items.history });

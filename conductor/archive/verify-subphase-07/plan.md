@@ -59,6 +59,6 @@ segnato come completed, certifichiamo la verifica).
 - [ ] **Step 2: Commit dei risultati della verifica**
 
 ```bash
-git add conductor/tracks/verify-subphase-07/
+git add conductor/archive/verify-subphase-07/
 git commit -m "verify: subphase 07 formal verification audit"
 ```

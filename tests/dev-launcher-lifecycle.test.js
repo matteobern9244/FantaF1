@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 import fs from 'node:fs';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
@@ -39,10 +40,11 @@ describe('dev launcher Chrome lifecycle tracking', () => {
     expect(launcherScript).toMatch(/export FANTAF1_LOCAL_RUNTIME="\$\{FANTAF1_LOCAL_RUNTIME:-csharp-dev\}"/);
   });
 
-  it('runs the responsive browser check inside the monitored launcher preflight', () => {
+  it('does not run the responsive browser check inside the monitored launcher preflight', () => {
     const launcherScript = fs.readFileSync(startCommandPath, 'utf8');
 
-    expect(launcherScript).toMatch(/npm run test:ui-responsive/);
+    expect(launcherScript).toContain('#run_step "Eseguo validazione UI responsive" npm run test:ui-responsive');
+    expect(launcherScript).not.toMatch(/^[^#\n]*npm run test:ui-responsive/m);
   });
 
   it('passes through the local launcher env for non-node targets even if the parent env is production', async () => {
