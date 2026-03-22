@@ -42,7 +42,7 @@ public sealed class PushNotificationsEndpointTests
                 {
                     configurationBuilder.AddInMemoryCollection(new Dictionary<string, string?>
                     {
-                        ["MONGODB_URI"] = "mongodb+srv://user:pass@cluster.mongodb.net/fantaf1_staging?retryWrites=true&w=majority",
+                        ["MONGODB_URI"] = "mongodb+srv://user:pass@cluster.mongodb.net/fantaf1_dev?retryWrites=true&w=majority",
                         [AdminSessionContract.SessionSecretEnvironmentVariableName] = "integration-admin-secret",
                         ["Bootstrap:DisableHostedService"] = "true",
                     });

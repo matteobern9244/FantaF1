@@ -22,7 +22,7 @@ public sealed class HealthEndpointTests
             environmentName: "Development",
             configurationValues: new Dictionary<string, string?>
             {
-                ["MONGODB_URI"] = "mongodb+srv://user:pass@cluster.mongodb.net/fantaf1_staging?retryWrites=true&w=majority",
+                ["MONGODB_URI"] = "mongodb+srv://user:pass@cluster.mongodb.net/fantaf1_dev?retryWrites=true&w=majority",
             });
         using var client = factory.CreateClient();
 
@@ -38,17 +38,17 @@ public sealed class HealthEndpointTests
         Assert.Equal(DateTimeOffset.UtcNow.Year.ToString(), payload["year"]?.ToString());
         Assert.Equal("1", payload["dbState"]?.ToString());
         Assert.Equal("development", payload["environment"]?.ToString());
-        Assert.Equal("fantaf1_staging", payload["databaseTarget"]?.ToString());
+        Assert.Equal("fantaf1_dev", payload["databaseTarget"]?.ToString());
     }
 
     [Fact]
-    public async Task Development_health_endpoint_supports_the_isolated_local_development_database_when_the_override_declares_it()
+    public async Task Development_health_endpoint_supports_the_ci_database_when_the_override_declares_it()
     {
         await using var factory = CreateFactory(
             environmentName: "Development",
             configurationValues: new Dictionary<string, string?>
             {
-                ["MONGODB_DB_NAME_OVERRIDE"] = "fantaf1_local_dev",
+                ["MONGODB_DB_NAME_OVERRIDE"] = "fantaf1_ci",
             });
         using var client = factory.CreateClient();
 
@@ -56,7 +56,7 @@ public sealed class HealthEndpointTests
 
         Assert.NotNull(payload);
         Assert.Equal("development", payload["environment"]?.ToString());
-        Assert.Equal("fantaf1_local_dev", payload["databaseTarget"]?.ToString());
+        Assert.Equal("fantaf1_ci", payload["databaseTarget"]?.ToString());
     }
 
     [Fact]
@@ -70,24 +70,6 @@ public sealed class HealthEndpointTests
         Assert.NotNull(payload);
         Assert.Equal("staging", payload["environment"]?.ToString());
         Assert.Equal("fantaf1_staging", payload["databaseTarget"]?.ToString());
-    }
-
-    [Fact]
-    public async Task Staging_health_endpoint_supports_the_local_smoke_porting_database_when_the_override_declares_it()
-    {
-        await using var factory = CreateFactory(
-            environmentName: "Staging",
-            configurationValues: new Dictionary<string, string?>
-            {
-                ["MONGODB_DB_NAME_OVERRIDE"] = "fantaf1_local_staging",
-            });
-        using var client = factory.CreateClient();
-
-        var payload = await client.GetFromJsonAsync<Dictionary<string, object>>("/api/health");
-
-        Assert.NotNull(payload);
-        Assert.Equal("staging", payload["environment"]?.ToString());
-        Assert.Equal("fantaf1_local_staging", payload["databaseTarget"]?.ToString());
     }
 
     [Fact]

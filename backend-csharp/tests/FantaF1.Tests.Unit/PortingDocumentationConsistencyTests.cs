@@ -58,8 +58,7 @@ public sealed class PortingDocumentationConsistencyTests
         Assert.Contains("stato globale del gioco (`appdatas`)", readme, StringComparison.Ordinal);
         Assert.Contains("cache standings piloti/costruttori (`standingscaches`)", readme, StringComparison.Ordinal);
         Assert.Contains("credenziali admin hashate e metadata auth (`admincredentials`)", readme, StringComparison.Ordinal);
-        Assert.Contains("fantaf1_local_dev", readme, StringComparison.Ordinal);
-        Assert.Contains("fantaf1_local_staging", readme, StringComparison.Ordinal);
+        Assert.Contains("fantaf1_dev", readme, StringComparison.Ordinal);
         Assert.Contains("I runner locali mutanti non devono mai toccare `fantaf1` o `fantaf1_staging`.", readme, StringComparison.Ordinal);
         Assert.Contains("local mutating runners must never target shared databases", project, StringComparison.Ordinal);
     }

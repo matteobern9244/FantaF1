@@ -18,7 +18,8 @@
     "test:save-local": "node scripts/save-local-check.mjs",
     "test:ui-responsive": "node scripts/ui-responsive-check.mjs",
     "format:csharp": "dotnet format backend-csharp/FantaF1.Backend.sln",
-    "format:csharp:check": "dotnet format backend-csharp/FantaF1.Backend.sln --verify-no-changes"
+    "format:csharp:check": "dotnet format backend-csharp/FantaF1.Backend.sln --verify-no-changes",
+    "db:sync": "node scripts/db-sync.mjs"
   },
   "dependencies": {
     "dotenv": "^17.3.1",

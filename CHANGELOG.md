@@ -4,6 +4,14 @@ Cronologia sintetica delle release documentate del progetto Fanta Formula 1.
 
 ## [Unreleased]
 
+- **Riorganizzazione Database MongoDB Atlas**: consolidati i database Atlas da 5
+  a 4. Rimossi `fantaf1_local_dev` e `fantaf1_local_staging` (legacy). Creato
+  `fantaf1_dev` come database di sviluppo locale. Il default Development ora
+  punta a `fantaf1_dev` anziche' `fantaf1_staging`. Rimosso il target locale
+  `csharp-staging-local`. Aggiunto script `db-sync.mjs` per backup/restore tra
+  database via `mongodump`/`mongorestore`. Aggiornata matrice ambiente, test e
+  documentazione.
+
 - **Fix Loop Infinito Dropdown Filtro Utente in Storico Gare**: corretto il
   loop infinito di re-render che si attivava selezionando un valore dal
   dropdown filtro utente (o digitando nel campo ricerca) nella pagina

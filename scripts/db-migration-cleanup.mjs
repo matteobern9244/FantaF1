@@ -23,7 +23,7 @@ async function run() {
 
     console.log('Database trovati:', dbNames.join(', '));
 
-    const databasesToDelete = ['fantaf1_dev', 'fantaf1_porting'];
+    const databasesToDelete = ['fantaf1_local_dev', 'fantaf1_local_staging'];
 
     for (const dbName of databasesToDelete) {
       if (dbNames.includes(dbName)) {

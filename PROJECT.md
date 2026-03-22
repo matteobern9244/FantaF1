@@ -149,8 +149,8 @@ Rules:
   running locally
 - local mutating runners must never target shared databases such as `fantaf1` or
   `fantaf1_staging`
-- local C# runtime targets must use isolated databases (`fantaf1_local_dev`,
-  `fantaf1_local_staging`) through explicit overrides
+- local C# runtime targets must use the isolated development database
+  (`fantaf1_dev`) through explicit overrides
 - local fixes must not introduce production-only or local-only scoring
   divergence
 - `start_fantaf1.command` is the canonical local launcher: it must remain valid,

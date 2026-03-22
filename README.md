@@ -345,17 +345,6 @@ diventare visibile.
   - usata dai runner locali e dalla CI per forzare un database isolato
   - non va usata per puntare a `fantaf1` o `fantaf1_staging`
 
-### Seed admin locale production-like
-
-Il target locale `csharp-staging-local` usa seed runtime non versionati come
-plaintext:
-
-- `AdminCredentialSeed__PasswordSalt`
-- `AdminCredentialSeed__PasswordHashHex`
-
-Queste variabili vengono generate dai runner locali; non vanno impostate
-manualmente su Render.
-
 ## Matrice ambiente esplicita
 
 ### Locale `csharp-dev`
@@ -363,26 +352,10 @@ manualmente su Render.
 - `MONGODB_URI`: obbligatoria, base URI Atlas o locale
 - `ADMIN_SESSION_SECRET`: obbligatoria
 - `ASPNETCORE_ENVIRONMENT`: forzata a `Development` dal launcher
-- `MONGODB_DB_NAME_OVERRIDE`: forzata a `fantaf1_local_dev` dal tooling locale
+- `MONGODB_DB_NAME_OVERRIDE`: forzata a `fantaf1_dev` dal tooling locale
 - `PORT`: non necessaria nel launcher locale canonico; l'host locale usa `3002`
 - `Frontend__BuildPath`: non necessaria in split mode
 - `VITE_APP_LOCAL_NAME`: opzionale
-
-### Locale `csharp-staging-local`
-
-- `MONGODB_URI`: obbligatoria, base URI Atlas o locale
-- `ADMIN_SESSION_SECRET`: obbligatoria
-- `ASPNETCORE_ENVIRONMENT`: forzata a `Staging`
-- `MONGODB_DB_NAME_OVERRIDE`: forzata a `fantaf1_local_staging`
-- `PORT`: non necessaria; l'host locale usa `3003`
-- `Frontend__BuildPath`: gestita dal runtime same-origin locale
-- `VITE_APP_LOCAL_NAME`: opzionale
-
-Questo target e' il runbook corretto per simulare `staging` in locale senza
-toccare Render staging. La verifica staging-like same-origin usa:
-
-- `SAVE_SMOKE_TARGET=csharp-staging-local node scripts/save-local-check.mjs`
-- `UI_RESPONSIVE_TARGET=csharp-staging-local npm run test:ui-responsive`
 
 Contratto operativo del browser check responsive:
 
@@ -585,8 +558,7 @@ I runner locali mutanti non devono mai toccare `fantaf1` o `fantaf1_staging`.
 
 Target supportati:
 
-- `csharp-dev` -> `fantaf1_local_dev`
-- `csharp-staging-local` -> `fantaf1_local_staging`
+- `csharp-dev` -> `fantaf1_dev`
 
 Se `MONGODB_URI` contiene un database condiviso, i runner locali:
 
