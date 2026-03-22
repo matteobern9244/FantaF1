@@ -21,7 +21,7 @@ documentation with the merged runtime state.
 ## Non-Functional Requirements
 
 - Strict compliance with `AGENTS.md`, including TDD, complete validation, and
-  100% coverage preservation.
+  80% coverage preservation.
 - Minimal-scope release integration with no unrelated refactors.
 - No regressions across desktop, mobile, development, or production-like flows.
 
@@ -36,7 +36,7 @@ documentation with the merged runtime state.
 - [x] Conductor contains a dedicated closed track for this merge/release
       integration.
 - [x] Full validation completes green with official frontend and backend
-      coverage preserved at 100%.
+      coverage preserved at 80%.
 
 ## Out of Scope
 

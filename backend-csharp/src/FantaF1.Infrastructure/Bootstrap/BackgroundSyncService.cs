@@ -10,22 +10,31 @@ public sealed class BackgroundSyncService : IBackgroundSyncService
     private readonly OfficialDriverSyncService _driverSyncService;
     private readonly OfficialCalendarSyncService _calendarSyncService;
     private readonly IStandingsSyncService _standingsSyncService;
+    private readonly Microsoft.Extensions.Configuration.IConfiguration _configuration;
     private readonly ILogger<BackgroundSyncService> _logger;
 
     public BackgroundSyncService(
         OfficialDriverSyncService driverSyncService,
         OfficialCalendarSyncService calendarSyncService,
         IStandingsSyncService standingsSyncService,
+        Microsoft.Extensions.Configuration.IConfiguration configuration,
         ILogger<BackgroundSyncService> logger)
     {
         _driverSyncService = driverSyncService ?? throw new ArgumentNullException(nameof(driverSyncService));
         _calendarSyncService = calendarSyncService ?? throw new ArgumentNullException(nameof(calendarSyncService));
         _standingsSyncService = standingsSyncService ?? throw new ArgumentNullException(nameof(standingsSyncService));
+        _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
     public async Task RunAsync(CancellationToken cancellationToken)
     {
+        if (string.Equals(_configuration["Bootstrap:DisableSync"], "true", StringComparison.OrdinalIgnoreCase))
+        {
+            _logger.LogInformation("Background synchronization is disabled via configuration (Bootstrap:DisableSync).");
+            return;
+        }
+
         try
         {
             await _driverSyncService.SyncAsync(cancellationToken);

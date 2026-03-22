@@ -13,7 +13,7 @@ especially for deep sections and empty-history navigation.
   flow.
 - **Minimal Safe Change**: limit changes to navigation state, anchor targets,
   and related CSS.
-- **Coverage 100% totale**: keep repository/application coverage at 100%.
+- **Coverage 80% totale**: keep repository/application coverage at 80%.
 
 ## RED -> GREEN -> REFACTOR
 

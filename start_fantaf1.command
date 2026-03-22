@@ -5,6 +5,7 @@ cd "$(dirname "$0")"
 
 export NODE_ENV=development
 export FANTAF1_LOCAL_RUNTIME="${FANTAF1_LOCAL_RUNTIME:-csharp-dev}"
+# run_step "Eseguo validazione UI responsive" npm run test:ui-responsive
 
 readonly APP_TITLE="Fanta Formula 1"
 readonly STARTUP_TIMEOUT_SECONDS=45
@@ -110,9 +111,9 @@ check_mongodb() {
   fi
 
   echo "Tentativo di connessione a MongoDB..."
-  if ! node -e "
+  if ! MONGODB_URI="$uri" node --input-type=module -e "
     import { MongoClient } from 'mongodb';
-    const uri = '$uri';
+    const uri = process.env.MONGODB_URI;
     const client = new MongoClient(uri, { serverSelectionTimeoutMS: 5000 });
     try {
       await client.connect();
@@ -121,7 +122,7 @@ check_mongodb() {
       console.error(err.message);
       process.exit(1);
     }
-  " --input-type=module; then
+  "; then
     echo "ERRORE: Impossibile connettersi a MongoDB." >&2
     echo "Verifica la tua connessione internet e le credenziali in .env." >&2
     return 1
@@ -139,7 +140,7 @@ fi
 run_step "Verifico MongoDB" check_mongodb
 run_step "Build Backend" dotnet build backend-csharp/FantaF1.Backend.sln -c Release
 run_step "Build Frontend" npm run build  
-#run_step "Eseguo validazione UI responsive" npm run test:ui-responsive
+# run_step "Eseguo validazione UI responsive" npm run test:ui-responsive
 
 backend_log="$(mktemp -t fantaf1-preflight-backend.XXXXXX.log)"
 frontend_log="$(mktemp -t fantaf1-preflight-frontend.XXXXXX.log)"

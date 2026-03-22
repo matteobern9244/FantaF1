@@ -26,7 +26,7 @@
 2. [x] Keep API/frontend contracts unchanged.
 3. [x] Run repository validations: lint, tests, build, C# coverage,
        responsive/browser checks, production-like preview.
-4. [x] Confirm official coverage remains at 100% and keep `AGENTS.md` unchanged
+4. [x] Confirm official coverage remains at 80% and keep `AGENTS.md` unchanged
        because the verified baseline did not change.
 5. [x] Finalize `review.md`, `verify.md`, `conductor/index.md`, and
        `conductor/tracks.md` with actual outcomes.

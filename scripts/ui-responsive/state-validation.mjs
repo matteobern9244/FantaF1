@@ -1,27 +1,35 @@
 import { uiShellPollIntervalMs, uiShellTimeoutMs } from './config.mjs';
 import { fail, stringifyDiagnostics } from './diagnostics.mjs';
 
-function sleepSync(durationMs) {
-  Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, durationMs);
+function sleep(durationMs) {
+  return new Promise((resolve) => {
+    setTimeout(resolve, durationMs);
+  });
 }
 
 function isAppShellReady(pageInfo) {
   const selectors = pageInfo?.selectors ?? {};
+  const routeContentPresent =
+    Boolean(selectors.calendarPanel) ||
+    Boolean(selectors.predictionsGrid) ||
+    Boolean(selectors.resultsActions) ||
+    Boolean(selectors.liveScoreValue) ||
+    Boolean(selectors.pointsPreviewValue);
 
   return (
     Boolean(pageInfo) &&
     !pageInfo.loadingShell &&
     Boolean(selectors.heroPanel) &&
     Boolean(selectors.heroSummaryGrid) &&
-    Boolean(selectors.calendarPanel) &&
-    Boolean(selectors.predictionsGrid) &&
-    Boolean(selectors.appFooter)
+    Boolean(selectors.appFooter) &&
+    Boolean(selectors.sectionNav) &&
+    routeContentPresent
   );
 }
 
-function waitForAppShell({
+async function waitForAppShell({
   getPageInfoImpl,
-  sleepSyncImpl = sleepSync,
+  sleepImpl = sleep,
   timeoutMs = uiShellTimeoutMs,
   pollInterval = uiShellPollIntervalMs,
   failureMessage = 'Shell UI principale non pronta entro il timeout previsto.',
@@ -31,7 +39,7 @@ function waitForAppShell({
 
   while (Date.now() - startedAt < timeoutMs) {
     try {
-      lastPageInfo = getPageInfoImpl();
+      lastPageInfo = await getPageInfoImpl();
       if (isAppShellReady(lastPageInfo)) {
         return lastPageInfo;
       }
@@ -39,17 +47,17 @@ function waitForAppShell({
       // Retry until timeout
     }
 
-    sleepSyncImpl(pollInterval);
+    await sleepImpl(pollInterval);
   }
 
   fail(failureMessage, lastPageInfo ? stringifyDiagnostics(lastPageInfo) : undefined);
 }
 
-function waitForEvaluatedCondition(
+async function waitForEvaluatedCondition(
   expression,
   {
     evaluateJsonImpl,
-    sleepSyncImpl = sleepSync,
+    sleepImpl = sleep,
     timeoutMs = 30000,
     pollInterval = 250,
     failureMessage = 'Condizione UI non raggiunta in tempo.',
@@ -59,17 +67,38 @@ function waitForEvaluatedCondition(
 
   while (Date.now() - startedAt < timeoutMs) {
     try {
-      if (evaluateJsonImpl(expression) === true) {
+      if (await evaluateJsonImpl(expression, { timeoutMs }) === true) {
         return;
       }
     } catch {
       // Retry until timeout
     }
 
-    sleepSyncImpl(pollInterval);
+    await sleepImpl(pollInterval);
   }
 
   fail(failureMessage);
+}
+
+function inferRoutePath(state) {
+  const explicitRoutePath = typeof state?.routePath === 'string' ? state.routePath : '';
+  if (explicitRoutePath) {
+    return explicitRoutePath;
+  }
+
+  if (state?.mainSections?.predictions || state?.mainSections?.results) {
+    return '/pronostici';
+  }
+
+  if (state?.mainSections?.calendar || Number(state?.selectedWeekend?.calendarCardCount ?? 0) > 0) {
+    return '/dashboard';
+  }
+
+  if (state?.history?.present) {
+    return '/classifiche';
+  }
+
+  return '/dashboard';
 }
 
 function validateState(
@@ -83,6 +112,12 @@ function validateState(
   } = {},
 ) {
   const failures = [];
+  const routePath = inferRoutePath(state);
+  const isDashboardRoute = routePath === '/dashboard';
+  const isPredictionsRoute = routePath === '/pronostici';
+  const isStandingsRoute = routePath === '/classifiche';
+  const isAnalysisRoute = routePath === '/analisi';
+  const isAdminRoute = routePath === '/admin';
   const usesFormula1 = (fontFamily) => /(?:^|,)\s*["']?Formula1["']?\s*(?:,|$)/i.test(fontFamily);
   const isTransparentColor = (value) => {
     if (!value) {
@@ -98,30 +133,31 @@ function validateState(
   };
   const isPublicView = expectedViewMode === 'public';
   const selectChecks = {
-    common: {
-      'select weekend': state.selects?.meeting,
-      'select KPI utente': state.selects?.insights,
-      'select filtro storico': state.selects?.historyFilter,
-    },
-    adminOnly: {
-      'select pronostici': state.selects?.prediction,
-      'select risultati': state.selects?.result,
-    },
+    ...(isDashboardRoute ? { 'select weekend': state.selects?.meeting } : {}),
+    ...(isAnalysisRoute ? { 'select KPI utente': state.selects?.insights } : {}),
+    ...(isStandingsRoute ? { 'select filtro storico': state.selects?.historyFilter } : {}),
+    ...(!isPublicView && isPredictionsRoute
+      ? {
+          'select pronostici': state.selects?.prediction,
+          'select risultati': state.selects?.result,
+        }
+      : {}),
   };
-  const optionChecks = {
-    adminOnly: {
-      'option pronostici': state.selects?.predictionOption,
-      'option risultati': state.selects?.resultOption,
-    },
-  };
+  const optionChecks =
+    !isPublicView && isPredictionsRoute
+      ? {
+          'option pronostici': state.selects?.predictionOption,
+          'option risultati': state.selects?.resultOption,
+        }
+      : {};
 
   const requiredSections = {
     hero: state.mainSections.hero,
     summary: state.mainSections.summary,
-    calendar: state.mainSections.calendar,
-    predictions: state.mainSections.predictions,
     footer: state.mainSections.footer,
-    ...(isPublicView ? {} : { results: state.mainSections.results }),
+    ...(isDashboardRoute ? { calendar: state.mainSections.calendar } : {}),
+    ...(isPredictionsRoute ? { predictions: state.mainSections.predictions } : {}),
+    ...(isAdminRoute ? { results: state.mainSections.results } : {}),
   };
 
   if (!Object.values(requiredSections).every(Boolean)) {
@@ -177,7 +213,7 @@ function validateState(
 
   for (const [label, details] of Object.entries({
     'punti classifica live': state.typography.liveScoreValue,
-    'valore proiezione gara': state.typography.projectionValue,
+    ...(isPredictionsRoute ? { 'valore proiezione gara': state.typography.projectionValue } : {}),
   })) {
     if (!details.present) {
       failures.push(`Target tipografico mancante: ${label}.`);
@@ -189,14 +225,7 @@ function validateState(
     }
   }
 
-  const selectsToValidate = isPublicView
-    ? selectChecks.common
-    : {
-        ...selectChecks.common,
-        ...selectChecks.adminOnly,
-      };
-
-  for (const [label, details] of Object.entries(selectsToValidate)) {
+  for (const [label, details] of Object.entries(selectChecks)) {
     if (!details?.present) {
       failures.push(`Controllo select mancante: ${label}.`);
       continue;
@@ -225,9 +254,7 @@ function validateState(
     }
   }
 
-  const optionsToValidate = isPublicView ? {} : optionChecks.adminOnly;
-
-  for (const [label, details] of Object.entries(optionsToValidate)) {
+  for (const [label, details] of Object.entries(optionChecks)) {
     if (!details?.present) {
       failures.push(`Controllo option mancante: ${label}.`);
       continue;
@@ -262,39 +289,45 @@ function validateState(
     failures.push(`Tooltip risultati fuori viewport: "${state.tooltip.text}"`);
   }
 
-  if (!state.history.present) {
-    failures.push('Pannello storico non trovato.');
+  if (isStandingsRoute) {
+    if (!state.history.present) {
+      failures.push('Pannello storico non trovato.');
+    }
+
+    if (!isPublicView && state.history.hasCards && state.history.actionButtonCount === 0) {
+      failures.push('Storico presente ma senza action buttons.');
+    }
+
+    if (state.history.hasCards && state.history.clippedButtons.length > 0) {
+      failures.push(
+        `Action buttons dello storico fuori pannello: ${JSON.stringify(state.history.clippedButtons)}`,
+      );
+    }
+
+    if (!state.history.hasCards && !state.history.emptyStateVisible) {
+      failures.push('Storico senza card ma anche senza empty state visibile.');
+    }
   }
 
-  if (!isPublicView && state.history.hasCards && state.history.actionButtonCount === 0) {
-    failures.push('Storico presente ma senza action buttons.');
-  }
-
-  if (state.history.hasCards && state.history.clippedButtons.length > 0) {
-    failures.push(
-      `Action buttons dello storico fuori pannello: ${JSON.stringify(state.history.clippedButtons)}`,
-    );
-  }
-
-  if (!state.history.hasCards && !state.history.emptyStateVisible) {
-    failures.push('Storico senza card ma anche senza empty state visibile.');
-  }
-
-  if (expectedWeekendChangeFrom) {
+  if (isDashboardRoute && expectedWeekendChangeFrom) {
     if (state.selectedWeekend.cardText === expectedWeekendChangeFrom.cardText) {
       failures.push('La card calendario selezionata non e\' cambiata dopo il click su un altro weekend.');
     }
 
-    if (state.selectedWeekend.bannerTitle === expectedWeekendChangeFrom.bannerTitle) {
+    if (
+      state.selectedWeekend.bannerTitle &&
+      expectedWeekendChangeFrom.bannerTitle &&
+      state.selectedWeekend.bannerTitle === expectedWeekendChangeFrom.bannerTitle
+    ) {
       failures.push('Il banner del weekend selezionato non si e\' aggiornato dopo il cambio gara.');
     }
   }
 
-  if (state.selectedWeekend?.highlightsButton?.present && !state.selectedWeekend.highlightsButton.text) {
+  if (isDashboardRoute && state.selectedWeekend?.highlightsButton?.present && !state.selectedWeekend.highlightsButton.text) {
     failures.push('Pulsante highlights presente ma senza testo leggibile.');
   }
 
-  if (state.selectedWeekend?.highlightsButton?.clipped) {
+  if (isDashboardRoute && state.selectedWeekend?.highlightsButton?.clipped) {
     failures.push('Pulsante highlights fuori dal recap del weekend selezionato.');
   }
 
@@ -308,7 +341,7 @@ function validateState(
     failures.push(`Vista corrente inattesa: attesa ${expectedViewMode}, rilevata ${state.viewMode?.current || '(vuota)'}.`);
   }
 
-  if (isPublicView) {
+  if (isPublicView && isPredictionsRoute) {
     if (!state.viewMode?.readonlyBannerPresent) {
       failures.push('Vista pubblica senza banner readonly.');
     }
@@ -316,7 +349,7 @@ function validateState(
     if (!state.viewMode?.publicControlsPresent) {
       failures.push('Vista pubblica senza pannello readonly dedicato.');
     }
-  } else if (expectedViewMode === 'admin' && !state.viewMode?.adminControlsPresent) {
+  } else if (expectedViewMode === 'admin' && (isAdminRoute || isPredictionsRoute) && !state.viewMode?.adminControlsPresent) {
     failures.push('Vista admin senza controlli risultati/modifica.');
   }
 
@@ -325,7 +358,7 @@ function validateState(
       failures.push('Nessuna interactive surface rilevata nella pagina.');
     }
 
-    if (state.interactiveSurfaces.analytics <= 0) {
+    if (isAnalysisRoute && state.interactiveSurfaces.analytics <= 0) {
       failures.push('Nessuna interactive surface analytics rilevata nei riquadri UI.');
     }
   }
@@ -334,18 +367,19 @@ function validateState(
 }
 
 function canSwitchWeekend(state) {
-  return Number(state?.selectedWeekend?.calendarCardCount ?? 0) > 1;
+  const routePath = inferRoutePath(state);
+  return routePath === '/dashboard' && Number(state?.selectedWeekend?.calendarCardCount ?? 0) > 1;
 }
 
 function canSelectSprintWeekend(state) {
-  return Number(state?.selectedWeekend?.sprintCardCount ?? 0) > 0;
+  return inferRoutePath(state) === '/dashboard' && Number(state?.selectedWeekend?.sprintCardCount ?? 0) > 0;
 }
 
 export {
   canSelectSprintWeekend,
   canSwitchWeekend,
   isAppShellReady,
-  sleepSync,
+  sleep,
   validateState,
   waitForAppShell,
   waitForEvaluatedCondition,

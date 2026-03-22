@@ -5,11 +5,9 @@ const DEFAULT_HOST = '127.0.0.1';
 const DEFAULT_PORTS = Object.freeze({
   nodeFrontend: 5173,
   csharpDevelopment: 3002,
-  csharpStaging: 3003,
 });
 const DEFAULT_LOCAL_DATABASES = Object.freeze({
-  csharpDevelopment: 'fantaf1_local_dev',
-  csharpStaging: 'fantaf1_local_staging',
+  csharpDevelopment: 'fantaf1_dev',
 });
 const SHARED_DATABASE_TARGETS = new Set(['fantaf1', 'fantaf1_staging']);
 
@@ -42,34 +40,6 @@ const targetDefinitions = Object.freeze({
     startupEnv: Object.freeze({
       ASPNETCORE_ENVIRONMENT: 'Development',
       ASPNETCORE_URLS: buildUrl(DEFAULT_PORTS.csharpDevelopment),
-    }),
-  }),
-  'csharp-staging-local': Object.freeze({
-    name: 'csharp-staging-local',
-    runtime: 'csharp',
-    frontendMode: 'same-origin',
-    baseUrl: buildUrl(DEFAULT_PORTS.csharpStaging),
-    backendBaseUrl: buildUrl(DEFAULT_PORTS.csharpStaging),
-    backendHealthUrl: buildUrl(DEFAULT_PORTS.csharpStaging, '/api/health'),
-    expectedEnvironment: 'staging',
-    expectedDatabaseTarget: DEFAULT_LOCAL_DATABASES.csharpStaging,
-    busyPorts: [DEFAULT_PORTS.csharpStaging],
-    backendCommand: 'dotnet',
-    backendArgs: [
-      'run',
-      '--project',
-      'backend-csharp/src/FantaF1.Api/FantaF1.Api.csproj',
-      '-c',
-      'Release',
-      '--no-launch-profile',
-    ],
-    startupEnv: Object.freeze({
-      ASPNETCORE_ENVIRONMENT: 'Staging',
-      ASPNETCORE_URLS: buildUrl(DEFAULT_PORTS.csharpStaging),
-    }),
-    adminAuth: Object.freeze({
-      passwordSeedLabel: 'subphase-9-staging-local-admin-password',
-      saltSeedLabel: 'subphase-9-staging-local-admin-salt',
     }),
   }),
 });

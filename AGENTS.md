@@ -62,6 +62,8 @@ Optional helper commands already supported by the repository:
 
 ### Development Conventions
 
+- **Extensive and rigorous use of subagents:** For every request received from
+  the user, subagents must be used strictly and extensively.
 - **Separation Of Concerns:** Keep UI, application orchestration, domain rules,
   infrastructure, and migration glue clearly separated.
 - **Abstraction Naming:** Name adapters, translators, facades, and compatibility
@@ -389,14 +391,15 @@ the repository. Where applicable this includes:
 - Main automated test stack: Vitest (Frontend), xUnit (Backend), and React
   Testing Library.
 - Coverage provider: V8 (Frontend), coverlet (Backend).
-- Current verified merged baseline for the configured official application-code
-  scope is **100% statements (2510 / 2510)**, **100% functions (213 / 213)**,
-  **100% branches (1138 / 1138)**, and **100% lines (2510 / 2510)**, aligned
-  with the thresholds currently documented in `README.md`.
-- Official backend-csharp application coverage on `backend-csharp/src/` is
-  **100% line coverage (3292 / 3292)**, **100% branch coverage (1843 / 1843)**,
-  and **100% method coverage (545 / 545)** across **71 included files**, as
-  reported by `npm run test:csharp-coverage`.
+- The official minimum threshold for the configured application-code scope is
+  **100% statements**, **100% functions**, **100% branches**, and **100%
+  lines**, aligned with the thresholds currently documented in `README.md`.
+- The official minimum threshold for `backend-csharp/src/` is **100% line
+  coverage**, **100% branch coverage**, and **100% method coverage** across the
+  included application files reported by `npm run test:csharp-coverage`.
+- Verified baseline currently documented for `backend-csharp/src/`: **3527 /
+  3527 lines**, **1909 / 1909 branches**, **606 / 606 methods** across **86
+  included files**.
 - Whenever a task produces a new verified merged Release coverage result, update
   this baseline in `AGENTS.md` to the new numbers.
 - If a task produces a new verified merged coverage result for the tracked
@@ -496,8 +499,10 @@ is not currently activatable.
 If the user writes exactly `deploya-staging`, treat that as explicit
 authorization to run the 23-point staging deployment workflow. Before starting,
 verify that the current branch is `develop` and the target is `staging`. This
-flow follows the same 23 points as `deploya`, adapted for the `staging`
-certification environment.
+flow follows the same pre-merge release discipline as `deploya` for the
+`staging` certification environment, but it does not execute the `deploya`-only
+post-merge branch realignment, tag, or GitHub Release steps that happen only
+after `staging -> main`.
 
 1. Before starting, run a full preflight on the repository state and release
    target. Verify there are no unstaged files, the target branch (`main` for
@@ -511,9 +516,9 @@ certification environment.
    proceed.
 2. Run a dry-run summary before any mutating action. Show the computed next
    version, the files expected to change, the validations that will run, the
-   Pull Request target (`main` for `deploya`, `staging` for
-   `deploya-staging`), and any tag/release names that would be created. Do not
-   commit, push, tag, or release during the dry-run phase.
+   Pull Request target (`main` for `deploya`, `staging` for `deploya-staging`),
+   and any tag/release names that would be created. Do not commit, push, tag, or
+   release during the dry-run phase.
 3. Determine the correct next application version and bump it consistently
    across the repository wherever needed.
 4. Verify the version bump diff is coherent across `package.json`,
@@ -570,16 +575,26 @@ certification environment.
 18. After GitHub has merged the Pull Request into the target branch, verify that
     the merged commit on the target branch is the expected release commit and
     that the repository state still matches the validated release candidate.
-19. Create a tag on `main` that matches the new version.
-20. Verify that the created tag points to the correct merged commit before
+19. Read the final commit SHA now pointed to by `main` after the protected Pull
+    Request merge has completed successfully.
+20. Temporarily lower the protection on `staging` just enough to allow a direct
+    branch ref update, then force `staging` to that final `main` commit SHA.
+21. Force `develop` to that same final `main` commit SHA so that the release
+    cycle closes with `main == staging == develop`.
+22. Restore the original `staging` protection immediately after the forced
+    branch alignment and verify that the restored policy matches the expected
+    CI/CD gate configuration.
+23. Create a tag on `main` that matches the new version.
+24. Verify that the created tag points to the correct merged commit before
     proceeding.
-21. Create a GitHub Release based on that tag, coherent with the version and
+25. Create a GitHub Release based on that tag, coherent with the version and
     delivered changes.
-22. If tag creation, release creation, or any post-merge release step fails,
-    stop immediately, do not continue with later release actions, and report the
-    exact rollback or cleanup actions required to restore a coherent release
-    state.
-23. Return to the original branch from which the deployment workflow started.
+26. If tag creation, release creation, the temporary `staging` protection
+    downgrade, the forced branch alignment, or any post-merge release step
+    fails, stop immediately, do not continue with later release actions, and
+    report the exact rollback or cleanup actions required to restore a coherent
+    release state.
+27. Return to the original branch from which the deployment workflow started.
 
 Failure policy for `deploya` and `deploya-staging`:
 

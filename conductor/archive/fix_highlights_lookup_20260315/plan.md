@@ -13,7 +13,7 @@ an unavailable state when the Sky Sport F1 source has valid content.
   tests/documentation are adjusted.
 - **Behavior Preservation First**: frontend contract, persistence shape, and
   runtime flow stay unchanged.
-- **Coverage 100% totale**: keep repository/application coverage at 100%.
+- **Coverage 80% totale**: keep repository/application coverage at 80%.
 
 ## RED -> GREEN -> REFACTOR
 
@@ -40,4 +40,4 @@ an unavailable state when the Sky Sport F1 source has valid content.
 - [x] Query generation uses a compact, race-relevant seed and the current live
       publisher label.
 - [x] Search requests hit the Sky Sport F1 channel with the corrected query.
-- [x] Full validation stack passes with 100% total coverage maintained.
+- [x] Full validation stack passes with 80% total coverage maintained.

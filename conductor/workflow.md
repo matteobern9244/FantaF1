@@ -10,7 +10,9 @@ integrando gli standard di `AGENTS.md` e `PROJECT.md`.
 - **Strict TDD:** Ogni modifica comportamentale deve seguire il ciclo **RED ->
   GREEN -> REFACTOR**.
 - **100% Coverage:** La copertura dei test deve essere mantenuta al 100%
-  (Statements, Functions, Branches, Lines) per tutto lo scope dell'applicazione.
+  (Statements, Functions, Branches, Lines) per tutto lo scope
+  frontend/repository e al 100% su line/branch/method coverage per
+  `backend-csharp/src/`.
 - **Production-Safe:** Ogni cambiamento deve essere deterministico, testato e
   sicuro per i dati di produzione.
 - **Compliance AGENTS.md:** Tutti i task devono includere e rispettare
@@ -35,7 +37,7 @@ Per ogni task, l'agente deve:
     - **REFACTOR:** Pulire il codice mantenendo i test verdi e la copertura al
       100%.
 4.  **Validazione:**
-    - Eseguire `conductor-compliance-audit` per verificare l'aderenza ai
+    - Eseguire `compliance-audit-orchestrator` per verificare l'aderenza ai
       principi di ingegneria (TDD, DI, UoW, Repository Pattern).
     - Eseguire `npm run lint`, `npm run test`, `npm run test:ui-responsive` (o
       il comando `check viste`).
@@ -53,9 +55,8 @@ Per ogni task, l'agente deve:
   l'integrità della persistenza.
 - **Deploy Staging:** Il comando `deploya-staging` avvia il protocollo a 23
   punti per il merge da `develop` a `staging`.
-- **Deploy Produzione:** Il comando `deploya` avvia il protocollo a 23 punti
-  per il merge da `staging` a `main`.
-
+- **Deploy Produzione:** Il comando `deploya` avvia il protocollo a 23 punti per
+  il merge da `staging` a `main`.
 
 ## 4. Gestione Git e Commit
 
@@ -86,7 +87,12 @@ Quando l'utente autorizza esplicitamente il deploy (comandi `deploya` o
     - `matteobern9244` deve essere impostato come assignee della PR.
     - Le label della PR devono riflettere esclusivamente il lavoro
       effettivamente svolto, senza categorie speculative o non pertinenti.
-7.  Creazione Tag e GitHub Release solo dopo il merge avvenuto con successo.
+7.  Solo per `deploya`, dopo il merge riuscito verso `main`, leggere lo SHA
+    finale di `main`, abbassare temporaneamente la protection di `staging`,
+    riallineare `staging` e `develop` allo SHA finale di `main` e ripristinare
+    subito la protection originaria di `staging`.
+8.  Creazione Tag e GitHub Release solo dopo il merge avvenuto con successo e il
+    riallineamento finale dei branch richiesto da `deploya`.
 
 ## 6. Sicurezza e Privacy
 

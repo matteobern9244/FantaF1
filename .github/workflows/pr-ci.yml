@@ -85,6 +85,8 @@ jobs:
             echo "EOF"
           } >> "$GITHUB_ENV"
       - run: npm ci
+      - name: Install Playwright Chromium for responsive-dev
+        run: npx playwright install --with-deps chromium
       - name: Start local stack
         run: |
           dotnet run --project backend-csharp/src/FantaF1.Api/FantaF1.Api.csproj -c Release --no-launch-profile > backend.log 2>&1 &

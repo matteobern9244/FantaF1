@@ -79,9 +79,9 @@ below.
     automation. Confirm the title, body, labels, base branch (`staging`), head
     branch (`develop`), reviewers, assignees, and release metadata are accurate
     and complete.
-    - The Pull Request body must be suitable, specific, and clearly aligned
-      with the real work delivered in the branch; generic or vague
-      descriptions are not acceptable.
+    - The Pull Request body must be suitable, specific, and clearly aligned with
+      the real work delivered in the branch; generic or vague descriptions are
+      not acceptable.
     - `matteobern9244` must be assigned as assignee on the Pull Request.
     - Pull Request labels must reflect the work actually performed and must not
       include unrelated or speculative categories.

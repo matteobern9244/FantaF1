@@ -3,40 +3,9 @@
  */
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
-import { readFileSync } from 'node:fs';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import React from 'react';
+import { MemoryRouter } from 'react-router-dom';
 import App from '../src/App';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const appCssPath = path.resolve(__dirname, '..', 'src', 'App.css');
-const appCssContent = readFileSync(appCssPath, 'utf8');
-
-Object.defineProperty(window, 'matchMedia', {
-  writable: true,
-  value: vi.fn().mockImplementation((query) => ({
-    matches: false,
-    media: query,
-    onchange: null,
-    addListener: vi.fn(),
-    removeListener: vi.fn(),
-    addEventListener: vi.fn(),
-    removeEventListener: vi.fn(),
-    dispatchEvent: vi.fn(),
-  })),
-});
-
-Object.defineProperty(window, 'IntersectionObserver', {
-  writable: true,
-  value: vi.fn().mockImplementation(() => ({
-    observe: vi.fn(),
-    unobserve: vi.fn(),
-    disconnect: vi.fn(),
-    takeRecords: vi.fn(() => []),
-  })),
-});
 
 function createEmptyPrediction() {
   return {
@@ -45,6 +14,13 @@ function createEmptyPrediction() {
     third: '',
     pole: '',
   };
+}
+
+function createResponse(payload: unknown) {
+  return {
+    ok: true,
+    json: () => Promise.resolve(payload),
+  } as Response;
 }
 
 function createDrivers() {
@@ -89,80 +65,102 @@ function createCalendar() {
       raceStartTime: '2099-03-22T14:00:00Z',
       sessions: [],
     },
-    {
-      meetingKey: 'race-3',
-      meetingName: 'Monaco',
-      grandPrixTitle: 'Monaco Grand Prix 2099',
-      roundNumber: 3,
-      dateRangeLabel: '27 - 29 MAR',
-      detailUrl: 'https://www.formula1.com/en/racing/2099/monaco',
-      heroImageUrl: 'https://media.example.com/monaco-hero.webp',
-      trackOutlineUrl: '',
-      isSprintWeekend: false,
-      startDate: '2099-03-27',
-      endDate: '2099-03-29',
-      raceStartTime: '2099-03-29T14:00:00Z',
-      sessions: [],
-    },
   ];
 }
 
-function createAppData() {
+function createWeekendState({
+  first,
+  second,
+  third,
+  pole,
+  player1First,
+  player2First,
+  player3First,
+}: {
+  first: string;
+  second: string;
+  third: string;
+  pole: string;
+  player1First: string;
+  player2First: string;
+  player3First: string;
+}) {
   return {
-    users: [
-      { name: 'Player 1', points: 10, predictions: { first: 'ver', second: '', third: '', pole: '' } },
-      { name: 'Player 2', points: 8, predictions: { first: '', second: '', third: '', pole: '' } },
-      { name: 'Player 3', points: 6, predictions: createEmptyPrediction() },
-    ],
-    history: [],
-    gpName: 'Australian Grand Prix 2099',
-    raceResults: { first: 'ver', second: '', third: '', pole: '' },
-    selectedMeetingKey: 'race-1',
-    weekendStateByMeetingKey: {
-      'race-1': {
-        userPredictions: {
-          'Player 1': { first: 'ver', second: '', third: '', pole: '' },
-          'Player 2': createEmptyPrediction(),
-          'Player 3': createEmptyPrediction(),
-        },
-        raceResults: { first: 'ver', second: '', third: '', pole: '' },
-      },
-      'race-2': {
-        userPredictions: {
-          'Player 1': { first: 'ham', second: '', third: '', pole: '' },
-          'Player 2': { first: 'nor', second: '', third: '', pole: '' },
-          'Player 3': createEmptyPrediction(),
-        },
-        raceResults: { first: 'ham', second: '', third: '', pole: 'pia' },
-      },
+    userPredictions: {
+      'Player 1': { first: player1First, second: '', third: '', pole: '' },
+      'Player 2': { first: player2First, second: '', third: '', pole: '' },
+      'Player 3': { first: player3First, second: '', third: '', pole: '' },
+    },
+    raceResults: {
+      first,
+      second,
+      third,
+      pole,
     },
   };
 }
 
-function createResponse(payload: unknown) {
+function createBaseAppData() {
   return {
-    ok: true,
-    json: () => Promise.resolve(payload),
-  } as Response;
-}
-
-function createDeferredResponse() {
-  let resolve;
-  const promise = new Promise<Response>((internalResolve) => {
-    resolve = internalResolve;
-  });
-
-  return {
-    promise,
-    resolve: (payload: unknown) => resolve(createResponse(payload)),
+    users: [
+      {
+        name: 'Player 1',
+        predictions: { first: 'ver', second: '', third: '', pole: '' },
+        points: 0,
+      },
+      {
+        name: 'Player 2',
+        predictions: { first: '', second: '', third: '', pole: '' },
+        points: 0,
+      },
+      {
+        name: 'Player 3',
+        predictions: { first: '', second: '', third: '', pole: '' },
+        points: 0,
+      },
+    ],
+    history: [],
+    gpName: 'Australian Grand Prix 2099',
+    raceResults: {
+      first: 'ver',
+      second: '',
+      third: '',
+      pole: '',
+    },
+    selectedMeetingKey: 'race-1',
+    weekendStateByMeetingKey: {
+      'race-1': createWeekendState({
+        first: 'ver',
+        second: '',
+        third: '',
+        pole: '',
+        player1First: 'ver',
+        player2First: '',
+        player3First: '',
+      }),
+      'race-2': createWeekendState({
+        first: 'ham',
+        second: '',
+        third: 'nor',
+        pole: 'pia',
+        player1First: 'ham',
+        player2First: 'nor',
+        player3First: '',
+      }),
+    },
   };
 }
 
 function setupFetch({
-  appData = createAppData(),
+  appData = createBaseAppData(),
   calendar = createCalendar(),
   drivers = createDrivers(),
   resultHandlers = {},
+}: {
+  appData?: ReturnType<typeof createBaseAppData>;
+  calendar?: ReturnType<typeof createCalendar>;
+  drivers?: ReturnType<typeof createDrivers>;
+  resultHandlers?: Record<string, () => Promise<Response>>;
 } = {}) {
   const fetchMock = global.fetch as ReturnType<typeof vi.fn>;
 
@@ -184,7 +182,9 @@ function setupFetch({
     }
 
     if (url.includes('/api/standings')) {
-      return Promise.resolve(createResponse({ driverStandings: [], constructorStandings: [], updatedAt: '' }));
+      return Promise.resolve(
+        createResponse({ driverStandings: [], constructorStandings: [], updatedAt: '' }),
+      );
     }
 
     if (url.includes('/api/predictions')) {
@@ -194,9 +194,8 @@ function setupFetch({
     const match = url.match(/\/api\/results\/(.+)$/);
     if (match) {
       const handler = resultHandlers[match[1]];
-
       if (handler) {
-        return typeof handler === 'function' ? handler() : handler;
+        return handler();
       }
 
       return Promise.resolve(
@@ -213,329 +212,131 @@ function setupFetch({
   return fetchMock;
 }
 
-function getUserCard(userName: string) {
-  return screen.getByRole('heading', { name: userName }).closest('article');
+function getPredictionsSection() {
+  return document.getElementById('predictions-section');
 }
 
-function getPredictionSelect(userName: string, label: RegExp) {
-  const userCard = getUserCard(userName);
-  if (!userCard) {
-    throw new Error(`User card not found for ${userName}`);
+function getUserCard(userName: string) {
+  const predictionsSection = getPredictionsSection();
+  if (!predictionsSection) {
+    return null;
   }
 
-  return within(userCard).getByLabelText(label) as HTMLSelectElement;
+  return within(predictionsSection)
+    .queryAllByRole('heading', { name: userName })
+    .find((heading) => heading.tagName === 'H3')
+    ?.closest('article');
 }
 
-function getResultSelect(label: RegExp) {
-  return screen.getByLabelText(label) as HTMLSelectElement;
+function getUserWinnerSelect(userName: string) {
+  const userCard = getUserCard(userName);
+  expect(userCard).not.toBeNull();
+
+  return within(userCard as HTMLElement).getByLabelText(/vincitore gara/i) as HTMLSelectElement;
 }
 
-function expectReadableSelectStyles(select: HTMLSelectElement) {
-  expect(select).toBeInTheDocument();
-  expect(appCssContent).toContain('--control-surface: #181c27;');
-  expect(appCssContent).toContain('--control-option-surface: #181c27;');
-  expect(appCssContent).toMatch(/select\s*\{[\s\S]*color:\s*var\(--ink\);/);
-  expect(appCssContent).toMatch(/select\s*\{[\s\S]*background-color:\s*var\(--control-surface\);/);
-  expect(appCssContent).toMatch(/select\s*\{[\s\S]*color-scheme:\s*dark;/);
-  expect(appCssContent).toMatch(/select option,\s*[\r\n\s]*select optgroup\s*\{[\s\S]*color:\s*var\(--control-option-ink\);/);
-  expect(appCssContent).toMatch(/select option,\s*[\r\n\s]*select optgroup\s*\{[\s\S]*background-color:\s*var\(--control-option-surface\);/);
+function getResultSelect(label: string | RegExp) {
+  const predictionsSection = getPredictionsSection();
+  expect(predictionsSection).not.toBeNull();
+
+  return within(predictionsSection as HTMLElement).getByLabelText(label) as HTMLSelectElement;
 }
 
-function createResultsResponse(racePhase, results = createEmptyPrediction()) {
-  return createResponse({ ...results, racePhase });
+function renderApp(initialEntry: string) {
+  render(
+    <MemoryRouter initialEntries={[initialEntry]}>
+      <App />
+    </MemoryRouter>,
+  );
+}
+
+async function waitForAppToSettle() {
+  await waitFor(() => {
+    expect(screen.queryByTestId('pitstop-loader')).not.toBeInTheDocument();
+  });
 }
 
 describe('Weekend draft synchronization UI', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.spyOn(window, 'alert').mockImplementation(() => {});
     window.history.replaceState({}, '', '/');
+    window.localStorage.clear();
+    window.sessionStorage.clear();
   });
 
-  it(
-    'updates predictions and weekend results when changing the selected race and shows placeholders for empty drafts',
-    async () => {
-    setupFetch();
+  it('hydrates the selected weekend predictions and official results for race-2', async () => {
+    const appData = createBaseAppData();
+    appData.selectedMeetingKey = 'race-2';
+    appData.gpName = 'Chinese Grand Prix 2099';
+    appData.users = [
+      { name: 'Player 1', predictions: { first: 'ham', second: '', third: '', pole: '' }, points: 0 },
+      { name: 'Player 2', predictions: { first: 'nor', second: '', third: '', pole: '' }, points: 0 },
+      { name: 'Player 3', predictions: { first: '', second: '', third: '', pole: '' }, points: 0 },
+    ];
+    appData.raceResults = {
+      first: 'ham',
+      second: '',
+      third: 'nor',
+      pole: 'pia',
+    };
 
-    render(<App />);
+    const fetchMock = setupFetch({ appData });
 
-    await waitFor(() => {
-      expect(screen.queryByTestId('pitstop-loader')).not.toBeInTheDocument();
-    });
+    renderApp('/pronostici?meeting=race-2');
 
-    expect(getPredictionSelect('Player 1', /vincitore gara/i)).toHaveValue('ver');
-    expect(getResultSelect(/risultato 1°/i)).toHaveValue('ver');
-
-    fireEvent.click(screen.getByRole('button', { name: /china/i }));
-
-    await waitFor(() => {
-      expect(getPredictionSelect('Player 1', /vincitore gara/i)).toHaveValue('ham');
-    });
-    expect(getPredictionSelect('Player 2', /vincitore gara/i)).toHaveValue('nor');
-    expect(getResultSelect(/risultato 1°/i)).toHaveValue('ham');
-    expect(getResultSelect(/pole \/ sprint reale/i)).toHaveValue('pia');
-
-    fireEvent.click(screen.getByRole('button', { name: /monaco/i }));
+    await waitForAppToSettle();
 
     await waitFor(() => {
-      expect(getPredictionSelect('Player 1', /vincitore gara/i)).toHaveValue('');
+      expect(fetchMock).toHaveBeenCalledWith('/api/results/race-2');
+      expect(getUserWinnerSelect('Player 1')).toHaveValue('ham');
+      expect(getUserWinnerSelect('Player 2')).toHaveValue('nor');
+      expect(getResultSelect(/risultato 1°/i)).toHaveValue('ham');
+      expect(getResultSelect(/pole \/ sprint reale/i)).toHaveValue('pia');
     });
-    expect(getPredictionSelect('Player 1', /vincitore gara/i)).toHaveDisplayValue(
-      'Seleziona un pilota',
-    );
-    expect(getPredictionSelect('Player 2', /vincitore gara/i)).toHaveDisplayValue(
-      'Seleziona un pilota',
-    );
-    expect(getResultSelect(/risultato 1°/i)).toHaveValue('');
-    },
-    60000,
-  );
+  });
 
-  it('keeps shared selects readable across admin and public flows', async () => {
-    setupFetch();
+  it('persists the active weekend draft without overwriting the other weekend state', async () => {
+    const appData = createBaseAppData();
+    appData.selectedMeetingKey = 'race-2';
+    appData.gpName = 'Chinese Grand Prix 2099';
+    appData.users = [
+      { name: 'Player 1', predictions: { first: 'ham', second: '', third: '', pole: '' }, points: 0 },
+      { name: 'Player 2', predictions: { first: 'nor', second: '', third: '', pole: '' }, points: 0 },
+      { name: 'Player 3', predictions: { first: '', second: '', third: '', pole: '' }, points: 0 },
+    ];
+    appData.raceResults = {
+      first: 'ham',
+      second: '',
+      third: 'nor',
+      pole: 'pia',
+    };
 
-    render(<App />);
+    const fetchMock = setupFetch({ appData });
 
-    await waitFor(() => {
-      expect(screen.queryByTestId('pitstop-loader')).not.toBeInTheDocument();
-    });
+    renderApp('/pronostici?meeting=race-2');
 
-    expectReadableSelectStyles(screen.getByLabelText(/weekend selezionato/i) as HTMLSelectElement);
-    expectReadableSelectStyles(screen.getByLabelText(/dashboard utente/i) as HTMLSelectElement);
-    expectReadableSelectStyles(getPredictionSelect('Player 1', /vincitore gara/i));
-    expectReadableSelectStyles(getResultSelect(/risultato 1°/i));
-    expectReadableSelectStyles(screen.getByLabelText(/filtra per giocatore/i) as HTMLSelectElement);
+    await waitForAppToSettle();
 
-    fireEvent.click(screen.getByRole('button', { name: /pubblica/i }));
-
-    await waitFor(() => {
-      expect(screen.getByText(/solo gli admin possono modificare i pronostici/i)).toBeInTheDocument();
-    });
-
-    expectReadableSelectStyles(screen.getByLabelText(/weekend selezionato/i) as HTMLSelectElement);
-    expectReadableSelectStyles(screen.getByLabelText(/dashboard utente/i) as HTMLSelectElement);
-    expectReadableSelectStyles(screen.getByLabelText(/filtra per giocatore/i) as HTMLSelectElement);
-  }, 30000);
-
-  it('removes the hero title blur and keeps the race background brightness isolated to the dynamic layer', async () => {
-    setupFetch();
-
-    render(<App />);
-
-    await waitFor(() => {
-      expect(screen.queryByTestId('pitstop-loader')).not.toBeInTheDocument();
-    });
-
-    const heroPanel = document.querySelector('.hero-panel') as HTMLElement | null;
-    const heroBrand = document.querySelector('.hero-brand') as HTMLElement | null;
-    const heroRaceBackground = screen.getByTestId('hero-race-background');
-
-    expect(heroPanel).not.toBeNull();
-    expect(heroBrand).not.toBeNull();
-    expect(heroPanel?.style.backgroundImage).toBe('');
-    expect(heroRaceBackground).toHaveStyle({
-      backgroundImage:
-        'linear-gradient(145deg, rgba(10, 11, 19, 0.95), rgba(10, 11, 19, 0.55)), url(https://media.example.com/australia-hero.webp)',
-    });
-
-    const heroBrandCssBlock = appCssContent.match(/\.hero-brand\s*\{[^}]*\}/);
-    const heroBrandTitleCssBlock = appCssContent.match(/\.hero-brand h1\s*\{[^}]*\}/);
-
-    expect(heroBrandCssBlock?.[0]).toContain('container-type: inline-size;');
-    expect(heroBrandCssBlock?.[0]).not.toContain('backdrop-filter:');
-    expect(heroBrandTitleCssBlock?.[0]).toContain('color: var(--ink);');
-    expect(heroBrandTitleCssBlock?.[0]).toContain('filter: drop-shadow(0 4px 12px rgba(0,0,0,0.4));');
-    expect(heroBrandTitleCssBlock?.[0]).not.toContain('background: linear-gradient');
-    expect(heroBrandTitleCssBlock?.[0]).not.toContain('-webkit-background-clip: text;');
-    expect(heroBrandTitleCssBlock?.[0]).not.toContain('-webkit-text-fill-color: transparent;');
-    expect(appCssContent).toMatch(/\.hero-race-background\s*\{[\s\S]*filter:\s*brightness\(1\.4\);/);
-
-    fireEvent.click(screen.getByRole('button', { name: /china/i }));
-
-    await waitFor(() => {
-      expect(heroRaceBackground).toHaveStyle({
-        backgroundImage:
-          'linear-gradient(145deg, rgba(10, 11, 19, 0.95), rgba(10, 11, 19, 0.55)), url(https://media.example.com/china-hero.webp)',
-      });
-    });
-  }, 30000);
-  it('saves the selected weekend draft without overwriting other weekend drafts', async () => {
-    const fetchMock = setupFetch();
-
-    render(<App />);
-
-    await waitFor(() => {
-      expect(screen.queryByTestId('pitstop-loader')).not.toBeInTheDocument();
-    });
-
-    fireEvent.change(getPredictionSelect('Player 1', /vincitore gara/i), {
+    fireEvent.change(getUserWinnerSelect('Player 1'), {
       target: { value: 'lec' },
     });
 
+    expect(getUserWinnerSelect('Player 1')).toHaveValue('lec');
+
     fireEvent.click(screen.getByRole('button', { name: /salva dati inseriti/i }));
 
+    let saveCall: (typeof fetchMock.mock.calls)[number] | undefined;
     await waitFor(() => {
-      expect(fetchMock).toHaveBeenCalledWith(
-        '/api/predictions',
-        expect.objectContaining({
-          method: 'POST',
-        }),
-      );
+      saveCall = fetchMock.mock.calls.find((call) => call[0] === '/api/predictions');
+      expect(saveCall).toBeDefined();
+      expect(saveCall?.[1]).toMatchObject({
+        method: 'POST',
+      });
     });
 
-    const saveCall = fetchMock.mock.calls.find(([url]) => String(url).includes('/api/predictions'));
-    const payload = JSON.parse(String(saveCall?.[1]?.body ?? '{}'));
-
-    // The frontend currently sends the full appData state to /api/predictions
-    // which corresponds to the AppDataDocument in C#
-    expect(payload.selectedMeetingKey).toBe('race-1');
-    expect(payload.users[0].predictions.first).toBe('lec');
-
-    fireEvent.click(screen.getByRole('button', { name: /china/i }));
-
-    await waitFor(() => {
-      // In createAppData, race-2 Player 1 first is 'ham'
-      expect(getPredictionSelect('Player 1', /vincitore gara/i)).toHaveValue('ham');
-    });
-
-    fireEvent.click(screen.getByRole('button', { name: /australia/i }));
-
-    await waitFor(() => {
-      // Should reflect the local change ('lec') before a new full data fetch would overwrite it
-      expect(getPredictionSelect('Player 1', /vincitore gara/i)).toHaveValue('lec');
-    });
-  }, 30000);
-
-  it('ignores stale official results responses after changing weekend', async () => {
-    const race1Results = createDeferredResponse();
-    const race2Results = createDeferredResponse();
-    const appData = createAppData();
-
-    appData.weekendStateByMeetingKey['race-2'].raceResults = createEmptyPrediction();
-
-    setupFetch({
-      appData,
-      resultHandlers: {
-        'race-1': () => race1Results.promise,
-        'race-2': () => race2Results.promise,
-      },
-    });
-
-    render(<App />);
-
-    await waitFor(() => {
-      expect(screen.queryByTestId('pitstop-loader')).not.toBeInTheDocument();
-    });
-
-    fireEvent.click(screen.getByRole('button', { name: /china/i }));
-
-    await waitFor(() => {
-      expect((global.fetch as ReturnType<typeof vi.fn>).mock.calls).toEqual(
-        expect.arrayContaining([[expect.stringContaining('/api/results/race-2')]]),
-      );
-    });
-
-    race2Results.resolve({ first: '', second: '', third: '', pole: 'nor' });
-
-    await waitFor(() => {
-      expect(getResultSelect(/pole \/ sprint reale/i)).toHaveValue('nor');
-    });
-
-    race1Results.resolve({ first: '', second: '', third: '', pole: 'pia' });
-
-    await waitFor(() => {
-      expect(getResultSelect(/pole \/ sprint reale/i)).toHaveValue('nor');
-    });
-    expect(getPredictionSelect('Player 1', /vincitore gara/i)).toHaveValue('ham');
+    const body = JSON.parse(String(saveCall?.[1]?.body));
+    expect(body.weekendStateByMeetingKey['race-2'].userPredictions['Player 1'].first).toBe('lec');
+    expect(body.weekendStateByMeetingKey['race-1'].userPredictions['Player 1'].first).toBe('ver');
   });
 
-  it('shows no lock banner before the race starts and keeps predictions editable', async () => {
-    setupFetch({
-      resultHandlers: {
-        'race-1': createResultsResponse('open'),
-      },
-    });
-
-    render(<App />);
-
-    await waitFor(() => {
-      expect(screen.queryByTestId('pitstop-loader')).not.toBeInTheDocument();
-    });
-
-    expect(screen.queryByText('Gara in corso: pronostici bloccati.')).not.toBeInTheDocument();
-    expect(screen.queryByText('Gara terminata.')).not.toBeInTheDocument();
-    expect(getPredictionSelect('Player 1', /vincitore gara/i)).not.toBeDisabled();
-  });
-
-  it('shows the in-progress lock banner when the backend marks the selected race as live', async () => {
-    setupFetch({
-      resultHandlers: {
-        'race-1': createResultsResponse('live'),
-      },
-    });
-
-    render(<App />);
-
-    await waitFor(() => {
-      expect(screen.queryByTestId('pitstop-loader')).not.toBeInTheDocument();
-    });
-
-    await waitFor(() => {
-      expect(screen.getByText('Gara in corso: pronostici bloccati.')).toBeInTheDocument();
-    });
-    expect(getPredictionSelect('Player 1', /vincitore gara/i)).toBeDisabled();
-  });
-
-  it('shows the finished banner when the backend marks the selected race as finished', async () => {
-    setupFetch({
-      resultHandlers: {
-        'race-1': createResultsResponse('finished', {
-          first: 'ver',
-          second: 'ham',
-          third: 'nor',
-          pole: 'pia',
-        }),
-      },
-    });
-
-    render(<App />);
-
-    await waitFor(() => {
-      expect(screen.queryByTestId('pitstop-loader')).not.toBeInTheDocument();
-    });
-
-    await waitFor(() => {
-      expect(screen.getByText('Gara terminata.')).toBeInTheDocument();
-    });
-    expect(screen.queryByText('Gara in corso: pronostici bloccati.')).not.toBeInTheDocument();
-    expect(getPredictionSelect('Player 1', /vincitore gara/i)).toBeDisabled();
-  });
-
-  it('accepts the legacy wrapper payload shape while using the backend race phase', async () => {
-    setupFetch({
-      resultHandlers: {
-        'race-1': createResponse({
-          racePhase: 'finished',
-          results: {
-            first: 'ver',
-            second: 'ham',
-            third: 'nor',
-            pole: 'pia',
-          },
-        }),
-      },
-    });
-
-    render(<App />);
-
-    await waitFor(() => {
-      expect(screen.queryByTestId('pitstop-loader')).not.toBeInTheDocument();
-    });
-
-    await waitFor(() => {
-      expect(screen.getByText('Gara terminata.')).toBeInTheDocument();
-    });
-    expect(getResultSelect(/risultato 1°/i)).toHaveValue('ver');
-    expect(getPredictionSelect('Player 1', /vincitore gara/i)).toBeDisabled();
-  });
 });

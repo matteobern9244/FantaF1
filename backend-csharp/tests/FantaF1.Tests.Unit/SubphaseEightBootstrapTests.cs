@@ -71,11 +71,35 @@ public sealed class SubphaseEightBootstrapTests
                 ["https://formula1.example/en/racing/2026"] = "__throw__",
             }));
         var standingsSync = new StubStandingsSyncService(exception: new InvalidOperationException("standings"));
-        var service = new BackgroundSyncService(driverSync, calendarSync, standingsSync, NullLogger<BackgroundSyncService>.Instance);
+        var service = new BackgroundSyncService(driverSync, calendarSync, standingsSync, new ConfigurationBuilder().Build(), NullLogger<BackgroundSyncService>.Instance);
 
         await service.RunAsync(CancellationToken.None);
 
         Assert.Equal(1, standingsSync.Calls);
+    }
+
+    [Fact]
+    public async Task Background_sync_service_skips_execution_when_disabled_via_configuration()
+    {
+        var driverSync = new OfficialDriverSyncService(
+            CreatePortingAppConfig(expectedDrivers: 1, expectedWeekends: 1),
+            new SpyDriverRepository(),
+            CreateHttpClient(new Dictionary<string, string>()));
+        var calendarSync = new OfficialCalendarSyncService(
+            CreatePortingAppConfig(expectedDrivers: 1, expectedWeekends: 1),
+            new SpyWeekendRepository(),
+            new StubHighlightsLookupService(false, new HighlightsLookupDocument("", "", "", "")),
+            new StubClock(DateTimeOffset.UtcNow),
+            CreateHttpClient(new Dictionary<string, string>()));
+        var standingsSync = new StubStandingsSyncService();
+        var config = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?> { ["Bootstrap:DisableSync"] = "true" })
+            .Build();
+        var service = new BackgroundSyncService(driverSync, calendarSync, standingsSync, config, NullLogger<BackgroundSyncService>.Instance);
+
+        await service.RunAsync(CancellationToken.None);
+
+        Assert.Equal(0, standingsSync.Calls);
     }
 
     [Fact]
@@ -104,16 +128,17 @@ public sealed class SubphaseEightBootstrapTests
                 ["https://www.formula1.com/en/racing/2026/monaco"] = "<title>Monaco GP - F1 Race</title>",
             }));
         var standingsSync = new StubStandingsSyncService();
-        var service = new BackgroundSyncService(driverSync, calendarSync, standingsSync, NullLogger<BackgroundSyncService>.Instance);
+        var service = new BackgroundSyncService(driverSync, calendarSync, standingsSync, new ConfigurationBuilder().Build(), NullLogger<BackgroundSyncService>.Instance);
 
         await service.RunAsync(CancellationToken.None);
 
         Assert.Equal(1, standingsSync.Calls);
 
-        Assert.Equal("driverSyncService", Assert.Throws<ArgumentNullException>(() => new BackgroundSyncService(null!, calendarSync, standingsSync, NullLogger<BackgroundSyncService>.Instance)).ParamName);
-        Assert.Equal("calendarSyncService", Assert.Throws<ArgumentNullException>(() => new BackgroundSyncService(driverSync, null!, standingsSync, NullLogger<BackgroundSyncService>.Instance)).ParamName);
-        Assert.Equal("standingsSyncService", Assert.Throws<ArgumentNullException>(() => new BackgroundSyncService(driverSync, calendarSync, null!, NullLogger<BackgroundSyncService>.Instance)).ParamName);
-        Assert.Equal("logger", Assert.Throws<ArgumentNullException>(() => new BackgroundSyncService(driverSync, calendarSync, standingsSync, null!)).ParamName);
+        Assert.Equal("driverSyncService", Assert.Throws<ArgumentNullException>(() => new BackgroundSyncService(null!, calendarSync, standingsSync, new ConfigurationBuilder().Build(), NullLogger<BackgroundSyncService>.Instance)).ParamName);
+        Assert.Equal("calendarSyncService", Assert.Throws<ArgumentNullException>(() => new BackgroundSyncService(driverSync, null!, standingsSync, new ConfigurationBuilder().Build(), NullLogger<BackgroundSyncService>.Instance)).ParamName);
+        Assert.Equal("standingsSyncService", Assert.Throws<ArgumentNullException>(() => new BackgroundSyncService(driverSync, calendarSync, null!, new ConfigurationBuilder().Build(), NullLogger<BackgroundSyncService>.Instance)).ParamName);
+        Assert.Equal("configuration", Assert.Throws<ArgumentNullException>(() => new BackgroundSyncService(driverSync, calendarSync, standingsSync, null!, NullLogger<BackgroundSyncService>.Instance)).ParamName);
+        Assert.Equal("logger", Assert.Throws<ArgumentNullException>(() => new BackgroundSyncService(driverSync, calendarSync, standingsSync, new ConfigurationBuilder().Build(), null!)).ParamName);
 
         var throwingDriverService = new OfficialDriverSyncService(
             CreatePortingAppConfig(expectedDrivers: 3, expectedWeekends: 1),
@@ -132,7 +157,7 @@ public sealed class SubphaseEightBootstrapTests
             {
                 ["https://formula1.example/en/racing/2026"] = "__throw__",
             }));
-        var throwingService = new BackgroundSyncService(throwingDriverService, throwingCalendarService, standingsSync, NullLogger<BackgroundSyncService>.Instance);
+        var throwingService = new BackgroundSyncService(throwingDriverService, throwingCalendarService, standingsSync, new ConfigurationBuilder().Build(), NullLogger<BackgroundSyncService>.Instance);
 
         await throwingService.RunAsync(CancellationToken.None);
 

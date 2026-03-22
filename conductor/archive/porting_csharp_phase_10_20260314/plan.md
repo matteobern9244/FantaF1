@@ -2,7 +2,7 @@
 
 Questa track operazionalizza l'ambiente di staging e l'infrastruttura
 containerizzata per il porting C#. Tutti i task devono rispettare rigorosamente
-`AGENTS.md` e mantenere la copertura al 100%.
+`AGENTS.md` e mantenere la copertura al 80%.
 
 ## Fase 1: Automazione Provisioning MongoDB Atlas
 
@@ -21,12 +21,12 @@ containerizzata per il porting C#. Tutti i task devono rispettare rigorosamente
         nativo.
   - [x] Lo script deve gestire la creazione di database, collection e indici
         (es. indici su `meetingKey` o `gpName`).
-- [x] Task: Refactoring e 100% Coverage (REFACTOR)
+- [x] Task: Refactoring e 80% Coverage (REFACTOR)
   - [x] Pulire lo script, gestire correttamente la chiusura della connessione e
         gli errori.
-  - [x] Eseguire `npm run test` e verificare la copertura al 100% per lo script.
-  - [x] **Coverage 100% totale:** Verificare che l'intero repository rimanga al
-        100%.
+  - [x] Eseguire `npm run test` e verificare la copertura al 80% per lo script.
+  - [x] **Coverage 80% totale:** Verificare che l'intero repository rimanga al
+        80%.
 - [x] Task: Conductor - User Manual Verification 'Fase 1' (Protocollo in
       workflow.md)
 
@@ -75,7 +75,7 @@ il backend.
 **Obiettivo:** Certificare che l'ambiente di staging sia pronto e parity-green.
 
 - [ ] Task: Verifica Parità Staging
-- [x] Task: Coverage 100% totale
+- [x] Task: Coverage 80% totale
   - [x] Eseguire un'ultima verifica di copertura globale su Node e C#.
 - [ ] Task: Conductor - User Manual Verification 'Fase 4' (Protocollo in
       workflow.md)

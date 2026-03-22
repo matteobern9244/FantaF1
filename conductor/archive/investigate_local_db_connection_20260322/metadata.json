@@ -1,0 +1,16 @@
+{
+  "id": "investigate_local_db_connection_20260322",
+  "slug": "investigate_local_db_connection_20260322",
+  "title": "Investigate and fix local backend database connection issues",
+  "phase": "completed",
+  "activeTask": null,
+  "path": "conductor/archive/investigate_local_db_connection_20260322",
+  "track_id": "investigate_local_db_connection_20260322",
+  "relatedTrackIds": [],
+  "type": "bug",
+  "status": "archived",
+  "createdAt": "2026-03-22T10:00:00Z",
+  "updatedAt": "2026-03-22T11:00:00Z",
+  "archivedAt": "2026-03-22T16:42:00Z",
+  "description": "ho lanciato il file start_fantaf1.command ma l'applicazione ma la vista dei dati per niente allineata in correllazione agli sviluppi e non vedo i dati del database di produzione...ho fatto dei comandi per importare ed usare il database di produzione in ambiente di development nel database fantaf1_dev , in sviluppo quindi se lancio l'applicazione in locale su questa macchina si deve puntare a fantaf1_dev; esamina e fammi capire creando un piano usando subagents e agenti e applicando integralmente il file gemini.md"
+}

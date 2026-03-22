@@ -7,6 +7,7 @@ using FantaF1.Infrastructure.Calendar;
 using FantaF1.Infrastructure.Configuration;
 using FantaF1.Infrastructure.Drivers;
 using FantaF1.Infrastructure.Mongo;
+using FantaF1.Infrastructure.Push;
 using FantaF1.Infrastructure.Results;
 using FantaF1.Infrastructure.Standings;
 using FantaF1.Domain.Results;
@@ -37,6 +38,17 @@ public static class InfrastructureServiceCollectionExtensions
                 PasswordSalt = string.IsNullOrWhiteSpace(configuredPasswordSalt)
                     ? ContractAdminCredentialSeedOptions.DefaultPasswordSalt
                     : configuredPasswordSalt,
+            });
+        });
+        services.AddSingleton(sp =>
+        {
+            var configuration = sp.GetRequiredService<Microsoft.Extensions.Configuration.IConfiguration>();
+
+            return Options.Create(new WebPushOptions
+            {
+                PublicKey = configuration[WebPushOptions.PublicKeyConfigurationPath] ?? string.Empty,
+                PrivateKey = configuration[WebPushOptions.PrivateKeyConfigurationPath] ?? string.Empty,
+                Subject = configuration[WebPushOptions.SubjectConfigurationPath] ?? string.Empty,
             });
         });
         services.AddSingleton<NodeCompatibleScryptPasswordHasher>();
@@ -90,6 +102,8 @@ public static class InfrastructureServiceCollectionExtensions
         services.AddHttpClient<IRaceHighlightsLookupService, RaceHighlightsLookupService>();
         services.AddHttpClient<IResultsSourceClient, ResultsSourceClient>();
         services.AddScoped<IBackgroundSyncService, BackgroundSyncService>();
+        services.AddScoped<IPushDeliveryGateway, WebPushDeliveryGateway>();
+        services.AddScoped<IPushSubscriptionRepository, MongoPushSubscriptionRepository>();
         services.AddScoped<IStandingsRepository, MongoStandingsRepository>();
         services.AddScoped<IWeekendRepository, MongoWeekendRepository>();
         services.AddSingleton<IStandingsParser, OfficialStandingsParser>();

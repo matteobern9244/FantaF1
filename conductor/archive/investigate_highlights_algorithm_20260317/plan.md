@@ -31,5 +31,5 @@
   - [ ] Define the TDD strategy: specify what unit/integration tests are needed
         to reproduce the issue (RED state).
 - [ ] Task: Validation & Verification Plan Formulation
-  - [ ] Detail validation commands and regression checks to ensure 100% coverage
+  - [ ] Detail validation commands and regression checks to ensure 80% coverage
         and production safety.

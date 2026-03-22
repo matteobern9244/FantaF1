@@ -20,7 +20,7 @@ operational local environment using the canonical launcher
 
 ## Non-Functional Requirements
 
-- **AGENTS.md Compliance**: Strict adherence to TDD, 100% total coverage, and
+- **AGENTS.md Compliance**: Strict adherence to TDD, 80% total coverage, and
   minimal safe changes.
 - **Safety**: No credentials in versioned files; deterministic and
   production-safe changes.
@@ -30,7 +30,7 @@ operational local environment using the canonical launcher
 
 - [ ] `./start_fantaf1.command` starts the application successfully without
       errors.
-- [ ] 100% Statement, Function, Branch, and Line coverage for both Frontend and
+- [ ] 80% Statement, Function, Branch, and Line coverage for both Frontend and
       Backend.
 - [ ] `check viste` (npm run test:ui-responsive) passes for both Desktop and
       Mobile.

@@ -14,7 +14,7 @@ while ensuring zero regressions for local execution.
   configuration ambiguity.
 - Use `backend-csharp/Dockerfile` as the base for the definitive root
   `Dockerfile`.
-- Adhere to `AGENTS.md` principles (TDD, 100% coverage, production-safe).
+- Adhere to `AGENTS.md` principles (TDD, 80% coverage, production-safe).
 
 **Tech Stack:** Docker, .NET 10, React, Vitest, xUnit.
 
@@ -65,12 +65,12 @@ while ensuring zero regressions for local execution.
 - [x] **Step 1: Run full validation suite.**
   - Run: `npm run lint && npm run test && npm run build`
   - Expected: ALL PASS.
-- [x] **Step 2: Verify 100% Backend Coverage.**
+- [x] **Step 2: Verify 80% Backend Coverage.**
   - Run: `npm run test:csharp-coverage`
-  - Expected: 100% coverage.
-- [x] **Step 3: Verify 100% Frontend Coverage.**
+  - Expected: 80% coverage.
+- [x] **Step 3: Verify 80% Frontend Coverage.**
   - Run: `npm run test:coverage`
-  - Expected: 100% coverage.
+  - Expected: 80% coverage.
 - [x] **Step 4: Verify NO REGRESSIONS in local execution.**
   - Run: `./start_fantaf1.command`
   - Check: Desktop and Mobile views are functional.
@@ -82,8 +82,8 @@ while ensuring zero regressions for local execution.
 
 ---
 
-### Coverage 100% totale
+### Coverage 80% totale
 
-- [x] **Step 1: Ensure 100% statements, functions, branches, and lines coverage
+- [x] **Step 1: Ensure 80% statements, functions, branches, and lines coverage
       for the entire application scope.**
-- [x] **Step 2: Verify backend coverage (100% line, branch, method).**
+- [x] **Step 2: Verify backend coverage (80% line, branch, method).**

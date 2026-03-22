@@ -159,6 +159,8 @@ public sealed class WriteRouteEndpointTests
         Action<IServiceCollection>? configureServices = null,
         IReadOnlyDictionary<string, string?>? configurationValues = null)
     {
+        var dbName = environmentName == "Staging" ? "fantaf1_staging" : "fantaf1_dev";
+
         return new WebApplicationFactory<Program>()
             .WithWebHostBuilder(builder =>
             {
@@ -167,7 +169,7 @@ public sealed class WriteRouteEndpointTests
                 {
                     configurationBuilder.AddInMemoryCollection(new Dictionary<string, string?>
                     {
-                        ["MONGODB_URI"] = "mongodb+srv://user:pass@cluster.mongodb.net/fantaf1_staging?retryWrites=true&w=majority",
+                        ["MONGODB_URI"] = $"mongodb+srv://user:pass@cluster.mongodb.net/{dbName}?retryWrites=true&w=majority",
                         [AdminSessionContract.SessionSecretEnvironmentVariableName] = "integration-admin-secret",
                         ["Bootstrap:DisableHostedService"] = "true",
                     });

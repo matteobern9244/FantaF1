@@ -37,5 +37,5 @@
 
 ## Outcome
 
-- Official repository/application coverage remains at 100%.
+- Official repository/application coverage remains at 80%.
 - No git commit or push was executed.

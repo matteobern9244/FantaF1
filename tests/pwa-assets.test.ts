@@ -5,6 +5,7 @@ import path from 'node:path';
 const repoRoot = path.resolve(__dirname, '..');
 const indexHtmlPath = path.join(repoRoot, 'index.html');
 const manifestPath = path.join(repoRoot, 'public', 'site.webmanifest');
+const serviceWorkerPath = path.join(repoRoot, 'public', 'sw.js');
 
 describe('PWA and browser icon assets', () => {
   it('references the custom browser and PWA icons from index.html', () => {
@@ -57,5 +58,17 @@ describe('PWA and browser icon assets', () => {
     }
 
     expect(existsSync(path.join(repoRoot, 'public', 'ios-splash-screen.png'))).toBe(true);
+  });
+
+  it('ships a minimal offline service worker with navigation fallback and stale asset caching', () => {
+    const serviceWorker = readFileSync(serviceWorkerPath, 'utf8');
+
+    expect(serviceWorker).toContain("const CACHE_NAME = 'fantaf1-pwa-v1';");
+    expect(serviceWorker).toContain("const PRECACHE_URLS = [");
+    expect(serviceWorker).toContain("'/index.html'");
+    expect(serviceWorker).toContain("event.request.mode === 'navigate'");
+    expect(serviceWorker).toContain('cache.addAll(PRECACHE_URLS)');
+    expect(serviceWorker).toContain("event.request.method !== 'GET'");
+    expect(serviceWorker).toContain("requestUrl.origin !== self.location.origin");
   });
 });

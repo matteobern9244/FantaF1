@@ -9,9 +9,7 @@ internal static class RuntimeEnvironmentProfileContract
     internal const string ProductionEnvironmentName = "Production";
     internal const string ProductionEnvironmentPayload = "production";
 
-    internal const string PortingDatabaseName = "fantaf1_staging";
-    internal const string LocalDevelopmentDatabaseName = "fantaf1_local_dev";
-    internal const string LocalStagingDatabaseName = "fantaf1_local_staging";
+    internal const string DevelopmentDatabaseName = "fantaf1_dev";
     internal const string ContinuousIntegrationDatabaseName = "fantaf1_ci";
     internal const string StagingDatabaseName = "fantaf1_staging";
     internal const string ProductionDatabaseName = "fantaf1";

@@ -1,7 +1,7 @@
 # Specifica di Verifica: Subphase 7 - Results Route & Highlights
 
 **Data:** 13 Marzo 2026 **Obiettivo:** Certificare la completezza e correttezza
-della Subphase 7 nel porting C#, garantendo parità con Node, 100% copertura e
+della Subphase 7 nel porting C#, garantendo parità con Node, 80% copertura e
 gestione corretta dei fallback.
 
 ## 1. Ambito della Verifica
@@ -28,7 +28,7 @@ La verifica copre i seguenti componenti in `backend-csharp/src/`:
 
 ## 3. Criteri di Accettazione
 
-- [ ] Audit di copertura al 100% su tutti i file sopra elencati.
+- [ ] Audit di copertura al 80% su tutti i file sopra elencati.
 - [ ] Esito positivo dei test di integrazione (`ReadRouteEndpointTests.cs`).
 - [ ] Esito positivo dei test di parity (Node-vs-C#).
 - [ ] Verifica manuale della logica di `RaceHighlightsLookupService` per i casi

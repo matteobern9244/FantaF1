@@ -11,6 +11,7 @@ type SectionNavigationId =
   | 'public-guide'
   | 'predictions-section'
   | 'results-section'
+  | 'admin-section'
   | 'history-archive';
 
 type SectionNavigationGroupId = 'analysis-group';
@@ -18,6 +19,7 @@ type SectionNavigationGroupId = 'analysis-group';
 interface SectionNavigationItem {
   kind: 'item';
   id: SectionNavigationId;
+  route: string;
   label: string;
   viewModes: ViewMode[];
 }
@@ -36,24 +38,28 @@ const sectionNavigationDefinitions: SectionNavigationEntry[] = [
   {
     kind: 'item',
     id: 'calendar-section',
+    route: '/dashboard#calendar-section',
     label: appText.shell.navigation.items.calendar,
     viewModes: ['admin', 'public'],
   },
   {
     kind: 'item',
     id: 'predictions-section',
+    route: '/pronostici#predictions-section',
     label: appText.shell.navigation.items.predictions,
     viewModes: ['admin', 'public'],
   },
   {
     kind: 'item',
     id: 'results-section',
+    route: '/gara#results-section',
     label: appText.shell.navigation.items.results,
     viewModes: ['admin'],
   },
   {
     kind: 'item',
     id: 'weekend-live',
+    route: '/gara#weekend-live',
     label: appText.shell.navigation.items.weekendLive,
     viewModes: ['admin', 'public'],
   },
@@ -66,18 +72,21 @@ const sectionNavigationDefinitions: SectionNavigationEntry[] = [
       {
         kind: 'item',
         id: 'season-analysis',
+        route: '/analisi#season-analysis',
         label: appText.shell.navigation.items.seasonAnalysis,
         viewModes: ['admin', 'public'],
       },
       {
         kind: 'item',
         id: 'user-analytics-section',
+        route: '/analisi#user-analytics-section',
         label: appText.shell.navigation.items.userAnalytics,
         viewModes: ['admin', 'public'],
       },
       {
         kind: 'item',
         id: 'user-kpi-section',
+        route: '/analisi#user-kpi-section',
         label: appText.shell.navigation.items.userKpi,
         viewModes: ['admin', 'public'],
       },
@@ -86,18 +95,21 @@ const sectionNavigationDefinitions: SectionNavigationEntry[] = [
   {
     kind: 'item',
     id: 'public-standings',
+    route: '/classifiche#public-standings',
     label: appText.shell.navigation.items.publicStandings,
     viewModes: ['public'],
   },
   {
     kind: 'item',
     id: 'history-archive',
+    route: '/classifiche#history-archive',
     label: appText.shell.navigation.items.history,
     viewModes: ['admin', 'public'],
   },
   {
     kind: 'item',
     id: 'public-guide',
+    route: '/dashboard#public-guide',
     label: appText.shell.navigation.items.publicGuide,
     viewModes: ['public'],
   },

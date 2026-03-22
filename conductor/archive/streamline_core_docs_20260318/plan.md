@@ -13,7 +13,7 @@
 
 - [x] Task: Create `fantaf1-tdd-coverage` skill.
   - **Sub-agent:** `generalist` (Coverage Restorer).
-  - **Task:** Analyze coverage reports and write missing tests to maintain 100%.
+  - **Task:** Analyze coverage reports and write missing tests to maintain 80%.
 - [x] Task: Create `fantaf1-deploy` skill (The 23-point protocol).
   - **Fase A: Release Planner (`generalist`):** Preflight, Dry-run, Version Bump
     in all files, Release Notes in `CHANGELOG.md`. (Punti 1-6)
@@ -59,6 +59,6 @@
 
 - [x] Task: Perform `fantaf1-core-audit` via `codebase_investigator` to ensure
       no mandates were lost.
-- [x] Task: Verify 100% coverage is maintained using `fantaf1-tdd-coverage`.
+- [x] Task: Verify 80% coverage is maintained using `fantaf1-tdd-coverage`.
 - [x] Task: Conductor - User Manual Verification 'Final Review' (Protocol in
       workflow.md)

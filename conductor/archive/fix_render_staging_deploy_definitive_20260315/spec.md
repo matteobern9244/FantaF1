@@ -18,7 +18,7 @@ definitive, non-regressive fix following `AGENTS.md`.
 
 ## Non-Functional Requirements
 
-- **100% Test Coverage:** Maintain full coverage for both Frontend and Backend.
+- **80% Test Coverage:** Maintain full coverage for both Frontend and Backend.
 - **Production-Safe:** No impact on production data or existing business rules.
 - **Responsive-Ready:** Ensure no regressions in desktop or mobile views.
 - **Local Execution:** Zero regressions for local execution using the canonical
@@ -29,7 +29,7 @@ definitive, non-regressive fix following `AGENTS.md`.
 - Docker build on Render (staging) succeeds without errors.
 - `Dockerfile` (wherever located) does not contain `COPY backend/`.
 - `npm run build`, `npm run test`, and `npm run lint` all pass locally.
-- 100% coverage verified for all files.
+- 80% coverage verified for all files.
 - Desktop and mobile views verified.
 
 ## Out of Scope

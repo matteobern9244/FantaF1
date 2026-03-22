@@ -157,28 +157,27 @@ Il lock e' server-side:
 ### UI
 
 - shell responsive desktop/mobile (F1 Racing Theme)
-- sidebar adattiva desktop (collassabile) e menu mobile overlay a tutto schermo
-- hardening della navigation shell: collapse desktop agganciato allo stato reale
-  della shell, trigger mobile localizzato e scroll lock del body mentre
-  l'overlay e' aperto
-- overlay mobile rifinito per leggibilita' e orientamento: label delle voci in
-  font `Formula1` a `20px`, card piu' alte, contenuto centrato e wrapping meno
-  aggressivo per evitare label schiacciate sui viewport stretti
-- riepilogo sticky della sezione corrente nel menu mobile per mantenere piu'
-  intuitiva la navigazione quando l'utente scrolla o riapre l'overlay
+- shell multi-route con entrypoint reali `/dashboard`, `/pronostici`, `/gara`,
+  `/classifiche`, `/analisi` e `/admin`
+- sidebar adattiva desktop (collassabile), coerente con lo stato route-aware
+- mobile shell senza overlay fullscreen nel path runtime attivo: bottom tab bar
+  fissa per dashboard, pronostici, gara, classifiche/storico e analisi
+- mobile utility bar dedicata a installazione PWA, toggle admin/public e logout
 - branding MenuLogo integrato con accenti hi-contrast
 - hero full-width pulita (controlli admin/public spostati nel menu)
 - stato admin/public coerente in tutte le superfici
 - track map coerente tra hero, recap e pannello risultati
 - CTA highlights coerente per ogni weekend selezionato; se il video non e'
   disponibile la label disabilitata e' `HIGHLIGHTS NON PRESENTI`
+- pannello notifiche push reale sulla dashboard con opt-in, opt-out e invio test
+  verso il backend C#
 
 ## Architettura
 
 ### Frontend
 
 - React 18 + TypeScript + Vite
-- SPA servita anche same-origin dal backend C#
+- shell React route-aware servita same-origin dal backend C#
 - API relative `/api/...`
 - logica condivisa centralizzata in moduli come:
   - [src/utils/gameService.ts](/Users/matteobernardini/code/FantaF1/src/utils/gameService.ts)
@@ -221,8 +220,8 @@ Il backend sanitizza sempre lo stato prima di persisterlo.
 - calendario: Formula1.com
 - standings: Formula1.com
 - risultati weekend: Formula1.com
-- highlights gara: feed YouTube Sky Sport F1, playlist del canale
-  `@skysportf1`, ricerca nel canale YouTube Sky Sport F1 e fallback
+- highlights gara: feed YouTube Sky Sport F1, playlist del canale `@skysportf1`,
+  ricerca nel canale YouTube Sky Sport F1 e fallback
   `sport.sky.it/formula-1/video/highlights`
 
 Se un sync fallisce, il backend prova a usare la cache MongoDB gia' disponibile
@@ -334,6 +333,10 @@ ai database live per il cutover. Eventuali future migrazioni dovranno essere:
   - path del build frontend servito same-origin
 - `VITE_APP_LOCAL_NAME`
   - override visuale del titolo hero, letto a build-time dal frontend
+- `Bootstrap:DisableSync`
+  - Se impostata a `true`, disabilita la sincronizzazione automatica di piloti e
+    calendario all'avvio. Utile per preservare dati importati manualmente o da
+    produzione senza che vengano sovrascritti.
 
 `VITE_APP_LOCAL_NAME` viene letta dal frontend Vite a build-time. Su
 Docker/Render non e' una variabile runtime del backend C#: deve entrare nello
@@ -346,17 +349,6 @@ diventare visibile.
   - usata dai runner locali e dalla CI per forzare un database isolato
   - non va usata per puntare a `fantaf1` o `fantaf1_staging`
 
-### Seed admin locale production-like
-
-Il target locale `csharp-staging-local` usa seed runtime non versionati come
-plaintext:
-
-- `AdminCredentialSeed__PasswordSalt`
-- `AdminCredentialSeed__PasswordHashHex`
-
-Queste variabili vengono generate dai runner locali; non vanno impostate
-manualmente su Render.
-
 ## Matrice ambiente esplicita
 
 ### Locale `csharp-dev`
@@ -364,26 +356,24 @@ manualmente su Render.
 - `MONGODB_URI`: obbligatoria, base URI Atlas o locale
 - `ADMIN_SESSION_SECRET`: obbligatoria
 - `ASPNETCORE_ENVIRONMENT`: forzata a `Development` dal launcher
-- `MONGODB_DB_NAME_OVERRIDE`: forzata a `fantaf1_local_dev` dal tooling locale
+- `MONGODB_DB_NAME_OVERRIDE`: forzata a `fantaf1_dev` dal tooling locale
 - `PORT`: non necessaria nel launcher locale canonico; l'host locale usa `3002`
 - `Frontend__BuildPath`: non necessaria in split mode
 - `VITE_APP_LOCAL_NAME`: opzionale
 
-### Locale `csharp-staging-local`
+Contratto operativo del browser check responsive:
 
-- `MONGODB_URI`: obbligatoria, base URI Atlas o locale
-- `ADMIN_SESSION_SECRET`: obbligatoria
-- `ASPNETCORE_ENVIRONMENT`: forzata a `Staging`
-- `MONGODB_DB_NAME_OVERRIDE`: forzata a `fantaf1_local_staging`
-- `PORT`: non necessaria; l'host locale usa `3003`
-- `Frontend__BuildPath`: gestita dal runtime same-origin locale
-- `VITE_APP_LOCAL_NAME`: opzionale
-
-Questo target e' il runbook corretto per simulare `staging` in locale senza
-toccare Render staging. La verifica staging-like same-origin usa:
-
-- `SAVE_SMOKE_TARGET=csharp-staging-local node scripts/save-local-check.mjs`
-- `UI_RESPONSIVE_TARGET=csharp-staging-local npm run test:ui-responsive`
+- usa il runner Playwright in-process del repository e non dipende piu' da
+  `playwright-cli`
+- se backend e frontend locali sono gia' sani, li riusa senza riavviarli
+- se uno dei due servizi non e' raggiungibile, bootstrapta solo la parte
+  mancante tramite `scripts/ui-responsive/stack.mjs`
+- esegue tutti gli scenari obbligatori sui breakpoint `mobile`,
+  `iphone-16-pro-max`, `tablet`, `laptop`, `desktop` e `desktop-xl`
+- non salta piu' `weekend-switch` o `sprint-tooltip`: ogni scenario viene
+  eseguito oppure il comando fallisce esplicitamente
+- scrive diagnostica in `output/playwright/ui-responsive/` quando una
+  navigazione o una validazione fallisce
 
 ### Render staging
 
@@ -444,10 +434,19 @@ Secret richiesti:
 Secret opzionali:
 
 - `RENDER_STAGING_HEALTHCHECK_URL`
-- `RENDER_PRODUCTION_HEALTHCHECK_URL`
+- `RENDER_HEALTHCHECK_URL`
 
 La pipeline normalizza la URI CI e usa `MONGODB_DB_NAME_OVERRIDE=fantaf1_ci` per
 impedire mutazioni dei database condivisi.
+
+Il job `responsive-dev` del workflow PR esegue inoltre
+`npx playwright install --with-deps chromium` dopo `npm ci`, cosi' il runner
+Linux GitHub abbia sempre un browser Playwright coerente con
+`npm run test:ui-responsive` senza dipendere da cache o immagini residue.
+
+Il gate responsive in CI usa lo stesso runner Playwright in-process usato in
+locale e non dipende piu' da wrapper `playwright-cli`, socket residue o cleanup
+manuali di sessione.
 
 ## Avvio locale
 
@@ -461,33 +460,62 @@ impedire mutazioni dei database condivisi.
 
 ### Launcher canonico
 
-- [start_fantaf1.command](/Users/matteobernardini/code/FantaF1/start_fantaf1.command) (macOS/Linux)
-- [start_fantaf1.bat](/Users/matteobernardini/code/FantaF1/start_fantaf1.bat) (Windows)
-- [clean_google_chrome.command](/Users/matteobernardini/code/FantaF1/clean_google_chrome.command) (macOS/Linux)
-- [clean_google_chrome.bat](/Users/matteobernardini/code/FantaF1/clean_google_chrome.bat) (Windows)
+- [start_fantaf1.command](/Users/matteobernardini/code/FantaF1/start_fantaf1.command)
+  (macOS/Linux)
+- [start_fantaf1.bat](/Users/matteobernardini/code/FantaF1/start_fantaf1.bat)
+  (Windows)
+- [clean_google_chrome.command](/Users/matteobernardini/code/FantaF1/clean_google_chrome.command)
+  (macOS/Linux)
+- [clean_google_chrome.bat](/Users/matteobernardini/code/FantaF1/clean_google_chrome.bat)
+  (Windows)
 
 Quando un task richiede di `avviare l'app`, questo e' il solo entrypoint
 canonico. Il launcher esegue una serie di controlli pre-volo obbligatori:
 
 - verifica connettivita' MongoDB (Atlas o locale)
-- linting del codice
-- test unitari frontend
-- test unitari backend C#
-- validazione UI responsive (Playwright)
+- build backend C#
 - build di produzione frontend
-- smoke test di salvataggio locale
+
+La validazione UI responsive resta intenzionalmente separata dal preflight del
+launcher: va eseguita solo con `npm run test:ui-responsive` quando il task lo
+richiede o quando l'utente scrive `check viste`.
+
+Questa separazione e' intenzionale: il launcher monitorato deve restare
+allineato al boot reale dell'applicazione senza incorporare il browser gate
+responsive, che continua a essere un controllo esplicito e isolato.
 
 ### Note operative UI recenti
 
-- il gruppo `Analisi` nel menu e nella dashboard contiene ora `Stagione attuale`,
-  `Deep-dive KPI dashboard` e `User KPI Dashboard`
+- la shell frontend usa ora routing client-side esplicito per `/dashboard`,
+  `/pronostici`, `/classifiche`, `/analisi` e `/admin`, mantenendo condivisibili
+  via URL i parametri `meeting`, `view`, `historyUser` e `historySearch`
+- gli ingressi legacy su `/` con query string vengono normalizzati a
+  `/dashboard` senza perdere lo stato richiesto nell'URL
+- in mobile la shell mostra una bottom tab bar fissa per dashboard, pronostici,
+  gara, area classifiche/storico e analisi; la voce standings usa
+  `Classifiche reali` in public e `Storico gare` in admin
+- il path mobile runtime non usa piu' il vecchio overlay fullscreen: le azioni
+  install/admin-public/logout vivono nella utility bar dedicata sopra la bottom
+  tab bar
+- il gruppo `Analisi` nel menu e nella dashboard contiene ora
+  `Stagione attuale`, `Deep-dive KPI dashboard` e `User KPI Dashboard`
 - `Stagione attuale` sostituisce la precedente label `Analisi stagione`
 - la sidebar desktop usa una larghezza leggermente maggiore per evitare clipping
   dei bordi attivi
-- desktop sidebar e mobile overlay mantengono ora uno stacco visivo tra il
-  gruppo `Analisi` e la successiva voce `Storico gare`
-- i bordi delle voci attive restano interamente visibili sia in desktop sia in
-  mobile/PWA
+- desktop sidebar e shell mobile mantengono ora uno stacco visivo tra il gruppo
+  `Analisi` e la successiva voce `Storico gare` nelle superfici storiche
+- i bordi delle voci attive restano interamente visibili sia in desktop sia nel
+  runtime mobile/PWA attuale
+- gli script di verifica responsive/browser sono stati riallineati alla shell
+  multi-route, con validazioni route-aware sulle sezioni realmente visibili
+- il runner responsive usa ora Playwright in-process, valida in modo
+  deterministico le rotte e le superfici realmente visibili e tratta
+  `weekend-switch` e `sprint-tooltip` come scenari obbligatori: se i
+  prerequisiti non convergono il check fallisce con diagnostica, non viene
+  saltato
+- il pannello notifiche push usa il service worker della PWA, recupera la public
+  key dal backend C#, salva la subscription su MongoDB e puo' inviare un test
+  reale tramite `POST /api/push-notifications/test-delivery`
 
 ### Tool locale di pulizia Chrome
 
@@ -517,14 +545,24 @@ Entrambi gli script:
 - `npm run format:csharp`
 - `npm run format:csharp:check`
 
+Dettagli pratici di `npm run test:ui-responsive`:
+
+- verifica la shell in modalita' admin/public sui breakpoint mobile, tablet e
+  desktop
+- puo' riusare uno stack locale gia' attivo oppure bootstrapparne uno temporaneo
+  quando necessario
+- fallisce esplicitamente se una route, una vista o uno scenario obbligatorio
+  non converge
+- produce screenshot, page state, log console e failure summary in
+  `output/playwright/ui-responsive/`
+
 ### Guardrail sui database locali
 
 I runner locali mutanti non devono mai toccare `fantaf1` o `fantaf1_staging`.
 
 Target supportati:
 
-- `csharp-dev` -> `fantaf1_local_dev`
-- `csharp-staging-local` -> `fantaf1_local_staging`
+- `csharp-dev` -> `fantaf1_dev`
 
 Se `MONGODB_URI` contiene un database condiviso, i runner locali:
 
@@ -643,6 +681,17 @@ Job eseguiti dal workflow PR su PR verso `main` e `staging`:
 - `responsive-dev`
 - `smoke-ci-db`
 
+Dettagli operativi del job `responsive-dev`:
+
+- esegue `npm ci`
+- installa esplicitamente Chromium Playwright con
+  `npx playwright install --with-deps chromium`
+- avvia backend C# e frontend Vite locali
+- aspetta `GET /api/health` e `GET /`
+- lancia `xvfb-run -a npm run test:ui-responsive`
+- in caso di failure stampa `backend.log` e `frontend.log`
+- arresta sempre lo stack locale nel blocco `always()`
+
 Status checks attualmente richiesti dalla branch protection remota su `main` e
 `staging`:
 
@@ -661,8 +710,7 @@ Healthcheck post-merge:
 - se il secret dell'ambiente relativo non e' configurato, il job salta in modo
   esplicito senza mascherare l'assenza del controllo
 - `RENDER_STAGING_HEALTHCHECK_URL` deve contenere l'endpoint health completo
-  dello staging, ad esempio
-  `https://fantaf1-staging.onrender.com/api/health`
+  dello staging, ad esempio `https://fantaf1-staging.onrender.com/api/health`
 
 Trigger operativi documentati:
 
@@ -674,29 +722,39 @@ Trigger operativi documentati:
 - `deploya`: valido solo dal branch corrente `staging`, crea/aggiorna la PR
   `staging -> main`, richiede una descrizione idonea e coerente con il lavoro
   svolto, `matteobern9244` come assignee e label aderenti alle modifiche reali,
-  e dipende dagli stessi gate verso produzione
+  dipende dagli stessi gate verso produzione e, dopo il merge con check verdi,
+  legge lo SHA finale di `main`, abbassa temporaneamente la protection di
+  `staging`, forza `staging` e `develop` allo SHA finale di `main` e poi
+  ripristina la protection di `staging`
 - entrambi i trigger restano invalidi se il workspace non e' pulito, se il
   branch non e' quello atteso o se i secret/controlli richiesti non sono
   disponibili
 
 ## Coverage e qualita'
 
-Baseline verificata corrente sullo scope ufficiale frontend/repository:
+Soglia minima ufficiale sullo scope frontend/repository:
 
-- `2510 / 2510` statements
-- `213 / 213` functions
-- `1138 / 1138` branches
-- `2510 / 2510` lines
+- `100%` statements
+- `100%` functions
+- `100%` branches
+- `100%` lines
 
-Baseline verificata corrente su `backend-csharp/src/`:
+Soglia minima ufficiale su `backend-csharp/src/`:
 
-- `3292 / 3292` lines
-- `1843 / 1843` branches
-- `545 / 545` methods
-- `71` file inclusi
+- `100%` lines
+- `100%` branches
+- `100%` methods
+- `86` file inclusi
 
 Le soglie repository restano a `100%` su statements, branches, functions e
 lines.
+
+Baseline verificata piu' recente:
+
+- frontend/repository: `100%` statements, `100%` functions, `100%` branches,
+  `100%` lines
+- backend `backend-csharp/src/`: `3527 / 3527` lines, `1909 / 1909` branches,
+  `606 / 606` methods su `86` file inclusi
 
 Verifica piu' recente rieseguita localmente:
 
@@ -709,8 +767,8 @@ Verifica piu' recente rieseguita localmente:
 
 Ultimo esito verificato:
 
-- `48` file test verdi
-- `318` test verdi
+- `59` file test verdi
+- `397` test verdi
 
 ## Struttura repository
 

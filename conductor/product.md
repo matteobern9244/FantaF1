@@ -45,7 +45,7 @@ schermo per mobile, garantendo un'esperienza immersiva in stile F1.
 
 ## Standard di Qualità
 
-- **Copertura TDD al 100%:** Sviluppo guidato dai test (TDD) obbligatorio per
+- **Copertura TDD al 80%:** Sviluppo guidato dai test (TDD) obbligatorio per
   ogni cambiamento comportamentale per garantire la massima stabilità.
 - **Mobile-First Responsive:** Navigazione ed elementi UI ottimizzati per
   un'esperienza fluida su smartphone.

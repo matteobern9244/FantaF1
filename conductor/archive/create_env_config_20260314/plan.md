@@ -25,9 +25,9 @@ Ripristinare la configurazione dell'ambiente tramite il file `.env`.
   lo smoke test.
 - **REFACTOR**: Nessuno necessario.
 
-## Coverage 100% totale
+## Coverage 80% totale
 
-- Poiché l'operazione è di configurazione e non di codice sorgente, il 100% di
+- Poiché l'operazione è di configurazione e non di codice sorgente, il 80% di
   copertura deve essere mantenuto per i test esistenti durante la validazione.
 
 ## Fasi dell'Attuazione

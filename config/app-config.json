@@ -381,6 +381,20 @@
         "sprintLabel": "Weekend Sprint",
         "sprintValue": "Il quarto campo usa Pole o vincitore Sprint in base al formato del weekend."
       },
+      "pushNotifications": {
+        "title": "Notifiche push",
+        "unsupported": "Questo browser non supporta le notifiche push.",
+        "idle": "Attiva le notifiche per ricevere gli aggiornamenti del weekend e verificare la consegna reale.",
+        "enabled": "Notifiche push attive su questo dispositivo.",
+        "permissionDenied": "Permesso notifiche negato dal browser.",
+        "enableButton": "Attiva notifiche",
+        "disableButton": "Disattiva notifiche",
+        "testButton": "Invia test push",
+        "subscribedToast": "Notifiche push attivate.",
+        "unsubscribedToast": "Notifiche push disattivate.",
+        "testedToast": "Notifica push di test inviata.",
+        "errorToast": "Impossibile completare l'operazione push."
+      },
       "weekendLive": {
         "title": "Weekend pulse",
         "liveTotalTemplate": "{points} pt live",
@@ -451,6 +465,8 @@
     "navigation": {
       "calendar": "Calendario stagione",
       "analysisGroup": "Analisi",
+      "bottomTabBar": "Barra di navigazione mobile",
+      "mobileActions": "Azioni rapide mobile",
       "userKpi": "User KPI Dashboard",
       "userAnalytics": "Deep-dive KPI dashboard",
       "publicStandings": "Classifiche reali",
@@ -460,7 +476,13 @@
       "predictions": "Pronostici dei giocatori",
       "results": "Risultati del weekend",
       "history": "Storico gare",
-      "currentSection": "Sezione corrente"
+      "currentSection": "Sezione corrente",
+      "installAppShort": "Installa",
+      "publicViewShort": "Pubblico",
+      "adminViewShort": "Admin",
+      "adminLoginShort": "Accedi",
+      "logoutShort": "Esci",
+      "race": "Gara"
     },
     "backend": {
       "health": {

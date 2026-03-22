@@ -73,7 +73,7 @@ public sealed class ConfigurationRuntimeEnvironmentProfileResolver : IRuntimeEnv
 
         if (string.Equals(environment, RuntimeEnvironmentProfileContract.DevelopmentEnvironmentPayload, StringComparison.Ordinal))
         {
-            return RuntimeEnvironmentProfileContract.PortingDatabaseName;
+            return RuntimeEnvironmentProfileContract.DevelopmentDatabaseName;
         }
 
         if (string.Equals(environment, RuntimeEnvironmentProfileContract.StagingEnvironmentPayload, StringComparison.Ordinal))
@@ -107,15 +107,13 @@ public sealed class ConfigurationRuntimeEnvironmentProfileResolver : IRuntimeEnv
 
     private static bool IsAllowedDevelopmentDatabaseTarget(string databaseTarget)
     {
-        return string.Equals(databaseTarget, RuntimeEnvironmentProfileContract.PortingDatabaseName, StringComparison.Ordinal)
-            || string.Equals(databaseTarget, RuntimeEnvironmentProfileContract.LocalDevelopmentDatabaseName, StringComparison.Ordinal)
+        return string.Equals(databaseTarget, RuntimeEnvironmentProfileContract.DevelopmentDatabaseName, StringComparison.Ordinal)
             || string.Equals(databaseTarget, RuntimeEnvironmentProfileContract.ContinuousIntegrationDatabaseName, StringComparison.Ordinal);
     }
 
     private static bool IsAllowedStagingDatabaseTarget(string databaseTarget)
     {
-        return string.Equals(databaseTarget, RuntimeEnvironmentProfileContract.StagingDatabaseName, StringComparison.Ordinal)
-            || string.Equals(databaseTarget, RuntimeEnvironmentProfileContract.LocalStagingDatabaseName, StringComparison.Ordinal);
+        return string.Equals(databaseTarget, RuntimeEnvironmentProfileContract.StagingDatabaseName, StringComparison.Ordinal);
     }
 
     private static string? ExtractMongoDatabaseName(string? mongoUri)

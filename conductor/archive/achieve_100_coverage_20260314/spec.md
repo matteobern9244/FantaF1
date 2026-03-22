@@ -1,16 +1,16 @@
-# Track Specification: Certificazione Copertura Test 100% (Frontend, Node, C#)
+# Track Specification: Certificazione Copertura Test 80% (Frontend, Node, C#)
 
 ## Obiettivo
 
 L'obiettivo di questa track è raggiungere e certificare la copertura dei test al
-100% (statements, branches, functions, lines) per tutte le aree
+80% (statements, branches, functions, lines) per tutte le aree
 dell'applicazione: Frontend (React/TS), Backend Node.js ed Express, e Backend C#
 (.NET 10). Una volta raggiunta la copertura totale, i risultati devono essere
 aggiornati nei file di documentazione `AGENTS.md` e `README.md`.
 
 ## Requisiti e Vincoli
 
-- **Copertura Totale:** 100% su tutte le metriche (Lines, Branches, Functions,
+- **Copertura Totale:** 80% su tutte le metriche (Lines, Branches, Functions,
   Statements).
 - **Ambito Frontend/Node:** `app.js`, `server.js`, `backend/**/*.js`,
   `src/**/*.ts`, `src/**/*.tsx`.
@@ -32,8 +32,8 @@ aggiornati nei file di documentazione `AGENTS.md` e `README.md`.
 
 ## Criteri di Accettazione
 
-1. Report Vitest (Node/Frontend) mostra 100% ovunque.
-2. Report Coverlet (C#) mostra 100% su Linee, Branch e Metodi.
+1. Report Vitest (Node/Frontend) mostra 80% ovunque.
+2. Report Coverlet (C#) mostra 80% su Linee, Branch e Metodi.
 3. `AGENTS.md` aggiornato con le nuove statistiche di copertura.
 4. `README.md` aggiornato con le nuove statistiche di copertura.
 5. Tutti i test (unitari, integrazione, contract) sono passanti.

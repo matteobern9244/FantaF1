@@ -58,8 +58,7 @@ public sealed class PortingDocumentationConsistencyTests
         Assert.Contains("stato globale del gioco (`appdatas`)", readme, StringComparison.Ordinal);
         Assert.Contains("cache standings piloti/costruttori (`standingscaches`)", readme, StringComparison.Ordinal);
         Assert.Contains("credenziali admin hashate e metadata auth (`admincredentials`)", readme, StringComparison.Ordinal);
-        Assert.Contains("fantaf1_local_dev", readme, StringComparison.Ordinal);
-        Assert.Contains("fantaf1_local_staging", readme, StringComparison.Ordinal);
+        Assert.Contains("fantaf1_dev", readme, StringComparison.Ordinal);
         Assert.Contains("I runner locali mutanti non devono mai toccare `fantaf1` o `fantaf1_staging`.", readme, StringComparison.Ordinal);
         Assert.Contains("local mutating runners must never target shared databases", project, StringComparison.Ordinal);
     }
@@ -83,7 +82,7 @@ public sealed class PortingDocumentationConsistencyTests
         Assert.Contains("`MONGODB_URI_CI`", readme, StringComparison.Ordinal);
         Assert.Contains("`ADMIN_SESSION_SECRET_CI`", readme, StringComparison.Ordinal);
         Assert.Contains("`RENDER_STAGING_HEALTHCHECK_URL`", readme, StringComparison.Ordinal);
-        Assert.Contains("`RENDER_PRODUCTION_HEALTHCHECK_URL`", readme, StringComparison.Ordinal);
+        Assert.Contains("`RENDER_HEALTHCHECK_URL`", readme, StringComparison.Ordinal);
         Assert.Contains("ASPNETCORE_ENVIRONMENT=Development", envExample, StringComparison.Ordinal);
         Assert.Contains("MONGODB_DB_NAME_OVERRIDE=", envExample, StringComparison.Ordinal);
         Assert.DoesNotContain("NODE_ENV=", envExample, StringComparison.Ordinal);
@@ -124,29 +123,22 @@ public sealed class PortingDocumentationConsistencyTests
         Assert.Contains("`develop -> staging`", readme, StringComparison.Ordinal);
         Assert.Contains("`deploya`", readme, StringComparison.Ordinal);
         Assert.Contains("`staging -> main`", readme, StringComparison.Ordinal);
+        Assert.Contains("abbassa temporaneamente la protection di `staging`", readme, StringComparison.Ordinal);
+        Assert.Contains("forza `staging` e `develop` allo SHA finale di `main`", readme, StringComparison.Ordinal);
         Assert.DoesNotContain("workflow aggiuntivi `gemini-*`", readme, StringComparison.Ordinal);
     }
 
     [Fact]
-    public void Coverage_baseline_numbers_are_aligned_between_readme_and_agents()
+    public void Coverage_thresholds_are_aligned_between_readme_and_agents()
     {
         var readme = StripAllWhitespace(ReadRepositoryFile("README.md"));
         var agents = StripAllWhitespace(ReadRepositoryFile("AGENTS.md"));
+        var project = NormalizeWhitespace(ReadRepositoryFile("PROJECT.md"));
 
-        Assert.Contains("-`2510/2510`statements", readme, StringComparison.Ordinal);
-        Assert.Contains("-`213/213`functions", readme, StringComparison.Ordinal);
-        Assert.Contains("-`1138/1138`branches", readme, StringComparison.Ordinal);
-        Assert.Contains("-`2510/2510`lines", readme, StringComparison.Ordinal);
-        Assert.Contains(
-            StripAllWhitespace("**100% statements (2510 / 2510)**, **100% functions (213 / 213)**, **100% branches (1138 / 1138)**, and **100% lines (2510 / 2510)**"),
-            agents,
-            StringComparison.Ordinal);
-        Assert.Contains("-`3292/3292`lines", readme, StringComparison.Ordinal);
-        Assert.Contains("-`1843/1843`branches", readme, StringComparison.Ordinal);
-        Assert.Contains("-`545/545`methods", readme, StringComparison.Ordinal);
-        Assert.Contains(StripAllWhitespace("**100% line coverage (3292 / 3292)**"), agents, StringComparison.Ordinal);
-        Assert.Contains(StripAllWhitespace("**100% branch coverage (1843 / 1843)**"), agents, StringComparison.Ordinal);
-        Assert.Contains(StripAllWhitespace("**100% method coverage (545 / 545)**"), agents, StringComparison.Ordinal);
+        Assert.Contains("Le soglie repository restano a `100%` su statements, branches, functions e lines.", NormalizeWhitespace(ReadRepositoryFile("README.md")), StringComparison.Ordinal);
+        Assert.Contains(StripAllWhitespace("**100% statements**, **100% functions**, **100% branches**, and **100% lines**"), agents, StringComparison.Ordinal);
+        Assert.Contains(StripAllWhitespace("**100% line coverage**, **100% branch coverage**, and **100% method coverage**"), agents, StringComparison.Ordinal);
+        Assert.Contains("coverage for the official application-code scope remains at 100% for lines, branches, functions, and statements", project, StringComparison.Ordinal);
     }
 
     [Fact]

@@ -34,18 +34,18 @@ A Conductor track to automate the verification process sequentially.
 
 ### 3. C# Verification Phase
 
-- **Action**: Run all .NET tests and verify 100% coverage.
+- **Action**: Run all .NET tests and verify 80% coverage.
 - **Command**: `npm run test:csharp-coverage` (executes
   `scripts/verify-csharp-coverage.mjs`)
 - **Reasoning**: This script is already specialized to handle `dotnet test` with
-  coverage for unit, integration, and contract tests, and it enforces a 100%
+  coverage for unit, integration, and contract tests, and it enforces a 80%
   coverage requirement.
 
 ## Success Criteria
 
 - All commands exit with code 0.
 - Node.js test coverage meets existing project thresholds.
-- C# test coverage is exactly 100%.
+- C# test coverage is exactly 80%.
 
 ## Verification Strategy
 

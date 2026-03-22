@@ -4,7 +4,7 @@
 - Phase: `spec`
 - Active task: Draft and confirm the track spec
 - Path:
-  `conductor/tracks/track-001-fix-mobile-menu-readability-and-scroll-affordance`
+  `conductor/archive/track-001-fix-mobile-menu-readability-and-scroll-affordance`
 
 ## Files
 

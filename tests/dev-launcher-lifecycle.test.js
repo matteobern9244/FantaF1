@@ -1,11 +1,13 @@
+// @vitest-environment jsdom
 import fs from 'node:fs';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { getChromeWindowLifecycleState } from '../scripts/dev-launcher-lifecycle.mjs';
-import { resolveLauncherTarget } from '../scripts/local-runtime-targets.mjs';
+
 
 const projectRoot = path.resolve(__dirname, '..');
 const startCommandPath = path.join(projectRoot, 'start_fantaf1.command');
+const startBatPath = path.join(projectRoot, 'start_fantaf1.bat');
 
 describe('dev launcher Chrome lifecycle tracking', () => {
   it('keeps the local stack alive until the Chrome app window becomes observable', () => {
@@ -39,10 +41,21 @@ describe('dev launcher Chrome lifecycle tracking', () => {
     expect(launcherScript).toMatch(/export FANTAF1_LOCAL_RUNTIME="\$\{FANTAF1_LOCAL_RUNTIME:-csharp-dev\}"/);
   });
 
-  it('runs the responsive browser check inside the monitored launcher preflight', () => {
+  it('does not run the responsive browser check inside the monitored launcher preflight', () => {
+    const commandLauncherScript = fs.readFileSync(startCommandPath, 'utf8');
+    const batLauncherScript = fs.readFileSync(startBatPath, 'utf8');
+
+    expect(commandLauncherScript).toContain('# run_step "Eseguo validazione UI responsive" npm run test:ui-responsive');
+    expect(commandLauncherScript).not.toMatch(/^[^#\n]*npm run test:ui-responsive/m);
+    expect(batLauncherScript).toContain('REM run_step "Eseguo validazione UI responsive" npm run test:ui-responsive');
+    expect(batLauncherScript).not.toMatch(/^\s*(?!REM\b).*npm run test:ui-responsive\b/m);
+  });
+
+  it('preserves MongoDB URIs without wrapping them in launcher-added quotes', () => {
     const launcherScript = fs.readFileSync(startCommandPath, 'utf8');
 
-    expect(launcherScript).toMatch(/npm run test:ui-responsive/);
+    expect(launcherScript).toContain('MONGODB_URI="$uri" node --input-type=module -e');
+    expect(launcherScript).not.toContain('MONGODB_URI="$uri" node -e');
   });
 
   it('passes through the local launcher env for non-node targets even if the parent env is production', async () => {
@@ -60,21 +73,4 @@ describe('dev launcher Chrome lifecycle tracking', () => {
     expect(launcherEnv.FANTAF1_LOCAL_RUNTIME).toBe('csharp-dev');
   });
 
-  it('builds the csharp staging launcher env from the explicit runtime target', async () => {
-    const { buildLauncherEnv } = await import('../scripts/dev-launcher.mjs');
-
-    const launcherEnv = buildLauncherEnv({
-      baseEnv: {
-        FANTAF1_LOCAL_RUNTIME: 'csharp-staging-local',
-      },
-      envFiles: {},
-      targetConfig: resolveLauncherTarget({
-        FANTAF1_LOCAL_RUNTIME: 'csharp-staging-local',
-      }),
-    });
-
-    expect(launcherEnv.ASPNETCORE_ENVIRONMENT).toBe('Staging');
-    expect(launcherEnv.ASPNETCORE_URLS).toBe('http://127.0.0.1:3003');
-    expect(launcherEnv.FANTAF1_LOCAL_RUNTIME).toBe('csharp-staging-local');
-  });
 });

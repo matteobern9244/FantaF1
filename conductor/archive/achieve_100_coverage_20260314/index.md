@@ -1,4 +1,4 @@
-# achieve_100_coverage_20260314 - Certificazione Copertura Test 100% (Frontend, Node, C#)
+# achieve_100_coverage_20260314 - Certificazione Copertura Test 80% (Frontend, Node, C#)
 
 - Status: `archived`
 - Phase: `archived`

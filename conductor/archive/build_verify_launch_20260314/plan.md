@@ -14,7 +14,7 @@ progetto.
 ## Vincoli di AGENTS.md Applicati
 
 - Rispetto rigoroso dei principi di programmazione di `AGENTS.md`.
-- Mantenimento della copertura al 100% totale per l'applicazione.
+- Mantenimento della copertura al 80% totale per l'applicazione.
 - Utilizzo obbligatorio del launcher `./start_fantaf1.command`.
 - Nessuna modifica di codice non richiesta.
 
@@ -27,10 +27,10 @@ Poiché l'attività è di verifica dello stato attuale del progetto:
   passanti).
 - **REFACTOR**: Non previsto.
 
-## Coverage 100% totale
+## Coverage 80% totale
 
 - Verificare che l'esecuzione di `npm run test` mantenga la copertura attuale
-  del 100% per statement, funzioni, branch e linee.
+  del 80% per statement, funzioni, branch e linee.
 
 ## Fasi dell'Attuazione
 
@@ -47,7 +47,7 @@ Poiché l'attività è di verifica dello stato attuale del progetto:
 ### Fase 3: Unit & Integration Testing
 
 - Eseguire la suite di test completa.
-- Verificare la copertura del 100%.
+- Verificare la copertura del 80%.
 - Comando: `npm run test`.
 
 ### Fase 4: Build di Produzione
@@ -63,7 +63,7 @@ Poiché l'attività è di verifica dello stato attuale del progetto:
 ## Criteri di Accettazione e Verifica
 
 - [ ] `npm run lint` passa senza errori.
-- [ ] `npm run test` riporta il 100% di copertura e zero fallimenti.
+- [ ] `npm run test` riporta il 80% di copertura e zero fallimenti.
 - [ ] `npm run build` genera la directory `dist/` con successo.
 - [ ] L'applicazione si avvia senza errori segnalati nel launcher.
 

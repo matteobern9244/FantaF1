@@ -1,8 +1,8 @@
 import { baseUrl, breakpoints as defaultBreakpoints, runtimeTarget as defaultRuntimeTarget } from './config.mjs';
 import { cleanupResponsiveCheck as defaultCleanupResponsiveCheck } from './cleanup.mjs';
 import { ensureLocalAdminCredential as defaultEnsureLocalAdminCredential } from '../local-admin-credential.mjs';
-import { ensureNpx as defaultEnsureNpx, hasDiagnosticsCollected, markDiagnosticsCollected, prepareOutputDirectory, stringifyDiagnostics } from './diagnostics.mjs';
-import { createPlaywrightCliAdapter as defaultCreatePlaywrightCliAdapter } from './playwright-cli.mjs';
+import { hasDiagnosticsCollected, markDiagnosticsCollected, prepareOutputDirectory, stringifyDiagnostics } from './diagnostics.mjs';
+import { createPlaywrightAdapter as defaultCreatePlaywrightAdapter } from './playwright-adapter.mjs';
 import {
   buildResponsiveScenarios as defaultBuildResponsiveScenarios,
   inspectState as defaultInspectState,
@@ -52,18 +52,17 @@ async function ensureAdminSession({
     );
   }
 
-  cli.goto(targetUrl);
+  await cli.goto(targetUrl);
 }
 
 async function runResponsiveCheck({
   baseUrl: targetBaseUrl = baseUrl,
   runtimeTarget = defaultRuntimeTarget,
   breakpoints = defaultBreakpoints,
-  ensureNpx = defaultEnsureNpx,
   prepareOutputDirectory: prepareOutputDirectoryImpl = prepareOutputDirectory,
   ensureLocalAppStack = defaultEnsureLocalAppStack,
   waitForFrontend = defaultWaitForFrontend,
-  createPlaywrightCliAdapter = defaultCreatePlaywrightCliAdapter,
+  createPlaywrightAdapter = defaultCreatePlaywrightAdapter,
   navigateToBase = defaultNavigateToBase,
   resizeViewport = defaultResizeViewport,
   inspectState = defaultInspectState,
@@ -78,19 +77,18 @@ async function runResponsiveCheck({
   ensureAdminSession: ensureAdminSessionImpl = ensureAdminSession,
   consoleImpl = console,
 } = {}) {
-  ensureNpx();
   prepareOutputDirectoryImpl();
   const localStack = await ensureLocalAppStack({
     targetConfig: runtimeTarget,
   });
-  const cli = createPlaywrightCliAdapter();
+  const cli = createPlaywrightAdapter();
   let playwrightSession = null;
   const allFailures = [];
   let exitCode = 0;
 
   try {
     await waitForFrontend(targetBaseUrl);
-    cli.assertCleanEnvironment();
+    await cli.assertCleanEnvironment();
     playwrightSession = await cli.startSession({
       url: targetBaseUrl,
     });
@@ -104,7 +102,7 @@ async function runResponsiveCheck({
     });
 
     consoleImpl.log(`[ui-responsive] Avvio controlli su ${targetBaseUrl}`);
-    navigateToBase(cli, {
+    await navigateToBase(cli, {
       label: 'initial-load',
       remediation: 'Verifica l\'allineamento della sessione Playwright, la splash iniziale e i log raccolti.',
       targetUrl: targetBaseUrl,
@@ -114,41 +112,34 @@ async function runResponsiveCheck({
       consoleImpl.log(
         `[ui-responsive] Controllo ${breakpoint.label} (${breakpoint.width}x${breakpoint.height})`,
       );
-      resizeViewport(breakpoint, {
-        runCliImpl: cli.run,
+      await resizeViewport(breakpoint, {
+        resizeViewportImpl: ({ width, height }) => cli.resizeViewport({ width, height }),
       });
-      navigateToBase(cli, {
+      await navigateToBase(cli, {
         label: `${breakpoint.label}-navigation`,
         remediation: 'Verifica che la sessione Playwright punti davvero al frontend locale e che la shell esca dal loading.',
         targetUrl: targetBaseUrl,
       });
 
-      const initialState = inspectState({
-        evaluateJsonImpl: cli.evaluateJson,
-      });
-      const scenarios = buildResponsiveScenarios({ initialState });
+      const scenarios = buildResponsiveScenarios();
       const scenarioContext = {
         canSelectSprintWeekend,
         canSwitchWeekend,
         cli,
-        inspectState: () => inspectState({ evaluateJsonImpl: cli.evaluateJson }),
-        scrollAwayFromHeader: () => scrollAwayFromHeader({ evaluateJsonImpl: cli.evaluateJson }),
-        openTooltipIfPresent: () => openTooltipIfPresent({ evaluateJsonImpl: cli.evaluateJson }),
-        selectSprintWeekend: () => selectSprintWeekend({ evaluateJsonImpl: cli.evaluateJson }),
-        switchViewMode: (targetView) => switchViewMode(targetView, { evaluateJsonImpl: cli.evaluateJson }),
-        switchWeekend: () => switchWeekend({ evaluateJsonImpl: cli.evaluateJson }),
+        inspectState: async () => await inspectState({ evaluateJsonImpl: cli.evaluateJson }),
+        scrollAwayFromHeader: async () => await scrollAwayFromHeader({ evaluateJsonImpl: cli.evaluateJson }),
+        openTooltipIfPresent: async () => await openTooltipIfPresent({ evaluateJsonImpl: cli.evaluateJson }),
+        selectSprintWeekend: async () => await selectSprintWeekend({ evaluateJsonImpl: cli.evaluateJson }),
+        switchViewMode: async (targetView) => await switchViewMode(targetView, {
+          evaluateJsonImpl: cli.evaluateJson,
+          gotoImpl: async (url) => await cli.goto(url),
+        }),
+        switchWeekend: async () => await switchWeekend({ evaluateJsonImpl: cli.evaluateJson }),
         validateState,
       };
 
       for (const scenario of scenarios) {
         const result = await scenario.run(scenarioContext);
-        if (result.skipped) {
-          consoleImpl.log(
-            `[ui-responsive] Salto controllo ${scenario.key} su ${breakpoint.label}: prerequisiti non disponibili.`,
-          );
-          continue;
-        }
-
         if (result.failures.length > 0) {
           allFailures.push({
             viewport: breakpoint,
@@ -181,11 +172,11 @@ async function runResponsiveCheck({
     const normalizedError = error instanceof Error ? error : new Error(String(error));
 
     if (!hasDiagnosticsCollected(normalizedError)) {
-      cli.collectDiagnostics({
+      await cli.collectDiagnostics({
         label: 'fatal',
         error: normalizedError,
         remediation:
-          'Verifica i file generati in output/playwright/ui-responsive e chiudi eventuali sessioni Playwright residue prima di riprovare.',
+          'Verifica i file generati in output/playwright/ui-responsive; il runner chiude automaticamente browser e stack locali.',
       });
       markDiagnosticsCollected(normalizedError);
     }

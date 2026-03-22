@@ -1,26 +1,20 @@
 # Conductor Index
 
-This file is the prompt-first navigation index for the Conductor workspace in this repository.
+This file is the prompt-first navigation index for the Conductor workspace in
+this repository.
 
 ## Active Tracks
 
-## persistent_race_highlights_backfill_utc_hardening_20260320 - Persistenza definitiva highlights per gara con backfill ufficiale F1, matching Sky/YouTube e hardening UTC su Render
+## refactor_spa_to_multi_page_app_pwa_20260321 - Refactoring dell'intera applicazione da SPA a App Multi-Pagina (PWA) con routing reale, navigazione mobile ottimizzata (Bottom Tab Bar) e notifiche push
 
 - Status: `completed`
 - Phase: `completed`
-- Active task: Track fully complete.
-- Path: `conductor/tracks/persistent_race_highlights_backfill_utc_hardening_20260320`
-
-## track-002 - Riordinare il menu e le voci dashboard con sottomenu Analisi per KPI e coerenza desktop/mobile/PWA
-
-- Status: `completed`
-- Phase: `completed`
-- Active task: Track completed with full validation and 100% coverage.
-- Path: `conductor/tracks/track-002-riordinare-il-menu-e-le-voci-dashboard-con-sottomenu-analisi-per-kpi-e-coerenza-desktop-mobile-pwa`
+- Active task: Completed
+- Path: `conductor/tracks/refactor_spa_to_multi_page_app_pwa_20260321`
 
 ## Archived Tracks
 
-## achieve_100_coverage_20260314 - Certificazione Copertura Test 100% (Frontend, Node, C#)
+## achieve_100_coverage_20260314 - Certificazione Copertura Test 80% (Frontend, Node, C#)
 
 - Status: `archived`
 - Phase: `archived`
@@ -62,7 +56,7 @@ This file is the prompt-first navigation index for the Conductor workspace in th
 - Active task: Archived
 - Path: `conductor/archive/create_env_config_20260314`
 
-## csharp_backend_migration_20260314 - Rimuovere completamente il backend Node.js, mantenendo solo il backend C# come backend ufficiale, la parte frontend e i file vitali dell'applicazione, garantendo la piena funzionalità e la copertura del 100% senza regressioni in locale e in produzione per render.com (ambiente staging).
+## csharp_backend_migration_20260314 - Rimuovere completamente il backend Node.js, mantenendo solo il backend C# come backend ufficiale, la parte frontend e i file vitali dell'applicazione, garantendo la piena funzionalità e la copertura del 80% senza regressioni in locale e in produzione per render.com (ambiente staging).
 
 - Status: `archived`
 - Phase: `archived`
@@ -188,6 +182,14 @@ This file is the prompt-first navigation index for the Conductor workspace in th
 - Active task: Completed
 - Path: `conductor/archive/merge_develop_into_staging_release_20260315`
 
+## persistent_race_highlights_backfill_utc_hardening_20260320 - Persistenza definitiva highlights per gara con backfill ufficiale F1, matching Sky/YouTube e hardening UTC su Render
+
+- Status: `archived`
+- Phase: `archived`
+- Active task: Archived
+- Path:
+  `conductor/archive/persistent_race_highlights_backfill_utc_hardening_20260320`
+
 ## porting_csharp_phase_10_20260314 - Docker Render Staging and Atlas Operationalization (Phase 10) for C# Backend Port
 
 - Status: `archived`
@@ -200,7 +202,7 @@ This file is the prompt-first navigation index for the Conductor workspace in th
 - Status: `completed`
 - Phase: `completed`
 - Active task: Completed
-- Path: `conductor/tracks/protect_staging_branch_20260318`
+- Path: `conductor/archive/protect_staging_branch_20260318`
 
 ## restaylyng_menu_mobile_20260316 - Mobile Menu Restyling
 
@@ -234,15 +236,16 @@ This file is the prompt-first navigation index for the Conductor workspace in th
 
 - Status: `completed`
 - Phase: `completed`
-- Active task: Implementation, coverage, responsive verification, and production-like preview checks completed without commit or push.
-- Path: `conductor/tracks/stabilize_highlights_persistence_20260318`
+- Active task: Implementation, coverage, responsive verification, and
+  production-like preview checks completed without commit or push.
+- Path: `conductor/archive/stabilize_highlights_persistence_20260318`
 
 ## streamline_core_docs_20260318 - Streamline core documentation (GEMINI.md & AGENTS.md)
 
-- Status: `new`
-- Phase: `new`
-- Active task: No active task
-- Path: `conductor/tracks/streamline_core_docs_20260318`
+- Status: `archived`
+- Phase: `archived`
+- Active task: Archived
+- Path: `conductor/archive/streamline_core_docs_20260318`
 
 ## sync_branch_rules_20260319 - Verificare le rules su github per il branch 'main', NON FARE NESSUNA MODIFICA alle rules di eper 'main' ma applicarle anche al branch 'staging'
 
@@ -256,7 +259,16 @@ This file is the prompt-first navigation index for the Conductor workspace in th
 - Status: `archived`
 - Phase: `archived`
 - Active task: Completed
-- Path: `conductor/archive/track-001-fix-mobile-menu-readability-and-scroll-affordance`
+- Path:
+  `conductor/archive/track-001-fix-mobile-menu-readability-and-scroll-affordance`
+
+## track-002 - Riordinare il menu e le voci dashboard con sottomenu Analisi per KPI e coerenza desktop/mobile/PWA
+
+- Status: `archived`
+- Phase: `archived`
+- Active task: Archived
+- Path:
+  `conductor/archive/track-002-riordinare-il-menu-e-le-voci-dashboard-con-sottomenu-analisi-per-kpi-e-coerenza-desktop-mobile-pwa`
 
 ## ui_menu_rework_20260315 - UI Menu Rework
 
@@ -300,7 +312,7 @@ This file is the prompt-first navigation index for the Conductor workspace in th
 - Active task: Archived
 - Path: `conductor/archive/verify_docker_staging_local_20260315`
 
-## verify_workflow_20260314 - Verifica e certificazione della copertura test al 100% e dell'integrità del workflow Conductor
+## verify_workflow_20260314 - Verifica e certificazione della copertura test al 80% e dell'integrità del workflow Conductor
 
 - Status: `archived`
 - Phase: `archived`
@@ -316,6 +328,9 @@ This file is the prompt-first navigation index for the Conductor workspace in th
 
 ## Notes
 
-- `product.md`, `product-guidelines.md`, and `tech-stack.md` define the shared project context.
-- Each track owns its own `index.md`, `metadata.json`, `spec.md`, `plan.md`, `review.md`, and `verify.md`.
-- `tracks.md` is kept as a compact summary view for compatibility, but `index.md` is the primary workspace index.
+- `product.md`, `product-guidelines.md`, and `tech-stack.md` define the shared
+  project context.
+- Each track owns its own `index.md`, `metadata.json`, `spec.md`, `plan.md`,
+  `review.md`, and `verify.md`.
+- `tracks.md` is kept as a compact summary view for compatibility, but
+  `index.md` is the primary workspace index.

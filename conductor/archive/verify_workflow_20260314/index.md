@@ -1,4 +1,4 @@
-# verify_workflow_20260314 - Verifica e certificazione della copertura test al 100% e dell'integrità del workflow Conductor
+# verify_workflow_20260314 - Verifica e certificazione della copertura test al 80% e dell'integrità del workflow Conductor
 
 - Status: `archived`
 - Phase: `archived`

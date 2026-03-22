@@ -103,35 +103,116 @@ describe('responsive UI local stack bootstrap', () => {
     await expect(stack.stop()).resolves.toBeUndefined();
   });
 
-  it('fails fast when only one side of the local stack is reachable', async () => {
+  it('starts only the missing backend when the frontend is already reachable', async () => {
+    let backendReady = false;
     const fetchImpl = vi.fn().mockImplementation(async (url) => {
       if (url === 'http://127.0.0.1:5173') {
         return { ok: true };
       }
 
-      throw new Error('offline');
+      if (url === 'http://127.0.0.1:3002/api/health') {
+        if (!backendReady) {
+          throw new Error('offline');
+        }
+
+        return { ok: true };
+      }
+
+      return { ok: true };
+    });
+    const backendKill = vi.fn();
+    const spawnImpl = vi.fn().mockImplementation(() => {
+      backendReady = true;
+      return { killed: false, kill: backendKill };
     });
 
-    await expect(
-      ensureLocalAppStack({
-        frontendUrl: 'http://127.0.0.1:5173',
-        backendUrl: 'http://127.0.0.1:3002/api/health',
-        fetchImpl,
-        spawnImpl: vi.fn(),
-        sleepImpl: async () => {},
-        timeoutMs: 100,
-        pollInterval: 10,
-      }),
-    ).rejects.toThrow(/stack locale parziale/i);
+    const stack = await ensureLocalAppStack({
+      frontendUrl: 'http://127.0.0.1:5173',
+      backendUrl: 'http://127.0.0.1:3002/api/health',
+      appProbeUrls: ['http://127.0.0.1:5173/api/session'],
+      fetchImpl,
+      spawnImpl,
+      sleepImpl: async () => {},
+      timeoutMs: 100,
+      pollInterval: 10,
+    });
+
+    expect(stack.started).toBe(true);
+    expect(spawnImpl).toHaveBeenCalledTimes(1);
+    expect(spawnImpl).toHaveBeenCalledWith(
+      'dotnet',
+      [
+        'run',
+        '--project',
+        'backend-csharp/src/FantaF1.Api/FantaF1.Api.csproj',
+        '-c',
+        'Release',
+        '--no-launch-profile',
+      ],
+      expect.objectContaining({ stdio: 'ignore' }),
+    );
+
+    await stack.stop();
+    expect(backendKill).toHaveBeenCalledWith('SIGTERM');
   });
 
-  it('skips the weekend-switch scenario when fewer than two calendar cards are available', () => {
+  it('starts only the missing frontend when the backend is already reachable', async () => {
+    let frontendReady = false;
+    const fetchImpl = vi.fn().mockImplementation(async (url) => {
+      if (url === 'http://127.0.0.1:3002/api/health' || url.startsWith('http://127.0.0.1:5173/api/')) {
+        return { ok: true };
+      }
+
+      if (url === 'http://127.0.0.1:5173') {
+        if (!frontendReady) {
+          throw new Error('offline');
+        }
+
+        return { ok: true };
+      }
+
+      throw new Error('offline');
+    });
+    const frontendKill = vi.fn();
+    const spawnImpl = vi.fn().mockImplementation(() => {
+      frontendReady = true;
+      return { killed: false, kill: frontendKill };
+    });
+
+    const stack = await ensureLocalAppStack({
+      frontendUrl: 'http://127.0.0.1:5173',
+      backendUrl: 'http://127.0.0.1:3002/api/health',
+      appProbeUrls: ['http://127.0.0.1:5173/api/session'],
+      fetchImpl,
+      spawnImpl,
+      sleepImpl: async () => {},
+      timeoutMs: 100,
+      pollInterval: 10,
+      backendCommand: 'dotnet',
+      backendArgs: ['run'],
+      frontendCommand: 'npm',
+      frontendArgs: ['run', 'dev:frontend'],
+    });
+
+    expect(stack.started).toBe(true);
+    expect(spawnImpl).toHaveBeenCalledTimes(1);
+    expect(spawnImpl).toHaveBeenCalledWith(
+      'npm',
+      ['run', 'dev:frontend'],
+      expect.objectContaining({ stdio: 'ignore' }),
+    );
+
+    await stack.stop();
+    expect(frontendKill).toHaveBeenCalledWith('SIGTERM');
+  });
+
+  it('marks weekend-switch as non executable when fewer than two calendar cards are available', () => {
     expect(canSwitchWeekend({ selectedWeekend: { calendarCardCount: 0 } })).toBe(false);
     expect(canSwitchWeekend({ selectedWeekend: { calendarCardCount: 1 } })).toBe(false);
     expect(canSwitchWeekend({ selectedWeekend: { calendarCardCount: 2 } })).toBe(true);
   });
 
-  it('skips the sprint scenario when no sprint weekends are available', () => {
+  it('marks sprint-tooltip as non executable when no sprint weekends are available', () => {
     expect(canSelectSprintWeekend({ selectedWeekend: { sprintCardCount: 0 } })).toBe(false);
     expect(canSelectSprintWeekend({ selectedWeekend: { sprintCardCount: 1 } })).toBe(true);
   });

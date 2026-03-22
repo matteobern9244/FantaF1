@@ -1,27 +1,27 @@
 ---
 name: fantaf1-deploy
 description:
-  Use this skill to execute the full FantaF1 23-point deployment protocol
-  whenever the 'deploya' command is invoked, using a coordinated sub-agent
-  workflow.
+  Use this skill to execute the full FantaF1 deployment protocol including the
+  final main/staging/develop realignment whenever the 'deploya' command is
+  invoked, using a coordinated sub-agent workflow.
 ---
 
-# Instructions: FantaF1 23-Point Deployment Protocol
+# Instructions: FantaF1 Deployment Protocol
 
 You are the **Release Orchestrator**, responsible for coordinating the full
-FantaF1 23-point deployment protocol. You MUST delegate each phase to the
-specialized **generalist** sub-agent as described below.
+FantaF1 deployment protocol. You MUST delegate each phase to the specialized
+**generalist** sub-agent as described below.
 
 ## Core Mandates
 
-- **Authoritative Source:** The 23 points are defined verbatim in `AGENTS.md`
-  (Section 10).
-- **Strict Sequence:** Follow the points from 1 to 23 in exact order. Do not
+- **Authoritative Source:** The protocol steps are defined verbatim in
+  `AGENTS.md` (Section 10).
+- **Strict Sequence:** Follow the points from 1 to 27 in exact order. Do not
   skip or reorder.
 - **Sub-Agent Delegation:** Every phase MUST be executed via a specialized
   sub-agent task.
 
-## The 23-Point Protocol (Verbatim from AGENTS.md)
+## The Protocol (Verbatim from AGENTS.md)
 
 1.  Before starting, run a full preflight on the repository state and release
     target. Verify there are no unstaged files, `main` is aligned with the stack
@@ -72,9 +72,9 @@ specialized **generalist** sub-agent as described below.
 14. Verify that the Pull Request configuration is correct before enabling merge
     automation. Confirm the title, body, labels, base branch, head branch,
     reviewers, assignees, and release metadata are accurate and complete.
-    - The Pull Request body must be suitable, specific, and clearly aligned
-      with the real work delivered in the branch; generic or vague
-      descriptions are not acceptable.
+    - The Pull Request body must be suitable, specific, and clearly aligned with
+      the real work delivered in the branch; generic or vague descriptions are
+      not acceptable.
     - `matteobern9244` must be assigned as assignee on the Pull Request.
     - Pull Request labels must reflect the work actually performed and must not
       include unrelated or speculative categories.
@@ -89,16 +89,26 @@ specialized **generalist** sub-agent as described below.
 18. After GitHub has merged the Pull Request into `main`, verify that the merged
     commit on `main` is the expected release commit and that the repository
     state still matches the validated release candidate.
-19. Create a tag on `main` that matches the new version.
-20. Verify that the created tag points to the correct merged commit before
+19. Read the final commit SHA now pointed to by `main` after the protected Pull
+    Request merge has completed successfully.
+20. Temporarily lower the protection on `staging` just enough to allow a direct
+    branch ref update, then force `staging` to that final `main` commit SHA.
+21. Force `develop` to that same final `main` commit SHA so that the release
+    cycle closes with `main == staging == develop`.
+22. Restore the original `staging` protection immediately after the forced
+    branch alignment and verify that the restored policy matches the expected
+    CI/CD gate configuration.
+23. Create a tag on `main` that matches the new version.
+24. Verify that the created tag points to the correct merged commit before
     proceeding.
-21. Create a GitHub Release based on that tag, coherent with the version and
+25. Create a GitHub Release based on that tag, coherent with the version and
     delivered changes.
-22. If tag creation, release creation, or any post-merge release step fails,
-    stop immediately, do not continue with later release actions, and report the
-    exact rollback or cleanup actions required to restore a coherent release
-    state.
-23. Return to the original branch from which the deployment workflow started.
+26. If tag creation, release creation, the temporary `staging` protection
+    downgrade, the forced branch alignment, or any post-merge release step
+    fails, stop immediately, do not continue with later release actions, and
+    report the exact rollback or cleanup actions required to restore a coherent
+    release state.
+27. Return to the original branch from which the deployment workflow started.
 
 ## The Coordinated Deployment Workflow
 
@@ -125,11 +135,13 @@ specialized **generalist** sub-agent as described below.
 - **Task:** Perform commit, push, PR creation, configuration verification, and
   auto-merge monitoring (Points 10-17).
 
-### Phase D: Release Publisher (Points 18-23)
+### Phase D: Release Publisher (Points 18-27)
 
 - **Sub-agent:** `generalist` (Release Publisher).
-- **Task:** Create/verify Git Tag, create GitHub Release, perform cleanup, and
-  restore branch (Points 18-23).
+- **Task:** verify the merged `main` SHA, perform the temporary `staging`
+  protection downgrade and final branch alignment, restore the `staging`
+  protection, create/verify Git Tag, create GitHub Release, perform cleanup, and
+  restore branch (Points 18-27).
 
 ## Verification Commands
 
