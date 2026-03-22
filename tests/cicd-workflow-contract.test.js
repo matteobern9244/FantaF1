@@ -52,4 +52,28 @@ describe('CI/CD workflow contract', () => {
     expect(deployStagingSkill).toContain('`matteobern9244` must be assigned as assignee');
     expect(readme).not.toContain('workflow aggiuntivi `gemini-*`');
   });
+
+  it('keeps the responsive-dev workflow aligned with the in-process Playwright runner', () => {
+    const workflow = readRepositoryFile('.github/workflows/pr-ci.yml').replace(/\s+/g, ' ');
+    const packageJson = readRepositoryFile('package.json').replace(/\s+/g, ' ');
+    const runnerEntrypoint = readRepositoryFile('scripts/ui-responsive-check.mjs');
+    const runnerImplementation = readRepositoryFile('scripts/ui-responsive/run-responsive-check.mjs');
+    const adapter = readRepositoryFile('scripts/ui-responsive/playwright-adapter.mjs');
+
+    expect(packageJson).toContain('"test:ui-responsive": "node scripts/ui-responsive-check.mjs"');
+    expect(workflow).toContain('name: responsive-dev');
+    expect(workflow).toContain('run: npm ci');
+    expect(workflow).toContain('run: npx playwright install --with-deps chromium');
+    expect(workflow).toContain('dotnet run --project backend-csharp/src/FantaF1.Api/FantaF1.Api.csproj -c Release --no-launch-profile');
+    expect(workflow).toContain('npm run dev:frontend');
+    expect(workflow).toContain('timeout 60 bash -lc \'until curl --fail --silent http://127.0.0.1:3002/api/health >/dev/null; do sleep 1; done\'');
+    expect(workflow).toContain('timeout 60 bash -lc \'until curl --fail --silent http://127.0.0.1:5173 >/dev/null; do sleep 1; done\'');
+    expect(workflow).toContain('run: xvfb-run -a npm run test:ui-responsive');
+    expect(workflow).toContain('name: Dump local stack logs on failure');
+    expect(workflow).toContain('name: Stop local stack');
+    expect(runnerEntrypoint).not.toContain('playwright-cli');
+    expect(runnerImplementation).not.toContain('ensureNpx');
+    expect(runnerImplementation).not.toContain('playwright-cli');
+    expect(adapter).toContain("import { chromium } from 'playwright';");
+  });
 });

@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { isAppShellReady, validateState, waitForAppShell } from '../scripts/ui-responsive/state-validation.mjs';
 
 describe('responsive UI app shell gating', () => {
-  it('treats the minimal shell as ready even before responsive assertions pass', () => {
+  it('treats the minimal shell as ready even before responsive assertions pass', async () => {
     const shellState = {
       href: 'http://127.0.0.1:5173/',
       title: 'FantaF1 2026',
@@ -94,12 +94,12 @@ describe('responsive UI app shell gating', () => {
     };
 
     expect(isAppShellReady(shellState)).toBe(true);
-    expect(waitForAppShell({
+    await expect(waitForAppShell({
       getPageInfoImpl: () => shellState,
-      sleepSyncImpl: vi.fn(),
+      sleepImpl: vi.fn(async () => {}),
       timeoutMs: 10,
       pollInterval: 0,
-    })).toEqual(shellState);
+    })).resolves.toEqual(shellState);
     expect(validateState(validationState)).toEqual(
       expect.arrayContaining([
         'Target tipografico mancante: punti classifica live.',
@@ -178,6 +178,96 @@ describe('responsive UI app shell gating', () => {
         sprintCardCount: 1,
         cardText: 'Round 1 Australia',
         bannerTitle: 'Australian Grand Prix 2026',
+        firstPredictionValue: '',
+        firstPredictionText: '',
+        firstResultValue: '',
+        firstResultText: '',
+        highlightsButton: { present: true, disabled: false, text: 'Guarda Highlights', clipped: false },
+      },
+      selects: {
+        meeting: { present: true, color: 'rgb(248, 250, 252)', backgroundColor: 'rgb(24, 28, 39)', fontFamily: 'Formula1, sans-serif', appearance: 'none', disabled: false, text: 'Australia' },
+        insights: { present: false, color: '', backgroundColor: '', fontFamily: '', appearance: '', disabled: false, text: '' },
+        prediction: { present: false, color: '', backgroundColor: '', fontFamily: '', appearance: '', disabled: false, text: '' },
+        result: { present: false, color: '', backgroundColor: '', fontFamily: '', appearance: '', disabled: false, text: '' },
+        historyFilter: { present: false, color: '', backgroundColor: '', fontFamily: '', appearance: '', disabled: false, text: '' },
+        predictionOption: { present: false, color: '', backgroundColor: '', fontFamily: '', appearance: '', disabled: false, text: '' },
+        resultOption: { present: false, color: '', backgroundColor: '', fontFamily: '', appearance: '', disabled: false, text: '' },
+      },
+      viewMode: {
+        current: 'admin',
+        readonlyBannerPresent: false,
+        adminLoginPresent: false,
+        adminControlsPresent: false,
+        publicControlsPresent: false,
+      },
+      navigation: {
+        present: true,
+        itemCount: 8,
+        activeText: 'Calendario stagione',
+      },
+      installCta: {
+        present: true,
+        text: 'INSTALLA APPLICAZIONE',
+        clipped: false,
+      },
+      interactiveSurfaces: {
+        total: 8,
+        analytics: 0,
+      },
+      unauthorizedOverflow: [],
+    };
+
+    expect(validateState(validationState, { expectedViewMode: 'admin' })).toEqual([]);
+  });
+
+  it('does not require the projection value on dashboard-only surfaces', () => {
+    const validationState = {
+      routePath: '/dashboard',
+      viewport: { width: 1280, height: 800 },
+      mainSections: {
+        hero: true,
+        summary: true,
+        calendar: true,
+        predictions: false,
+        results: false,
+        footer: true,
+      },
+      nextRace: {
+        cardPresent: true,
+        badgeText: 'Weekend Standard',
+        hasSessions: false,
+        rowCount: 0,
+        clippedRows: [],
+        noteText: '',
+        noteFits: true,
+      },
+      typography: {
+        sessionDay: { present: false, fontFamily: '', text: '' },
+        sessionDate: { present: false, fontFamily: '', text: '' },
+        sessionClock: { present: false, fontFamily: '', text: '' },
+        liveScoreValue: { present: true, fontFamily: 'Formula1, sans-serif', text: '12' },
+        projectionValue: { present: false, fontFamily: '', text: '' },
+      },
+      tooltip: {
+        wrapperPresent: false,
+        disabledWrapperPresent: false,
+        present: false,
+        visible: false,
+        fitsViewport: true,
+        text: '',
+      },
+      history: {
+        present: false,
+        hasCards: false,
+        emptyStateVisible: false,
+        actionButtonCount: 0,
+        clippedButtons: [],
+      },
+      selectedWeekend: {
+        calendarCardCount: 2,
+        sprintCardCount: 1,
+        cardText: 'Round 1 Australia',
+        bannerTitle: '',
         firstPredictionValue: '',
         firstPredictionText: '',
         firstResultValue: '',

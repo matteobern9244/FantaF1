@@ -1,7 +1,7 @@
 import { pathToFileURL } from 'url';
 import { cleanupResponsiveCheck } from './ui-responsive/cleanup.mjs';
-import { ensureNpx, prepareOutputDirectory } from './ui-responsive/diagnostics.mjs';
-import { createPlaywrightCliAdapter, findStaleResponsiveSessions } from './ui-responsive/playwright-cli.mjs';
+import { prepareOutputDirectory } from './ui-responsive/diagnostics.mjs';
+import { createPlaywrightAdapter } from './ui-responsive/playwright-adapter.mjs';
 import { buildResponsiveScenarios } from './ui-responsive/scenarios.mjs';
 import { ensureLocalAppStack } from './ui-responsive/stack.mjs';
 import {
@@ -15,10 +15,9 @@ import { runResponsiveCheck } from './ui-responsive/run-responsive-check.mjs';
 
 async function main() {
   const result = await runResponsiveCheck({
-    ensureNpx,
     prepareOutputDirectory,
     ensureLocalAppStack,
-    createPlaywrightCliAdapter,
+    createPlaywrightAdapter,
     buildResponsiveScenarios,
     cleanupResponsiveCheck,
   });
@@ -39,9 +38,8 @@ export {
   canSelectSprintWeekend,
   canSwitchWeekend,
   cleanupResponsiveCheck,
-  createPlaywrightCliAdapter,
+  createPlaywrightAdapter,
   ensureLocalAppStack,
-  findStaleResponsiveSessions,
   isAppShellReady,
   main,
   runResponsiveCheck,

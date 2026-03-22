@@ -1,8 +1,10 @@
 import { uiShellPollIntervalMs, uiShellTimeoutMs } from './config.mjs';
 import { fail, stringifyDiagnostics } from './diagnostics.mjs';
 
-function sleepSync(durationMs) {
-  Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, durationMs);
+function sleep(durationMs) {
+  return new Promise((resolve) => {
+    setTimeout(resolve, durationMs);
+  });
 }
 
 function isAppShellReady(pageInfo) {
@@ -25,9 +27,9 @@ function isAppShellReady(pageInfo) {
   );
 }
 
-function waitForAppShell({
+async function waitForAppShell({
   getPageInfoImpl,
-  sleepSyncImpl = sleepSync,
+  sleepImpl = sleep,
   timeoutMs = uiShellTimeoutMs,
   pollInterval = uiShellPollIntervalMs,
   failureMessage = 'Shell UI principale non pronta entro il timeout previsto.',
@@ -37,7 +39,7 @@ function waitForAppShell({
 
   while (Date.now() - startedAt < timeoutMs) {
     try {
-      lastPageInfo = getPageInfoImpl();
+      lastPageInfo = await getPageInfoImpl();
       if (isAppShellReady(lastPageInfo)) {
         return lastPageInfo;
       }
@@ -45,17 +47,17 @@ function waitForAppShell({
       // Retry until timeout
     }
 
-    sleepSyncImpl(pollInterval);
+    await sleepImpl(pollInterval);
   }
 
   fail(failureMessage, lastPageInfo ? stringifyDiagnostics(lastPageInfo) : undefined);
 }
 
-function waitForEvaluatedCondition(
+async function waitForEvaluatedCondition(
   expression,
   {
     evaluateJsonImpl,
-    sleepSyncImpl = sleepSync,
+    sleepImpl = sleep,
     timeoutMs = 30000,
     pollInterval = 250,
     failureMessage = 'Condizione UI non raggiunta in tempo.',
@@ -65,14 +67,14 @@ function waitForEvaluatedCondition(
 
   while (Date.now() - startedAt < timeoutMs) {
     try {
-      if (evaluateJsonImpl(expression, { timeoutMs }) === true) {
+      if (await evaluateJsonImpl(expression, { timeoutMs }) === true) {
         return;
       }
     } catch {
       // Retry until timeout
     }
 
-    sleepSyncImpl(pollInterval);
+    await sleepImpl(pollInterval);
   }
 
   fail(failureMessage);
@@ -211,7 +213,7 @@ function validateState(
 
   for (const [label, details] of Object.entries({
     'punti classifica live': state.typography.liveScoreValue,
-    'valore proiezione gara': state.typography.projectionValue,
+    ...(isPredictionsRoute ? { 'valore proiezione gara': state.typography.projectionValue } : {}),
   })) {
     if (!details.present) {
       failures.push(`Target tipografico mancante: ${label}.`);
@@ -312,7 +314,11 @@ function validateState(
       failures.push('La card calendario selezionata non e\' cambiata dopo il click su un altro weekend.');
     }
 
-    if (state.selectedWeekend.bannerTitle === expectedWeekendChangeFrom.bannerTitle) {
+    if (
+      state.selectedWeekend.bannerTitle &&
+      expectedWeekendChangeFrom.bannerTitle &&
+      state.selectedWeekend.bannerTitle === expectedWeekendChangeFrom.bannerTitle
+    ) {
       failures.push('Il banner del weekend selezionato non si e\' aggiornato dopo il cambio gara.');
     }
   }
@@ -361,18 +367,19 @@ function validateState(
 }
 
 function canSwitchWeekend(state) {
-  return Number(state?.selectedWeekend?.calendarCardCount ?? 0) > 1;
+  const routePath = inferRoutePath(state);
+  return routePath === '/dashboard' && Number(state?.selectedWeekend?.calendarCardCount ?? 0) > 1;
 }
 
 function canSelectSprintWeekend(state) {
-  return Number(state?.selectedWeekend?.sprintCardCount ?? 0) > 0;
+  return inferRoutePath(state) === '/dashboard' && Number(state?.selectedWeekend?.sprintCardCount ?? 0) > 0;
 }
 
 export {
   canSelectSprintWeekend,
   canSwitchWeekend,
   isAppShellReady,
-  sleepSync,
+  sleep,
   validateState,
   waitForAppShell,
   waitForEvaluatedCondition,

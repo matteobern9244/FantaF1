@@ -1,27 +1,27 @@
 import { baseUrl } from './config.mjs';
 import { inspectStateExpression } from './dom-expressions.mjs';
 import { fail, markDiagnosticsCollected } from './diagnostics.mjs';
-import { sleepSync, waitForAppShell, waitForEvaluatedCondition } from './state-validation.mjs';
+import { sleep, waitForAppShell, waitForEvaluatedCondition } from './state-validation.mjs';
 
-function inspectState({ evaluateJsonImpl }) {
-  return evaluateJsonImpl(inspectStateExpression);
+async function inspectState({ evaluateJsonImpl }) {
+  return await evaluateJsonImpl(inspectStateExpression);
 }
 
-function navigateToBase(cli, {
+async function navigateToBase(cli, {
   label = 'navigation',
   remediation = 'Verifica il lifecycle della sessione Playwright e i log raccolti in output/playwright/ui-responsive.',
   targetUrl = baseUrl,
 } = {}) {
   try {
-    cli.goto(targetUrl);
-    const pageInfo = waitForAppShell({
-      getPageInfoImpl: () => cli.getPageInfo(),
+    await cli.goto(targetUrl);
+    const pageInfo = await waitForAppShell({
+      getPageInfoImpl: async () => await cli.getPageInfo(),
     });
-    sleepSync(250);
+    await sleep(250);
     return pageInfo;
   } catch (error) {
     const normalizedError = error instanceof Error ? error : new Error(String(error));
-    cli.collectDiagnostics({
+    await cli.collectDiagnostics({
       label,
       error: normalizedError,
       remediation,
@@ -31,19 +31,57 @@ function navigateToBase(cli, {
   }
 }
 
-function resizeViewport({ width, height }, {
-  runCliImpl,
-  sleepSyncImpl = sleepSync,
-} = {}) {
-  runCliImpl(['resize', String(width), String(height)]);
-  sleepSyncImpl(150);
+function buildDashboardAdminUrl() {
+  return new URL('/dashboard?view=admin#calendar-section', `${baseUrl}/`).toString();
 }
 
-function selectSprintWeekend({
-  evaluateJsonImpl,
-  sleepSyncImpl = sleepSync,
+async function ensureDashboardCalendarContext({
+  cli,
+  inspectStateImpl,
+  switchViewModeImpl,
+}) {
+  await navigateToBase(cli, {
+    label: 'dashboard-calendar-context',
+    remediation: 'Verifica che la dashboard admin sia raggiungibile e che il calendario UI sia renderizzato correttamente.',
+    targetUrl: buildDashboardAdminUrl(),
+  });
+
+  await switchViewModeImpl('admin');
+
+  const startedAt = Date.now();
+  let dashboardState = await inspectStateImpl();
+
+  while (
+    (
+      dashboardState?.routePath !== '/dashboard'
+      || Number(dashboardState?.selectedWeekend?.calendarCardCount ?? 0) <= 0
+    )
+    && Date.now() - startedAt < 10000
+  ) {
+    await sleep(250);
+    dashboardState = await inspectStateImpl();
+  }
+
+  if (dashboardState?.routePath !== '/dashboard') {
+    fail(`Contesto dashboard non raggiunto prima del controllo calendario: ${dashboardState?.routePath || '(vuoto)'}.`);
+  }
+
+  return dashboardState;
+}
+
+async function resizeViewport({ width, height }, {
+  resizeViewportImpl,
+  sleepImpl = sleep,
 } = {}) {
-  const result = evaluateJsonImpl(`() => {
+  await resizeViewportImpl({ width, height });
+  await sleepImpl(150);
+}
+
+async function selectSprintWeekend({
+  evaluateJsonImpl,
+  sleepImpl = sleep,
+} = {}) {
+  const result = await evaluateJsonImpl(`() => {
     const sprintCard = document.querySelector('.calendar-card.sprint');
 
     if (!sprintCard) {
@@ -58,26 +96,26 @@ function selectSprintWeekend({
     fail('Nessun weekend Sprint trovato nel calendario UI.');
   }
 
-  waitForEvaluatedCondition(
+  await waitForEvaluatedCondition(
     `() => {
       const badge = document.querySelector('.next-race-card .race-badge');
       return Boolean(badge) && /sprint/i.test(badge.textContent || '');
     }`,
     {
       evaluateJsonImpl,
-      sleepSyncImpl,
+      sleepImpl,
       timeoutMs: 10000,
       failureMessage: 'Badge Sprint non aggiornato dopo la selezione del weekend Sprint.',
     },
   );
-  sleepSyncImpl(150);
+  await sleepImpl(150);
 }
 
-function openTooltipIfPresent({
+async function openTooltipIfPresent({
   evaluateJsonImpl,
-  sleepSyncImpl = sleepSync,
+  sleepImpl = sleep,
 } = {}) {
-  const result = evaluateJsonImpl(`() => {
+  const result = await evaluateJsonImpl(`() => {
     const wrapper = document.querySelector('.results-actions .tooltip-wrapper.disabled-wrapper');
 
     if (!wrapper) {
@@ -92,34 +130,34 @@ function openTooltipIfPresent({
     return false;
   }
 
-  sleepSyncImpl(100);
+  await sleepImpl(100);
   return true;
 }
 
-function scrollAwayFromHeader({
+async function scrollAwayFromHeader({
   evaluateJsonImpl,
-  sleepSyncImpl = sleepSync,
+  sleepImpl = sleep,
 } = {}) {
-  evaluateJsonImpl(`() => {
+  await evaluateJsonImpl(`() => {
     window.scrollTo(0, Math.max(window.innerHeight, 900));
     return true;
   }`);
 
-  sleepSyncImpl(100);
+  await sleepImpl(100);
 }
 
-function switchWeekend({
+async function switchWeekend({
   evaluateJsonImpl,
-  sleepSyncImpl = sleepSync,
+  sleepImpl = sleep,
 } = {}) {
-  waitForEvaluatedCondition('() => document.querySelectorAll(".calendar-card").length > 1', {
+  await waitForEvaluatedCondition('() => document.querySelectorAll(".calendar-card").length > 1', {
     evaluateJsonImpl,
-    sleepSyncImpl,
+    sleepImpl,
     timeoutMs: 10000,
     failureMessage: 'Calendario UI senza weekend alternativi disponibili.',
   });
 
-  const result = evaluateJsonImpl(`() => {
+  const result = await evaluateJsonImpl(`() => {
     const cards = [...document.querySelectorAll('.calendar-card')];
     const currentIndex = cards.findIndex((card) => card.classList.contains('selected'));
     const nextCard = cards.find((_, index) => index !== currentIndex) || null;
@@ -139,15 +177,46 @@ function switchWeekend({
     fail('Impossibile selezionare un weekend alternativo nel calendario UI.');
   }
 
-  sleepSyncImpl(150);
+  await sleepImpl(150);
 }
 
-function switchViewMode(targetView, {
+async function switchViewMode(targetView, {
   evaluateJsonImpl,
-  sleepSyncImpl = sleepSync,
+  gotoImpl,
+  sleepImpl = sleep,
 } = {}) {
   const evalOptions = { timeoutMs: 90000 };
-  const findAndClickResult = () => evaluateJsonImpl(`() => {
+  const isTargetViewActiveExpression = `() => {
+    const isVisible = (element) => {
+      if (!element) {
+        return false;
+      }
+
+      const styles = getComputedStyle(element);
+      const rect = element.getBoundingClientRect();
+      return styles.display !== 'none' && styles.visibility !== 'hidden' && rect.width > 0 && rect.height > 0;
+    };
+    const toggleButton = [
+      ...document.querySelectorAll('.view-mode-toggle button[aria-pressed]'),
+      ...document.querySelectorAll('.sidebar-footer .sidebar-item[aria-pressed]'),
+      ...document.querySelectorAll('.mobile-nav-section.footer-section .mobile-nav-item[aria-pressed]'),
+    ].find((button) => isVisible(button));
+
+    if (toggleButton) {
+      const isAdmin = toggleButton.getAttribute('aria-pressed') === 'true';
+      return ${JSON.stringify(targetView)} === 'public' ? !isAdmin : isAdmin;
+    }
+
+    return new URL(window.location.href).searchParams.get('view') === ${JSON.stringify(targetView)};
+  }`;
+  const isTargetViewAlreadyActive = await evaluateJsonImpl(isTargetViewActiveExpression, evalOptions);
+
+  if (isTargetViewAlreadyActive) {
+    await sleepImpl(150);
+    return;
+  }
+
+  const findAndClickResult = async () => await evaluateJsonImpl(`() => {
     const normalizeText = (value) => String(value || '').replace(/\\s+/g, ' ').trim();
     const matcher = ${JSON.stringify(targetView)} === 'public' ? /pubblica/i : /admin/i;
     const isVisible = (element) => {
@@ -175,14 +244,14 @@ function switchViewMode(targetView, {
       return { clicked: false };
     }
 
-    targetButton.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    targetButton.click();
     return { clicked: true };
   }`, evalOptions);
 
-  let result = findAndClickResult();
+  let result = await findAndClickResult();
 
   if (!result.clicked) {
-    const openMenuResult = evaluateJsonImpl(`() => {
+    const openMenuResult = await evaluateJsonImpl(`() => {
       const mobileTrigger = document.querySelector('.mobile-menu-trigger');
       if (!mobileTrigger) {
         return { opened: false };
@@ -195,42 +264,58 @@ function switchViewMode(targetView, {
         return { opened: false };
       }
 
-      mobileTrigger.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+      mobileTrigger.click();
       return { opened: true };
     }`, evalOptions);
 
     if (openMenuResult.opened) {
-      sleepSyncImpl(150);
-      result = findAndClickResult();
+      await sleepImpl(150);
+      result = await findAndClickResult();
     }
   }
 
   if (!result.clicked) {
-    fail(`Impossibile cambiare vista verso ${targetView}.`);
+    const currentUrl = gotoImpl
+      ? await evaluateJsonImpl('() => window.location.href', evalOptions)
+      : null;
+
+    if (!gotoImpl || !currentUrl) {
+      fail(`Impossibile cambiare vista verso ${targetView}.`);
+    }
+
+    const targetUrl = new URL(currentUrl);
+    targetUrl.searchParams.set('view', targetView);
+    await gotoImpl(targetUrl.toString());
   }
 
-  waitForEvaluatedCondition(
-    `() => {
-      const toggleButton = [
-        ...document.querySelectorAll('.view-mode-toggle button[aria-pressed]'),
-        ...document.querySelectorAll('.sidebar-footer .sidebar-item[aria-pressed]'),
-        ...document.querySelectorAll('.mobile-nav-section.footer-section .mobile-nav-item[aria-pressed]'),
-      ][0];
-      const isAdmin = toggleButton?.getAttribute('aria-pressed') === 'true';
-      return ${JSON.stringify(targetView)} === 'public' ? !isAdmin : isAdmin;
-    }`,
-    {
+  try {
+    await waitForEvaluatedCondition(isTargetViewActiveExpression, {
       evaluateJsonImpl,
-      sleepSyncImpl,
+      sleepImpl,
       timeoutMs: 90000,
       failureMessage: `Vista ${targetView} non attiva dopo il toggle UI.`,
-    },
-  );
+    });
+  } catch (error) {
+    if (!gotoImpl) {
+      throw error;
+    }
 
-  sleepSyncImpl(150);
+    const currentUrl = await evaluateJsonImpl('() => window.location.href', evalOptions);
+    const targetUrl = new URL(currentUrl);
+    targetUrl.searchParams.set('view', targetView);
+    await gotoImpl(targetUrl.toString());
+    await waitForEvaluatedCondition(isTargetViewActiveExpression, {
+      evaluateJsonImpl,
+      sleepImpl,
+      timeoutMs: 90000,
+      failureMessage: `Vista ${targetView} non attiva dopo il cambio vista responsive.`,
+    });
+  }
+
+  await sleepImpl(150);
 }
 
-function finalizeScenarioResult({
+async function finalizeScenarioResult({
   key,
   failures,
   cli,
@@ -239,8 +324,7 @@ function finalizeScenarioResult({
   return {
     key,
     failures: normalizedFailures,
-    screenshotPath: normalizedFailures.length > 0 ? cli.captureScreenshot(key) : null,
-    skipped: false,
+    screenshotPath: normalizedFailures.length > 0 ? await cli.captureScreenshot(key) : null,
   };
 }
 
@@ -248,7 +332,7 @@ function buildResponsiveScenarios({ initialState }) {
   const scenarios = [
     {
       key: 'default',
-      run: async ({ cli, validateState }) => finalizeScenarioResult({
+      run: async ({ cli, validateState }) => await finalizeScenarioResult({
         key: 'default',
         failures: validateState(initialState, { expectedViewMode: 'admin' }),
         cli,
@@ -257,9 +341,9 @@ function buildResponsiveScenarios({ initialState }) {
     {
       key: 'public-view',
       run: async ({ cli, inspectState: inspectStateImpl, switchViewMode: switchViewModeImpl, validateState }) => {
-        switchViewModeImpl('public');
-        const publicState = inspectStateImpl();
-        return finalizeScenarioResult({
+        await switchViewModeImpl('public');
+        const publicState = await inspectStateImpl();
+        return await finalizeScenarioResult({
           key: 'public-view',
           failures: validateState(publicState, { expectedViewMode: 'public' }),
           cli,
@@ -269,9 +353,9 @@ function buildResponsiveScenarios({ initialState }) {
     {
       key: 'admin-return',
       run: async ({ cli, inspectState: inspectStateImpl, switchViewMode: switchViewModeImpl, validateState }) => {
-        switchViewModeImpl('admin');
-        const adminReturnState = inspectStateImpl();
-        return finalizeScenarioResult({
+        await switchViewModeImpl('admin');
+        const adminReturnState = await inspectStateImpl();
+        return await finalizeScenarioResult({
           key: 'admin-return',
           failures: validateState(adminReturnState, { expectedViewMode: 'admin' }),
           cli,
@@ -281,9 +365,9 @@ function buildResponsiveScenarios({ initialState }) {
     {
       key: 'sticky-navigation',
       run: async ({ cli, inspectState: inspectStateImpl, scrollAwayFromHeader: scrollAwayFromHeaderImpl, validateState }) => {
-        scrollAwayFromHeaderImpl();
-        const scrolledState = inspectStateImpl();
-        return finalizeScenarioResult({
+        await scrollAwayFromHeaderImpl();
+        const scrolledState = await inspectStateImpl();
+        return await finalizeScenarioResult({
           key: 'sticky-navigation',
           failures: validateState(scrolledState, {
             expectedViewMode: 'admin',
@@ -298,19 +382,26 @@ function buildResponsiveScenarios({ initialState }) {
         cli,
         canSwitchWeekend,
         inspectState: inspectStateImpl,
+        switchViewMode: switchViewModeImpl,
         switchWeekend: switchWeekendImpl,
         validateState,
       }) => {
-        if (!canSwitchWeekend(initialState)) {
-          return { key: 'weekend-switch', failures: [], screenshotPath: null, skipped: true };
+        const dashboardState = await ensureDashboardCalendarContext({
+          cli,
+          inspectStateImpl,
+          switchViewModeImpl,
+        });
+
+        if (!canSwitchWeekend(dashboardState)) {
+          fail('Controllo weekend-switch non eseguibile: il calendario UI non espone almeno due weekend selezionabili.');
         }
 
-        switchWeekendImpl();
-        const switchedState = inspectStateImpl();
-        return finalizeScenarioResult({
+        await switchWeekendImpl();
+        const switchedState = await inspectStateImpl();
+        return await finalizeScenarioResult({
           key: 'weekend-switch',
           failures: validateState(switchedState, {
-            expectedWeekendChangeFrom: initialState.selectedWeekend,
+            expectedWeekendChangeFrom: dashboardState.selectedWeekend,
           }),
           cli,
         });
@@ -324,16 +415,23 @@ function buildResponsiveScenarios({ initialState }) {
         inspectState: inspectStateImpl,
         openTooltipIfPresent: openTooltipIfPresentImpl,
         selectSprintWeekend: selectSprintWeekendImpl,
+        switchViewMode: switchViewModeImpl,
         validateState,
       }) => {
-        if (!canSelectSprintWeekend(initialState)) {
-          return { key: 'sprint-tooltip', failures: [], screenshotPath: null, skipped: true };
+        const dashboardState = await ensureDashboardCalendarContext({
+          cli,
+          inspectStateImpl,
+          switchViewModeImpl,
+        });
+
+        if (!canSelectSprintWeekend(dashboardState)) {
+          fail('Controllo sprint-tooltip non eseguibile: nessun weekend Sprint disponibile nel calendario UI.');
         }
 
-        selectSprintWeekendImpl();
-        const tooltipActivated = openTooltipIfPresentImpl();
-        const sprintState = inspectStateImpl();
-        return finalizeScenarioResult({
+        await selectSprintWeekendImpl();
+        const tooltipActivated = await openTooltipIfPresentImpl();
+        const sprintState = await inspectStateImpl();
+        return await finalizeScenarioResult({
           key: 'sprint-tooltip',
           failures: validateState(sprintState, {
             expectSprintBadge: true,
@@ -350,6 +448,8 @@ function buildResponsiveScenarios({ initialState }) {
 
 export {
   buildResponsiveScenarios,
+  buildDashboardAdminUrl,
+  ensureDashboardCalendarContext,
   inspectState,
   navigateToBase,
   scrollAwayFromHeader,

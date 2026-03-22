@@ -18,15 +18,16 @@ describe('responsive UI runner', () => {
       }),
     };
     const cli = {
-      assertCleanEnvironment: vi.fn(() => {
+      assertCleanEnvironment: vi.fn(async () => {
         calls.push('assert-clean');
       }),
       startSession: vi.fn(async () => {
         calls.push('start-session');
         return playwrightSession;
       }),
-      captureScreenshot: vi.fn().mockReturnValue(null),
-      collectDiagnostics: vi.fn(),
+      resizeViewport: vi.fn(async () => {}),
+      captureScreenshot: vi.fn(async () => null),
+      collectDiagnostics: vi.fn(async () => {}),
     };
     const scenarios = [
       {
@@ -51,7 +52,6 @@ describe('responsive UI runner', () => {
         UI_RESPONSIVE_TARGET: 'csharp-dev',
       }),
       breakpoints: [{ label: 'mobile', width: 390, height: 844 }],
-      ensureNpx: vi.fn(),
       prepareOutputDirectory: vi.fn(),
       ensureLocalAppStack: vi.fn(async () => localStack),
       ensureLocalAdminCredential: vi.fn(async () => false),
@@ -61,14 +61,14 @@ describe('responsive UI runner', () => {
       waitForFrontend: vi.fn(async () => {
         calls.push('wait-frontend');
       }),
-      createPlaywrightCliAdapter: vi.fn(() => cli),
-      navigateToBase: vi.fn(() => {
+      createPlaywrightAdapter: vi.fn(() => cli),
+      navigateToBase: vi.fn(async () => {
         calls.push('navigate');
       }),
-      resizeViewport: vi.fn(({ label }) => {
+      resizeViewport: vi.fn(async ({ label }) => {
         calls.push(`resize:${label}`);
       }),
-      inspectState: vi.fn(() => ({ selectedWeekend: { cardText: 'A', bannerTitle: 'A' } })),
+      inspectState: vi.fn(async () => ({ selectedWeekend: { cardText: 'A', bannerTitle: 'A' } })),
       buildResponsiveScenarios: vi.fn(() => scenarios),
       cleanupResponsiveCheck: vi.fn(async ({ playwrightSession: session, localStack: stack }) => {
         await session.stop();
@@ -116,16 +116,16 @@ describe('responsive UI runner', () => {
         UI_RESPONSIVE_TARGET: 'csharp-staging-local',
       }),
       breakpoints: [],
-      ensureNpx: vi.fn(),
       prepareOutputDirectory: vi.fn(),
       ensureLocalAppStack,
       waitForFrontend: vi.fn(async () => {}),
-      createPlaywrightCliAdapter: vi.fn(() => ({
-        assertCleanEnvironment: vi.fn(),
+      createPlaywrightAdapter: vi.fn(() => ({
+        assertCleanEnvironment: vi.fn(async () => {}),
         startSession: vi.fn(async () => ({
           stop: vi.fn(async () => []),
         })),
-        collectDiagnostics: vi.fn(),
+        resizeViewport: vi.fn(async () => {}),
+        collectDiagnostics: vi.fn(async () => {}),
       })),
       cleanupResponsiveCheck: vi.fn(async () => []),
       ensureAdminSession: vi.fn(async () => {}),
@@ -154,19 +154,19 @@ describe('responsive UI runner', () => {
         MONGODB_URI: 'mongodb+srv://user:pass@cluster.mongodb.net/fantaf1_dev?retryWrites=true&w=majority',
       }),
       breakpoints: [],
-      ensureNpx: vi.fn(),
       prepareOutputDirectory: vi.fn(),
       ensureLocalAppStack: vi.fn(async () => ({
         stop: vi.fn(async () => {}),
       })),
       ensureLocalAdminCredential: vi.fn(async () => true),
       waitForFrontend: vi.fn(async () => {}),
-      createPlaywrightCliAdapter: vi.fn(() => ({
-        assertCleanEnvironment: vi.fn(),
+      createPlaywrightAdapter: vi.fn(() => ({
+        assertCleanEnvironment: vi.fn(async () => {}),
         startSession: vi.fn(async () => ({
           stop: vi.fn(async () => []),
         })),
-        collectDiagnostics: vi.fn(),
+        resizeViewport: vi.fn(async () => {}),
+        collectDiagnostics: vi.fn(async () => {}),
       })),
       ensureAdminSession,
       cleanupResponsiveCheck: vi.fn(async () => []),
@@ -211,5 +211,41 @@ describe('responsive UI teardown', () => {
     expect(consoleImpl.error).toHaveBeenCalledWith(
       '[ui-responsive] Sessione Playwright orfana ancora aperta: ui-stale',
     );
+  });
+
+  it('does not require npx preflight checks for the in-process Playwright runner', async () => {
+    const createPlaywrightAdapter = vi.fn(() => ({
+      assertCleanEnvironment: vi.fn(async () => {}),
+      startSession: vi.fn(async () => ({
+        stop: vi.fn(async () => []),
+      })),
+      resizeViewport: vi.fn(async () => {}),
+      collectDiagnostics: vi.fn(async () => {}),
+    }));
+
+    const result = await runResponsiveCheck({
+      baseUrl: 'http://127.0.0.1:5173',
+      runtimeTarget: resolveUiResponsiveTarget({
+        UI_RESPONSIVE_TARGET: 'csharp-dev',
+      }),
+      breakpoints: [],
+      prepareOutputDirectory: vi.fn(),
+      ensureLocalAppStack: vi.fn(async () => ({
+        stop: vi.fn(async () => {}),
+      })),
+      waitForFrontend: vi.fn(async () => {}),
+      createPlaywrightAdapter,
+      navigateToBase: vi.fn(async () => {}),
+      ensureLocalAdminCredential: vi.fn(async () => false),
+      ensureAdminSession: vi.fn(async () => {}),
+      cleanupResponsiveCheck: vi.fn(async () => []),
+      consoleImpl: {
+        log: vi.fn(),
+        error: vi.fn(),
+      },
+    });
+
+    expect(createPlaywrightAdapter).toHaveBeenCalledTimes(1);
+    expect(result.exitCode).toBe(0);
   });
 });

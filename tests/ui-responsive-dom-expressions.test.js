@@ -11,6 +11,24 @@ function evaluateInspectStateExpression() {
 }
 
 describe('responsive UI DOM expressions', () => {
+  it('reads the current view mode from the url before falling back to the toggle DOM', () => {
+    window.history.replaceState({}, '', '/dashboard?view=public');
+    document.body.innerHTML = `
+      <aside class="app-sidebar"></aside>
+      <div class="sidebar-footer">
+        <button class="sidebar-item" aria-pressed="true">Admin</button>
+      </div>
+      <header class="hero-panel"></header>
+      <section class="hero-summary-grid"></section>
+      <section class="calendar-panel"></section>
+      <footer class="app-footer"></footer>
+    `;
+
+    const state = evaluateInspectStateExpression();
+
+    expect(state.viewMode.current).toBe('public');
+  });
+
   it('detects admin controls on the admin predictions route', () => {
     window.history.replaceState({}, '', '/pronostici');
     document.body.innerHTML = `

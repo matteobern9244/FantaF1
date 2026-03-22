@@ -1,7 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import { spawnSync } from 'child_process';
-import { cliCleanupTimeoutMs, outputDir, projectRoot } from './config.mjs';
+import { outputDir, projectRoot } from './config.mjs';
 
 function fail(message, details) {
   const error = new Error(message);
@@ -35,18 +34,6 @@ function markDiagnosticsCollected(error) {
 
 function hasDiagnosticsCollected(error) {
   return Boolean(error && typeof error === 'object' && error.diagnosticsCollected);
-}
-
-function ensureNpx({ spawnSyncImpl = spawnSync, cwd = process.cwd() } = {}) {
-  const result = spawnSyncImpl('npx', ['--version'], {
-    cwd,
-    encoding: 'utf8',
-    timeout: cliCleanupTimeoutMs,
-  });
-
-  if (result.error || result.status !== 0) {
-    fail('npx non disponibile. Installa Node.js/npm prima di eseguire il controllo responsive.');
-  }
 }
 
 function loadEnvFile(filePath, { fsImpl = fs } = {}) {
@@ -96,7 +83,6 @@ function prepareOutputDirectory({ fsImpl = fs, outputDirectory = outputDir } = {
 }
 
 export {
-  ensureNpx,
   fail,
   formatErrorDetails,
   hasDiagnosticsCollected,

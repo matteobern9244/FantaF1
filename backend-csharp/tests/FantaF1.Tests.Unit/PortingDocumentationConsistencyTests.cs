@@ -83,7 +83,7 @@ public sealed class PortingDocumentationConsistencyTests
         Assert.Contains("`MONGODB_URI_CI`", readme, StringComparison.Ordinal);
         Assert.Contains("`ADMIN_SESSION_SECRET_CI`", readme, StringComparison.Ordinal);
         Assert.Contains("`RENDER_STAGING_HEALTHCHECK_URL`", readme, StringComparison.Ordinal);
-        Assert.Contains("`RENDER_PRODUCTION_HEALTHCHECK_URL`", readme, StringComparison.Ordinal);
+        Assert.Contains("`RENDER_HEALTHCHECK_URL`", readme, StringComparison.Ordinal);
         Assert.Contains("ASPNETCORE_ENVIRONMENT=Development", envExample, StringComparison.Ordinal);
         Assert.Contains("MONGODB_DB_NAME_OVERRIDE=", envExample, StringComparison.Ordinal);
         Assert.DoesNotContain("NODE_ENV=", envExample, StringComparison.Ordinal);
@@ -136,10 +136,10 @@ public sealed class PortingDocumentationConsistencyTests
         var agents = StripAllWhitespace(ReadRepositoryFile("AGENTS.md"));
         var project = NormalizeWhitespace(ReadRepositoryFile("PROJECT.md"));
 
-        Assert.Contains("Le soglie repository restano a `80%` su statements, branches, functions e lines.", NormalizeWhitespace(ReadRepositoryFile("README.md")), StringComparison.Ordinal);
-        Assert.Contains(StripAllWhitespace("**80% statements**, **80% functions**, **80% branches**, and **80% lines**"), agents, StringComparison.Ordinal);
-        Assert.Contains(StripAllWhitespace("**80% line coverage**, **80% branch coverage**, and **80% method coverage**"), agents, StringComparison.Ordinal);
-        Assert.Contains("coverage for the official application-code scope remains at 80% for lines, branches, functions, and statements", project, StringComparison.Ordinal);
+        Assert.Contains("Le soglie repository restano a `100%` su statements, branches, functions e lines.", NormalizeWhitespace(ReadRepositoryFile("README.md")), StringComparison.Ordinal);
+        Assert.Contains(StripAllWhitespace("**100% statements**, **100% functions**, **100% branches**, and **100% lines**"), agents, StringComparison.Ordinal);
+        Assert.Contains(StripAllWhitespace("**100% line coverage**, **100% branch coverage**, and **100% method coverage**"), agents, StringComparison.Ordinal);
+        Assert.Contains("coverage for the official application-code scope remains at 100% for lines, branches, functions, and statements", project, StringComparison.Ordinal);
     }
 
     [Fact]

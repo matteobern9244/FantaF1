@@ -4,6 +4,40 @@ Cronologia sintetica delle release documentate del progetto Fanta Formula 1.
 
 ## [Unreleased]
 
+- **Responsive Runner In-Process Consolidato e Gate CI Hardened**:
+  `npm run test:ui-responsive` usa ora solo il runner Playwright in-process del
+  repository, senza dipendere da `playwright-cli`, sessioni residue o cleanup
+  manuali; il residuo runtime `ensureNpx` e' stato rimosso dal path attivo del
+  comando. Il workflow
+  [pr-ci.yml](/Users/matteobernardini/code/FantaF1/.github/workflows/pr-ci.yml)
+  installa ora esplicitamente Chromium con
+  `npx playwright install --with-deps chromium` nel job `responsive-dev`,
+  eliminando la dipendenza implicita da cache/browser preesistenti sui runner
+  Linux GitHub. I test di contratto bloccano inoltre il mapping reale del job,
+  l'assenza di riferimenti runtime a `playwright-cli`, la separazione del
+  launcher da `test:ui-responsive` e il contratto `execute-or-fail` senza skip
+  per `weekend-switch` e `sprint-tooltip`.
+- **README e Gate Documentali Riallineati al Contratto Runtime Corrente**:
+  [README.md](/Users/matteobernardini/code/FantaF1/README.md) documenta ora in
+  modo esplicito il runner responsive in-process, il bootstrap/riuso dello
+  stack locale, la diagnostica in `output/playwright/ui-responsive/`, il fatto
+  che il launcher monitorato non includa il browser check nel proprio preflight
+  e l'uso corretto dei secret Render
+  `RENDER_STAGING_HEALTHCHECK_URL` e `RENDER_HEALTHCHECK_URL`. Il gate backend
+  [PortingDocumentationConsistencyTests.cs](/Users/matteobernardini/code/FantaF1/backend-csharp/tests/FantaF1.Tests.Unit/PortingDocumentationConsistencyTests.cs)
+  e' stato aggiornato per bloccare regressioni documentali sul secret
+  storico di produzione e mantenere coerenti workflow, README e validazioni.
+- **Validazioni Rieseguite con Coverage Totale Confermata**: rieseguiti con
+  esito verde `npx vitest run tests/ui-responsive-*.test.js
+  tests/cicd-workflow-contract.test.js tests/startup-script-parity.test.js
+  tests/dev-launcher-lifecycle.test.js tests/readme-vite-env-docs.test.js`,
+  `npx playwright install --dry-run chromium`, `npm run lint`,
+  `npm run test:ui-responsive`, `npm run test`, `npm run test:coverage`,
+  `npm run build` e `npm run test:csharp-coverage`; l'ultimo snapshot
+  verificato resta a `100%` su statements, branches, functions e lines per lo
+  scope frontend/repository e a `3387 / 3387` linee, `1869 / 1869` branch,
+  `567 / 567` metodi sullo scope ufficiale `backend-csharp/src/`.
+
 - **Stabilizzazione Suite Test Admin e Routing MPA**: aggiunti timeout espliciti
   ai test `ui-mockup-roadmap` (mobile-nav, navigation, shell) per eliminare
   flakiness sui CI più lenti; aggiunto test di regressione per la rotta

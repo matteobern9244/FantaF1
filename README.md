@@ -385,6 +385,20 @@ toccare Render staging. La verifica staging-like same-origin usa:
 - `SAVE_SMOKE_TARGET=csharp-staging-local node scripts/save-local-check.mjs`
 - `UI_RESPONSIVE_TARGET=csharp-staging-local npm run test:ui-responsive`
 
+Contratto operativo del browser check responsive:
+
+- usa il runner Playwright in-process del repository e non dipende piu' da
+  `playwright-cli`
+- se backend e frontend locali sono gia' sani, li riusa senza riavviarli
+- se uno dei due servizi non e' raggiungibile, bootstrapta solo la parte
+  mancante tramite `scripts/ui-responsive/stack.mjs`
+- esegue tutti gli scenari obbligatori sui breakpoint `mobile`,
+  `iphone-16-pro-max`, `tablet`, `laptop`, `desktop` e `desktop-xl`
+- non salta piu' `weekend-switch` o `sprint-tooltip`: ogni scenario viene
+  eseguito oppure il comando fallisce esplicitamente
+- scrive diagnostica in `output/playwright/ui-responsive/` quando una
+  navigazione o una validazione fallisce
+
 ### Render staging
 
 Impostare esplicitamente:
@@ -444,10 +458,19 @@ Secret richiesti:
 Secret opzionali:
 
 - `RENDER_STAGING_HEALTHCHECK_URL`
-- `RENDER_PRODUCTION_HEALTHCHECK_URL`
+- `RENDER_HEALTHCHECK_URL`
 
 La pipeline normalizza la URI CI e usa `MONGODB_DB_NAME_OVERRIDE=fantaf1_ci` per
 impedire mutazioni dei database condivisi.
+
+Il job `responsive-dev` del workflow PR esegue inoltre `npx playwright install
+--with-deps chromium` dopo `npm ci`, cosi' il runner Linux GitHub abbia sempre
+un browser Playwright coerente con `npm run test:ui-responsive` senza
+dipendere da cache o immagini residue.
+
+Il gate responsive in CI usa lo stesso runner Playwright in-process usato in
+locale e non dipende piu' da wrapper `playwright-cli`, socket residue o cleanup
+manuali di sessione.
 
 ## Avvio locale
 
@@ -474,12 +497,16 @@ Quando un task richiede di `avviare l'app`, questo e' il solo entrypoint
 canonico. Il launcher esegue una serie di controlli pre-volo obbligatori:
 
 - verifica connettivita' MongoDB (Atlas o locale)
-- linting del codice
-- test unitari frontend
-- test unitari backend C#
-- validazione UI responsive (Playwright)
+- build backend C#
 - build di produzione frontend
-- smoke test di salvataggio locale
+
+La validazione UI responsive resta intenzionalmente separata dal preflight del
+launcher: va eseguita solo con `npm run test:ui-responsive` quando il task lo
+richiede o quando l'utente scrive `check viste`.
+
+Questa separazione e' intenzionale: il launcher monitorato deve restare
+allineato al boot reale dell'applicazione senza incorporare il browser gate
+responsive, che continua a essere un controllo esplicito e isolato.
 
 ### Note operative UI recenti
 
@@ -504,6 +531,11 @@ canonico. Il launcher esegue una serie di controlli pre-volo obbligatori:
   mobile/PWA
 - gli script di verifica responsive/browser sono stati riallineati alla shell
   multi-route, con validazioni route-aware sulle sezioni realmente visibili
+- il runner responsive usa ora Playwright in-process, valida in modo
+  deterministico le rotte e le superfici realmente visibili e tratta
+  `weekend-switch` e `sprint-tooltip` come scenari obbligatori: se i
+  prerequisiti non convergono il check fallisce con diagnostica, non viene
+  saltato
 
 ### Tool locale di pulizia Chrome
 
@@ -532,6 +564,17 @@ Entrambi gli script:
 - `npm run test:csharp-coverage`
 - `npm run format:csharp`
 - `npm run format:csharp:check`
+
+Dettagli pratici di `npm run test:ui-responsive`:
+
+- verifica la shell in modalita' admin/public sui breakpoint mobile, tablet e
+  desktop
+- puo' riusare uno stack locale gia' attivo oppure bootstrapparne uno
+  temporaneo quando necessario
+- fallisce esplicitamente se una route, una vista o uno scenario obbligatorio
+  non converge
+- produce screenshot, page state, log console e failure summary in
+  `output/playwright/ui-responsive/`
 
 ### Guardrail sui database locali
 
@@ -659,6 +702,17 @@ Job eseguiti dal workflow PR su PR verso `main` e `staging`:
 - `responsive-dev`
 - `smoke-ci-db`
 
+Dettagli operativi del job `responsive-dev`:
+
+- esegue `npm ci`
+- installa esplicitamente Chromium Playwright con
+  `npx playwright install --with-deps chromium`
+- avvia backend C# e frontend Vite locali
+- aspetta `GET /api/health` e `GET /`
+- lancia `xvfb-run -a npm run test:ui-responsive`
+- in caso di failure stampa `backend.log` e `frontend.log`
+- arresta sempre lo stack locale nel blocco `always()`
+
 Status checks attualmente richiesti dalla branch protection remota su `main` e
 `staging`:
 
@@ -708,10 +762,10 @@ Soglia minima ufficiale sullo scope frontend/repository:
 
 Soglia minima ufficiale su `backend-csharp/src/`:
 
-- `80%` lines
-- `80%` branches
-- `80%` methods
-- `71` file inclusi
+- `100%` lines
+- `100%` branches
+- `100%` methods
+- `75` file inclusi
 
 Le soglie repository restano a `100%` su statements, branches, functions e
 lines.
@@ -727,8 +781,8 @@ Verifica piu' recente rieseguita localmente:
 
 Ultimo esito verificato:
 
-- `56` file test verdi
-- `382` test verdi
+- `59` file test verdi
+- `397` test verdi
 
 ## Struttura repository
 

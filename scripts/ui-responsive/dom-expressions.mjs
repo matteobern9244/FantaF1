@@ -190,6 +190,11 @@ const inspectStateExpression = `() => {
     },
     viewMode: {
       current: (() => {
+        const urlView = new URL(window.location.href).searchParams.get('view');
+        if (urlView === 'admin' || urlView === 'public') {
+          return urlView;
+        }
+
         const toggleButton = [
           ...document.querySelectorAll('.view-mode-toggle button[aria-pressed]'),
           ...document.querySelectorAll('.sidebar-footer .sidebar-item[aria-pressed]'),
