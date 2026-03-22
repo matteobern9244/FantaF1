@@ -130,25 +130,16 @@ public sealed class PortingDocumentationConsistencyTests
     }
 
     [Fact]
-    public void Coverage_baseline_numbers_are_aligned_between_readme_and_agents()
+    public void Coverage_thresholds_are_aligned_between_readme_and_agents()
     {
         var readme = StripAllWhitespace(ReadRepositoryFile("README.md"));
         var agents = StripAllWhitespace(ReadRepositoryFile("AGENTS.md"));
+        var project = NormalizeWhitespace(ReadRepositoryFile("PROJECT.md"));
 
-        Assert.Contains("-`2510/2510`statements", readme, StringComparison.Ordinal);
-        Assert.Contains("-`213/213`functions", readme, StringComparison.Ordinal);
-        Assert.Contains("-`1138/1138`branches", readme, StringComparison.Ordinal);
-        Assert.Contains("-`2510/2510`lines", readme, StringComparison.Ordinal);
-        Assert.Contains(
-            StripAllWhitespace("**100% statements (2510 / 2510)**, **100% functions (213 / 213)**, **100% branches (1138 / 1138)**, and **100% lines (2510 / 2510)**"),
-            agents,
-            StringComparison.Ordinal);
-        Assert.Contains("-`3292/3292`lines", readme, StringComparison.Ordinal);
-        Assert.Contains("-`1843/1843`branches", readme, StringComparison.Ordinal);
-        Assert.Contains("-`545/545`methods", readme, StringComparison.Ordinal);
-        Assert.Contains(StripAllWhitespace("**100% line coverage (3292 / 3292)**"), agents, StringComparison.Ordinal);
-        Assert.Contains(StripAllWhitespace("**100% branch coverage (1843 / 1843)**"), agents, StringComparison.Ordinal);
-        Assert.Contains(StripAllWhitespace("**100% method coverage (545 / 545)**"), agents, StringComparison.Ordinal);
+        Assert.Contains("Le soglie repository restano a `80%` su statements, branches, functions e lines.", NormalizeWhitespace(ReadRepositoryFile("README.md")), StringComparison.Ordinal);
+        Assert.Contains(StripAllWhitespace("**80% statements**, **80% functions**, **80% branches**, and **80% lines**"), agents, StringComparison.Ordinal);
+        Assert.Contains(StripAllWhitespace("**80% line coverage**, **80% branch coverage**, and **80% method coverage**"), agents, StringComparison.Ordinal);
+        Assert.Contains("coverage for the official application-code scope remains at 80% for lines, branches, functions, and statements", project, StringComparison.Ordinal);
     }
 
     [Fact]

@@ -5,7 +5,7 @@
 This track aims to restore the functionality of the `./start_fantaf1.command`
 script, which is currently failing. Additionally, it will expand the script's
 capabilities to include a comprehensive suite of test cycles for both the
-frontend and backend, ensuring that all quality standards (100% TDD, 100%
+frontend and backend, ensuring that all quality standards (80% TDD, 80%
 coverage, and UI responsiveness) are met before the application starts.
 
 ## Objectives

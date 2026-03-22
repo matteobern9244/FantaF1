@@ -11,7 +11,7 @@ conformità agli standard del progetto.
 - **Rispetto di AGENTS.md**: Ogni modifica al codice, alla configurazione o ai
   workflow deve seguire le istruzioni operative di `AGENTS.md`, inclusa la
   sequenza di validazione (`lint`, `test`, `build`) e il mantenimento della
-  copertura al 100%.
+  copertura al 80%.
 
 ## Fasi dell'Attuazione
 
@@ -49,5 +49,5 @@ conformità agli standard del progetto.
 - [ ] Script `format:csharp` e `format:csharp:check` presenti in `package.json`.
 - [ ] Job `format-csharp` presente in `pr-ci.yml` prima di `build-csharp`.
 - [ ] La pipeline CI/CD fallisce se il codice C# non è formattato.
-- [ ] Copertura dei test unitari e di integrazione C# invariata al 100%.
+- [ ] Copertura dei test unitari e di integrazione C# invariata al 80%.
 - [ ] Conformità totale a `AGENTS.md` certificata.

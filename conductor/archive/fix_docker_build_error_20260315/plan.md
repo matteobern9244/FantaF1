@@ -19,13 +19,13 @@
 
 - [x] Task: Run full validation suite (`npm run lint`, `npm run test`,
       `npm run build`, `./start_fantaf1.command`).
-- [x] Task: Verify backend-csharp coverage is still 100% using
+- [x] Task: Verify backend-csharp coverage is still 80% using
       `npm run test:csharp-coverage`.
 - [x] Task: Conductor - User Manual Verification 'Final Validation' (Protocol in
       workflow.md)
 
-## Coverage 100% totale
+## Coverage 80% totale
 
-- [x] Task: Ensure 100% statements, functions, branches, and lines coverage for
+- [x] Task: Ensure 80% statements, functions, branches, and lines coverage for
       the entire application scope.
-- [x] Task: Verify backend coverage (100% line, branch, method).
+- [x] Task: Verify backend coverage (80% line, branch, method).

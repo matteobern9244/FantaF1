@@ -10,7 +10,7 @@
   "path": "conductor/archive/fix_highlights_lookup_20260315",
   "relatedTrackIds": [],
   "activeTask": "Completed",
-  "description": "Bugfix track for highlights always showing unavailable. The authoritative runtime path is the C# lookup algorithm and the fix must follow AGENTS.md with strict TDD, full validation, and 100% total coverage.",
+  "description": "Bugfix track for highlights always showing unavailable. The authoritative runtime path is the C# lookup algorithm and the fix must follow AGENTS.md with strict TDD, full validation, and 80% total coverage.",
   "type": "bug",
   "track_id": "fix_highlights_lookup_20260315",
   "created_at": "2026-03-15T15:10:00Z",

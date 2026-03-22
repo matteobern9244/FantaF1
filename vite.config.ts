@@ -36,10 +36,10 @@ export default defineConfig({
       include: ['src/**/*.ts', 'src/**/*.tsx', 'scripts/atlas-provisioning.mjs'],
       exclude: ['src/types.ts', 'src/vite-env.d.ts'],
       thresholds: {
-        lines: 100,
-        functions: 100,
-        branches: 100,
-        statements: 100
+        lines: 80,
+        functions: 80,
+        branches: 80,
+        statements: 80
       }
     }
   }

@@ -9,12 +9,12 @@
   "archivedAt": null,
   "path": "conductor/tracks/track-002-riordinare-il-menu-e-le-voci-dashboard-con-sottomenu-analisi-per-kpi-e-coerenza-desktop-mobile-pwa",
   "relatedTrackIds": [],
-  "activeTask": "Track completed with full validation and 100% coverage.",
+  "activeTask": "Track completed with full validation and 80% coverage.",
   "branch": "change-menu-options-dashboard",
   "constraints": [
     "Apply all AGENTS.md instructions",
     "Strict TDD RED -> GREEN -> REFACTOR",
-    "Preserve 100% coverage",
+    "Preserve 80% coverage",
     "Do not commit",
     "Do not push",
     "Validate desktop, mobile browser, and PWA behavior"

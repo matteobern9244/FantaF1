@@ -24,13 +24,13 @@ this repository.
 
 - Status: `completed`
 - Phase: `completed`
-- Active task: Track completed with full validation and 100% coverage.
+- Active task: Track completed with full validation and 80% coverage.
 - Path:
   `conductor/tracks/track-002-riordinare-il-menu-e-le-voci-dashboard-con-sottomenu-analisi-per-kpi-e-coerenza-desktop-mobile-pwa`
 
 ## Archived Tracks
 
-## achieve_100_coverage_20260314 - Certificazione Copertura Test 100% (Frontend, Node, C#)
+## achieve_100_coverage_20260314 - Certificazione Copertura Test 80% (Frontend, Node, C#)
 
 - Status: `archived`
 - Phase: `archived`
@@ -72,7 +72,7 @@ this repository.
 - Active task: Archived
 - Path: `conductor/archive/create_env_config_20260314`
 
-## csharp_backend_migration_20260314 - Rimuovere completamente il backend Node.js, mantenendo solo il backend C# come backend ufficiale, la parte frontend e i file vitali dell'applicazione, garantendo la piena funzionalità e la copertura del 100% senza regressioni in locale e in produzione per render.com (ambiente staging).
+## csharp_backend_migration_20260314 - Rimuovere completamente il backend Node.js, mantenendo solo il backend C# come backend ufficiale, la parte frontend e i file vitali dell'applicazione, garantendo la piena funzionalità e la copertura del 80% senza regressioni in locale e in produzione per render.com (ambiente staging).
 
 - Status: `archived`
 - Phase: `archived`
@@ -312,7 +312,7 @@ this repository.
 - Active task: Archived
 - Path: `conductor/archive/verify_docker_staging_local_20260315`
 
-## verify_workflow_20260314 - Verifica e certificazione della copertura test al 100% e dell'integrità del workflow Conductor
+## verify_workflow_20260314 - Verifica e certificazione della copertura test al 80% e dell'integrità del workflow Conductor
 
 - Status: `archived`
 - Phase: `archived`

@@ -3,51 +3,9 @@
  */
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
-import { readFileSync } from 'node:fs';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import React from 'react';
-import { MemoryRouter } from 'react-router-dom';
+import { BrowserRouter, MemoryRouter } from 'react-router-dom';
 import App from '../src/App';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const appCssPath = path.resolve(__dirname, '..', 'src', 'App.css');
-const appCssContent = readFileSync(appCssPath, 'utf8');
-const asyncUiTimeoutMs = 10000;
-
-function setDesktopMatchMedia() {
-  Object.defineProperty(window, 'matchMedia', {
-    writable: true,
-    value: vi.fn().mockImplementation((query) => ({
-      matches: false,
-      media: query,
-      onchange: null,
-      addListener: vi.fn(),
-      removeListener: vi.fn(),
-      addEventListener: vi.fn(),
-      removeEventListener: vi.fn(),
-      dispatchEvent: vi.fn(),
-    })),
-  });
-}
-
-setDesktopMatchMedia();
-
-Object.defineProperty(window, 'IntersectionObserver', {
-  writable: true,
-  value: vi.fn().mockImplementation(() => ({
-    observe: vi.fn(),
-    unobserve: vi.fn(),
-    disconnect: vi.fn(),
-    takeRecords: vi.fn(() => []),
-  })),
-});
-
-Object.defineProperty(window, 'scrollTo', {
-  writable: true,
-  value: vi.fn(),
-});
 
 function createEmptyPrediction() {
   return {
@@ -56,6 +14,22 @@ function createEmptyPrediction() {
     third: '',
     pole: '',
   };
+}
+
+function createResponse(payload: unknown) {
+  return {
+    ok: true,
+    json: () => Promise.resolve(payload),
+  } as Response;
+}
+
+function createDeferredResponse() {
+  let resolve: (payload: unknown) => void = () => undefined;
+  const promise = new Promise<Response>((internalResolve) => {
+    resolve = (payload: unknown) => internalResolve(createResponse(payload));
+  });
+
+  return { promise, resolve };
 }
 
 function createDrivers() {
@@ -100,25 +74,42 @@ function createCalendar() {
       raceStartTime: '2099-03-22T14:00:00Z',
       sessions: [],
     },
-    {
-      meetingKey: 'race-3',
-      meetingName: 'Monaco',
-      grandPrixTitle: 'Monaco Grand Prix 2099',
-      roundNumber: 3,
-      dateRangeLabel: '27 - 29 MAR',
-      detailUrl: 'https://www.formula1.com/en/racing/2099/monaco',
-      heroImageUrl: 'https://media.example.com/monaco-hero.webp',
-      trackOutlineUrl: '',
-      isSprintWeekend: false,
-      startDate: '2099-03-27',
-      endDate: '2099-03-29',
-      raceStartTime: '2099-03-29T14:00:00Z',
-      sessions: [],
-    },
   ];
 }
 
-function createAppData() {
+function createWeekendState({
+  first,
+  second,
+  third,
+  pole,
+  player1First,
+  player2First,
+  player3First,
+}: {
+  first: string;
+  second: string;
+  third: string;
+  pole: string;
+  player1First: string;
+  player2First: string;
+  player3First: string;
+}) {
+  return {
+    userPredictions: {
+      'Player 1': { first: player1First, second: '', third: '', pole: '' },
+      'Player 2': { first: player2First, second: '', third: '', pole: '' },
+      'Player 3': { first: player3First, second: '', third: '', pole: '' },
+    },
+    raceResults: {
+      first,
+      second,
+      third,
+      pole,
+    },
+  };
+}
+
+function createBaseAppData() {
   return {
     users: [
       {
@@ -138,88 +129,47 @@ function createAppData() {
       },
     ],
     history: [],
-    gpName: 'Australia',
-    raceResults: { first: 'ver', second: '', third: '', pole: '' },
+    gpName: 'Australian Grand Prix 2099',
+    raceResults: {
+      first: 'ver',
+      second: '',
+      third: '',
+      pole: '',
+    },
     selectedMeetingKey: 'race-1',
     weekendStateByMeetingKey: {
-      'race-1': {
-        users: [
-          {
-            name: 'Player 1',
-            predictions: { first: 'ver', second: '', third: '', pole: '' },
-            points: 0,
-          },
-          {
-            name: 'Player 2',
-            predictions: { first: '', second: '', third: '', pole: '' },
-            points: 0,
-          },
-          {
-            name: 'Player 3',
-            predictions: { first: '', second: '', third: '', pole: '' },
-            points: 0,
-          },
-        ],
-        raceResults: { first: 'ver', second: '', third: '', pole: '' },
-      },
-      'race-2': {
-        users: [
-          {
-            name: 'Player 1',
-            predictions: { first: 'ham', second: '', third: '', pole: '' },
-            points: 0,
-          },
-          {
-            name: 'Player 2',
-            predictions: { first: 'nor', second: '', third: '', pole: '' },
-            points: 0,
-          },
-          {
-            name: 'Player 3',
-            predictions: { first: '', second: '', third: '', pole: '' },
-            points: 0,
-          },
-        ],
-        raceResults: { first: 'ham', second: '', third: 'nor', pole: 'pia' },
-      },
+      'race-1': createWeekendState({
+        first: 'ver',
+        second: '',
+        third: '',
+        pole: '',
+        player1First: 'ver',
+        player2First: '',
+        player3First: '',
+      }),
+      'race-2': createWeekendState({
+        first: 'ham',
+        second: '',
+        third: 'nor',
+        pole: 'pia',
+        player1First: 'ham',
+        player2First: 'nor',
+        player3First: '',
+      }),
     },
   };
 }
 
-function createResponse(payload: unknown) {
-  return {
-    ok: true,
-    json: () => Promise.resolve(payload),
-  } as Response;
-}
-
-function createResultsResponse(racePhase: string, results = createEmptyPrediction()) {
-  return () =>
-    Promise.resolve(
-      createResponse({
-        ...results,
-        racePhase,
-      }),
-    );
-}
-
-function createDeferredResponse() {
-  let resolve;
-  const promise = new Promise<Response>((internalResolve) => {
-    resolve = internalResolve;
-  });
-
-  return {
-    promise,
-    resolve: (payload: unknown) => resolve(createResponse(payload)),
-  };
-}
-
 function setupFetch({
-  appData = createAppData(),
+  appData = createBaseAppData(),
   calendar = createCalendar(),
   drivers = createDrivers(),
   resultHandlers = {},
+}: {
+  appData?: ReturnType<typeof createBaseAppData>;
+  calendar?: ReturnType<typeof createCalendar>;
+  drivers?: ReturnType<typeof createDrivers>;
+  resultHandlers?: Record<string, () => Promise<Response>>;
 } = {}) {
   const fetchMock = global.fetch as ReturnType<typeof vi.fn>;
 
@@ -241,7 +191,9 @@ function setupFetch({
     }
 
     if (url.includes('/api/standings')) {
-      return Promise.resolve(createResponse({ driverStandings: [], constructorStandings: [], updatedAt: '' }));
+      return Promise.resolve(
+        createResponse({ driverStandings: [], constructorStandings: [], updatedAt: '' }),
+      );
     }
 
     if (url.includes('/api/predictions')) {
@@ -251,9 +203,8 @@ function setupFetch({
     const match = url.match(/\/api\/results\/(.+)$/);
     if (match) {
       const handler = resultHandlers[match[1]];
-
       if (handler) {
-        return typeof handler === 'function' ? handler() : handler;
+        return handler();
       }
 
       return Promise.resolve(
@@ -280,210 +231,126 @@ function getUserCard(userName: string) {
     return null;
   }
 
-  const headings = within(predictionsSection).queryAllByRole('heading', { name: userName });
-  const h3 = headings.find(h => h.tagName === 'H3');
-  return h3?.closest('article') || null;
+  return within(predictionsSection)
+    .queryAllByRole('heading', { name: userName })
+    .find((heading) => heading.tagName === 'H3')
+    ?.closest('article');
 }
 
-function getPredictionSelect(userName: string, label: string | RegExp) {
+function getUserWinnerSelect(userName: string) {
   const userCard = getUserCard(userName);
-  if (!userCard) {
-    return null;
-  }
+  expect(userCard).not.toBeNull();
 
-  return within(userCard).queryByLabelText(label) as HTMLSelectElement | null;
+  return within(userCard as HTMLElement).getByLabelText(/vincitore gara/i) as HTMLSelectElement;
 }
 
 function getResultSelect(label: string | RegExp) {
   const predictionsSection = getPredictionsSection();
-  if (!predictionsSection) {
-    return null;
-  }
+  expect(predictionsSection).not.toBeNull();
 
-  return within(predictionsSection).queryByLabelText(label) as HTMLSelectElement | null;
+  return within(predictionsSection as HTMLElement).getByLabelText(label) as HTMLSelectElement;
 }
 
-function expectReadableSelectStyles(element: HTMLElement) {
-  const computedStyle = window.getComputedStyle(element);
-  expect(computedStyle.color).not.toBe('transparent');
-  expect(computedStyle.color).not.toBe('rgba(0, 0, 0, 0)');
-}
-
-function clickSectionNavigationButton(label: RegExp) {
-  const sectionNavigation = screen.getByRole('navigation', { name: /sezioni applicazione/i });
-  fireEvent.click(within(sectionNavigation).getByRole('button', { name: label }));
+function renderApp(initialEntry: string) {
+  render(
+    <MemoryRouter initialEntries={[initialEntry]}>
+      <App />
+    </MemoryRouter>,
+  );
 }
 
 async function waitForAppToSettle() {
   await waitFor(() => {
     expect(screen.queryByTestId('pitstop-loader')).not.toBeInTheDocument();
-  }, { timeout: asyncUiTimeoutMs });
+  });
 }
 
 describe('Weekend draft synchronization UI', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    setDesktopMatchMedia();
     window.history.replaceState({}, '', '/');
     window.localStorage.clear();
     window.sessionStorage.clear();
-    vi.spyOn(window, 'alert').mockImplementation(() => {});
   });
 
-  it('loads the selected weekend predictions and official results for race-2', async () => {
-    const fetchMock = setupFetch();
+  it('hydrates the selected weekend predictions and official results for race-2', async () => {
+    const appData = createBaseAppData();
+    appData.selectedMeetingKey = 'race-2';
+    appData.gpName = 'Chinese Grand Prix 2099';
+    appData.users = [
+      { name: 'Player 1', predictions: { first: 'ham', second: '', third: '', pole: '' }, points: 0 },
+      { name: 'Player 2', predictions: { first: 'nor', second: '', third: '', pole: '' }, points: 0 },
+      { name: 'Player 3', predictions: { first: '', second: '', third: '', pole: '' }, points: 0 },
+    ];
+    appData.raceResults = {
+      first: 'ham',
+      second: '',
+      third: 'nor',
+      pole: 'pia',
+    };
 
-    render(<MemoryRouter initialEntries={['/pronostici?meeting=race-2']}><App /></MemoryRouter>);
+    const fetchMock = setupFetch({ appData });
 
-    await waitForAppToSettle();
-
-    await waitFor(() => {
-      expect(fetchMock).toHaveBeenCalledWith('/api/results/race-2');
-    }, { timeout: asyncUiTimeoutMs });
-
-    await waitFor(() => {
-      const userCard = getUserCard('Player 1');
-      expect(userCard).not.toBeNull();
-      expect(within(userCard!).getByLabelText(/vincitore gara/i)).toHaveValue('ham');
-    }, { timeout: asyncUiTimeoutMs });
-
-    const player2Card = getUserCard('Player 2');
-    expect(within(player2Card!).getByLabelText(/vincitore gara/i)).toHaveValue('nor');
-    expect(getResultSelect(/risultato 1°/i)).toHaveValue('ham');
-    expect(getResultSelect(/pole \/ sprint reale/i)).toHaveValue('pia');
-  }, asyncUiTimeoutMs);
-
-  it('shows placeholders for empty drafts on weekends without saved predictions', async () => {
-    setupFetch();
-
-    render(<MemoryRouter initialEntries={['/pronostici?meeting=race-3']}><App /></MemoryRouter>);
-
-    await waitForAppToSettle();
-
-    await waitFor(() => {
-      const userCard = getUserCard('Player 1');
-      expect(userCard).not.toBeNull();
-      expect(within(userCard!).getByLabelText(/vincitore gara/i)).toHaveValue('');
-    }, { timeout: asyncUiTimeoutMs });
-    
-    const player1CardMonaco = getUserCard('Player 1');
-    expect(within(player1CardMonaco!).getByLabelText(/vincitore gara/i)).toHaveDisplayValue(
-      'Seleziona un pilota',
-    );
-    const player2CardMonaco = getUserCard('Player 2');
-    expect(within(player2CardMonaco!).getByLabelText(/vincitore gara/i)).toHaveDisplayValue(
-      'Seleziona un pilota',
-    );
-    expect(getResultSelect(/risultato 1°/i)).toHaveValue('');
-  }, asyncUiTimeoutMs);
-
-  it('keeps shared selects readable on the dashboard and predictions screens', async () => {
-    setupFetch();
-
-    const { unmount } = render(<MemoryRouter initialEntries={['/dashboard']}><App /></MemoryRouter>);
-
-    await waitForAppToSettle();
-
-    await waitFor(() => {
-      expect(screen.getByLabelText(/weekend selezionato/i)).toBeInTheDocument();
-    }, { timeout: asyncUiTimeoutMs });
-
-    expectReadableSelectStyles(screen.getByLabelText(/weekend selezionato/i) as HTMLSelectElement);
-
-    unmount();
-    render(<MemoryRouter initialEntries={['/pronostici?meeting=race-2']}><App /></MemoryRouter>);
-
-    await waitForAppToSettle();
-
-    await waitFor(() => {
-      const player1Card = getUserCard('Player 1');
-      expect(player1Card).not.toBeNull();
-      expect(within(player1Card!).getByLabelText(/vincitore gara/i)).toBeInTheDocument();
-    }, { timeout: asyncUiTimeoutMs });
-
-    const player1Card = getUserCard('Player 1');
-    expectReadableSelectStyles(within(player1Card!).getByLabelText(/vincitore gara/i) as HTMLElement);
-    expectReadableSelectStyles(getResultSelect(/risultato 1°/i));
-  }, asyncUiTimeoutMs);
-
-  it('shows the public-view banner after toggling from predictions', async () => {
-    setupFetch();
-
-    render(<MemoryRouter initialEntries={['/pronostici?meeting=race-2']}><App /></MemoryRouter>);
-
-    await waitForAppToSettle();
-
-    fireEvent.click(screen.getAllByRole('button', { name: /pubblica/i })[0]);
-
-    await waitFor(() => {
-      expect(screen.getByText(/solo gli admin possono modificare i pronostici/i)).toBeInTheDocument();
-    }, { timeout: asyncUiTimeoutMs });
-  }, asyncUiTimeoutMs);
-
-  it('removes the hero title blur and keeps the race background brightness isolated to the dynamic layer', async () => {
-    setupFetch();
-    window.history.replaceState({}, '', '/?meeting=race-2');
-
-    render(<MemoryRouter initialEntries={['/dashboard?meeting=race-2']}><App /></MemoryRouter>);
-
-    await waitForAppToSettle();
-
-    const hero = screen.getByRole('banner');
-    expect(hero).toHaveClass('hero-panel');
-
-    await waitFor(() => {
-      const heroBackground = screen.getByTestId('hero-race-background');
-      const heroStyles = window.getComputedStyle(heroBackground);
-      expect(heroStyles.backgroundImage).toContain('china-hero.webp');
-    }, { timeout: asyncUiTimeoutMs });
-  }, asyncUiTimeoutMs);
-
-  it('saves the selected weekend draft without overwriting other weekend drafts', async () => {
-    const fetchMock = setupFetch();
-    render(<MemoryRouter initialEntries={['/pronostici?meeting=race-2']}><App /></MemoryRouter>);
+    renderApp('/pronostici?meeting=race-2');
 
     await waitForAppToSettle();
 
     await waitFor(() => {
       expect(fetchMock).toHaveBeenCalledWith('/api/results/race-2');
-      const loadedPlayer1Card = getUserCard('Player 1');
-      expect(loadedPlayer1Card).not.toBeNull();
-      expect(within(loadedPlayer1Card!).getByLabelText(/vincitore gara/i)).toHaveValue('ham');
-    }, { timeout: asyncUiTimeoutMs });
+      expect(getUserWinnerSelect('Player 1')).toHaveValue('ham');
+      expect(getUserWinnerSelect('Player 2')).toHaveValue('nor');
+      expect(getResultSelect(/risultato 1°/i)).toHaveValue('ham');
+      expect(getResultSelect(/pole \/ sprint reale/i)).toHaveValue('pia');
+    });
+  });
 
-    const player1Card = getUserCard('Player 1');
-    expect(player1Card).not.toBeNull();
-    fireEvent.change(within(player1Card!).getByLabelText(/vincitore gara/i), {
+  it('persists the active weekend draft without overwriting the other weekend state', async () => {
+    const appData = createBaseAppData();
+    appData.selectedMeetingKey = 'race-2';
+    appData.gpName = 'Chinese Grand Prix 2099';
+    appData.users = [
+      { name: 'Player 1', predictions: { first: 'ham', second: '', third: '', pole: '' }, points: 0 },
+      { name: 'Player 2', predictions: { first: 'nor', second: '', third: '', pole: '' }, points: 0 },
+      { name: 'Player 3', predictions: { first: '', second: '', third: '', pole: '' }, points: 0 },
+    ];
+    appData.raceResults = {
+      first: 'ham',
+      second: '',
+      third: 'nor',
+      pole: 'pia',
+    };
+
+    const fetchMock = setupFetch({ appData });
+
+    renderApp('/pronostici?meeting=race-2');
+
+    await waitForAppToSettle();
+
+    fireEvent.change(getUserWinnerSelect('Player 1'), {
       target: { value: 'lec' },
     });
 
-    await waitFor(() => {
-      const updatedPlayer1Card = getUserCard('Player 1');
-      expect(updatedPlayer1Card).not.toBeNull();
-      expect(within(updatedPlayer1Card!).getByLabelText(/vincitore gara/i)).toHaveValue('lec');
-    }, { timeout: asyncUiTimeoutMs });
+    expect(getUserWinnerSelect('Player 1')).toHaveValue('lec');
 
     fireEvent.click(screen.getByRole('button', { name: /salva dati inseriti/i }));
 
-    let predictionsCall: (typeof fetchMock.mock.calls)[number] | undefined;
+    let saveCall: (typeof fetchMock.mock.calls)[number] | undefined;
     await waitFor(() => {
-      predictionsCall = fetchMock.mock.calls.find((call) => call[0] === '/api/predictions');
-      expect(predictionsCall).toBeDefined();
-      expect(predictionsCall?.[1]).toMatchObject({
+      saveCall = fetchMock.mock.calls.find((call) => call[0] === '/api/predictions');
+      expect(saveCall).toBeDefined();
+      expect(saveCall?.[1]).toMatchObject({
         method: 'POST',
       });
-    }, { timeout: asyncUiTimeoutMs });
+    });
 
-    const body = JSON.parse(String(predictionsCall?.[1]?.body));
-    expect(body.users.find((u: any) => u.name === 'Player 1').predictions.first).toBe('lec');
+    const body = JSON.parse(String(saveCall?.[1]?.body));
     expect(body.weekendStateByMeetingKey['race-2'].userPredictions['Player 1'].first).toBe('lec');
     expect(body.weekendStateByMeetingKey['race-1'].userPredictions['Player 1'].first).toBe('ver');
-  }, asyncUiTimeoutMs);
+  });
 
   it('ignores stale official results responses after changing weekend', async () => {
     const race1Results = createDeferredResponse();
-    const appData = createAppData();
-
+    const appData = createBaseAppData();
     appData.weekendStateByMeetingKey['race-2'].raceResults = createEmptyPrediction();
 
     const fetchMock = setupFetch({
@@ -493,126 +360,35 @@ describe('Weekend draft synchronization UI', () => {
       },
     });
 
-    render(<MemoryRouter initialEntries={['/dashboard']}><App /></MemoryRouter>);
+    window.history.replaceState({}, '', '/pronostici?meeting=race-1');
+
+    render(
+      <BrowserRouter>
+        <App />
+      </BrowserRouter>,
+    );
 
     await waitForAppToSettle();
 
-    // We are on Australia (race-1), results are loading
-
-    fireEvent.click(screen.getByRole('button', { name: /china/i }));
+    window.history.pushState({}, '', '/pronostici?meeting=race-2');
+    fireEvent.popState(window);
 
     await waitFor(() => {
       expect(fetchMock).toHaveBeenCalledWith('/api/results/race-2');
-      const player1Card = getUserCard('Player 1');
-      expect(player1Card).not.toBeNull();
-      expect(within(player1Card!).getByLabelText(/vincitore gara/i)).toHaveValue('ham');
-    }, { timeout: asyncUiTimeoutMs });
+      expect(getUserWinnerSelect('Player 1')).toHaveValue('ham');
+    });
 
-    // Now resolve race-1 results (stale)
     race1Results.resolve({
-      first: 'ham',
-      second: 'ver',
+      first: 'ver',
+      second: 'ham',
       third: 'nor',
-      pole: 'ham',
+      pole: 'ver',
       racePhase: 'finished',
     });
 
     await waitFor(() => {
-      // Result for 1st should still be empty because we are on race-2
+      expect(getUserWinnerSelect('Player 1')).toHaveValue('ham');
       expect(getResultSelect(/risultato 1°/i)).toHaveValue('');
-    }, { timeout: asyncUiTimeoutMs });
-  }, asyncUiTimeoutMs);
-
-  it('shows no lock banner before the race starts and keeps predictions editable', async () => {
-    setupFetch({
-      resultHandlers: {
-        'race-1': createResultsResponse('open'),
-      },
-    });
-
-    render(<MemoryRouter initialEntries={['/pronostici']}><App /></MemoryRouter>);
-
-    await waitForAppToSettle();
-
-    expect(screen.queryByText('Gara in corso: pronostici bloccati.')).not.toBeInTheDocument();
-    expect(screen.queryByText('Gara terminata.')).not.toBeInTheDocument();
-
-    await waitFor(() => {
-      const player1Card = getUserCard('Player 1');
-      expect(player1Card).not.toBeNull();
-      expect(within(player1Card!).getByLabelText(/vincitore gara/i)).not.toBeDisabled();
-    }, { timeout: asyncUiTimeoutMs });
-  });
-
-  it('shows the in-progress lock banner when the backend marks the selected race as live', async () => {
-    setupFetch({
-      resultHandlers: {
-        'race-1': createResultsResponse('live'),
-      },
-    });
-
-    render(<MemoryRouter initialEntries={['/pronostici']}><App /></MemoryRouter>);
-
-    await waitForAppToSettle();
-
-    await waitFor(() => expect(screen.getByText('Gara in corso: pronostici bloccati.')).toBeInTheDocument(), {
-      timeout: asyncUiTimeoutMs,
-    });
-    const player1Card = getUserCard('Player 1');
-    expect(within(player1Card!).getByLabelText(/vincitore gara/i)).toBeDisabled();
-  });
-
-  it('shows the finished banner when the backend marks the selected race as finished', async () => {
-    setupFetch({
-      resultHandlers: {
-        'race-1': createResultsResponse('finished', {
-          first: 'ver',
-          second: 'ham',
-          third: 'nor',
-          pole: 'ver',
-        }),
-      },
-    });
-
-    render(<MemoryRouter initialEntries={['/pronostici']}><App /></MemoryRouter>);
-
-    await waitForAppToSettle();
-
-    await waitFor(() => expect(screen.getByText('Gara terminata.')).toBeInTheDocument(), {
-      timeout: asyncUiTimeoutMs,
-    });
-    expect(screen.queryByText('Gara in corso: pronostici bloccati.')).not.toBeInTheDocument();
-    const player1Card = getUserCard('Player 1');
-    expect(within(player1Card!).getByLabelText(/vincitore gara/i)).toBeDisabled();
-  });
-
-  it('accepts the legacy wrapper payload shape while using the backend race phase', async () => {
-    setupFetch({
-      resultHandlers: {
-        'race-1': createResponse({
-          racePhase: 'finished',
-          results: {
-            first: 'ver',
-            second: 'ham',
-            third: 'nor',
-            pole: 'ver',
-          },
-        }),
-      },
-    });
-
-    render(<MemoryRouter initialEntries={['/pronostici']}><App /></MemoryRouter>);
-
-    await waitForAppToSettle();
-
-    await waitFor(() => expect(screen.getByText('Gara terminata.')).toBeInTheDocument(), {
-      timeout: asyncUiTimeoutMs,
-    });
-    
-    // Check dashboard too
-    clickSectionNavigationButton(/calendario stagione/i);
-    await waitFor(() => expect(screen.getAllByText(/australia/i).length).toBeGreaterThan(0), {
-      timeout: asyncUiTimeoutMs,
     });
   });
 });

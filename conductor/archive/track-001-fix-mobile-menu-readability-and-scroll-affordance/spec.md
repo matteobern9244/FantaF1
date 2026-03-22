@@ -71,7 +71,7 @@ established visual language or the desktop behavior.
 - Keep the current font family and visual language.
 - Follow centralized text/config patterns already in the repository.
 - Use minimal, safe CSS/TSX changes only where needed.
-- Preserve 100% coverage for the official repository/application scope.
+- Preserve 80% coverage for the official repository/application scope.
 - Do not perform git operations unless explicitly authorized.
 
 ## Open Questions

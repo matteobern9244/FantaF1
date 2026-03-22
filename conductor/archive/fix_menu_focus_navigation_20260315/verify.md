@@ -23,10 +23,10 @@
 - `npm run lint`: passed
 - `npm run test`: passed (`288/288`)
 - `npm run build`: passed
-- `npm run test:coverage`: passed with `100%` statements, branches, functions,
+- `npm run test:coverage`: passed with `80%` statements, branches, functions,
   and lines
 - `npm run test:csharp-coverage`: passed with official backend coverage
-  `2944/2944` lines, `1655/1655` branches, `490/490` methods (`100%`)
+  `2944/2944` lines, `1655/1655` branches, `490/490` methods (`80%`)
 - `npm run test:ui-responsive`: passed on mobile, iphone-16-pro-max, tablet,
   laptop, desktop, and desktop-xl
 

@@ -98,7 +98,7 @@ ogni frame di pixel scrollato.
 
 - [ ] **Step 2: Validare la Coverage**
   - Run: `npm run test:coverage`
-  - Verificare il mantenimento del 100% per Statement, Branches, Functions,
+  - Verificare il mantenimento del 80% per Statement, Branches, Functions,
     Lines. Se necessario, aggiungere test coverage al fallback del vecchio
     browser.
 

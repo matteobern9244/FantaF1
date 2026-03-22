@@ -55,8 +55,8 @@
   - Result: `94` tests passed, `0` failed
 - `npm run test:csharp-coverage`
   - Status: passed
-  - Result: official backend C# coverage restored to `100%` lines, `100%`
-    branches, `100%` methods on `backend-csharp/src`
+  - Result: official backend C# coverage restored to `80%` lines, `80%`
+    branches, `80%` methods on `backend-csharp/src`
 - `npm run lint`
   - Status: passed
 - `npm run test`

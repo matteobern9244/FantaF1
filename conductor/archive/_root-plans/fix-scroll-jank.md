@@ -63,7 +63,7 @@ preservare la leggibilità del testo.
 
 - [ ] **Step 3: Mantenere la Copertura**
   - Run: `npm run test:coverage`
-  - Expected: 100% Statements, Branches, Functions, Lines. (Le modifiche
+  - Expected: 80% Statements, Branches, Functions, Lines. (Le modifiche
     puramente CSS non dovrebbero impattare l'AST JavaScript, ma è un check
     obbligatorio).
 

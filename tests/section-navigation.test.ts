@@ -55,4 +55,32 @@ describe('section navigation', () => {
     expect(groupEntry && isSectionNavigationGroup(groupEntry)).toBe(true);
     expect(itemEntry && isSectionNavigationGroup(itemEntry)).toBe(false);
   });
+
+  it('keeps every leaf navigation entry mapped to the expected route and section id', () => {
+    const publicLeafEntries = getSectionNavigationLeafItems('public');
+    const adminLeafEntries = getSectionNavigationLeafItems('admin');
+
+    expect(publicLeafEntries.map((item) => [item.id, item.route])).toEqual([
+      ['calendar-section', '/dashboard#calendar-section'],
+      ['predictions-section', '/pronostici#predictions-section'],
+      ['weekend-live', '/dashboard#weekend-live'],
+      ['season-analysis', '/analisi#season-analysis'],
+      ['user-analytics-section', '/analisi#user-analytics-section'],
+      ['user-kpi-section', '/analisi#user-kpi-section'],
+      ['public-standings', '/classifiche#public-standings'],
+      ['history-archive', '/classifiche#history-archive'],
+      ['public-guide', '/dashboard#public-guide'],
+    ]);
+
+    expect(adminLeafEntries.map((item) => [item.id, item.route])).toEqual([
+      ['calendar-section', '/dashboard#calendar-section'],
+      ['predictions-section', '/pronostici#predictions-section'],
+      ['results-section', '/admin#results-section'],
+      ['weekend-live', '/dashboard#weekend-live'],
+      ['season-analysis', '/analisi#season-analysis'],
+      ['user-analytics-section', '/analisi#user-analytics-section'],
+      ['user-kpi-section', '/analisi#user-kpi-section'],
+      ['history-archive', '/classifiche#history-archive'],
+    ]);
+  });
 });

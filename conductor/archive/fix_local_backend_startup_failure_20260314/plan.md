@@ -36,11 +36,11 @@ locale per evitare timeout generici in caso di configurazione mancante.
 
 - Pulire la gestione degli errori e consolidare i messaggi utente.
 
-## Coverage 100% totale
+## Coverage 80% totale
 
 - Garantire che i nuovi rami di errore e controlli siano coperti dai test in
   `tests/save-local-check.test.js`.
-- Verificare che l'intera applicazione mantenga il 100% di copertura.
+- Verificare che l'intera applicazione mantenga il 80% di copertura.
 
 ## Fasi dell'Attuazione
 
@@ -69,4 +69,4 @@ locale per evitare timeout generici in caso di configurazione mancante.
 - [ ] Lo smoke test fallisce velocemente (< 5s) se il backend crasha.
 - [ ] L'errore indica chiaramente se manca `MONGODB_URI`.
 - [ ] Il launcher suggerisce la creazione del file `.env`.
-- [ ] Copertura al 100% preservata.
+- [ ] Copertura al 80% preservata.

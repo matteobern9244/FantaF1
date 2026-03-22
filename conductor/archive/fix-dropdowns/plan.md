@@ -72,7 +72,7 @@ con il sistema operativo.
 
 - [ ] **Step 2: Eseguire i test e la copertura**
   - Run: `npm run test:coverage`
-  - Expected: 100% Statements, Branches, Functions, Lines.
+  - Expected: 80% Statements, Branches, Functions, Lines.
 
 - [ ] **Step 3: Eseguire lo smoke test responsive**
   - Run: `npm run test:ui-responsive`

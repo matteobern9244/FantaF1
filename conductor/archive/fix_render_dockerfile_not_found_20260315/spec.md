@@ -17,7 +17,7 @@ configuration to resolve this definitively.
 
 ## Non-Functional Requirements
 
-- **100% Test Coverage:** No impact on tests, but must pass before release.
+- **80% Test Coverage:** No impact on tests, but must pass before release.
 - **Production-Safe:** No changes to application logic.
 - **Clean Git State:** Ensure no hidden characters or weird filesystem
   attributes on the Dockerfile.

@@ -39,7 +39,7 @@ text stretching.
 - [ ] Text in mobile menu items uses the Formula 1 font family.
 - [ ] Desktop menu (screens > 768px) remains unchanged in its layout and
       styling.
-- [ ] 100% test coverage for the mobile menu component and related styles.
+- [ ] 80% test coverage for the mobile menu component and related styles.
 
 ## Out of Scope
 

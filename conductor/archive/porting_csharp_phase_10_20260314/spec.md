@@ -15,7 +15,7 @@ specifiche tecniche e di programmazione contenute nel file `AGENTS.md`.
 
 1. **TDD:** Ogni modifica comportamentale deve seguire il ciclo **RED -> GREEN
    -> REFACTOR**.
-2. **Coverage 100%:** La copertura dei test deve essere mantenuta al 100%
+2. **Coverage 80%:** La copertura dei test deve essere mantenuta al 80%
    (Statements, Functions, Branches, Lines) per tutto lo scope interessato
    (inclusi gli script di automazione e le build del Dockerfile).
 3. **Politica di Chiarimento:** In caso di dubbi tecnici o ambiguità nei
@@ -59,7 +59,7 @@ specifiche tecniche e di programmazione contenute nel file `AGENTS.md`.
     correttamente a `/api/health`.
 4.  Tutte le route migrate (Fasi 1-7) mostrano parità funzionale nell'ambiente
     di staging.
-5.  La copertura test del backend C# rimane al 100%.
+5.  La copertura test del backend C# rimane al 80%.
 
 ## Out of Scope
 

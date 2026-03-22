@@ -14,7 +14,7 @@
     "track-002-riordinare-il-menu-e-le-voci-dashboard-con-sottomenu-analisi-per-kpi-e-coerenza-desktop-mobile-pwa"
   ],
   "activeTask": "Stabilizzare routing e layout della Fase 1 e riallineare gli artefatti Conductor del branch.",
-  "description": "Refactoring dell'intera applicazione da SPA a App Multi-Pagina (PWA) con routing reale, navigazione mobile ottimizzata (Bottom Tab Bar) e notifiche push, mantenendo la logica di business invariata e garantendo il 100% di copertura.",
+  "description": "Refactoring dell'intera applicazione da SPA a App Multi-Pagina (PWA) con routing reale, navigazione mobile ottimizzata (Bottom Tab Bar) e notifiche push, mantenendo la logica di business invariata e garantendo il 80% di copertura.",
   "skills": [
     "conductor",
     "playwright"
@@ -22,12 +22,12 @@
   "constraints": [
     "Apply all AGENTS.md principles",
     "Strict TDD RED -> GREEN -> REFACTOR",
-    "100% repository/application coverage required",
+    "80% repository/application coverage required",
     "No commit",
     "No push",
     "Preserve business logic behavior"
   ],
-  "coverage_target": "100% statements, functions, branches, and lines for the official repository/application scope.",
+  "coverage_target": "80% statements, functions, branches, and lines for the official repository/application scope.",
   "validation_commands": [
     "npm run lint",
     "npm run test",

@@ -18,7 +18,7 @@ _Obiettivo: Validazione totale e preparazione del workspace._
 - [x] **Task 0.4: Conductor - User Manual Verification 'Fase 0: Audit Totale'
       (Protocollo in workflow.md)**
 
-## Fase 1: Infrastruttura di Routing e Layout (TDD 100%)
+## Fase 1: Infrastruttura di Routing e Layout (TDD 80%)
 
 _Obiettivo: Trasformazione in App multi-pagina mantenendo la logica atomica._
 
@@ -26,7 +26,7 @@ _Obiettivo: Trasformazione in App multi-pagina mantenendo la logica atomica._
   - [ ] **RED:** Test di navigazione per le rotte `/dashboard`, `/pronostici`,
         `/classifiche`, `/analisi`, `/admin`.
   - [ ] **GREEN:** Implementazione router e migrazione componenti.
-  - [ ] Skill: `fantaf1-tdd-coverage` -> Certificare 100% di copertura sul nuovo
+  - [ ] Skill: `fantaf1-tdd-coverage` -> Certificare 80% di copertura sul nuovo
         strato di routing.
 - [ ] **Task 1.2: Refactoring del Layout "Gestionale" (Desktop/Mobile)**
   - [ ] **RED:** Test per il componente `AppLayout` (Sidebar Desktop vs Bottom
@@ -66,7 +66,7 @@ _Obiettivo: Funzionalità di sistema e persistenza avanzata._
 - [ ] **Task 3.4: Conductor - User Manual Verification 'Fase 3: PWA & Push'
       (Protocollo in workflow.md)**
 
-## Fase 4: Validazione Finale e Copertura 100% Totale
+## Fase 4: Validazione Finale e Copertura 80% Totale
 
 _Obiettivo: Garanzia di stabilità assoluta e allineamento documentale._
 
@@ -77,7 +77,7 @@ _Obiettivo: Garanzia di stabilità assoluta e allineamento documentale._
   - [ ] Skill: `fantaf1-readme-manager` & `fantaf1-changelog-manager` ->
         Documentare evoluzione.
   - [ ] Skill: `markdown-formatter` -> Qualità formale documentazione.
-- [ ] **Task 4.3: Copertura 100% Totale (Requisito Categorico)**
+- [ ] **Task 4.3: Copertura 80% Totale (Requisito Categorico)**
   - [ ] Eseguire `fantaf1-tdd-coverage` su TUTTO il repository (Frontend &
         Backend).
 - [ ] **Task 4.4: Verifica Protocolli di Deploy**

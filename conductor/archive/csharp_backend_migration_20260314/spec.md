@@ -5,7 +5,7 @@
 Questa traccia gestisce la rimozione completa del backend Node.js, passando a
 usare il backend C# come unico backend ufficiale per FantaF1. Questo include il
 mantenimento del frontend e dei file vitali dell'applicazione, garantendo la
-piena funzionalità con il 100% di copertura dei test e zero regressioni sia in
+piena funzionalità con il 80% di copertura dei test e zero regressioni sia in
 locale che negli ambienti di staging/produzione (Render.com). Il processo sarà
 graduale, mantenendo l'ambiente di staging per lo sviluppo.
 
@@ -33,7 +33,7 @@ graduale, mantenendo l'ambiente di staging per lo sviluppo.
   - Aggiornare le action di deploy per puntare al servizio Docker C# su Render.
   - Pulire i passaggi CI specifici per Node.js (mantenendo solo quelli necessari
     per il frontend Vite).
-- **Copertura Test:** Mantenere il 100% di test coverage senza regressioni.
+- **Copertura Test:** Mantenere il 80% di test coverage senza regressioni.
 
 ## Requisiti Non Funzionali
 

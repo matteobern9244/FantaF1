@@ -24,26 +24,34 @@ describe('Startup Scripts Parity', () => {
 
     expect(commandContent).toContain('FANTAF1_LOCAL_RUNTIME');
     expect(batContent).toContain('FANTAF1_LOCAL_RUNTIME');
+    expect(commandContent).toContain('node ./scripts/dev-launcher.mjs');
+    expect(batContent).toContain('node ./scripts/dev-launcher.mjs');
   });
 
   test('both scripts should perform the same preflight steps', () => {
     const commandContent = fs.readFileSync(commandPath, 'utf8');
     const batContent = fs.readFileSync(batPath, 'utf8');
 
-    // Check for MongoDB validation
     expect(commandContent).toContain('import { MongoClient } from \'mongodb\'');
     expect(batContent).toContain('import { MongoClient } from \'mongodb\'');
+    expect(commandContent).toContain('node --input-type=module -e');
+    expect(batContent).toContain('node --input-type=module -e');
 
-    // Check for build steps
     expect(commandContent).toContain('dotnet build');
     expect(batContent).toContain('dotnet build');
 
     expect(commandContent).toContain('npm run build');
     expect(batContent).toContain('npm run build');
+  });
 
-    // Check for final handover
-    expect(commandContent).toContain('node ./scripts/dev-launcher.mjs');
-    expect(batContent).toContain('node ./scripts/dev-launcher.mjs');
+  test('both scripts keep the responsive browser check documented but disabled in preflight', () => {
+    const commandContent = fs.readFileSync(commandPath, 'utf8');
+    const batContent = fs.readFileSync(batPath, 'utf8');
+
+    expect(commandContent).toContain('# run_step "Eseguo validazione UI responsive" npm run test:ui-responsive');
+    expect(commandContent).not.toMatch(/^[^#\n]*npm run test:ui-responsive/m);
+    expect(batContent).toContain('REM run_step "Eseguo validazione UI responsive" npm run test:ui-responsive');
+    expect(batContent).not.toMatch(/^\s*(?!REM\b).*npm run test:ui-responsive\b/m);
   });
 
   test('the Windows launcher preserves MongoDB URIs with embedded equals signs', () => {

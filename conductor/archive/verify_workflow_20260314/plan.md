@@ -5,10 +5,10 @@
 - [ ] Task: Baseline Check - Integrità Ambiente
   - [ ] Eseguire `npm run lint` e verificare zero avvisi.
   - [ ] Eseguire `npm run test` e verificare che tutti i test passino.
-- [ ] Task: Verifica Copertura 100%
+- [ ] Task: Verifica Copertura 80%
   - [ ] Eseguire `npm run test:coverage` e confermare la copertura totale al
-        100%.
-  - [ ] Eseguire `npm run test:csharp-coverage` e confermare il 100% per il
+        80%.
+  - [ ] Eseguire `npm run test:csharp-coverage` e confermare il 80% per il
         backend C#.
 - [ ] Task: Conductor - User Manual Verification 'Fase 1' (Protocollo in
       workflow.md)

@@ -48,7 +48,7 @@ mantenendo la logica di business atomica e invariata.
   le funzionalità presenti devono rimanere invariate.
 - **Strict TDD:** Obbligatorio il ciclo RED-GREEN-REFACTOR per ogni modifica
   comportamentale.
-- **100% Coverage:** La copertura dei test deve essere mantenuta al 100%
+- **80% Coverage:** La copertura dei test deve essere mantenuta al 80%
   (Statements, Functions, Branches, Lines).
 - **DI & Repository Pattern:** Applicazione rigorosa degli standard di
   ingegneria backend C# e frontend React.

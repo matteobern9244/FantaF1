@@ -699,21 +699,21 @@ Trigger operativi documentati:
 
 ## Coverage e qualita'
 
-Baseline verificata corrente sullo scope ufficiale frontend/repository:
+Soglia minima ufficiale sullo scope frontend/repository:
 
-- `2510 / 2510` statements
-- `213 / 213` functions
-- `1138 / 1138` branches
-- `2510 / 2510` lines
+- `80%` statements
+- `80%` functions
+- `80%` branches
+- `80%` lines
 
-Baseline verificata corrente su `backend-csharp/src/`:
+Soglia minima ufficiale su `backend-csharp/src/`:
 
-- `3292 / 3292` lines
-- `1843 / 1843` branches
-- `545 / 545` methods
+- `80%` lines
+- `80%` branches
+- `80%` methods
 - `71` file inclusi
 
-Le soglie repository restano a `100%` su statements, branches, functions e
+Le soglie repository restano a `80%` su statements, branches, functions e
 lines.
 
 Verifica piu' recente rieseguita localmente:

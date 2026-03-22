@@ -17,6 +17,6 @@
   ],
   "branch_policy": "Dedicated branch already created: track/stabilize-highlights-persistence-20260318. No further git operations allowed in this track except the already approved branch creation.",
   "commit_policy": "No commit or push in this track.",
-  "coverage_target": "100% statements, functions, branches, and lines for the official repository/application scope.",
+  "coverage_target": "80% statements, functions, branches, and lines for the official repository/application scope.",
   "description": "Preserve highlights found per race in the weekends persistence model, prevent destructive downgrade on later missing lookups, and align calendar sync time handling on IClock."
 }

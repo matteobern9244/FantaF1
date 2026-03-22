@@ -15,7 +15,7 @@ corrente durante l'uso del menu mobile. La vista desktop va preservata.
 - Accessibilita' e leggibilita' prima del polish visivo
 - TDD rigoroso
 - `RED -> GREEN -> REFACTOR`
-- Copertura `100% totale` obbligatoria
+- Copertura `80% totale` obbligatoria
 
 ## Diagnosi Tecnica Iniziale
 
@@ -107,13 +107,13 @@ corrente durante l'uso del menu mobile. La vista desktop va preservata.
 - Mobile browser view, production-like
   1. check responsive del bundle su device matrix supportata
 
-## Coverage 100% totale
+## Coverage 80% totale
 
-- Verificare e mantenere `100%` statements, branches, functions e lines sullo
+- Verificare e mantenere `80%` statements, branches, functions e lines sullo
   scope frontend/repository.
-- Verificare e mantenere `100%` line, branch e method coverage sullo scope
+- Verificare e mantenere `80%` line, branch e method coverage sullo scope
   ufficiale `backend-csharp/src/`.
-- Se la track fa scendere anche un solo valore sotto il `100%`, aggiungere test
+- Se la track fa scendere anche un solo valore sotto il `80%`, aggiungere test
   e fix fino al ripristino completo.
 
 ## Comandi Di Validazione Previsti

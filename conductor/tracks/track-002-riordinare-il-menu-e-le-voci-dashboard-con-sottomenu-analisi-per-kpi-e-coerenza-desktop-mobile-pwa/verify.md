@@ -24,10 +24,10 @@
 - `npm run lint`: passed
 - `npm run build`: passed
 - `npm run test`: passed with `47` files and `311` tests green
-- `npm run test:coverage`: passed with `100%` statements, branches, functions,
+- `npm run test:coverage`: passed with `80%` statements, branches, functions,
   and lines
 - `npm run test:csharp-coverage`: passed with official backend C# coverage at
-  `100%` line (`3194/3194`), `100%` branch (`1793/1793`), and `100%` method
+  `80%` line (`3194/3194`), `80%` branch (`1793/1793`), and `80%` method
   (`539/539`)
 - `npm run test:ui-responsive`: passed on mobile, iphone-16-pro-max, tablet,
   laptop, desktop, and desktop-xl

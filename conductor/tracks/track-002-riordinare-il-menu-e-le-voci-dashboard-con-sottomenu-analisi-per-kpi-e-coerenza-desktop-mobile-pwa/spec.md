@@ -33,7 +33,7 @@ stessa esperienza su desktop browser, mobile browser e PWA.
 - Il sottomenu `Analisi` non ingloba altre voci oltre a
   `Deep-dive KPI dashboard` e `User KPI Dashboard`.
 - Non vengono introdotte regressioni su view mode admin/public.
-- Tutti i test rilevanti passano e la coverage resta al 100%.
+- Tutti i test rilevanti passano e la coverage resta al 80%.
 
 ## In Scope
 
@@ -62,7 +62,7 @@ stessa esperienza su desktop browser, mobile browser e PWA.
 - Applicare integralmente
   [AGENTS.md](/Users/matteobernardini/code/FantaF1/AGENTS.md)
 - TDD obbligatoria `RED -> GREEN -> REFACTOR`
-- Coverage totale al 100% da preservare
+- Coverage totale al 80% da preservare
 - Nessun commit
 - Nessun push
 - La modifica deve valere su desktop browser, mobile browser e PWA

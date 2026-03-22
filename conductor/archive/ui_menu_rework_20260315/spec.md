@@ -48,7 +48,7 @@ mobile users.
     in as an administrator.
 4.  **Style:** The UI matches the requested F1 Racing Theme.
 5.  **Validation:** `npm run test:ui-responsive` passes for all breakpoints.
-6.  **Coverage:** 100% code coverage for any new or modified components.
+6.  **Coverage:** 80% code coverage for any new or modified components.
 
 ## Out of Scope
 

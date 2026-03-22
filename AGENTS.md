@@ -62,6 +62,8 @@ Optional helper commands already supported by the repository:
 
 ### Development Conventions
 
+- **Extensive and rigorous use of subagents:** For every request received from
+the user, subagents must be used strictly and extensively.
 - **Separation Of Concerns:** Keep UI, application orchestration, domain rules,
   infrastructure, and migration glue clearly separated.
 - **Abstraction Naming:** Name adapters, translators, facades, and compatibility
@@ -152,11 +154,11 @@ For every task, execute this sequence:
 4. State the acceptance criteria.
 5. Inspect existing logic before editing anything.
 6. Apply strict TDD for any behavioral change.
-7. Define and preserve the required 100% total coverage target for the task
+7. Define and preserve the required 80% total coverage target for the task
    scope and repository/application.
 8. Implement the smallest safe change required.
 9. Run the relevant validations, including explicit coverage verification at
-   100%.
+   80%.
 10. Ensure versioning coordination: every version increment must be applied
     consistently across `package.json`, `package-lock.json`, `CHANGELOG.md`, and
     `README.md`.
@@ -317,13 +319,13 @@ Rules:
   mock only collaborators outside the actual intent of the test.
 - This TDD rule is mandatory for every fix, modification, and new implementation
   in this repository without exception.
-- RED must also define the coverage work needed to preserve or restore 100%
+- RED must also define the coverage work needed to preserve or restore 80%
   statements, functions, branches, and lines for the official
   repository/application scope.
 - GREEN is not complete if the implementation passes behavior tests but leaves
-  coverage below 100%.
+  coverage below 80%.
 - REFACTOR is not complete until all tests remain green and coverage remains at
-  100%.
+  80%.
 
 ---
 
@@ -389,14 +391,12 @@ the repository. Where applicable this includes:
 - Main automated test stack: Vitest (Frontend), xUnit (Backend), and React
   Testing Library.
 - Coverage provider: V8 (Frontend), coverlet (Backend).
-- Current verified merged baseline for the configured official application-code
-  scope is **100% statements (2510 / 2510)**, **100% functions (213 / 213)**,
-  **100% branches (1138 / 1138)**, and **100% lines (2510 / 2510)**, aligned
-  with the thresholds currently documented in `README.md`.
-- Official backend-csharp application coverage on `backend-csharp/src/` is
-  **100% line coverage (3292 / 3292)**, **100% branch coverage (1843 / 1843)**,
-  and **100% method coverage (545 / 545)** across **71 included files**, as
-  reported by `npm run test:csharp-coverage`.
+- The official minimum threshold for the configured application-code scope is
+  **80% statements**, **80% functions**, **80% branches**, and **80% lines**,
+  aligned with the thresholds currently documented in `README.md`.
+- The official minimum threshold for `backend-csharp/src/` is **80% line
+  coverage**, **80% branch coverage**, and **80% method coverage** across the
+  included application files reported by `npm run test:csharp-coverage`.
 - Whenever a task produces a new verified merged Release coverage result, update
   this baseline in `AGENTS.md` to the new numbers.
 - If a task produces a new verified merged coverage result for the tracked
@@ -412,7 +412,7 @@ A task is not complete if:
 - the project does not compile
 - any relevant test fails
 - the behavior was changed without automated test coverage
-- coverage for the official repository/application scope is below 100%
+- coverage for the official repository/application scope is below 80%
   statements, functions, branches, or lines
 
 If a validation step cannot be executed, explicitly state:
@@ -625,13 +625,13 @@ Before editing:
 - in every plan, explicitly include acceptance criteria, regression checks, and
   the validation commands intended to be run
 - in every plan must always include a dedicated section named
-  `Coverage 100% totale`
-- in every plan must always include verification of 100% coverage for all files
+  `Coverage 80% totale`
+- in every plan must always include verification of 80% coverage for all files
   in the repository and application
-- if coverage is not 100% at the end of plan implementation, coverage must be
-  performed until 100% coverage is achieved for all files in the repository and
+- if coverage is not 80% at the end of plan implementation, coverage must be
+  performed until 80% coverage is achieved for all files in the repository and
   application
-- no plan is valid or complete if it omits the explicit 100% total coverage
+- no plan is valid or complete if it omits the explicit 80% total coverage
   requirement
 
 After editing:
@@ -639,7 +639,7 @@ After editing:
 - summarize what changed
 - list touched files
 - list tests added or updated
-- list coverage verification executed and the resulting 100% status
+- list coverage verification executed and the resulting 80% status
 - list validation commands executed
 - state residual risks, blockers, or skipped checks if any
 

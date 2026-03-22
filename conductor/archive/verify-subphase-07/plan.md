@@ -28,7 +28,7 @@ Expected: Tutti i test PASS.
 
 - [ ] **Step 2: Verificare il report di copertura aggregato**
 
-Run: `npm run test:csharp-coverage` Expected: 100% su `FantaF1.Api`,
+Run: `npm run test:csharp-coverage` Expected: 80% su `FantaF1.Api`,
 `FantaF1.Application`, `FantaF1.Domain`, `FantaF1.Infrastructure` (limitatamente
 all'ambito Results).
 

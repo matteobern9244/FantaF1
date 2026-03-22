@@ -9,7 +9,7 @@ e il rispetto degli standard ingegneristici del progetto FantaF1.
 ## Criteri di Accettazione
 
 1.  **Copertura Totale:** Entrambi gli stack (Node/React e C#) devono mantenere
-    il 100% di copertura test.
+    il 80% di copertura test.
 2.  **Parità Funzionale:** Tutte le rotte migrate (Fasi 1-7) devono restituire
     payload identici (flat shape, field names, HTTP status) tra Node e C#.
 3.  **Integrità Bootstrap (Fase 8):** Il backend C# deve eseguire correttamente

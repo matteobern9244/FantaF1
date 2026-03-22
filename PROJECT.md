@@ -200,6 +200,6 @@ A task is complete only if:
 - no API contract mismatch is introduced
 - all relevant tests pass
 - browser and responsive checks pass for the affected admin/public flows
-- coverage for the official application-code scope remains at 100% for lines,
+- coverage for the official application-code scope remains at 80% for lines,
   branches, functions, and statements
 - production-sensitive logic remains safe

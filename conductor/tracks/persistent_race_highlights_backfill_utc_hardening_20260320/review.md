@@ -18,7 +18,7 @@
 - Determinismo del backfill e della retry policy
 - Accuratezza del matching dei video highlights
 - Assenza di regressioni su startup, UI admin/public, desktop/mobile
-- Conservazione della coverage al 100%
+- Conservazione della coverage al 80%
 
 ## Risks To Evaluate During Review
 
@@ -44,4 +44,4 @@
 - No push
 - Apply all `AGENTS.md` programming principles
 - Use strict `RED -> GREEN -> REFACTOR`
-- Do not accept completion below 100% coverage
+- Do not accept completion below 80% coverage

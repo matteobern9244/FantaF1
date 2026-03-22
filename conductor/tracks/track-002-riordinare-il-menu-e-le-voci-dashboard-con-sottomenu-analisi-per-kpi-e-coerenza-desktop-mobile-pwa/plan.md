@@ -59,7 +59,7 @@ la parita' tra desktop, mobile e PWA senza regressioni.
 - [x] Step 4. Run `npm run test:coverage`
 - [x] Step 5. Run `npm run build`
 - [x] Step 6. Run `npm run test:ui-responsive`
-- [x] Step 7. Record final verification results and 100% coverage status in
+- [x] Step 7. Record final verification results and 80% coverage status in
       `verify.md`
 
 ## Public Interfaces
@@ -77,7 +77,7 @@ la parita' tra desktop, mobile e PWA senza regressioni.
 - [x] Verify footer actions remain at the end of the menu
 - [x] Verify admin/public mode actions still behave correctly
 - [x] Verify dashboard section order matches the menu order
-- [x] Verify repository/application coverage remains at 100%
+- [x] Verify repository/application coverage remains at 80%
 
 ## Assumptions
 
@@ -105,10 +105,10 @@ la parita' tra desktop, mobile e PWA senza regressioni.
 - Admin access/login CTA remains in the footer area and unchanged in behavior.
 - Existing analytics, history, standings and guide panels remain reachable.
 
-## Coverage 100% totale
+## Coverage 80% totale
 
-- Preserve `100%` statements, functions, branches and lines for the official
+- Preserve `80%` statements, functions, branches and lines for the official
   frontend/repository scope.
-- Preserve `100%` official backend C# coverage baseline even if the backend is
+- Preserve `80%` official backend C# coverage baseline even if the backend is
   not directly modified.
-- Do not close the track if any touched scope falls below `100%`.
+- Do not close the track if any touched scope falls below `80%`.

@@ -17,12 +17,12 @@ This file is the compact summary view of Conductor tracks in this repository.
   `conductor/tracks/persistent_race_highlights_backfill_utc_hardening_20260320`
 - `track-002` | Riordinare il menu e le voci dashboard con sottomenu Analisi per
   KPI e coerenza desktop/mobile/PWA | `completed` | phase `completed` | Track
-  completed with full validation and 100% coverage. |
+  completed with full validation and 80% coverage. |
   `conductor/tracks/track-002-riordinare-il-menu-e-le-voci-dashboard-con-sottomenu-analisi-per-kpi-e-coerenza-desktop-mobile-pwa`
 
 ## Archived Tracks
 
-- `achieve_100_coverage_20260314` | Certificazione Copertura Test 100%
+- `achieve_100_coverage_20260314` | Certificazione Copertura Test 80%
   (Frontend, Node, C#) | `archived` | phase `archived` | Archived |
   `conductor/archive/achieve_100_coverage_20260314`
 - `archive_completed_tasks_20260314` | eliminare tutti i task effettuati e
@@ -43,7 +43,7 @@ This file is the compact summary view of Conductor tracks in this repository.
 - `csharp_backend_migration_20260314` | Rimuovere completamente il backend
   Node.js, mantenendo solo il backend C# come backend ufficiale, la parte
   frontend e i file vitali dell'applicazione, garantendo la piena funzionalità e
-  la copertura del 100% senza regressioni in locale e in produzione per
+  la copertura del 80% senza regressioni in locale e in produzione per
   render.com (ambiente staging). | `archived` | phase `archived` | Archived |
   `conductor/archive/csharp_backend_migration_20260314`
 - `deploya_staging_20260319` | Implementare un comando 'deploya-staging' e una
@@ -145,7 +145,7 @@ This file is the compact summary view of Conductor tracks in this repository.
   and staging simulation. | `archived` | phase `archived` | Archived |
   `conductor/archive/verify_docker_staging_local_20260315`
 - `verify_workflow_20260314` | Verifica e certificazione della copertura test al
-  100% e dell'integrità del workflow Conductor | `archived` | phase `archived` |
+  80% e dell'integrità del workflow Conductor | `archived` | phase `archived` |
   Archived | `conductor/archive/verify_workflow_20260314`
 - `windows_startup_script_20260319` | Creare un file start_fantaf1.bat che deve
   essere equivalente al file start_fantaf1.command | `completed` | phase

@@ -756,14 +756,16 @@ describe('Live projection UI', () => {
       return Promise.reject(new Error(`Unhandled fetch to ${url}`));
     });
 
-    render(<MemoryRouter initialEntries={['/dashboard']}><App /></MemoryRouter>);
+    render(<MemoryRouter initialEntries={['/pronostici?meeting=race-2']}><App /></MemoryRouter>);
 
     await waitForAppToSettle();
 
-    fireEvent.click(screen.getByRole('button', { name: /china/i }));
-
     await waitFor(() => {
+      const selectedPoleResult = document.getElementById('result-pole') as HTMLSelectElement | null;
+      expect(fetchMock).toHaveBeenCalledWith('/api/results/race-1');
       expect(fetchMock).toHaveBeenCalledWith('/api/results/race-2');
+      expect(screen.getByRole('heading', { name: /pronostici dei giocatori/i })).toBeInTheDocument();
+      expect(selectedPoleResult?.value).toBe('nor');
       expect(getProjectionValue('Matteo')).toBe('0');
       expect(getProjectionValue('Fabio')).toBe('1');
       expect(getProjectionValue('Adriano')).toBe('0');
@@ -771,10 +773,13 @@ describe('Live projection UI', () => {
 
     resolveRace1?.({
       ok: true,
-      json: () => Promise.resolve({ first: '', second: '', third: '', pole: '', racePhase: 'open' }),
+      json: () => Promise.resolve({ first: 'ver', second: 'ham', third: 'lec', pole: 'pia', racePhase: 'open' }),
     } as Response);
 
     await waitFor(() => {
+      const selectedPoleResult = document.getElementById('result-pole') as HTMLSelectElement | null;
+      expect(screen.getByRole('heading', { name: /pronostici dei giocatori/i })).toBeInTheDocument();
+      expect(selectedPoleResult?.value).toBe('nor');
       expect(getProjectionValue('Matteo')).toBe('0');
       expect(getProjectionValue('Fabio')).toBe('1');
       expect(getProjectionValue('Adriano')).toBe('0');

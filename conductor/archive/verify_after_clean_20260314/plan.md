@@ -51,7 +51,7 @@ test suites for both Node.js and .NET stacks.
 - [ ] **Step 1: Run C# coverage verification script**
   - Run: `npm run test:csharp-coverage`
   - Expected: `dotnet restore`, `dotnet build`, and `dotnet test` execute
-    successfully. Coverage must be 100%.
+    successfully. Coverage must be 80%.
 
 ## Task 4: Documentation & Metadata Update
 

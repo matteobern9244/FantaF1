@@ -415,7 +415,7 @@ function App() {
       return;
     }
 
-    const leafItems = getSectionNavigationLeafItems(sessionState.isAdmin ? 'admin' : 'public');
+    const leafItems = getSectionNavigationLeafItems(viewMode);
     const item = leafItems.find(i => i.id === sectionId);
 
     if (item) {
@@ -856,6 +856,7 @@ function App() {
     location.pathname,
     location.search,
     navigate,
+    sessionState.isAdmin,
     selectedMeetingKey,
     sortedCalendar,
     users,
@@ -886,6 +887,7 @@ function App() {
     }
 
     const activeRace = selectedRace;
+    selectedMeetingKeyRef.current = activeRace.meetingKey;
     let isCancelled = false;
     let pollingId: number | null = null;
 

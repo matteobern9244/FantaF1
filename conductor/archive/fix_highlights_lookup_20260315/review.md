@@ -26,5 +26,5 @@ the Sky Sport F1 source was reachable.
   - verbose `GrandPrixTitle` search seed
   - real channel-search request URI not matching the compact live query
 - Added fallback coverage tests for detail-url slug and `GrandPrixTitle`.
-- GREEN and REFACTOR kept the runtime contract unchanged while restoring 100%
+- GREEN and REFACTOR kept the runtime contract unchanged while restoring 80%
   backend coverage in the touched file.

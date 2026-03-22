@@ -20,7 +20,7 @@ file serves as your primary routing and configuration entry point.
 Before starting any task, you MUST activate the following skills to load their
 specialized instructions:
 
-- `activate_skill("fantaf1-tdd-coverage")`: To maintain the 100% coverage
+- `activate_skill("fantaf1-tdd-coverage")`: To maintain the 80% coverage
   baseline.
 - `activate_skill("fantaf1-deploy")`: To execute the 23-point deployment
   protocol ("deploya").

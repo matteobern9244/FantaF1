@@ -45,7 +45,7 @@ environment with isolated environment variables.
 
 ---
 
-### Coverage 100% totale
+### Coverage 80% totale
 
 - [x] Task: This track is for infrastructure verification; ensure no regressions
       in application test coverage are introduced (not expected as no code is

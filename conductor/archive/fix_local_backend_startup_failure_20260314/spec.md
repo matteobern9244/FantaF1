@@ -22,12 +22,12 @@ backend crasha silenziosamente (poiché `stdio: 'ignore'`). Lo smoke test attend
     mancante o se il backend crasha durante l'avvio.
 3.  `start_fantaf1.command` deve informare l'utente se non è stato configurato
     l'ambiente (es. suggerendo di creare `.env` da `.env.example`).
-4.  Mantenere la copertura del 100% per i file modificati.
+4.  Mantenere la copertura del 80% per i file modificati.
 5.  Non introdurre regressioni in produzione o in altri flussi locali.
 
 ## Vincoli di AGENTS.md Applicati
 
 - Rispetto rigoroso del TDD per le modifiche comportamentali.
-- Mantenimento della copertura al 100% totale per l'applicazione.
+- Mantenimento della copertura al 80% totale per l'applicazione.
 - Nessuna modifica di codice non richiesta.
 - Utilizzo del launcher canonico `./start_fantaf1.command`.

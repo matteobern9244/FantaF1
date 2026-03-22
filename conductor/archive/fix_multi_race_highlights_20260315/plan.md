@@ -13,7 +13,7 @@ unavailable CTA label with the requested wording.
   placement.
 - **Minimal Safe Change**: limit edits to matching/query logic, aliases, UI
   text, and regression coverage.
-- **Coverage 100% totale**: keep repository/application coverage at 100%.
+- **Coverage 80% totale**: keep repository/application coverage at 80%.
 
 ## RED -> GREEN -> REFACTOR
 

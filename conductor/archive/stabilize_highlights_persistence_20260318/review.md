@@ -17,6 +17,6 @@
   exception paths.
 - Do not introduce a separate collection for this fix.
 - Keep the repository coverage baseline unchanged because the verified official
-  summary remains at 100%.
+  summary remains at 80%.
 - Do not execute commit or push; the track remains completed locally on the
   dedicated branch.

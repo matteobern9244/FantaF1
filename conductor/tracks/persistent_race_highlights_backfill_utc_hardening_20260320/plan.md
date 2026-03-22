@@ -119,17 +119,17 @@
 7. [x] Verificare desktop e mobile su admin e public in ambiente development.
 8. [x] Verificare comportamento production-like con build reale e backend C#.
 9. [x] Verificare che startup locale resti coerente su Mac e Windows.
-10. [x] Confermare coverage al 100% su scope ufficiale repository/application e
+10. [x] Confermare coverage al 80% su scope ufficiale repository/application e
         backend C#.
 
-## Coverage 100% totale
+## Coverage 80% totale
 
-1. [x] Mantenere 100% statements, functions, branches e lines per lo scope
+1. [x] Mantenere 80% statements, functions, branches e lines per lo scope
        ufficiale repository/application.
-2. [x] Mantenere 100% coverage backend C# sullo scope monitorato da
+2. [x] Mantenere 80% coverage backend C# sullo scope monitorato da
        `npm run test:csharp-coverage`.
 3. [x] Aggiungere test mirati per ogni ramo nuovo introdotto.
-4. [x] Non considerare il task completo se la coverage scende sotto 100%.
+4. [x] Non considerare il task completo se la coverage scende sotto 80%.
 
 ## Regression Checks
 

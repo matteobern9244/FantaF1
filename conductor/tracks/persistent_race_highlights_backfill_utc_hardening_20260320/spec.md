@@ -37,7 +37,7 @@
 - Miglioramento lookup e ranking Sky/YouTube
 - Verifica consumo frontend dei dettagli gara
 - Verifica launcher Mac/Windows
-- Test backend/frontend e coverage al 100%
+- Test backend/frontend e coverage al 80%
 
 ## Out Of Scope
 
@@ -60,7 +60,7 @@
 - Dependency injection by default
 - Nessuna perdita dati silenziosa
 - Nessun uso diretto del clock globale nei path highlights
-- Coverage totale obbligatoria al 100%
+- Coverage totale obbligatoria al 80%
 
 ## Acceptance Criteria
 
@@ -79,7 +79,7 @@
 - Il frontend continua a mostrare correttamente gli highlights nei dettagli
   gara.
 - Tutti i test richiesti passano.
-- La coverage ufficiale repository/application e backend C# resta al 100%.
+- La coverage ufficiale repository/application e backend C# resta al 80%.
 - Nessun commit o push viene eseguito.
 
 ## Risks

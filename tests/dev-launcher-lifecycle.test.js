@@ -7,6 +7,7 @@ import { resolveLauncherTarget } from '../scripts/local-runtime-targets.mjs';
 
 const projectRoot = path.resolve(__dirname, '..');
 const startCommandPath = path.join(projectRoot, 'start_fantaf1.command');
+const startBatPath = path.join(projectRoot, 'start_fantaf1.bat');
 
 describe('dev launcher Chrome lifecycle tracking', () => {
   it('keeps the local stack alive until the Chrome app window becomes observable', () => {
@@ -41,10 +42,20 @@ describe('dev launcher Chrome lifecycle tracking', () => {
   });
 
   it('does not run the responsive browser check inside the monitored launcher preflight', () => {
+    const commandLauncherScript = fs.readFileSync(startCommandPath, 'utf8');
+    const batLauncherScript = fs.readFileSync(startBatPath, 'utf8');
+
+    expect(commandLauncherScript).toContain('# run_step "Eseguo validazione UI responsive" npm run test:ui-responsive');
+    expect(commandLauncherScript).not.toMatch(/^[^#\n]*npm run test:ui-responsive/m);
+    expect(batLauncherScript).toContain('REM run_step "Eseguo validazione UI responsive" npm run test:ui-responsive');
+    expect(batLauncherScript).not.toMatch(/^\s*(?!REM\b).*npm run test:ui-responsive\b/m);
+  });
+
+  it('preserves MongoDB URIs without wrapping them in launcher-added quotes', () => {
     const launcherScript = fs.readFileSync(startCommandPath, 'utf8');
 
-    expect(launcherScript).toContain('#run_step "Eseguo validazione UI responsive" npm run test:ui-responsive');
-    expect(launcherScript).not.toMatch(/^[^#\n]*npm run test:ui-responsive/m);
+    expect(launcherScript).toContain('MONGODB_URI="$uri" node --input-type=module -e');
+    expect(launcherScript).not.toContain('MONGODB_URI="$uri" node -e');
   });
 
   it('passes through the local launcher env for non-node targets even if the parent env is production', async () => {

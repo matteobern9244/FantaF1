@@ -7,6 +7,7 @@ set NODE_ENV=development
 if "%FANTAF1_LOCAL_RUNTIME%"=="" (
     set FANTAF1_LOCAL_RUNTIME=csharp-dev
 )
+REM run_step "Eseguo validazione UI responsive" npm run test:ui-responsive
 
 if not exist ".env" (
     echo ==^> ERRORE: File .env non trovato.
@@ -23,7 +24,7 @@ if "%MONGODB_URI%"=="" (
     exit /b 1
 )
 
-node -e "import { MongoClient } from 'mongodb'; const uri = process.env.MONGODB_URI; const client = new MongoClient(uri, { serverSelectionTimeoutMS: 5000 }); try { await client.connect(); process.exit(0); } catch (err) { console.error(err.message); process.exit(1); }" --input-type=module
+node --input-type=module -e "import { MongoClient } from 'mongodb'; const uri = process.env.MONGODB_URI; const client = new MongoClient(uri, { serverSelectionTimeoutMS: 5000 }); try { await client.connect(); process.exit(0); } catch (err) { console.error(err.message); process.exit(1); }"
 if %ERRORLEVEL% neq 0 (
     echo ERRORE: Impossibile connettersi a MongoDB.
     echo Verifica la tua connessione internet e le credenziali in .env.
