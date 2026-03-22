@@ -2,7 +2,7 @@
 
 Cronologia sintetica delle release documentate del progetto Fanta Formula 1.
 
-## [Unreleased]
+## [1.7.0] - 2026-03-22
 
 - **Launcher Transparency**: The local launcher now explicitly logs the target
   MongoDB URI (masked) at startup for better visibility.
