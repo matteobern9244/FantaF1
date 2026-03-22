@@ -3,6 +3,7 @@
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { RaceWeekend } from '../src/types';
+import { buildLocationHash, isIosSafariInstallableBrowser, resolveInstallCtaMode } from '../src/App';
 import {
   buildEmptyAppData,
   fetchJson,
@@ -29,6 +30,26 @@ describe('App helpers', () => {
 
   afterEach(() => {
     vi.useRealTimers();
+  });
+
+  it('returns native when hasInstallPrompt is true', () => {
+    expect(resolveInstallCtaMode({ isAppInstalled: false, hasInstallPrompt: true, isIosSafari: false }))
+      .toBe('native');
+  });
+
+  it('returns ios when isIosSafari is true', () => {
+    expect(resolveInstallCtaMode({ isAppInstalled: false, hasInstallPrompt: false, isIosSafari: true }))
+      .toBe('ios');
+  });
+
+  it('returns installed when isAppInstalled is true', () => {
+    expect(resolveInstallCtaMode({ isAppInstalled: true, hasInstallPrompt: false, isIosSafari: false }))
+      .toBe('installed');
+  });
+
+  it('returns unavailable when no install method is available', () => {
+    expect(resolveInstallCtaMode({ isAppInstalled: false, hasInstallPrompt: false, isIosSafari: false }))
+      .toBe('unavailable');
   });
 
   it('formats template text and normalizes meeting names', () => {
@@ -202,6 +223,42 @@ describe('App helpers', () => {
         endDate: undefined,
       }),
     ).toBe(false);
+  });
+
+  describe('buildLocationHash', () => {
+    it('returns empty string when hash normalizes to empty', () => {
+      expect(buildLocationHash('')).toBe('');
+      expect(buildLocationHash('#')).toBe('');
+      expect(buildLocationHash('   ')).toBe('');
+    });
+    it('returns hash with # prefix when hash is non-empty', () => {
+      expect(buildLocationHash('section-1')).toBe('#section-1');
+      expect(buildLocationHash('#section-1')).toBe('#section-1');
+    });
+  });
+
+  describe('isIosSafariInstallableBrowser', () => {
+    it('returns true for iOS Safari', () => {
+      Object.defineProperty(window.navigator, 'userAgent', {
+        value: 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1',
+        configurable: true,
+      });
+      expect(isIosSafariInstallableBrowser()).toBe(true);
+    });
+    it('returns false for iOS Chrome', () => {
+      Object.defineProperty(window.navigator, 'userAgent', {
+        value: 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) CriOS/119.0.6045.169 Mobile/15E148 Safari/604.1',
+        configurable: true,
+      });
+      expect(isIosSafariInstallableBrowser()).toBe(false);
+    });
+    it('returns false for non-Apple device', () => {
+      Object.defineProperty(window.navigator, 'userAgent', {
+        value: 'Mozilla/5.0 (Linux; Android 10; SM-G981B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.162 Mobile Safari/537.36',
+        configurable: true,
+      });
+      expect(isIosSafariInstallableBrowser()).toBe(false);
+    });
   });
 
   it('recognizes finished weekends when the derived finish time is in the past', () => {

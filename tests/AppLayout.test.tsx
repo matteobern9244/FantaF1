@@ -4,7 +4,7 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
-import AppLayout from '../src/components/AppLayout';
+import AppLayout, { isBottomTabBarItemActive } from '../src/components/AppLayout';
 import React from 'react';
 import { getSectionNavigationItems } from '../src/utils/sectionNavigation';
 
@@ -169,6 +169,71 @@ describe('AppLayout Component', () => {
 
     fireEvent.click(closeButtons[1]);
     expect(onCloseMobileNav).toHaveBeenCalledTimes(1);
+  });
+
+  it('renders bottom tab bar with no tabs when nav items do not include the expected section ids', () => {
+    setMockViewport(600);
+    const minimalItems: ReturnType<typeof getSectionNavigationItems> = [
+      {
+        kind: 'item',
+        id: 'results-section',
+        route: '/results',
+        label: 'Results',
+        viewModes: ['public', 'admin'],
+      },
+    ];
+    renderWithLayout({ items: minimalItems, activeId: 'results-section' });
+
+    const bottomTabBar = screen.getByRole('navigation', { name: /Barra di navigazione mobile/i });
+    expect(bottomTabBar).toBeInTheDocument();
+    expect(within(bottomTabBar).queryByRole('button', { name: /Calendario stagione/i })).not.toBeInTheDocument();
+    expect(within(bottomTabBar).queryByRole('button', { name: /Pronostici/i })).not.toBeInTheDocument();
+    expect(within(bottomTabBar).queryByRole('button', { name: /Classifiche/i })).not.toBeInTheDocument();
+    expect(within(bottomTabBar).queryByRole('button', { name: /Analisi/i })).not.toBeInTheDocument();
+  });
+
+  it('marks no tab as active when activeId does not match any known section', () => {
+    setMockViewport(600);
+    renderWithLayout({ activeId: 'nonexistent-section' });
+
+    const bottomTabBar = screen.getByRole('navigation', { name: /Barra di navigazione mobile/i });
+    const buttons = within(bottomTabBar).queryAllByRole('button');
+    for (const button of buttons) {
+      expect(button).not.toHaveAttribute('aria-current', 'page');
+    }
+  });
+
+  it('returns false for unknown tabId', () => {
+    expect(isBottomTabBarItemActive('unknown-tab', 'calendar-section')).toBe(false);
+  });
+
+  it('applies app-shell-sidebar-collapsed class when sidebar is collapsed', () => {
+    setMockViewport(1400);
+    render(
+      <MemoryRouter>
+        <AppLayout
+          items={getSectionNavigationItems('public')}
+          activeId="calendar-section"
+          onItemClick={() => {}}
+          isAdmin={false}
+          viewMode="public"
+          onViewModeToggle={() => {}}
+          onLogout={() => {}}
+          onLogin={() => {}}
+          isSidebarCollapsed={true}
+          onCollapseChange={() => {}}
+          isMobileNavOpen={false}
+          onOpenMobileNav={() => {}}
+          onCloseMobileNav={() => {}}
+          onInstall={() => {}}
+        >
+          <div>Content</div>
+        </AppLayout>
+      </MemoryRouter>
+    );
+    // verifica che il container radice abbia la classe collapsed
+    const shell = document.querySelector('.app-shell');
+    expect(shell).toHaveClass('app-shell-sidebar-collapsed');
   });
 
   it('updates the bottom tab bar when the viewport crosses the mobile breakpoint', () => {

@@ -138,7 +138,7 @@ interface ToastState {
   tone: ToastTone;
 }
 
-function buildLocationHash(hash: string) {
+export function buildLocationHash(hash: string) {
   const normalizedHash = hash.trim().replace(/^#/, '');
   return normalizedHash ? `#${normalizedHash}` : '';
 }
@@ -159,7 +159,7 @@ function isStandaloneInstallContext() {
   return standaloneMediaQuery.matches || navigatorWithStandalone.standalone === true;
 }
 
-function isIosSafariInstallableBrowser() {
+export function isIosSafariInstallableBrowser() {
   const userAgent = window.navigator.userAgent;
   const isAppleMobileDevice = /iPad|iPhone|iPod/.test(userAgent);
   const isSafariEngine = /Safari/.test(userAgent);
@@ -167,7 +167,7 @@ function isIosSafariInstallableBrowser() {
   return isAppleMobileDevice && isSafariEngine && !isUnsupportedBrowser;
 }
 
-function resolveInstallCtaMode({
+export function resolveInstallCtaMode({
   isAppInstalled,
   hasInstallPrompt,
   isIosSafari,
@@ -328,6 +328,7 @@ function App() {
   const pendingPathnameRef = useRef<string | null>(null);
   const pendingHashRef = useRef<string | null>(null);
   const pendingMeetingKeyRef = useRef<string | null>(null);
+  const pendingViewModeRef = useRef<ViewMode | null>(null);
 
   // Derived state (declared before effects to avoid TS errors)
   const sortedDrivers = sortDriversBySurname(drivers, driversSource.sortLocale);
@@ -423,12 +424,15 @@ function App() {
     if (
       pendingPathnameRef.current &&
       location.pathname === pendingPathnameRef.current &&
-      (!pendingHashRef.current || location.hash === pendingHashRef.current)
+      (!pendingHashRef.current || location.hash === pendingHashRef.current) &&
+      (!pendingViewModeRef.current ||
+        new URLSearchParams(location.search).get('view') === pendingViewModeRef.current)
     ) {
       pendingPathnameRef.current = null;
       pendingHashRef.current = null;
+      pendingViewModeRef.current = null;
     }
-  }, [location.hash, location.pathname]);
+  }, [location.hash, location.pathname, location.search]);
 
   useEffect(() => {
     setSelectedRacePhase(raceLocked ? 'live' : 'open');
@@ -515,9 +519,11 @@ function App() {
   function navigateToAdminPredictions() {
     pendingPathnameRef.current = '/pronostici';
     pendingHashRef.current = '#predictions-section';
-    handledHashLocationRef.current = '/pronostici#predictions-section';
+    pendingViewModeRef.current = 'admin';
+    handledHashLocationRef.current = '';
     setActiveSectionId('predictions-section');
     setShowAdminLogin(false);
+    setIsMobileNavOpen(false);
     navigate(
       { pathname: '/pronostici', search: '?view=admin', hash: '#predictions-section' },
       { replace: true },
@@ -553,7 +559,9 @@ function App() {
     const [fallbackPath, fallbackHash = ''] = fallbackItem.route.split('#');
     pendingPathnameRef.current = fallbackPath;
     pendingHashRef.current = buildLocationHash(fallbackHash);
+    pendingViewModeRef.current = 'public';
     setActiveSectionId(fallbackItem.id);
+    setIsMobileNavOpen(false);
     navigate(
       {
         pathname: fallbackPath,
@@ -786,6 +794,13 @@ function App() {
     const hashSectionId = location.hash.replace(/^#/, '');
     const fallbackSectionId = hashSectionId || firstSectionId;
     setActiveSectionId((currentActiveSectionId) => {
+      const isHashSectionVisible = effectSectionNavigationLeafItems.some(
+        (item) => item.id === hashSectionId,
+      );
+      if (hashSectionId && isHashSectionVisible) {
+        return hashSectionId;
+      }
+
       const isCurrentSectionVisible = effectSectionNavigationLeafItems.some(
         (item) => item.id === currentActiveSectionId,
       );
@@ -888,6 +903,11 @@ function App() {
     }
     const isPendingLocalMeetingSelection =
       pendingMeetingKeyRef.current !== null && pendingMeetingKeyRef.current === selectedMeetingKey;
+    if (pendingViewModeRef.current && urlViewMode === pendingViewModeRef.current) {
+      pendingViewModeRef.current = null;
+    }
+    const isPendingViewModeTransition =
+      pendingViewModeRef.current !== null && pendingViewModeRef.current === viewMode;
 
     // Sync URL -> State (e.g. on back/forward or manual URL edit)
     if (!isPendingLocalMeetingSelection && urlMeetingKey && urlMeetingKey !== selectedMeetingKey) {
@@ -909,7 +929,7 @@ function App() {
           ? 'admin'
           : null;
 
-    if (resolvedUrlViewMode && resolvedUrlViewMode !== viewMode) {
+    if (!isPendingViewModeTransition && resolvedUrlViewMode && resolvedUrlViewMode !== viewMode) {
       setViewMode(resolvedUrlViewMode);
     }
 

@@ -701,10 +701,10 @@ Trigger operativi documentati:
 
 Soglia minima ufficiale sullo scope frontend/repository:
 
-- `80%` statements
-- `80%` functions
-- `80%` branches
-- `80%` lines
+- `100%` statements
+- `100%` functions
+- `100%` branches
+- `100%` lines
 
 Soglia minima ufficiale su `backend-csharp/src/`:
 
@@ -713,7 +713,7 @@ Soglia minima ufficiale su `backend-csharp/src/`:
 - `80%` methods
 - `71` file inclusi
 
-Le soglie repository restano a `80%` su statements, branches, functions e
+Le soglie repository restano a `100%` su statements, branches, functions e
 lines.
 
 Verifica piu' recente rieseguita localmente:
@@ -728,7 +728,7 @@ Verifica piu' recente rieseguita localmente:
 Ultimo esito verificato:
 
 - `48` file test verdi
-- `318` test verdi
+- `382` test verdi
 
 ## Struttura repository
 

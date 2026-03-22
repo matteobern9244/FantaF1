@@ -154,11 +154,11 @@ For every task, execute this sequence:
 4. State the acceptance criteria.
 5. Inspect existing logic before editing anything.
 6. Apply strict TDD for any behavioral change.
-7. Define and preserve the required 80% total coverage target for the task
+7. Define and preserve the required 100% total coverage target for the task
    scope and repository/application.
 8. Implement the smallest safe change required.
 9. Run the relevant validations, including explicit coverage verification at
-   80%.
+   100%.
 10. Ensure versioning coordination: every version increment must be applied
     consistently across `package.json`, `package-lock.json`, `CHANGELOG.md`, and
     `README.md`.
@@ -319,13 +319,13 @@ Rules:
   mock only collaborators outside the actual intent of the test.
 - This TDD rule is mandatory for every fix, modification, and new implementation
   in this repository without exception.
-- RED must also define the coverage work needed to preserve or restore 80%
+- RED must also define the coverage work needed to preserve or restore 100%
   statements, functions, branches, and lines for the official
   repository/application scope.
 - GREEN is not complete if the implementation passes behavior tests but leaves
-  coverage below 80%.
+  coverage below 100%.
 - REFACTOR is not complete until all tests remain green and coverage remains at
-  80%.
+  100%.
 
 ---
 
@@ -392,7 +392,7 @@ the repository. Where applicable this includes:
   Testing Library.
 - Coverage provider: V8 (Frontend), coverlet (Backend).
 - The official minimum threshold for the configured application-code scope is
-  **80% statements**, **80% functions**, **80% branches**, and **80% lines**,
+  **100% statements**, **100% functions**, **100% branches**, and **100% lines**,
   aligned with the thresholds currently documented in `README.md`.
 - The official minimum threshold for `backend-csharp/src/` is **80% line
   coverage**, **80% branch coverage**, and **80% method coverage** across the
@@ -412,7 +412,7 @@ A task is not complete if:
 - the project does not compile
 - any relevant test fails
 - the behavior was changed without automated test coverage
-- coverage for the official repository/application scope is below 80%
+- coverage for the official repository/application scope is below 100%
   statements, functions, branches, or lines
 
 If a validation step cannot be executed, explicitly state:
@@ -625,13 +625,13 @@ Before editing:
 - in every plan, explicitly include acceptance criteria, regression checks, and
   the validation commands intended to be run
 - in every plan must always include a dedicated section named
-  `Coverage 80% totale`
-- in every plan must always include verification of 80% coverage for all files
+  `Coverage 100% totale`
+- in every plan must always include verification of 100% coverage for all files
   in the repository and application
-- if coverage is not 80% at the end of plan implementation, coverage must be
-  performed until 80% coverage is achieved for all files in the repository and
+- if coverage is not 100% at the end of plan implementation, coverage must be
+  performed until 100% coverage is achieved for all files in the repository and
   application
-- no plan is valid or complete if it omits the explicit 80% total coverage
+- no plan is valid or complete if it omits the explicit 100% total coverage
   requirement
 
 After editing:

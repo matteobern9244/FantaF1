@@ -87,7 +87,7 @@ function buildBottomTabBarItems(items: SectionNavigationEntry[]): BottomTabBarIt
   return definitions.filter((item): item is BottomTabBarItem => Boolean(item));
 }
 
-function isBottomTabBarItemActive(tabId: string, activeId: string) {
+export function isBottomTabBarItemActive(tabId: string, activeId: string) {
   const activeGroups: Record<string, SectionNavigationId[]> = {
     dashboard: ['calendar-section', 'weekend-live', 'public-guide'],
     predictions: ['predictions-section'],

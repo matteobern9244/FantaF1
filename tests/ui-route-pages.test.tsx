@@ -5,6 +5,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen } from '@testing-library/react';
 import AdminPage from '../src/pages/AdminPage';
 import AnalysisPage from '../src/pages/AnalysisPage';
+import DashboardPage from '../src/pages/DashboardPage';
+import PredictionsPage from '../src/pages/PredictionsPage';
 import StandingsPage from '../src/pages/StandingsPage';
 import { appConfig } from '../src/constants';
 import { appText } from '../src/uiText';
@@ -250,6 +252,81 @@ describe('route page wrappers', () => {
     expect(onSelectedInsightsUserChange).toHaveBeenCalledWith('Luca');
   });
 
+  it('renders SeasonAnalysisPanel when activeSectionId is season-analysis', () => {
+    render(
+      <AnalysisPage
+        seasonAnalytics={{
+          comparison: [],
+          leaderName: 'Marco',
+          narratives: [],
+          recap: null,
+        }}
+        predictionLabels={predictionLabels}
+        selectedAnalyticsSummary={null}
+        formatTrendDriver={() => 'Pilota sconosciuto'}
+        selectedInsightsUserName="Marco"
+        formatAverageValue={() => 'N/D'}
+        selectedKpiSummary={null}
+        users={users}
+        onSelectedInsightsUserChange={() => {}}
+        activeSectionId="season-analysis"
+      />,
+    );
+
+    expect(screen.getByTestId('season-cumulative-trend')).toBeInTheDocument();
+  });
+
+  it('renders the analyticsEmpty copy and hides the trend chart when trend is an empty array', () => {
+    const selectedAnalyticsSummary: UserAnalyticsSummary = {
+      userName: 'Marco',
+      bestWeekend: { gpName: 'Australia', points: 21 },
+      worstWeekend: { gpName: 'Monaco', points: 4 },
+      mostPickedDriverId: 'ver',
+      fieldAccuracy: [{ field: 'first', hits: 3, total: 5, accuracy: 60 }],
+      trend: [],
+      cumulativeTrend: [],
+      pointsByField: { first: 10, second: 5, third: 3, pole: 3 },
+      weekendsAboveLeader: 1,
+    };
+    const selectedKpiSummary: UserKpiSummary = {
+      userName: 'Marco',
+      seasonPoints: 44,
+      averagePosition: 1.5,
+      poleAccuracy: 50,
+      averagePointsPerRace: 11,
+      racesCount: 4,
+      weekendWins: 2,
+      podiums: 3,
+      averageLeaderDelta: 0.5,
+      totalHitRate: 62,
+    };
+
+    render(
+      <AnalysisPage
+        seasonAnalytics={{
+          comparison: [],
+          leaderName: 'Marco',
+          narratives: [],
+          recap: null,
+        }}
+        predictionLabels={predictionLabels}
+        selectedAnalyticsSummary={selectedAnalyticsSummary}
+        formatTrendDriver={(id) => (id === 'ver' ? 'Max Verstappen' : 'Pilota sconosciuto')}
+        selectedInsightsUserName="Marco"
+        formatAverageValue={(value, digits = 0) =>
+          value === null ? 'N/D' : value.toFixed(digits)
+        }
+        selectedKpiSummary={selectedKpiSummary}
+        users={users}
+        onSelectedInsightsUserChange={() => {}}
+        activeSectionId="user-analytics-section"
+      />,
+    );
+
+    expect(screen.getByText(uiText.history.analyticsEmpty)).toBeInTheDocument();
+    expect(screen.queryByTestId('user-points-trend')).not.toBeInTheDocument();
+  });
+
   it('keeps the analysis empty states and standings history shell aligned with the selected view', () => {
     const { rerender } = render(
       <AnalysisPage
@@ -359,5 +436,302 @@ describe('route page wrappers', () => {
 
     expect(screen.queryByText('Lewis Hamilton')).not.toBeInTheDocument();
     expect(screen.getByRole('heading', { name: appText.panels.historyArchive.title })).toBeInTheDocument();
+  });
+
+  it('renders the tooltip-text div and show-tooltip class when showTooltip=true and canAssignPoints=false', () => {
+    const sessionState: SessionState = { isAdmin: true, defaultViewMode: 'admin' };
+
+    render(
+      <AdminPage
+        sessionState={sessionState}
+        adminPassword=""
+        onAdminPasswordChange={() => {}}
+        onAdminLogin={() => {}}
+        adminLoginError={null}
+        editingSession={null}
+        selectedRace={selectedRace}
+        renderSelectedRaceTrackMap={() => null}
+        predictionFieldOrder={predictionFieldOrder}
+        resultLabels={resultLabels}
+        raceResults={createEmptyPrediction()}
+        onUpdateRaceResult={() => {}}
+        sortedDrivers={drivers}
+        onCancelEditRace={() => {}}
+        canAssignPoints={false}
+        showTooltip={true}
+        onShowTooltipChange={() => {}}
+        disabledReason="Risultati incompleti"
+        onCalculateAndApplyPoints={() => {}}
+      />,
+    );
+
+    const tooltipText = screen.getByText('Risultati incompleti');
+    expect(tooltipText).toBeInTheDocument();
+    expect(tooltipText.className).toContain('tooltip-text');
+
+    const tooltipWrapper = tooltipText.closest('.tooltip-wrapper');
+    expect(tooltipWrapper).not.toBeNull();
+    expect(tooltipWrapper!.className).toContain('show-tooltip');
+  });
+
+  it('renders the sprint weekend badge on a DashboardPage calendar card', () => {
+    const sprintRace: RaceWeekend = {
+      meetingKey: 'china-2026',
+      meetingName: 'China',
+      grandPrixTitle: 'Chinese Grand Prix 2026',
+      roundNumber: 2,
+      dateRangeLabel: '20-22 Mar 2026',
+      detailUrl: 'https://example.com/china',
+      heroImageUrl: 'https://example.com/china.webp',
+      trackOutlineUrl: 'https://example.com/china-track.webp',
+      isSprintWeekend: true,
+    };
+
+    render(
+      <DashboardPage
+        sortedCalendar={[sprintRace]}
+        selectedRace={sprintRace}
+        handleRaceSelection={() => {}}
+        editingSession={null}
+        getWeekendLiveDriverName={() => ''}
+        predictionFieldOrder={predictionFieldOrder}
+        predictionLabels={predictionLabels}
+        weekendComparison={[]}
+        isPublicView={false}
+        activeSectionId="calendar-section"
+      />,
+    );
+
+    expect(screen.getByText(uiText.labels.calendarSprint)).toBeInTheDocument();
+  });
+
+  it('renders DashboardPage with selectedRace null covering the ?? branch and fires onChange and onClick handlers', () => {
+    const handleRaceSelection = vi.fn();
+    render(
+      <DashboardPage
+        sortedCalendar={[selectedRace]}
+        selectedRace={null}
+        handleRaceSelection={handleRaceSelection}
+        editingSession={null}
+        getWeekendLiveDriverName={() => ''}
+        predictionFieldOrder={predictionFieldOrder}
+        predictionLabels={predictionLabels}
+        weekendComparison={[]}
+        isPublicView={false}
+        activeSectionId="calendar-section"
+      />,
+    );
+
+    // selectedRace is null → value prop resolves via ?? '' (null-coalescing branch covered)
+    const select = screen.getByLabelText(uiText.labels.selectedRace);
+
+    // fire the onChange inline arrow function on the select
+    fireEvent.change(select, { target: { value: 'australia-2026' } });
+    expect(handleRaceSelection).toHaveBeenCalledWith('australia-2026');
+
+    // fire the onClick inline arrow function on a calendar card button
+    fireEvent.click(screen.getByRole('button', { name: /Australia/i }));
+    expect(handleRaceSelection).toHaveBeenCalledWith('australia-2026');
+  });
+
+  it('renders PredictionsPage with isPublicView true showing the readonly panel', () => {
+    render(
+      <PredictionsPage
+        isPublicView={true}
+        selectedRacePhase="upcoming"
+        predictionResultsStatusMessage={null}
+        users={users}
+        calculatePotentialPoints={() => 42}
+        predictionFieldOrder={predictionFieldOrder}
+        predictionLabels={predictionLabels}
+        updatePrediction={() => {}}
+        predictionsLocked={false}
+        sortedDrivers={drivers}
+        drivers={drivers}
+        clearAllPredictions={() => {}}
+        handleSavePredictions={() => {}}
+        editingSession={null}
+        resultLabels={resultLabels}
+        raceResults={createEmptyPrediction()}
+        updateRaceResult={() => {}}
+      />,
+    );
+
+    expect(screen.getByText(uiText.history.publicReadonly)).toBeInTheDocument();
+    // user cards are rendered in the readonly grid
+    expect(screen.getByText('Marco')).toBeInTheDocument();
+    expect(screen.getByText('Luca')).toBeInTheDocument();
+  });
+
+  it('fires the updateRaceResult and updatePrediction inline handlers on PredictionsPage', () => {
+    const updateRaceResult = vi.fn();
+    const updatePrediction = vi.fn();
+
+    render(
+      <PredictionsPage
+        isPublicView={false}
+        selectedRacePhase="upcoming"
+        predictionResultsStatusMessage={null}
+        users={users}
+        calculatePotentialPoints={() => 0}
+        predictionFieldOrder={predictionFieldOrder}
+        predictionLabels={predictionLabels}
+        updatePrediction={updatePrediction}
+        predictionsLocked={false}
+        sortedDrivers={drivers}
+        drivers={drivers}
+        clearAllPredictions={() => {}}
+        handleSavePredictions={() => {}}
+        editingSession={null}
+        resultLabels={resultLabels}
+        raceResults={createEmptyPrediction()}
+        updateRaceResult={updateRaceResult}
+      />,
+    );
+
+    // fire the (event) => updateRaceResult(...) inline handler
+    fireEvent.change(screen.getByLabelText('Risultato 1°'), { target: { value: 'ver' } });
+    expect(updateRaceResult).toHaveBeenCalledWith('first', 'ver');
+
+    // fire the (event) => updatePrediction(...) inline handler for the first user/field combo
+    // two users both have the same label; pick the first (Marco)
+    const [firstPredictionSelect] = screen.getAllByLabelText('Vincitore gara (5 pt)');
+    fireEvent.change(firstPredictionSelect, { target: { value: 'ham' } });
+    expect(updatePrediction).toHaveBeenCalledWith('Marco', 'first', 'ham');
+  });
+
+  it('renders the live locked banner on PredictionsPage when selectedRacePhase is live', () => {
+    render(
+      <PredictionsPage
+        isPublicView={false}
+        selectedRacePhase="live"
+        predictionResultsStatusMessage={null}
+        users={users}
+        calculatePotentialPoints={() => 0}
+        predictionFieldOrder={predictionFieldOrder}
+        predictionLabels={predictionLabels}
+        updatePrediction={() => {}}
+        predictionsLocked={true}
+        sortedDrivers={drivers}
+        drivers={drivers}
+        clearAllPredictions={() => {}}
+        handleSavePredictions={() => {}}
+        editingSession={null}
+        resultLabels={resultLabels}
+        raceResults={createEmptyPrediction()}
+        updateRaceResult={() => {}}
+      />,
+    );
+
+    expect(screen.getByText(uiText.calendar.raceInProgressLocked)).toBeInTheDocument();
+  });
+
+  it('renders the finished banner on PredictionsPage when selectedRacePhase is finished', () => {
+    render(
+      <PredictionsPage
+        isPublicView={false}
+        selectedRacePhase="finished"
+        predictionResultsStatusMessage={null}
+        users={users}
+        calculatePotentialPoints={() => 0}
+        predictionFieldOrder={predictionFieldOrder}
+        predictionLabels={predictionLabels}
+        updatePrediction={() => {}}
+        predictionsLocked={true}
+        sortedDrivers={drivers}
+        drivers={drivers}
+        clearAllPredictions={() => {}}
+        handleSavePredictions={() => {}}
+        editingSession={null}
+        resultLabels={resultLabels}
+        raceResults={createEmptyPrediction()}
+        updateRaceResult={() => {}}
+      />,
+    );
+
+    expect(screen.getByText(uiText.calendar.raceFinished)).toBeInTheDocument();
+  });
+
+  it('renders AdminPage with canAssignPoints=true: tooltip-wrapper has no disabled-wrapper class and tooltip-text is absent', () => {
+    const sessionState: SessionState = { isAdmin: true, defaultViewMode: 'admin' };
+
+    render(
+      <AdminPage
+        sessionState={sessionState}
+        adminPassword=""
+        onAdminPasswordChange={() => {}}
+        onAdminLogin={() => {}}
+        adminLoginError={null}
+        editingSession={null}
+        selectedRace={selectedRace}
+        renderSelectedRaceTrackMap={() => null}
+        predictionFieldOrder={predictionFieldOrder}
+        resultLabels={resultLabels}
+        raceResults={createEmptyPrediction()}
+        onUpdateRaceResult={() => {}}
+        sortedDrivers={drivers}
+        onCancelEditRace={() => {}}
+        canAssignPoints={true}
+        showTooltip={false}
+        onShowTooltipChange={() => {}}
+        disabledReason={null}
+        onCalculateAndApplyPoints={() => {}}
+      />,
+    );
+
+    const tooltipWrapper = document.querySelector('.tooltip-wrapper');
+    expect(tooltipWrapper).not.toBeNull();
+    expect(tooltipWrapper!.className).not.toContain('disabled-wrapper');
+    expect(document.querySelector('.tooltip-text')).toBeNull();
+  });
+
+  it('renders AnalysisPage with bestWeekend=null and worstWeekend=null showing unknownDriver fallbacks', () => {
+    const selectedAnalyticsSummary: UserAnalyticsSummary = {
+      userName: 'Marco',
+      bestWeekend: null,
+      worstWeekend: null,
+      mostPickedDriverId: 'ver',
+      fieldAccuracy: [],
+      trend: [{ gpName: 'Australia', points: 21 }],
+      cumulativeTrend: [{ gpName: 'Australia', points: 21 }],
+      pointsByField: { first: 10, second: 5, third: 3, pole: 3 },
+      weekendsAboveLeader: 0,
+    };
+    const selectedKpiSummary: UserKpiSummary = {
+      userName: 'Marco',
+      seasonPoints: 44,
+      averagePosition: 1.5,
+      poleAccuracy: 50,
+      averagePointsPerRace: 11,
+      racesCount: 4,
+      weekendWins: 2,
+      podiums: 3,
+      averageLeaderDelta: 0.5,
+      totalHitRate: 62,
+    };
+
+    render(
+      <AnalysisPage
+        seasonAnalytics={{
+          comparison: [],
+          leaderName: 'Marco',
+          narratives: [],
+          recap: null,
+        }}
+        predictionLabels={predictionLabels}
+        selectedAnalyticsSummary={selectedAnalyticsSummary}
+        formatTrendDriver={(id) => (id === 'ver' ? 'Max Verstappen' : 'Pilota sconosciuto')}
+        selectedInsightsUserName="Marco"
+        formatAverageValue={(value, digits = 0) =>
+          value === null ? 'N/D' : value.toFixed(digits)
+        }
+        selectedKpiSummary={selectedKpiSummary}
+        users={users}
+        onSelectedInsightsUserChange={() => {}}
+        activeSectionId="user-analytics-section"
+      />,
+    );
+
+    expect(screen.getAllByText(uiText.history.unknownDriver).length).toBeGreaterThanOrEqual(2);
   });
 });

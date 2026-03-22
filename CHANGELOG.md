@@ -4,6 +4,13 @@ Cronologia sintetica delle release documentate del progetto Fanta Formula 1.
 
 ## [Unreleased]
 
+- **Branch Coverage al 100% e Soglie Aggiornate**: raggiunti il 100% su statements,
+  branches, functions e lines nella suite frontend Vitest. Aggiunti test mirati per
+  coprire i branch residui in `resolveInstallCtaMode`, `buildLocationHash`,
+  `isIosSafariInstallableBrowser`, `isBottomTabBarItemActive`, `AppLayout`
+  (isSidebarCollapsed), `AnalysisPage` (SeasonAnalysisPanel, bestWeekend/worstWeekend
+  null), `AdminPage` (canAssignPoints=true). Le soglie globali in `vite.config.ts`,
+  `AGENTS.md`, `README.md` e `GEMINI.md` sono state aggiornate da 80% a 100%.
 - **Launcher Locali e Test di Parita' Rafforzati**: `start_fantaf1.command`
   usa ora `MONGODB_URI` via ambiente nel preflight MongoDB, mentre
   `start_fantaf1.bat` preserva correttamente URI contenenti `=`; i test
