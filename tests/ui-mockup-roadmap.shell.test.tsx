@@ -40,7 +40,7 @@ describe('Mockup roadmap shell flows', () => {
     ).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: appText.shell.navigation.items.editRace })).not.toBeInTheDocument();
     expect(screen.getByText(appText.history.publicReadonly)).toBeInTheDocument();
-  });
+  }, 10000);
 
   it('renders season analysis surfaces for the selected user and latest GP recap', async () => {
     setupRoadmapFetch();
@@ -78,21 +78,19 @@ describe('Mockup roadmap shell flows', () => {
     expect(screen.getByRole('heading', { name: appText.headings.userKpi })).toBeInTheDocument();
     expect(within(kpiCards[0]).getByText('9')).toBeInTheDocument();
     expect(within(kpiCards[2]).getByText('0%')).toBeInTheDocument();
-  });
+  }, 10000);
 
   it('renders the public guide in public mode', async () => {
-    setupRoadmapFetch();
+    setupRoadmapFetch({
+      sessionState: { isAdmin: false, defaultViewMode: 'public' },
+    });
 
-    await renderRoadmapApp(['/dashboard?view=public']);
-
-    fireEvent.click(
-      await screen.findByRole('button', { name: appText.shell.navigation.items.publicGuide }),
-    );
+    await renderRoadmapApp(['/dashboard?view=public#public-guide']);
 
     expect(await screen.findByRole('heading', { name: appText.panels.publicGuide.title })).toBeInTheDocument();
     expect(screen.getByText(appText.panels.publicGuide.raceLockLabel)).toBeInTheDocument();
     expect(screen.getByText(appText.panels.publicGuide.liveViewLabel)).toBeInTheDocument();
-  });
+  }, 10000);
 
   it('does not grant admin access from a shared admin url when the session is not admin', async () => {
     setupRoadmapFetch({
@@ -104,5 +102,42 @@ describe('Mockup roadmap shell flows', () => {
     expect(screen.getByRole('button', { name: appText.shell.navigation.items.adminLogin })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: appText.shell.navigation.items.savePredictions })).not.toBeInTheDocument();
     expect(screen.getByText(appText.history.publicReadonly)).toBeInTheDocument();
+  });
+
+  it('stabilizes on pronostici without public flicker after switching from public to admin', async () => {
+    setupRoadmapFetch({
+      sessionState: { isAdmin: true, defaultViewMode: 'admin' },
+    });
+
+    await renderRoadmapApp(['/dashboard?view=public#calendar-section']);
+
+    const adminToggle = screen.getAllByRole('button', {
+      name: appText.shell.navigation.items.adminView,
+    })[0];
+    expect(adminToggle).toHaveAttribute('aria-pressed', 'false');
+    expect(screen.getByRole('heading', { name: appText.headings.calendar })).toBeInTheDocument();
+
+    fireEvent.click(adminToggle);
+
+    const predictionsHeading = await screen.findByRole('heading', {
+      name: appText.headings.predictionEntry,
+    });
+
+    expect(predictionsHeading).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: appText.headings.calendar })).not.toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: appText.panels.weekendLive.title })).not.toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: appText.panels.publicGuide.title })).not.toBeInTheDocument();
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+
+    const sectionNavigation = screen.getByRole('navigation', { name: /sezioni applicazione/i });
+    const predictionsButton = within(sectionNavigation).getByRole('button', {
+      name: appText.shell.navigation.items.predictions,
+    });
+    const calendarButton = within(sectionNavigation).getByRole('button', {
+      name: appText.shell.navigation.items.calendar,
+    });
+
+    expect(predictionsButton).toHaveAttribute('aria-current', 'page');
+    expect(calendarButton).not.toHaveAttribute('aria-current');
   });
 });

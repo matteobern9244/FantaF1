@@ -727,7 +727,7 @@ Verifica piu' recente rieseguita localmente:
 
 Ultimo esito verificato:
 
-- `48` file test verdi
+- `56` file test verdi
 - `382` test verdi
 
 ## Struttura repository

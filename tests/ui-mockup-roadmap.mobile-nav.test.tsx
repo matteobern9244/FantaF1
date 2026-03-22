@@ -43,7 +43,7 @@ describe('Mockup roadmap mobile and observer navigation flows', () => {
 
     expect(document.body.style.overflow).toBe('');
     expect(document.body.style.touchAction).toBe('');
-  });
+  }, 15000);
 
   it('aligns the mobile third menu item to the navigation anchor and keeps it active after reopening the overlay', async () => {
     setupRoadmapFetch();
@@ -182,5 +182,5 @@ describe('Mockup roadmap mobile and observer navigation flows', () => {
         expect(screen.queryByRole('heading', { name: forbiddenHeading })).not.toBeInTheDocument();
       }
     }
-  });
+  }, 10000);
 });

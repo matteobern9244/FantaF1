@@ -113,6 +113,17 @@ describe('App Routing (MPA-like)', () => {
     expect(screen.getByRole('heading', { name: /Pronostici dei giocatori/i })).toBeInTheDocument();
   });
 
+  it('keeps the admin predictions route stable without falling back to dashboard content', async () => {
+    renderWithRouter('/pronostici?view=admin#predictions-section');
+    await waitFor(() => {
+      expect(screen.queryByTestId('pitstop-loader')).not.toBeInTheDocument();
+    });
+
+    expect(screen.getByRole('heading', { name: /Pronostici dei giocatori/i })).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: new RegExp(appConfig.uiText.headings.calendar, 'i') })).not.toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: new RegExp(appConfig.uiText.panels.weekendLive.title, 'i') })).not.toBeInTheDocument();
+  });
+
   it('renders Standings view on /classifiche', async () => {
     renderWithRouter('/classifiche');
     await waitFor(() => {

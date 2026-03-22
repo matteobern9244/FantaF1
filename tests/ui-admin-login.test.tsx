@@ -237,7 +237,7 @@ describe('Admin login UI', () => {
       return Promise.reject(new Error(`Unhandled fetch to ${url}`));
     });
 
-    window.history.replaceState({}, '', '/dashboard');
+    window.history.replaceState({}, '', '/dashboard?view=public#calendar-section');
 
     render(
       <BrowserRouter>
@@ -270,11 +270,24 @@ describe('Admin login UI', () => {
     await waitFor(() => {
       expect(window.location.pathname).toBe('/pronostici');
       expect(window.location.hash).toBe('#predictions-section');
+      expect(window.location.search).toContain('view=admin');
     });
 
     expect(await screen.findByRole('heading', { name: appText.headings.predictionEntry })).toBeInTheDocument();
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: appText.headings.calendar })).not.toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: appText.panels.weekendLive.title })).not.toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: appText.panels.publicGuide.title })).not.toBeInTheDocument();
+
+    const sectionNavigation = screen.getByRole('navigation', { name: /sezioni applicazione/i });
+    const predictionsButton = screen.getAllByRole('button', {
+      name: new RegExp(appText.shell.navigation.items.predictions, 'i'),
+    }).find((button) => sectionNavigation.contains(button));
+    const calendarButton = screen.getAllByRole('button', {
+      name: new RegExp(appText.shell.navigation.items.calendar, 'i'),
+    }).find((button) => sectionNavigation.contains(button));
+
+    expect(predictionsButton).toHaveAttribute('aria-current', 'page');
+    expect(calendarButton).not.toHaveAttribute('aria-current');
   }, 30000);
 });

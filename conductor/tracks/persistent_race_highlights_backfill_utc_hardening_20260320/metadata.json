@@ -26,14 +26,14 @@
   "constraints": [
     "Apply all AGENTS.md principles",
     "Strict TDD RED -> GREEN -> REFACTOR",
-    "80% repository/application coverage required",
+    "100% repository/application coverage required",
     "80% backend C# coverage required",
     "No commit",
     "No push",
     "No API break unless explicitly required and tested",
     "Use UTC-safe logic for highlights decisions"
   ],
-  "coverage_target": "80% statements, functions, branches, and lines for the official repository/application scope, and 80% official backend C# coverage.",
+  "coverage_target": "100% statements, functions, branches, and lines for the official repository/application scope, and 80% official backend C# coverage.",
   "validation_commands": [
     "npm run lint",
     "npm run test",

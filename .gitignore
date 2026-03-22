@@ -30,5 +30,6 @@ F1Result/data.json
 backups/
 
 .gemini/*
+.claude/*
 !.gemini/skills/
 gha-creds-*.json

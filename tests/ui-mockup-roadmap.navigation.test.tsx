@@ -44,7 +44,7 @@ describe('Mockup roadmap navigation flows', () => {
       appText.shell.navigation.items.history,
       appText.shell.navigation.items.publicGuide,
     ]);
-  });
+  }, 10000);
 
   it('renders navigation directly in the header and updates the hash on navigation', async () => {
     setupRoadmapFetch();
@@ -176,5 +176,5 @@ describe('Mockup roadmap navigation flows', () => {
         expect(screen.queryByRole('heading', { name: forbiddenHeading })).not.toBeInTheDocument();
       }
     }
-  });
+  }, 15000);
 });

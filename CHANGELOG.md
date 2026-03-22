@@ -4,6 +4,15 @@ Cronologia sintetica delle release documentate del progetto Fanta Formula 1.
 
 ## [Unreleased]
 
+- **Stabilizzazione Suite Test Admin e Routing MPA**: aggiunti timeout espliciti
+  ai test `ui-mockup-roadmap` (mobile-nav, navigation, shell) per eliminare
+  flakiness sui CI più lenti; aggiunto test di regressione per la rotta
+  `/pronostici?view=admin#predictions-section` che verifica l'assenza di
+  contenuto dashboard residuo; rafforzate le asserzioni del test di login admin
+  con verifica di `view=admin` nel search param, assenza del public guide e
+  stato `aria-current` sui pulsanti di navigazione; aggiunto test per il flusso
+  public→admin che controlla l'assenza di flickering e la corretta attivazione
+  del tab pronostici. Aggiornato `.gitignore` per escludere `.claude/*`.
 - **Branch Coverage al 100% e Soglie Aggiornate**: raggiunti il 100% su statements,
   branches, functions e lines nella suite frontend Vitest. Aggiunti test mirati per
   coprire i branch residui in `resolveInstallCtaMode`, `buildLocationHash`,
