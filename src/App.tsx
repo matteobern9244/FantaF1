@@ -191,6 +191,52 @@ function resolveInstallCtaMode({
   return 'unavailable';
 }
 
+type DashboardSectionId = 'calendar-section' | 'weekend-live' | 'public-guide';
+type StandingsSectionId = 'public-standings' | 'history-archive';
+type AnalysisSectionId = 'season-analysis' | 'user-analytics-section' | 'user-kpi-section';
+
+function resolveDashboardSectionId(hash: string): DashboardSectionId {
+  const sectionId = hash.replace(/^#/, '');
+
+  if (
+    sectionId === 'calendar-section' ||
+    sectionId === 'weekend-live' ||
+    sectionId === 'public-guide'
+  ) {
+    return sectionId;
+  }
+
+  return 'calendar-section';
+}
+
+function resolveStandingsSectionId(hash: string, viewMode: ViewMode): StandingsSectionId {
+  const sectionId = hash.replace(/^#/, '');
+
+  if (sectionId === 'history-archive') {
+    return sectionId;
+  }
+
+  if (sectionId === 'public-standings' && viewMode === 'public') {
+    return sectionId;
+  }
+
+  return viewMode === 'admin' ? 'history-archive' : 'public-standings';
+}
+
+function resolveAnalysisSectionId(hash: string): AnalysisSectionId {
+  const sectionId = hash.replace(/^#/, '');
+
+  if (
+    sectionId === 'season-analysis' ||
+    sectionId === 'user-analytics-section' ||
+    sectionId === 'user-kpi-section'
+  ) {
+    return sectionId;
+  }
+
+  return 'season-analysis';
+}
+
 /* v8 ignore next -- static SVG exercised by integration and browser smoke tests */
 function AppLogo() {
   return (
@@ -280,6 +326,8 @@ function App() {
   const navigationLockTimeoutRef = useRef<number | null>(null);
   const manualNavigationTargetRef = useRef<string | null>(null);
   const pendingPathnameRef = useRef<string | null>(null);
+  const pendingHashRef = useRef<string | null>(null);
+  const pendingMeetingKeyRef = useRef<string | null>(null);
 
   // Derived state (declared before effects to avoid TS errors)
   const sortedDrivers = sortDriversBySurname(drivers, driversSource.sortLocale);
@@ -372,10 +420,15 @@ function App() {
   }, [selectedMeetingKey]);
 
   useEffect(() => {
-    if (pendingPathnameRef.current && location.pathname === pendingPathnameRef.current) {
+    if (
+      pendingPathnameRef.current &&
+      location.pathname === pendingPathnameRef.current &&
+      (!pendingHashRef.current || location.hash === pendingHashRef.current)
+    ) {
       pendingPathnameRef.current = null;
+      pendingHashRef.current = null;
     }
-  }, [location.pathname]);
+  }, [location.hash, location.pathname]);
 
   useEffect(() => {
     setSelectedRacePhase(raceLocked ? 'live' : 'open');
@@ -426,6 +479,8 @@ function App() {
         handledHashLocationRef.current = '';
         scheduleManualNavigation(sectionId);
         setActiveSectionId(sectionId);
+        pendingPathnameRef.current = path;
+        pendingHashRef.current = nextHash;
         navigate(item.route);
       } else {
         const targetElement = document.getElementById(sectionId);
@@ -457,8 +512,56 @@ function App() {
     setShowAdminLogin(true);
   }
 
+  function navigateToAdminPredictions() {
+    pendingPathnameRef.current = '/pronostici';
+    pendingHashRef.current = '#predictions-section';
+    handledHashLocationRef.current = '/pronostici#predictions-section';
+    setActiveSectionId('predictions-section');
+    setShowAdminLogin(false);
+    navigate(
+      { pathname: '/pronostici', search: '?view=admin', hash: '#predictions-section' },
+      { replace: true },
+    );
+  }
+
   function handleToggleViewMode() {
-    setViewMode((currentViewMode) => (currentViewMode === 'public' ? 'admin' : 'public'));
+    if (!sessionState.isAdmin) {
+      handleOpenAdminLogin();
+      return;
+    }
+
+    if (viewMode === 'public') {
+      setViewMode('admin');
+      navigateToAdminPredictions();
+      return;
+    }
+
+    const publicLeafItems = getSectionNavigationLeafItems('public');
+    const currentRoutePublicItem = publicLeafItems.find((item) => {
+      const [itemPath] = item.route.split('#');
+      return itemPath === location.pathname;
+    });
+    const fallbackItem = currentRoutePublicItem ?? publicLeafItems[0] ?? null;
+
+    handledHashLocationRef.current = '';
+    setViewMode('public');
+
+    if (!fallbackItem) {
+      return;
+    }
+
+    const [fallbackPath, fallbackHash = ''] = fallbackItem.route.split('#');
+    pendingPathnameRef.current = fallbackPath;
+    pendingHashRef.current = buildLocationHash(fallbackHash);
+    setActiveSectionId(fallbackItem.id);
+    navigate(
+      {
+        pathname: fallbackPath,
+        search: '?view=public',
+        hash: pendingHashRef.current,
+      },
+      { replace: true },
+    );
   }
 
   useEffect(() => {
@@ -779,9 +882,15 @@ function App() {
     const urlHistorySearch = params.get('historySearch')?.trim() ?? '';
     const normalizedPathname = location.pathname === '/' ? '/dashboard' : location.pathname;
     const targetPathname = pendingPathnameRef.current ?? normalizedPathname;
+    const targetHash = pendingHashRef.current ?? location.hash;
+    if (pendingMeetingKeyRef.current && urlMeetingKey === pendingMeetingKeyRef.current) {
+      pendingMeetingKeyRef.current = null;
+    }
+    const isPendingLocalMeetingSelection =
+      pendingMeetingKeyRef.current !== null && pendingMeetingKeyRef.current === selectedMeetingKey;
 
     // Sync URL -> State (e.g. on back/forward or manual URL edit)
-    if (urlMeetingKey && urlMeetingKey !== selectedMeetingKey) {
+    if (!isPendingLocalMeetingSelection && urlMeetingKey && urlMeetingKey !== selectedMeetingKey) {
       const race = getRaceByMeetingKey(sortedCalendar, urlMeetingKey);
       if (race) {
         const nextMeeting = race.meetingKey;
@@ -842,10 +951,10 @@ function App() {
     if (changed) {
       const nextSearch = `?${params.toString()}`;
       if (location.pathname !== targetPathname || location.search !== nextSearch) {
-        navigate({ pathname: targetPathname, search: nextSearch, hash: location.hash }, { replace: true });
+        navigate({ pathname: targetPathname, search: nextSearch, hash: targetHash }, { replace: true });
       }
     } else if (location.pathname !== targetPathname) {
-      navigate({ pathname: targetPathname, search: location.search, hash: location.hash }, { replace: true });
+      navigate({ pathname: targetPathname, search: location.search, hash: targetHash }, { replace: true });
     }
   }, [
     historySearch,
@@ -952,6 +1061,9 @@ function App() {
   ]);
 
   const liveLeaderboardUsers = sortUsersByLiveTotal(users, raceResults, points);
+  const dashboardSectionId = resolveDashboardSectionId(location.hash);
+  const standingsSectionId = resolveStandingsSectionId(location.hash, viewMode);
+  const analysisSectionId = resolveAnalysisSectionId(location.hash);
 
   function calculatePotentialPoints(userPrediction: Prediction) {
     return calculateProjectedPoints(userPrediction, raceResults, points);
@@ -1075,11 +1187,11 @@ function App() {
     setGpName(nextRace?.grandPrixTitle ?? nextRace?.meetingName ?? '');
     setUsers(nextWeekendView.users);
     setRaceResults(nextWeekendView.raceResults);
-
-    const params = new URLSearchParams(location.search);
-    params.set('meeting', nextMeeting);
-    pendingPathnameRef.current = '/pronostici';
-    navigate(`/pronostici?${params.toString()}`);
+    setActiveSectionId('calendar-section');
+    pendingPathnameRef.current = '/dashboard';
+    pendingHashRef.current = '#calendar-section';
+    pendingMeetingKeyRef.current = nextMeeting;
+    handledHashLocationRef.current = '';
   }
 
   function updatePrediction(userName: string, field: PredictionKey, value: string) {
@@ -1162,9 +1274,9 @@ function App() {
       const session = await response.json() as SessionState;
       setSessionState(session);
       setViewMode('admin');
-      setShowAdminLogin(false);
       setAdminPassword('');
       setAdminLoginError('');
+      navigateToAdminPredictions();
       showToastMessage(uiText.status.adminLoginSuccess, 'success');
     } catch (error) {
       console.error(error);
@@ -1796,6 +1908,7 @@ function App() {
                 predictionLabels={predictionLabels}
                 weekendComparison={weekendComparison}
                 isPublicView={isPublicView}
+                activeSectionId={dashboardSectionId}
               />
             } />
             <Route path="/pronostici" element={
@@ -1822,6 +1935,7 @@ function App() {
             <Route path="/classifiche" element={
               <StandingsPage
                 isPublicView={isPublicView}
+                activeSectionId={standingsSectionId}
                 standings={standings}
                 editingSession={editingSession}
                 expandedHistoryKey={expandedHistoryKey}
@@ -1853,6 +1967,7 @@ function App() {
                 selectedKpiSummary={selectedKpiSummary}
                 users={users}
                 onSelectedInsightsUserChange={setSelectedInsightsUser}
+                activeSectionId={analysisSectionId}
               />
             } />
             <Route path="/admin" element={

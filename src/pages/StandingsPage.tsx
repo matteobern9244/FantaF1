@@ -8,6 +8,7 @@ const { uiText } = appConfig;
 
 interface StandingsPageProps {
   isPublicView: boolean;
+  activeSectionId: string;
   standings: StandingsPayload;
   editingSession: EditingSession | null;
   expandedHistoryKey: string;
@@ -35,6 +36,7 @@ interface StandingsPageProps {
 
 const StandingsPage: React.FC<StandingsPageProps> = ({
   isPublicView,
+  activeSectionId,
   standings,
   editingSession,
   expandedHistoryKey,
@@ -54,9 +56,13 @@ const StandingsPage: React.FC<StandingsPageProps> = ({
   userDisplayNameForWinner,
   users,
 }) => {
+  const visibleSectionId = activeSectionId === 'history-archive'
+    ? 'history-archive'
+    : 'public-standings';
+
   return (
     <>
-      {isPublicView ? (
+      {isPublicView && visibleSectionId === 'public-standings' ? (
         <PublicStandingsPanel
           constructorStandings={standings.constructorStandings}
           driverStandings={standings.driverStandings}
@@ -64,29 +70,31 @@ const StandingsPage: React.FC<StandingsPageProps> = ({
         />
       ) : null}
 
-      <HistoryArchivePanel
-        editingSession={editingSession}
-        expandedHistoryKey={expandedHistoryKey}
-        filteredHistoryEntries={filteredHistoryEntries}
-        getHistoryFieldHitLabel={getHistoryFieldHitLabel}
-        getHistoryKey={getHistoryKey}
-        historyEmptyLabel={uiText.history.empty}
-        historySearch={historySearch}
-        historyUserFilter={historyUserFilter}
-        isPublicView={isPublicView}
-        onDeleteHistoryRace={onDeleteHistoryRace}
-        onEditHistoryRace={onEditHistoryRace}
-        onHistorySearchChange={onHistorySearchChange}
-        onHistoryUserFilterChange={onHistoryUserFilterChange}
-        onToggleExpanded={onToggleExpanded}
-        pointsSuffix={uiText.pointsSuffix}
-        predictionFieldOrder={predictionFieldOrder}
-        predictionLabels={predictionLabels}
-        resolveHistoryPodium={resolveHistoryPodium}
-        unknownDriverLabel={uiText.history.unknownDriver}
-        userDisplayNameForWinner={userDisplayNameForWinner}
-        users={users}
-      />
+      {visibleSectionId === 'history-archive' ? (
+        <HistoryArchivePanel
+          editingSession={editingSession}
+          expandedHistoryKey={expandedHistoryKey}
+          filteredHistoryEntries={filteredHistoryEntries}
+          getHistoryFieldHitLabel={getHistoryFieldHitLabel}
+          getHistoryKey={getHistoryKey}
+          historyEmptyLabel={uiText.history.empty}
+          historySearch={historySearch}
+          historyUserFilter={historyUserFilter}
+          isPublicView={isPublicView}
+          onDeleteHistoryRace={onDeleteHistoryRace}
+          onEditHistoryRace={onEditHistoryRace}
+          onHistorySearchChange={onHistorySearchChange}
+          onHistoryUserFilterChange={onHistoryUserFilterChange}
+          onToggleExpanded={onToggleExpanded}
+          pointsSuffix={uiText.pointsSuffix}
+          predictionFieldOrder={predictionFieldOrder}
+          predictionLabels={predictionLabels}
+          resolveHistoryPodium={resolveHistoryPodium}
+          unknownDriverLabel={uiText.history.unknownDriver}
+          userDisplayNameForWinner={userDisplayNameForWinner}
+          users={users}
+        />
+      ) : null}
     </>
   );
 };

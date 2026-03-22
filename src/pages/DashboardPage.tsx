@@ -24,6 +24,7 @@ interface DashboardPageProps {
   predictionLabels: Record<PredictionKey, string>;
   weekendComparison: WeekendComparisonEntry[];
   isPublicView: boolean;
+  activeSectionId: string;
 }
 
 const DashboardPage: React.FC<DashboardPageProps> = ({
@@ -36,70 +37,81 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
   predictionLabels,
   weekendComparison,
   isPublicView,
+  activeSectionId,
 }) => {
+  const visibleSectionId = activeSectionId === 'weekend-live'
+    ? 'weekend-live'
+    : activeSectionId === 'public-guide' && isPublicView
+      ? 'public-guide'
+      : 'calendar-section';
+
   return (
     <>
-      <section className="calendar-panel nav-section" id="calendar-section">
-        <div className="section-title">
-          <Flag size={20} />
-          <h2>{uiText.headings.calendar}</h2>
-        </div>
-        {sortedCalendar.length === 0 ? (
-          <p className="empty-copy">{uiText.calendar.empty}</p>
-        ) : (
-          <>
-            <div className="race-selector">
-              <label htmlFor="meeting-selector">{uiText.labels.selectedRace}</label>
-              <select
-                id="meeting-selector"
-                value={selectedRace?.meetingKey ?? ''}
-                onChange={(event) => handleRaceSelection(event.target.value)}
-                disabled={Boolean(editingSession)}
-              >
-                {sortedCalendar.map((weekend) => (
-                  <option key={weekend.meetingKey} value={weekend.meetingKey}>
-                    {weekend.roundNumber}. {weekend.grandPrixTitle}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="calendar-strip">
-              {sortedCalendar.map((weekend) => (
-                <button
-                  key={weekend.meetingKey}
-                  className={`calendar-card interactive-surface ${
-                    weekend.meetingKey === selectedRace?.meetingKey ? 'selected' : ''
-                  } ${weekend.isSprintWeekend ? 'sprint' : ''}`}
-                  onClick={() => handleRaceSelection(weekend.meetingKey)}
+      {visibleSectionId === 'calendar-section' ? (
+        <section className="calendar-panel nav-section" id="calendar-section">
+          <div className="section-title">
+            <Flag size={20} />
+            <h2>{uiText.headings.calendar}</h2>
+          </div>
+          {sortedCalendar.length === 0 ? (
+            <p className="empty-copy">{uiText.calendar.empty}</p>
+          ) : (
+            <>
+              <div className="race-selector">
+                <label htmlFor="meeting-selector">{uiText.labels.selectedRace}</label>
+                <select
+                  id="meeting-selector"
+                  value={selectedRace?.meetingKey ?? ''}
+                  onChange={(event) => handleRaceSelection(event.target.value)}
                   disabled={Boolean(editingSession)}
-                  type="button"
                 >
-                  <span className="calendar-round">
-                    {uiText.labels.calendarRound} {weekend.roundNumber}
-                  </span>
-                  <strong>{weekend.meetingName}</strong>
-                  <span>{weekend.dateRangeLabel}</span>
-                  <span className={`calendar-badge ${weekend.isSprintWeekend ? 'sprint' : ''}`}>
-                    {weekend.isSprintWeekend
-                      ? uiText.labels.calendarSprint
-                      : uiText.calendar.raceBadge}
-                  </span>
-                </button>
-              ))}
-            </div>
-          </>
-        )}
-      </section>
+                  {sortedCalendar.map((weekend) => (
+                    <option key={weekend.meetingKey} value={weekend.meetingKey}>
+                      {weekend.roundNumber}. {weekend.grandPrixTitle}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
-      <WeekendLivePanel
-        getDriverName={getWeekendLiveDriverName}
-        predictionFieldOrder={predictionFieldOrder}
-        predictionLabels={predictionLabels}
-        weekendComparison={weekendComparison}
-      />
+              <div className="calendar-strip">
+                {sortedCalendar.map((weekend) => (
+                  <button
+                    key={weekend.meetingKey}
+                    className={`calendar-card interactive-surface ${
+                      weekend.meetingKey === selectedRace?.meetingKey ? 'selected' : ''
+                    } ${weekend.isSprintWeekend ? 'sprint' : ''}`}
+                    onClick={() => handleRaceSelection(weekend.meetingKey)}
+                    disabled={Boolean(editingSession)}
+                    type="button"
+                  >
+                    <span className="calendar-round">
+                      {uiText.labels.calendarRound} {weekend.roundNumber}
+                    </span>
+                    <strong>{weekend.meetingName}</strong>
+                    <span>{weekend.dateRangeLabel}</span>
+                    <span className={`calendar-badge ${weekend.isSprintWeekend ? 'sprint' : ''}`}>
+                      {weekend.isSprintWeekend
+                        ? uiText.labels.calendarSprint
+                        : uiText.calendar.raceBadge}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
+        </section>
+      ) : null}
 
-      {isPublicView ? (
+      {visibleSectionId === 'weekend-live' ? (
+        <WeekendLivePanel
+          getDriverName={getWeekendLiveDriverName}
+          predictionFieldOrder={predictionFieldOrder}
+          predictionLabels={predictionLabels}
+          weekendComparison={weekendComparison}
+        />
+      ) : null}
+
+      {visibleSectionId === 'public-guide' ? (
         <PublicGuidePanel />
       ) : null}
     </>

@@ -83,4 +83,13 @@ describe('section navigation', () => {
       ['history-archive', '/classifiche#history-archive'],
     ]);
   });
+
+  it('keeps pronostici as the admin landing target', () => {
+    const adminLeafEntries = getSectionNavigationLeafItems('admin');
+    const predictionsEntry = adminLeafEntries.find((item) => item.id === 'predictions-section');
+    const resultsEntry = adminLeafEntries.find((item) => item.id === 'results-section');
+
+    expect(predictionsEntry?.route).toBe('/pronostici#predictions-section');
+    expect(resultsEntry?.route).toBe('/admin#results-section');
+  });
 });

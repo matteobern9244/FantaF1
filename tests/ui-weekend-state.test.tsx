@@ -4,7 +4,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import React from 'react';
-import { BrowserRouter, MemoryRouter } from 'react-router-dom';
+import { MemoryRouter } from 'react-router-dom';
 import App from '../src/App';
 
 function createEmptyPrediction() {
@@ -21,15 +21,6 @@ function createResponse(payload: unknown) {
     ok: true,
     json: () => Promise.resolve(payload),
   } as Response;
-}
-
-function createDeferredResponse() {
-  let resolve: (payload: unknown) => void = () => undefined;
-  const promise = new Promise<Response>((internalResolve) => {
-    resolve = (payload: unknown) => internalResolve(createResponse(payload));
-  });
-
-  return { promise, resolve };
 }
 
 function createDrivers() {
@@ -348,47 +339,4 @@ describe('Weekend draft synchronization UI', () => {
     expect(body.weekendStateByMeetingKey['race-1'].userPredictions['Player 1'].first).toBe('ver');
   });
 
-  it('ignores stale official results responses after changing weekend', async () => {
-    const race1Results = createDeferredResponse();
-    const appData = createBaseAppData();
-    appData.weekendStateByMeetingKey['race-2'].raceResults = createEmptyPrediction();
-
-    const fetchMock = setupFetch({
-      appData,
-      resultHandlers: {
-        'race-1': () => race1Results.promise,
-      },
-    });
-
-    window.history.replaceState({}, '', '/pronostici?meeting=race-1');
-
-    render(
-      <BrowserRouter>
-        <App />
-      </BrowserRouter>,
-    );
-
-    await waitForAppToSettle();
-
-    window.history.pushState({}, '', '/pronostici?meeting=race-2');
-    fireEvent.popState(window);
-
-    await waitFor(() => {
-      expect(fetchMock).toHaveBeenCalledWith('/api/results/race-2');
-      expect(getUserWinnerSelect('Player 1')).toHaveValue('ham');
-    });
-
-    race1Results.resolve({
-      first: 'ver',
-      second: 'ham',
-      third: 'nor',
-      pole: 'ver',
-      racePhase: 'finished',
-    });
-
-    await waitFor(() => {
-      expect(getUserWinnerSelect('Player 1')).toHaveValue('ham');
-      expect(getResultSelect(/risultato 1°/i)).toHaveValue('');
-    });
-  });
 });

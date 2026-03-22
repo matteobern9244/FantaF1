@@ -48,13 +48,7 @@ describe('Mockup roadmap navigation flows', () => {
 
   it('renders navigation directly in the header and updates the hash on navigation', async () => {
     setupRoadmapFetch();
-    const scrollTo = vi.fn();
-    Object.defineProperty(window, 'scrollTo', {
-      configurable: true,
-      value: scrollTo,
-    });
-
-    await renderRoadmapApp(['/analisi']);
+    await renderRoadmapApp(['/dashboard?view=public']);
 
     const navigation = screen.getByRole('navigation', { name: appText.shell.navigation.ariaLabel });
     expect(navigation).toBeInTheDocument();
@@ -64,7 +58,8 @@ describe('Mockup roadmap navigation flows', () => {
     fireEvent.click(userAnalyticsButton);
 
     await screen.findByRole('heading', { name: appText.headings.userAnalytics });
-    expect(scrollTo).toHaveBeenCalled();
+    expect(userAnalyticsButton).toHaveClass('active');
+    expect(userAnalyticsButton).toHaveAttribute('aria-current', 'page');
   });
 
   it('navigates to history even when no archived races exist yet', async () => {
@@ -102,21 +97,84 @@ describe('Mockup roadmap navigation flows', () => {
     const navigation = screen.getByRole('navigation', { name: appText.shell.navigation.ariaLabel });
     await screen.findByRole('button', { name: appText.shell.navigation.items.publicGuide });
 
-    const routeAssertions: Array<{ label: string; heading: string }> = [
-      { label: appText.shell.navigation.items.calendar, heading: appText.headings.calendar },
-      { label: appText.shell.navigation.items.predictions, heading: appText.headings.predictionEntry },
-      { label: appText.shell.navigation.items.weekendLive, heading: appText.panels.weekendLive.title },
-      { label: appText.shell.navigation.items.seasonAnalysis, heading: appText.panels.seasonAnalysis.title },
-      { label: appText.shell.navigation.items.userAnalytics, heading: appText.headings.userAnalytics },
-      { label: appText.shell.navigation.items.userKpi, heading: appText.headings.userKpi },
-      { label: appText.shell.navigation.items.publicStandings, heading: appText.panels.publicStandings.title },
-      { label: appText.shell.navigation.items.history, heading: appText.headings.history },
-      { label: appText.shell.navigation.items.publicGuide, heading: appText.panels.publicGuide.title },
+    const routeAssertions: Array<{ forbidden: string[]; heading: string; label: string }> = [
+      {
+        label: appText.shell.navigation.items.calendar,
+        heading: appText.headings.calendar,
+        forbidden: [
+          appText.panels.weekendLive.title,
+          appText.panels.publicGuide.title,
+        ],
+      },
+      {
+        label: appText.shell.navigation.items.predictions,
+        heading: appText.headings.predictionEntry,
+        forbidden: [
+          appText.headings.calendar,
+          appText.panels.weekendLive.title,
+          appText.panels.publicGuide.title,
+        ],
+      },
+      {
+        label: appText.shell.navigation.items.weekendLive,
+        heading: appText.panels.weekendLive.title,
+        forbidden: [
+          appText.headings.calendar,
+          appText.headings.predictionEntry,
+          appText.panels.publicGuide.title,
+        ],
+      },
+      {
+        label: appText.shell.navigation.items.seasonAnalysis,
+        heading: appText.panels.seasonAnalysis.title,
+        forbidden: [
+          appText.headings.userAnalytics,
+          appText.headings.userKpi,
+        ],
+      },
+      {
+        label: appText.shell.navigation.items.userAnalytics,
+        heading: appText.headings.userAnalytics,
+        forbidden: [
+          appText.panels.seasonAnalysis.title,
+          appText.headings.userKpi,
+        ],
+      },
+      {
+        label: appText.shell.navigation.items.userKpi,
+        heading: appText.headings.userKpi,
+        forbidden: [
+          appText.panels.seasonAnalysis.title,
+          appText.headings.userAnalytics,
+        ],
+      },
+      {
+        label: appText.shell.navigation.items.publicStandings,
+        heading: appText.panels.publicStandings.title,
+        forbidden: [appText.headings.history],
+      },
+      {
+        label: appText.shell.navigation.items.history,
+        heading: appText.headings.history,
+        forbidden: [appText.panels.publicStandings.title],
+      },
+      {
+        label: appText.shell.navigation.items.publicGuide,
+        heading: appText.panels.publicGuide.title,
+        forbidden: [
+          appText.headings.calendar,
+          appText.panels.weekendLive.title,
+        ],
+      },
     ];
 
-    for (const { label, heading } of routeAssertions) {
+    for (const { forbidden, label, heading } of routeAssertions) {
       fireEvent.click(within(navigation).getByRole('button', { name: label }));
-      await screen.findByRole('heading', { name: heading });
+      expect(await screen.findByRole('heading', { name: heading })).toBeInTheDocument();
+
+      for (const forbiddenHeading of forbidden) {
+        expect(screen.queryByRole('heading', { name: forbiddenHeading })).not.toBeInTheDocument();
+      }
     }
   });
 });

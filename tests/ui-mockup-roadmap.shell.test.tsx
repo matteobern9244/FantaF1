@@ -45,18 +45,7 @@ describe('Mockup roadmap shell flows', () => {
   it('renders season analysis surfaces for the selected user and latest GP recap', async () => {
     setupRoadmapFetch();
 
-    await renderRoadmapApp(['/analisi']);
-
-    expect(screen.getByRole('heading', { name: appText.headings.userKpi })).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: appText.headings.userAnalytics })).toBeInTheDocument();
-    const kpiPanel = screen.getByTestId('user-kpi-dashboard');
-    const kpiCards = within(kpiPanel).getAllByRole('article');
-    expect(within(kpiCards[0]).getByText('9')).toBeInTheDocument();
-    expect(within(kpiCards[2]).getByText('0%')).toBeInTheDocument();
-    const analyticsPanel = screen.getByRole('heading', { name: appText.headings.userAnalytics }).closest('section');
-    expect(analyticsPanel).not.toBeNull();
-    expect(within(analyticsPanel as HTMLElement).getByText(/hamilton lewis/i)).toBeInTheDocument();
-    expect(within(analyticsPanel as HTMLElement).getAllByText(/gran premio di gran bretagna/i).length).toBeGreaterThan(0);
+    const initialView = await renderRoadmapApp(['/analisi']);
 
     expect(screen.getByRole('heading', { name: appText.panels.seasonAnalysis.title })).toBeInTheDocument();
     expect(screen.getByText(appText.panels.seasonAnalysis.narratives.charge.title)).toBeInTheDocument();
@@ -71,6 +60,24 @@ describe('Mockup roadmap shell flows', () => {
     expect((seasonPanel as HTMLElement).querySelectorAll('.analytics-card.interactive-surface').length).toBeGreaterThan(0);
     expect((seasonPanel as HTMLElement).querySelectorAll('.analytics-subpanel.interactive-surface').length).toBeGreaterThan(0);
     expect((seasonPanel as HTMLElement).querySelectorAll('.season-comparison-row.interactive-surface').length).toBeGreaterThan(0);
+
+    initialView.unmount();
+    const analyticsView = await renderRoadmapApp(['/analisi#user-analytics-section']);
+
+    const analyticsPanel = await screen.findByRole('heading', { name: appText.headings.userAnalytics });
+    const analyticsSection = analyticsPanel.closest('section');
+    expect(analyticsSection).not.toBeNull();
+    expect(within(analyticsSection as HTMLElement).getByText(/hamilton lewis/i)).toBeInTheDocument();
+    expect(within(analyticsSection as HTMLElement).getAllByText(/gran premio di gran bretagna/i).length).toBeGreaterThan(0);
+
+    analyticsView.unmount();
+    await renderRoadmapApp(['/analisi#user-kpi-section']);
+
+    const kpiPanel = await screen.findByTestId('user-kpi-dashboard');
+    const kpiCards = within(kpiPanel).getAllByRole('article');
+    expect(screen.getByRole('heading', { name: appText.headings.userKpi })).toBeInTheDocument();
+    expect(within(kpiCards[0]).getByText('9')).toBeInTheDocument();
+    expect(within(kpiCards[2]).getByText('0%')).toBeInTheDocument();
   });
 
   it('renders the public guide in public mode', async () => {

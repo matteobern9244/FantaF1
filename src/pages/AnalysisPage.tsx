@@ -16,6 +16,7 @@ interface AnalysisPageProps {
   selectedKpiSummary: UserKpiSummary | null;
   users: UserData[];
   onSelectedInsightsUserChange: (userName: string) => void;
+  activeSectionId: string;
 }
 
 const AnalysisPage: React.FC<AnalysisPageProps> = ({
@@ -28,17 +29,27 @@ const AnalysisPage: React.FC<AnalysisPageProps> = ({
   selectedKpiSummary,
   users,
   onSelectedInsightsUserChange,
+  activeSectionId,
 }) => {
+  const visibleSectionId = activeSectionId === 'user-analytics-section'
+    ? 'user-analytics-section'
+    : activeSectionId === 'user-kpi-section'
+      ? 'user-kpi-section'
+      : 'season-analysis';
+
   return (
     <>
-      <SeasonAnalysisPanel
-        analyticsEmptyLabel={uiText.history.analyticsEmpty}
-        emptyOptionLabel={uiText.placeholders.emptyOption}
-        predictionLabels={predictionLabels}
-        seasonAnalytics={seasonAnalytics}
-      />
+      {visibleSectionId === 'season-analysis' ? (
+        <SeasonAnalysisPanel
+          analyticsEmptyLabel={uiText.history.analyticsEmpty}
+          emptyOptionLabel={uiText.placeholders.emptyOption}
+          predictionLabels={predictionLabels}
+          seasonAnalytics={seasonAnalytics}
+        />
+      ) : null}
 
-      <section className="panel analytics-panel nav-section" id="user-analytics-section">
+      {visibleSectionId === 'user-analytics-section' ? (
+        <section className="panel analytics-panel nav-section" id="user-analytics-section">
         <div className="section-title">
           <BarChart3 size={20} />
           <h2>{uiText.headings.userAnalytics}</h2>
@@ -111,9 +122,11 @@ const AnalysisPage: React.FC<AnalysisPageProps> = ({
         ) : (
           <p className="empty-copy">{uiText.history.analyticsEmpty}</p>
         )}
-      </section>
+        </section>
+      ) : null}
 
-      <section className="panel nav-section" id="user-kpi-section">
+      {visibleSectionId === 'user-kpi-section' ? (
+        <section className="panel nav-section" id="user-kpi-section">
         <div className="panel-head">
           <div className="section-title">
             <BarChart3 size={20} />
@@ -156,7 +169,8 @@ const AnalysisPage: React.FC<AnalysisPageProps> = ({
         ) : (
           <p className="empty-copy">{uiText.history.analyticsEmpty}</p>
         )}
-      </section>
+        </section>
+      ) : null}
     </>
   );
 };

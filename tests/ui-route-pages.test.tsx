@@ -192,7 +192,7 @@ describe('route page wrappers', () => {
       totalHitRate: 62,
     };
 
-    render(
+    const { rerender } = render(
       <AnalysisPage
         seasonAnalytics={{
           comparison: [],
@@ -210,6 +210,7 @@ describe('route page wrappers', () => {
         selectedKpiSummary={selectedKpiSummary}
         users={users}
         onSelectedInsightsUserChange={onSelectedInsightsUserChange}
+        activeSectionId="user-analytics-section"
       />,
     );
 
@@ -217,6 +218,29 @@ describe('route page wrappers', () => {
     expect(screen.getByText('Monaco')).toBeInTheDocument();
     expect(screen.getByText('Max Verstappen')).toBeInTheDocument();
     expect(screen.getByTestId('user-points-trend')).toBeInTheDocument();
+
+    rerender(
+      <AnalysisPage
+        seasonAnalytics={{
+          comparison: [],
+          leaderName: 'Marco',
+          narratives: [],
+          recap: null,
+        }}
+        predictionLabels={predictionLabels}
+        selectedAnalyticsSummary={selectedAnalyticsSummary}
+        formatTrendDriver={(id) => (id === 'ver' ? 'Max Verstappen' : 'Pilota sconosciuto')}
+        selectedInsightsUserName="Marco"
+        formatAverageValue={(value, digits = 0) =>
+          value === null ? 'N/D' : value.toFixed(digits)
+        }
+        selectedKpiSummary={selectedKpiSummary}
+        users={users}
+        onSelectedInsightsUserChange={onSelectedInsightsUserChange}
+        activeSectionId="user-kpi-section"
+      />,
+    );
+
     expect(screen.getByTestId('user-kpi-dashboard')).toBeInTheDocument();
 
     fireEvent.change(screen.getByLabelText(appText.labels.userKpiSelector), {
@@ -243,14 +267,38 @@ describe('route page wrappers', () => {
         selectedKpiSummary={null}
         users={users}
         onSelectedInsightsUserChange={() => {}}
+        activeSectionId="user-analytics-section"
       />,
     );
 
-    expect(screen.getAllByText(appText.history.analyticsEmpty).length).toBeGreaterThanOrEqual(2);
+    expect(screen.getByText(appText.history.analyticsEmpty)).toBeInTheDocument();
+
+    rerender(
+      <AnalysisPage
+        seasonAnalytics={{
+          comparison: [],
+          leaderName: '',
+          narratives: [],
+          recap: null,
+        }}
+        predictionLabels={predictionLabels}
+        selectedAnalyticsSummary={null}
+        formatTrendDriver={() => 'Pilota sconosciuto'}
+        selectedInsightsUserName="Marco"
+        formatAverageValue={() => 'N/D'}
+        selectedKpiSummary={null}
+        users={users}
+        onSelectedInsightsUserChange={() => {}}
+        activeSectionId="user-kpi-section"
+      />,
+    );
+
+    expect(screen.getByText(appText.history.analyticsEmpty)).toBeInTheDocument();
 
     rerender(
       <StandingsPage
         isPublicView={true}
+        activeSectionId="public-standings"
         standings={{
           constructorStandings: [{ position: 1, team: 'Ferrari', points: 44 }],
           driverStandings: [{ position: 1, driverId: 'ham', name: 'Lewis Hamilton', team: 'Ferrari', points: 25 }],
@@ -277,11 +325,13 @@ describe('route page wrappers', () => {
     );
 
     expect(screen.getByText('Lewis Hamilton')).toBeInTheDocument();
-    expect(screen.getByRole('heading', { name: appText.panels.historyArchive.title })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: appText.panels.publicStandings.title })).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: appText.panels.historyArchive.title })).not.toBeInTheDocument();
 
     rerender(
       <StandingsPage
         isPublicView={false}
+        activeSectionId="history-archive"
         standings={{
           constructorStandings: [{ position: 1, team: 'Ferrari', points: 44 }],
           driverStandings: [{ position: 1, driverId: 'ham', name: 'Lewis Hamilton', team: 'Ferrari', points: 25 }],

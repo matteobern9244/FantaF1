@@ -359,10 +359,49 @@ describe('Live projection UI', () => {
       expect(fetchMock).toHaveBeenCalledWith('/api/results/race-2');
     });
 
+    expect(screen.getByRole('heading', { name: /calendario stagione/i })).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: /pronostici dei giocatori/i })).not.toBeInTheDocument();
+    expect(document.getElementById('meeting-selector')).toHaveValue('race-2');
+    expect(within(getSelectedRaceHeroCard() as HTMLElement).getByText('Chinese Grand Prix 2099')).toBeInTheDocument();
     expect(
       within(getSelectedRaceHeroCard() as HTMLElement).getByRole('button', { name: /guarda highlights/i }),
     ).toBeEnabled();
   }, asyncUiTimeoutMs);
+
+  it('keeps the user inside calendario stagione when selecting another race from the calendar', async () => {
+    const fetchMock = mockAppFetches({
+      resultsByMeetingKey: {
+        'race-1': {
+          racePhase: 'open',
+          results: createEmptyPrediction(),
+        },
+        'race-2': {
+          racePhase: 'open',
+          results: { first: '', second: '', third: '', pole: 'nor' },
+        },
+      },
+    });
+
+    render(<MemoryRouter initialEntries={['/dashboard?meeting=race-1#calendar-section']}><App /></MemoryRouter>);
+
+    await waitForAppToSettle();
+
+    fireEvent.click(screen.getByRole('button', { name: /china/i }));
+
+    await waitFor(() => {
+      expect(fetchMock).toHaveBeenCalledWith('/api/results/race-2');
+      expect(document.getElementById('meeting-selector')).toHaveValue('race-2');
+    });
+
+    const sectionNavigation = screen.getByRole('navigation', { name: /sezioni applicazione/i });
+    const calendarButton = within(sectionNavigation).getByRole('button', { name: /calendario stagione/i });
+
+    expect(calendarButton).toHaveClass('active');
+    expect(calendarButton).toHaveAttribute('aria-current', 'page');
+    expect(screen.getByRole('heading', { name: /calendario stagione/i })).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: /pronostici dei giocatori/i })).not.toBeInTheDocument();
+    expect(within(getSelectedRaceHeroCard() as HTMLElement).getByText('China')).toBeInTheDocument();
+  });
 
   it('shows the official grand prix title in the selected race recap when the race is finished', async () => {
     mockAppFetches({
@@ -634,7 +673,7 @@ describe('Live projection UI', () => {
       },
     });
 
-    render(<MemoryRouter initialEntries={['/dashboard']}><App /></MemoryRouter>);
+    render(<MemoryRouter initialEntries={['/dashboard#weekend-live']}><App /></MemoryRouter>);
 
     await waitForAppToSettle();
 
