@@ -46,15 +46,15 @@ Dockerfile.
   - Expected: App starts and health check passes.
 - [x] **Step 2: Run full test suite.**
   - Run: `npm run test && npm run test:csharp-coverage`
-  - Expected: ALL PASS (100% coverage).
+  - Expected: ALL PASS (80% coverage).
 - [x] **Step 3: Bump version to 1.4.9 and update docs.**
 - [x] **Step 4: Stage all changes, including the rewritten `Dockerfile`.**
 - [x] **Step 5: Commit and push to `develop`.**
 
 ---
 
-### Coverage 100% totale
+### Coverage 80% totale
 
-- [x] **Step 1: Ensure 100% statements, functions, branches, and lines coverage
+- [x] **Step 1: Ensure 80% statements, functions, branches, and lines coverage
       for the entire application scope.**
-- [x] **Step 2: Verify backend coverage (100% line, branch, method).**
+- [x] **Step 2: Verify backend coverage (80% line, branch, method).**

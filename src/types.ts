@@ -109,6 +109,11 @@ export interface AppData {
   weekendStateByMeetingKey?: WeekendStateByMeetingKey;
 }
 
+export interface EditingSession {
+  record: RaceRecord;
+  historyIndex: number;
+}
+
 export interface PointsConfig {
   first: number;
   second: number;

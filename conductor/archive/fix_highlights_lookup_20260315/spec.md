@@ -18,7 +18,7 @@ to discover and persist highlights video URLs.
 
 - **AGENTS.md Compliance**: strict RED -> GREEN -> REFACTOR, minimal safe
   change, deterministic validation.
-- **Coverage 100% totale**: frontend and backend coverage must remain at 100%.
+- **Coverage 80% totale**: frontend and backend coverage must remain at 80%.
 - **No UI regressions**: desktop/mobile views must remain stable in development
   and production-like checks.
 
@@ -31,7 +31,7 @@ to discover and persist highlights video URLs.
 - [ ] Highlights lookup remains deterministic and backward compatible for
       completed races.
 - [ ] Lint, tests, build, backend coverage, and responsive checks all pass with
-      100% coverage maintained.
+      80% coverage maintained.
 
 ## Out of Scope
 

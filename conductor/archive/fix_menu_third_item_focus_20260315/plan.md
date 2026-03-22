@@ -13,7 +13,7 @@ behavior while reducing mobile menu font size for better readability.
   section order.
 - **Minimal Safe Change**: limit edits to active-state coordination,
   accessibility semantics, and mobile typography.
-- **Coverage 100% totale**: keep repository/application coverage at 100%.
+- **Coverage 80% totale**: keep repository/application coverage at 80%.
 
 ## RED -> GREEN -> REFACTOR
 

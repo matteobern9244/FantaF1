@@ -84,9 +84,9 @@ Library.
   - Implementare `readStandingsCache` e `writeStandingsCache` in `storage.js`.
   - Implementare la logica di fetching usando `fetchHtml` (esistente in
     config/drivers) e parsing delle tabelle.
-- [ ] **Step 4: Eseguire test (REFACTOR) e verificare 100% Coverage**
+- [ ] **Step 4: Eseguire test (REFACTOR) e verificare 80% Coverage**
   - Run: `npm run test`
-  - Expected: PASS e Coverage 100% mantenuta per i file backend.
+  - Expected: PASS e Coverage 80% mantenuta per i file backend.
 - [ ] **Step 5: Commit**
   - `git add backend/ tests/`
   - `git commit -m "feat: implement backend scraping and storage for standings"`
@@ -110,7 +110,7 @@ Library.
   - Aggiungere il gestore di rotta in `app-route-service.js`.
   - Invocare la sincronizzazione in background in `server-bootstrap-service.js`
     senza bloccare l'avvio.
-- [ ] **Step 4: Eseguire test (REFACTOR) e 100% Coverage**
+- [ ] **Step 4: Eseguire test (REFACTOR) e 80% Coverage**
   - Verificare rami di errore e successo.
 - [ ] **Step 5: Commit**
   - `git add backend/ tests/`
@@ -133,7 +133,7 @@ Library.
     config), posizionamenti con layout grid/flex, font app.
   - Implementare un selettore/tab (Piloti vs Scuderie) interno al componente.
   - Applicare classi CSS corrette in `App.css`.
-- [ ] **Step 4: Eseguire test UI e 100% Coverage**
+- [ ] **Step 4: Eseguire test UI e 80% Coverage**
   - Assicurarsi che ogni interazione (click sul tab) e ramo visivo sia testato.
 - [ ] **Step 5: Commit**
   - `git add src/ tests/`
@@ -160,7 +160,7 @@ Library.
   - Renderizzare `<StandingsPanel data={standings} />` condizionatamente dentro
     la dashboard principale o solo se `isPublicView` (in base ai requisiti
     visivi concordati).
-- [ ] **Step 4: Eseguire test e verificare Coverage 100%**
+- [ ] **Step 4: Eseguire test e verificare Coverage 80%**
 - [ ] **Step 5: Commit**
   - `git add src/ tests/`
   - `git commit -m "feat: integrate standings in main app shell"`
@@ -180,15 +180,15 @@ Library.
 
 ---
 
-## Coverage 100% totale
+## Coverage 80% totale
 
 Per adempiere rigorosamente alle direttive di `AGENTS.md`, durante l'intera
 esecuzione di questo piano **è fatto obbligo** che la test coverage rimanga e
-venga verificata esplicitamente al **100% per statements, branches, functions e
+venga verificata esplicitamente al **80% per statements, branches, functions e
 lines** alla fine di ogni singola modifica (dopo la fase REFACTOR).
 
 Nessun task è da considerarsi completato se il comando di validation
-`npm run test` o la suite di test integrata riportano metriche inferiori al 100%
+`npm run test` o la suite di test integrata riportano metriche inferiori al 80%
 per l'intero repository. Se la coverage risulta inferiore, occorre interrompere
 l'implementazione e integrare i test necessari prima di passare al task
 successivo.

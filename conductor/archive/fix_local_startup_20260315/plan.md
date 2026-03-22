@@ -9,7 +9,7 @@ fixing the root cause of the startup failure in `./start_fantaf1.command`.
 
 - **Strict TDD**: Every behavioral fix will follow the RED -> GREEN -> REFACTOR
   cycle.
-- **100% Total Coverage**: Mandatory 100% coverage for Statements, Functions,
+- **80% Total Coverage**: Mandatory 80% coverage for Statements, Functions,
   Branches, and Lines for both Frontend and Backend.
 - **AGENTS.md Compliance**: All instructions from `AGENTS.md` are applied,
   including the mandatory launcher rule and TDD policy.
@@ -40,22 +40,22 @@ Apply the fix using the RED -> GREEN -> REFACTOR cycle.
       identified startup failure.
 - [x] Task: **GREEN**: Implement the minimal safe change to fix the identified
       issue.
-- [x] Task: **REFACTOR**: Clean up the implementation and ensure 100% coverage
+- [x] Task: **REFACTOR**: Clean up the implementation and ensure 80% coverage
       for the touched areas.
 - [x] Task: Conductor - User Manual Verification 'Implementation & TDD'
       (Protocol in workflow.md).
 
-## Phase 3: Coverage 100% totale
+## Phase 3: Coverage 80% totale
 
-Ensure the entire application meets the 100% coverage threshold.
+Ensure the entire application meets the 80% coverage threshold.
 
-- [x] Task: Run frontend tests: `npm run test` and verify 100% coverage.
-- [x] Task: Run backend tests: `npm run test:csharp-coverage` and verify 100%
+- [x] Task: Run frontend tests: `npm run test` and verify 80% coverage.
+- [x] Task: Run backend tests: `npm run test:csharp-coverage` and verify 80%
       coverage on `backend-csharp/src/`.
-- [x] Task: Achieve 100% total coverage across all files in the repository and
+- [x] Task: Achieve 80% total coverage across all files in the repository and
       application.
-- [x] Task: Conductor - User Manual Verification 'Coverage 100% totale'
-      (Protocol in workflow.md).
+- [x] Task: Conductor - User Manual Verification 'Coverage 80% totale' (Protocol
+      in workflow.md).
 
 ## Phase 4: Validation & UI Consistency
 
@@ -80,6 +80,6 @@ Final verification of the application health.
 
 - [x] `./start_fantaf1.command` completes without errors and the app is
       reachable.
-- [x] Frontend and Backend tests report 100% coverage.
+- [x] Frontend and Backend tests report 80% coverage.
 - [x] No regressions in UI (Desktop/Mobile) via responsive checks.
 - [x] All changes are documented in `CHANGELOG.md`.

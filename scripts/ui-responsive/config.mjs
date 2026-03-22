@@ -7,15 +7,9 @@ const baseUrl = runtimeTarget.baseUrl;
 const backendHealthUrl = runtimeTarget.backendHealthUrl;
 const startupTimeoutMs = 45000;
 const pollIntervalMs = 750;
-const cliCommandTimeoutMs = 30000;
-const cliStartupTimeoutMs = 30000;
-const cliCleanupTimeoutMs = 30000;
-const cliRetryTimeoutMs = 90000;
+const cliStartupTimeoutMs = 60000;
 const uiShellTimeoutMs = 30000;
 const uiShellPollIntervalMs = 250;
-const responsiveSessionPrefix = 'ui-';
-const playwrightCliBaseArgs = ['--yes', '--package', '@playwright/cli', 'playwright-cli'];
-const sessionName = `ui-${Date.now().toString(36)}`;
 const breakpoints = [
   { label: 'mobile', width: 390, height: 844 },
   { label: 'iphone-16-pro-max', width: 440, height: 956 },
@@ -34,17 +28,11 @@ export {
   backendHealthUrl,
   baseUrl,
   breakpoints,
-  cliCleanupTimeoutMs,
-  cliCommandTimeoutMs,
-  cliRetryTimeoutMs,
   cliStartupTimeoutMs,
   outputDir,
-  playwrightCliBaseArgs,
   pollIntervalMs,
   projectRoot,
-  responsiveSessionPrefix,
   runtimeTarget,
-  sessionName,
   startupTimeoutMs,
   uiShellPollIntervalMs,
   uiShellTimeoutMs,

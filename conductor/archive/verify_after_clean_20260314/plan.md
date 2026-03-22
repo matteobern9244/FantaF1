@@ -17,7 +17,7 @@ test suites for both Node.js and .NET stacks.
 
 **Files:**
 
-- Modify: `conductor/tracks/verify_after_clean_20260314/metadata.json`
+- Modify: `conductor/archive/verify_after_clean_20260314/metadata.json`
 
 - [ ] **Step 1: Restore Node.js dependencies**
   - Run: `npm install`
@@ -51,13 +51,13 @@ test suites for both Node.js and .NET stacks.
 - [ ] **Step 1: Run C# coverage verification script**
   - Run: `npm run test:csharp-coverage`
   - Expected: `dotnet restore`, `dotnet build`, and `dotnet test` execute
-    successfully. Coverage must be 100%.
+    successfully. Coverage must be 80%.
 
 ## Task 4: Documentation & Metadata Update
 
 **Files:**
 
-- Modify: `conductor/tracks/verify_after_clean_20260314/metadata.json`
+- Modify: `conductor/archive/verify_after_clean_20260314/metadata.json`
 - Modify: `conductor/tracks.md`
 
 - [ ] **Step 1: Update track metadata to 'completed'**

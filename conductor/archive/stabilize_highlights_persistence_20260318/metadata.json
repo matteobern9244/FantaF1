@@ -9,7 +9,7 @@
   "archivedAt": null,
   "active_task": "Implementation, coverage, responsive verification, and production-like preview checks completed without commit or push.",
   "activeTask": "Implementation, coverage, responsive verification, and production-like preview checks completed without commit or push.",
-  "path": "conductor/tracks/stabilize_highlights_persistence_20260318",
+  "path": "conductor/archive/stabilize_highlights_persistence_20260318",
   "relatedTrackIds": [
     "investigate_highlights_algorithm_20260317",
     "fix_highlights_lookup_20260315",

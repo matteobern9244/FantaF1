@@ -2,7 +2,7 @@
  * @vitest-environment jsdom
  */
 import { fireEvent, render, screen, within } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import HistoryArchivePanel from '../src/components/HistoryArchivePanel';
 import PublicGuidePanel from '../src/components/PublicGuidePanel';
 import SeasonAnalysisPanel from '../src/components/SeasonAnalysisPanel';
@@ -213,6 +213,108 @@ describe('isolated UI panels', () => {
     expect(onDeleteHistoryRace).toHaveBeenCalledWith(0);
     expect(onHistoryUserFilterChange).toHaveBeenCalledWith('Marco');
     expect(onHistorySearchChange).toHaveBeenCalledWith('Australia');
+  });
+
+  it('regression Bug A: HistoryArchivePanel calls onHistorySearchChange with typed value exactly once', () => {
+    const onSearchChange = vi.fn();
+    const record = {
+      gpName: 'Australian Grand Prix 2099',
+      date: '01/03/2099',
+      results: createEmptyPrediction(),
+      userPredictions: {
+        Marco: {
+          prediction: createEmptyPrediction(),
+          pointsEarned: 9,
+        },
+      },
+    };
+
+    render(
+      <HistoryArchivePanel
+        editingSession={null}
+        expandedHistoryKey=""
+        filteredHistoryEntries={[{ index: 0, record }]}
+        getHistoryFieldHitLabel={() => 'N/D'}
+        getHistoryKey={() => 'history-0'}
+        historyEmptyLabel="Nessuna gara"
+        historySearch=""
+        historyUserFilter="all"
+        isPublicView={false}
+        onDeleteHistoryRace={() => {}}
+        onEditHistoryRace={() => {}}
+        onHistorySearchChange={onSearchChange}
+        onHistoryUserFilterChange={() => {}}
+        onToggleExpanded={() => {}}
+        pointsSuffix="pt"
+        predictionFieldOrder={['first', 'second', 'third', 'pole'] as const}
+        predictionLabels={{
+          first: 'Primo',
+          second: 'Secondo',
+          third: 'Terzo',
+          pole: 'Pole',
+        }}
+        resolveHistoryPodium={() => []}
+        unknownDriverLabel="Pilota sconosciuto"
+        userDisplayNameForWinner={() => ''}
+        users={[{ name: 'Marco', predictions: createEmptyPrediction(), points: 0 }]}
+      />,
+    );
+
+    fireEvent.change(screen.getByLabelText(appText.panels.historyArchive.searchLabel), {
+      target: { value: 'Australia' },
+    });
+    expect(onSearchChange).toHaveBeenCalledWith('Australia');
+    expect(onSearchChange).toHaveBeenCalledTimes(1);
+  });
+
+  it('dropdown user filter dispatches a single onChange event to parent with selected value', () => {
+    const onUserFilterChange = vi.fn();
+    const record = {
+      gpName: 'Australian Grand Prix 2099',
+      date: '01/03/2099',
+      results: createEmptyPrediction(),
+      userPredictions: {
+        Marco: {
+          prediction: createEmptyPrediction(),
+          pointsEarned: 9,
+        },
+      },
+    };
+    render(
+      <HistoryArchivePanel
+        editingSession={null}
+        expandedHistoryKey=""
+        filteredHistoryEntries={[{ index: 0, record }]}
+        getHistoryFieldHitLabel={() => 'N/D'}
+        getHistoryKey={() => 'history-0'}
+        historyEmptyLabel={appText.panels.historyArchive.empty}
+        historySearch=""
+        historyUserFilter="all"
+        isPublicView={true}
+        onDeleteHistoryRace={() => {}}
+        onEditHistoryRace={() => {}}
+        onHistorySearchChange={() => {}}
+        onHistoryUserFilterChange={onUserFilterChange}
+        onToggleExpanded={() => {}}
+        pointsSuffix={appText.pointsSuffix}
+        predictionFieldOrder={['first', 'second', 'third', 'pole'] as const}
+        predictionLabels={{
+          first: 'Primo',
+          second: 'Secondo',
+          third: 'Terzo',
+          pole: 'Pole',
+        }}
+        resolveHistoryPodium={() => []}
+        unknownDriverLabel={appText.panels.historyArchive.unknownDriver}
+        userDisplayNameForWinner={() => 'Marco'}
+        users={[{ name: 'Marco', predictions: createEmptyPrediction(), points: 0 }]}
+      />,
+    );
+    fireEvent.change(screen.getByLabelText(appText.panels.historyArchive.userFilterLabel), {
+      target: { value: 'Marco' },
+    });
+    expect(onUserFilterChange).toHaveBeenCalledWith('Marco');
+    expect(onUserFilterChange).toHaveBeenCalledTimes(1);
   });
 
   it('renders the public guide with the new race strip points layout', () => {

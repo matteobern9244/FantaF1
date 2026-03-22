@@ -1,7 +1,7 @@
 {
   "id": "csharp_backend_migration_20260314",
   "slug": "rimuovere-completamente-il-backend-node-js-mantenendo-solo-il-backend-c-come-backend-ufficiale-la-parte-frontend-e-i-file-vitali-dell-applicazione-garantendo-la-piena-funzionalit-e-la-copertura-del-100-senza-regressioni-in-locale-e-in-produzione-per-render-com-ambiente-staging",
-  "title": "Rimuovere completamente il backend Node.js, mantenendo solo il backend C# come backend ufficiale, la parte frontend e i file vitali dell'applicazione, garantendo la piena funzionalit\u00e0 e la copertura del 100% senza regressioni in locale e in produzione per render.com (ambiente staging).",
+  "title": "Rimuovere completamente il backend Node.js, mantenendo solo il backend C# come backend ufficiale, la parte frontend e i file vitali dell'applicazione, garantendo la piena funzionalit\u00e0 e la copertura del 80% senza regressioni in locale e in produzione per render.com (ambiente staging).",
   "status": "archived",
   "phase": "archived",
   "createdAt": "2026-03-14T12:00:00Z",
@@ -10,7 +10,7 @@
   "path": "conductor/archive/csharp_backend_migration_20260314",
   "relatedTrackIds": [],
   "activeTask": "Archived",
-  "description": "Rimuovere completamente il backend Node.js, mantenendo solo il backend C# come backend ufficiale, la parte frontend e i file vitali dell'applicazione, garantendo la piena funzionalit\u00e0 e la copertura del 100% senza regressioni in locale e in produzione per render.com (ambiente staging).",
+  "description": "Rimuovere completamente il backend Node.js, mantenendo solo il backend C# come backend ufficiale, la parte frontend e i file vitali dell'applicazione, garantendo la piena funzionalit\u00e0 e la copertura del 80% senza regressioni in locale e in produzione per render.com (ambiente staging).",
   "type": "refactor",
   "track_id": "csharp_backend_migration_20260314",
   "created_at": "2026-03-14T12:00:00Z",

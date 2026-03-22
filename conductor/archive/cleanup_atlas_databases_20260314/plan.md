@@ -44,10 +44,10 @@ I seguenti database **DEVONO ESSERE MANTENUTI**:
   (che usano `fantaf1_ci`).
 - **Staging Check:** Verificare la raggiungibilità del servizio su Render.com.
 
-## Coverage 100% totale
+## Coverage 80% totale
 
 - Questo task è di natura infrastrutturale/configurativa e non modifica il
   codice dell'applicazione.
-- La copertura del 100% per i test esistenti deve essere preservata dopo la
+- La copertura del 80% per i test esistenti deve essere preservata dopo la
   pulizia.
 - Eseguire `npm run test:coverage` per confermare l'integrità del sistema.

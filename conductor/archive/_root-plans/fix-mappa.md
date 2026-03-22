@@ -60,7 +60,7 @@ Seguendo rigorosamente `AGENTS.md` e il flusso RED -> GREEN -> REFACTOR:
 1. **Esecuzione Test Locali**: Assicurerò che tutti i test superino l'asserzione
    (GREEN).
 2. **Copertura Assoluta**: Eseguirò `npm run test:coverage` per garantire che
-   l'integrazione del nuovo matching lasci tutti i rami coperti al 100%.
+   l'integrazione del nuovo matching lasci tutti i rami coperti al 80%.
 3. **Responsive & Build**: Confermerò che non ci siano regressioni.
 4. **Documentazione**: Una volta superato, aggiornerò `CHANGELOG.md` e
    `README.md`.

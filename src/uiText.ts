@@ -21,17 +21,21 @@ const appText = {
       open: uiText.shell.weekendStatusOpen,
     },
     navigation: {
-      openButton: uiText.buttons.openSections,
-      closeButton: uiText.buttons.closeSections,
       ariaLabel: uiText.labels.sectionNavigation,
-      currentSection: uiText.navigation.currentSection,
+      bottomTabBar: uiText.navigation.bottomTabBar,
       items: {
         ...uiText.navigation,
         installApp: uiText.buttons.installApp,
+        installAppShort: uiText.navigation.installAppShort,
         publicView: uiText.buttons.publicView,
+        publicViewShort: uiText.navigation.publicViewShort,
         adminView: uiText.buttons.adminView,
+        adminViewShort: uiText.navigation.adminViewShort,
         adminLogin: uiText.headings.adminAccess,
+        adminLoginShort: uiText.navigation.adminLoginShort,
         logout: uiText.buttons.logout,
+        logoutShort: uiText.navigation.logoutShort,
+        mobileActions: uiText.navigation.mobileActions,
         expandSidebar: uiText.buttons.openSections,
         collapseSidebar: uiText.buttons.closeSections,
         savePredictions: uiText.buttons.savePredictions,
@@ -68,6 +72,7 @@ const appText = {
       sprintLabel: uiText.panels.publicGuide.sprintLabel,
       sprintValue: uiText.panels.publicGuide.sprintValue,
     },
+    pushNotifications: uiText.panels.pushNotifications,
     weekendLive: {
       title: uiText.panels.weekendLive.title,
       liveTotal: (liveTotal: number) =>

@@ -68,4 +68,67 @@ describe('game services', () => {
     ).toBe(true);
     expect(validationService.validatePredictions(null as never, ['first'] as never)).toBe(false);
   });
+
+  it('covers scoring wrappers and race history helper branches', () => {
+    const scoringService = new PredictionScoringService();
+    const historyService = new RaceHistoryService({ scoringService });
+
+    expect(scoringService.normalizePredictionValue('  VER ')).toBe('ver');
+
+    expect(
+      scoringService.calculateProjectedPoints(
+        { first: 'ver', second: '', third: '', pole: '' },
+        { first: 'ver', second: '', third: '', pole: '' },
+        { first: 5, second: 3, third: 2, pole: 1 },
+      ),
+    ).toBe(5);
+    expect(
+      scoringService.calculateLiveTotal(
+        { name: 'A', points: 7, predictions: { first: 'ver', second: '', third: '', pole: '' } },
+        { first: 'ver', second: '', third: '', pole: '' },
+        { first: 5, second: 3, third: 2, pole: 1 },
+      ),
+    ).toBe(12);
+
+    expect(historyService.createInitialUsers(2)).toEqual([
+      { name: 'Player 1', predictions: historyService.createEmptyPrediction(), points: 0 },
+      { name: 'Player 2', predictions: historyService.createEmptyPrediction(), points: 0 },
+    ]);
+    expect(historyService.createInitialUsers(['Ana', 'Bea']).map((user) => user.name)).toEqual(['Ana', 'Bea']);
+
+    const unchangedPrediction = { first: 'ver', second: '', third: '', pole: '' };
+    expect(
+      historyService.mergeMissingPredictionFields(unchangedPrediction, {
+        first: 'ham',
+        second: '',
+        third: '',
+        pole: '',
+      }),
+    ).toBe(unchangedPrediction);
+
+    const { record, updatedUsers } = historyService.buildRaceRecord(
+      'Australia',
+      'race-1',
+      { first: 'ver', second: '', third: '', pole: '' },
+      [{ name: 'A', points: 1, predictions: { first: 'ver', second: '', third: '', pole: '' } }],
+      { first: 5, second: 3, third: 2, pole: 1 },
+      () => 'generated-date',
+      '  ',
+    );
+
+    expect(record.date).toBe('generated-date');
+    expect(updatedUsers[0].points).toBe(6);
+
+    const persistedRecord = historyService.buildRaceRecord(
+      'Australia',
+      'race-2',
+      { first: '', second: '', third: '', pole: '' },
+      [],
+      { first: 5, second: 3, third: 2, pole: 1 },
+      () => 'generated-date',
+      '2026-03-13',
+    );
+
+    expect(persistedRecord.record.date).toBe('2026-03-13');
+  });
 });

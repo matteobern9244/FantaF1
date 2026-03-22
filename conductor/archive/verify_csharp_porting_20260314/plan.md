@@ -4,11 +4,11 @@
 
 - [ ] Task: Verifica Stato Salute Node/React
   - [ ] Eseguire `npm run lint` e `npm run build`.
-  - [ ] Eseguire `npm run test:coverage` e certificare il 100%.
+  - [ ] Eseguire `npm run test:coverage` e certificare il 80%.
 - [ ] Task: Verifica Stato Salute C#
   - [ ] Eseguire `dotnet build backend-csharp/FantaF1.Backend.sln -c Release`.
   - [ ] Eseguire `dotnet test backend-csharp/FantaF1.Backend.sln -c Release`.
-  - [ ] Eseguire `npm run test:csharp-coverage` e certificare il 100% su
+  - [ ] Eseguire `npm run test:csharp-coverage` e certificare il 80% su
         `backend-csharp/src/`.
 - [ ] Task: Conductor - User Manual Verification 'Fase 1 - Qualità' (Protocollo
       in workflow.md)

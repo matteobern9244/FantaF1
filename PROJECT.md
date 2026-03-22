@@ -1,7 +1,8 @@
 # PROJECT.md
 
-Project: Fanta Formula 1 Type: Full-stack web application Architecture: SPA
-frontend + REST backend + MongoDB Atlas
+Project: Fanta Formula 1 Type: Full-stack web application Architecture:
+route-aware React shell (MPA-like via client-side routing) + ASP.NET Core REST
+backend + MongoDB Atlas
 
 This repository contains real production-facing business logic. Production data
 exists and must be treated as important and non-disposable.
@@ -12,9 +13,11 @@ exists and must be treated as important and non-disposable.
 
 Frontend:
 
-- single-page application
+- React shell with explicit client-side routes
 - strongly typed
 - no local persistence for core game state
+- PWA bootstrap with service worker, standalone install support and web push
+  subscription/delivery flow
 
 Backend:
 
@@ -31,8 +34,24 @@ Database collections:
 - `standingscaches`: cached driver and constructor standings
 - `admincredentials`: hashed admin credentials and authentication metadata
 
-Frontend and backend are tightly coupled. API contracts and score-related
-payload semantics must remain consistent.
+Primary browser routes currently in use:
+
+- `/dashboard`
+- `/pronostici`
+- `/gara`
+- `/classifiche`
+- `/analisi`
+- `/admin`
+
+Frontend and backend are tightly coupled. API contracts, URL semantics,
+responsive shell behavior and score-related payload semantics must remain
+consistent.
+
+Race routing notes:
+
+- `/gara#weekend-live` is the canonical public race surface
+- `/gara#results-section` is the canonical admin race-results surface
+- non-admin access to `#results-section` must fall back to `#weekend-live`
 
 ---
 
@@ -130,8 +149,8 @@ Rules:
   running locally
 - local mutating runners must never target shared databases such as `fantaf1` or
   `fantaf1_staging`
-- local C# runtime targets must use isolated databases (`fantaf1_local_dev`,
-  `fantaf1_local_staging`) through explicit overrides
+- local C# runtime targets must use the isolated development database
+  (`fantaf1_dev`) through explicit overrides
 - local fixes must not introduce production-only or local-only scoring
   divergence
 - `start_fantaf1.command` is the canonical local launcher: it must remain valid,
@@ -154,6 +173,12 @@ Rules:
 - every UI-affecting task must be verified in real browser behavior across admin
   view, public view, desktop breakpoints, and mobile breakpoints before the task
   is considered complete
+- the mobile runtime shell is route-aware and must remain centered on:
+  - bottom tab bar as the primary navigation surface
+  - page-level section tabs inside route surfaces where subsections remain
+    necessary
+  - mobile utility actions for install, admin/public switch and logout
+  - no fullscreen overlay menu in the active runtime path
 - a missing or failing responsive/browser verification is a blocker, not a
   documentation note or an optional follow-up
 - new fixes, modifications, and implementations must preserve end-to-end browser
@@ -199,7 +224,23 @@ A task is complete only if:
 - no UI regression is introduced
 - no API contract mismatch is introduced
 - all relevant tests pass
-- browser and responsive checks pass for the affected admin/public flows
+- browser and responsive checks pass for the affected admin/public flows in both
+  development and production-like conditions when relevant
 - coverage for the official application-code scope remains at 100% for lines,
   branches, functions, and statements
 - production-sensitive logic remains safe
+
+## 11. Current Branch Runtime Notes
+
+- The active frontend shell is no longer described accurately as a pure SPA
+  landing on hash-only sections; it is a multi-route shell with route-aware
+  section navigation and legacy hash normalization.
+- `/gara#weekend-live` and `/gara#results-section` are the canonical race
+  surfaces for public/admin browser flows.
+- The responsive verification gate `npm run test:ui-responsive` is part of the
+  repository quality contract and must remain aligned with the real browser
+  shell, not with deprecated wrappers or manual cleanup flows.
+- The PWA/runtime path includes service-worker registration, install CTA logic,
+  offline shell support for already loaded assets, stored web-push
+  subscriptions, a backend-managed public VAPID key, and a real test-delivery
+  flow for push notifications through `/api/push-notifications/test-delivery`.

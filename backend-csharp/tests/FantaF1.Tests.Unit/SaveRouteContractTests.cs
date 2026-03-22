@@ -39,6 +39,37 @@ public sealed class SaveRouteContractTests
     }
 
     [Fact]
+    public void Create_generic_error_uses_the_classified_code_and_hides_details_in_production()
+    {
+        Exception exception;
+
+        try
+        {
+            throw new InvalidOperationException("mongo write failed");
+        }
+        catch (Exception caughtException)
+        {
+            exception = caughtException;
+        }
+
+        var developmentOutcome = SaveRouteContract.CreateGenericError("development", "req-dev", exception);
+        var productionOutcome = SaveRouteContract.CreateGenericError("production", "req-prod", exception);
+
+        var developmentError = Assert.IsType<SaveErrorOutcome>(developmentOutcome);
+        var productionError = Assert.IsType<SaveErrorOutcome>(productionOutcome);
+
+        Assert.Equal(SaveRouteContract.InternalServerErrorStatusCode, developmentError.StatusCode);
+        Assert.Equal(SaveRouteContract.StorageWriteFailedCode, developmentError.Payload.Code);
+        Assert.Equal("req-dev", developmentError.Payload.RequestId);
+        Assert.Contains("mongo write failed", developmentError.Payload.Details!, StringComparison.Ordinal);
+
+        Assert.Equal(SaveRouteContract.InternalServerErrorStatusCode, productionError.StatusCode);
+        Assert.Equal(SaveRouteContract.StorageWriteFailedCode, productionError.Payload.Code);
+        Assert.Equal("req-prod", productionError.Payload.RequestId);
+        Assert.Null(productionError.Payload.Details);
+    }
+
+    [Fact]
     public void Classify_save_error_matches_the_node_compatible_codes()
     {
         Assert.Equal(

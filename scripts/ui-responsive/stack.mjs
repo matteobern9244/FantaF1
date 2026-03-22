@@ -181,19 +181,16 @@ async function ensureLocalAppStack({
     };
   }
 
-  if (frontendReachable !== backendReachable) {
-    fail(
-      frontendReachable
-        ? `Frontend raggiungibile su ${frontendUrl} ma backend non pronto su ${backendUrl}. Chiudi lo stack locale parziale e riesegui il controllo responsive.`
-        : `Backend raggiungibile su ${backendUrl} ma frontend non pronto su ${frontendUrl}. Chiudi lo stack locale parziale e riesegui il controllo responsive.`,
-    );
-  }
+  let backendChild = null;
+  let frontendChild = null;
 
-  const backendChild = startChild(backendCommand, backendArgs, {
-    cwd,
-    env: resolvedEnv,
-    spawnImpl,
-  });
+  if (!backendReachable) {
+    backendChild = startChild(backendCommand, backendArgs, {
+      cwd,
+      env: resolvedEnv,
+      spawnImpl,
+    });
+  }
 
   try {
     await waitForUrl(backendUrl, {
@@ -223,18 +220,21 @@ async function ensureLocalAppStack({
       });
 
       return {
-        started: true,
+        started: Boolean(backendChild),
         stop: async () => {
+          await stopChild(frontendChild, { sleepImpl });
           await stopChild(backendChild, { sleepImpl });
         },
       };
     }
 
-    const frontendChild = startChild(frontendCommand, frontendArgs, {
-      cwd,
-      env: resolvedEnv,
-      spawnImpl,
-    });
+    if (!frontendReachable) {
+      frontendChild = startChild(frontendCommand, frontendArgs, {
+        cwd,
+        env: resolvedEnv,
+        spawnImpl,
+      });
+    }
 
     try {
       await waitForUrl(frontendUrl, {
@@ -254,7 +254,7 @@ async function ensureLocalAppStack({
       });
 
       return {
-        started: true,
+        started: Boolean(frontendChild || backendChild),
         stop: async () => {
           await stopChild(frontendChild, { sleepImpl });
           await stopChild(backendChild, { sleepImpl });
@@ -266,6 +266,7 @@ async function ensureLocalAppStack({
       throw error;
     }
   } catch (error) {
+    await stopChild(frontendChild, { sleepImpl });
     await stopChild(backendChild, { sleepImpl });
     throw error;
   }

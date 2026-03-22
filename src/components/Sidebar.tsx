@@ -46,6 +46,7 @@ const iconMap: Record<SectionNavigationId, React.ComponentType<{ size?: number |
   'public-guide': ShieldCheck,
   'predictions-section': User,
   'results-section': ListChecks,
+  'admin-section': LockKeyhole,
   'history-archive': History,
 };
 

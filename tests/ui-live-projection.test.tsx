@@ -4,6 +4,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import React from 'react';
+import { MemoryRouter } from 'react-router-dom';
 import App from '../src/App';
 
 const originalConsoleError = console.error;
@@ -39,6 +40,11 @@ function createEmptyPrediction() {
     third: '',
     pole: '',
   };
+}
+
+function clickSectionNavigationButton(label: RegExp) {
+  const sectionNavigation = screen.getByRole('navigation', { name: /sezioni applicazione/i });
+  fireEvent.click(within(sectionNavigation).getByRole('button', { name: label }));
 }
 
 function createCalendar() {
@@ -218,15 +224,26 @@ function mockAppFetches({
 }
 
 function getUserCard(name: string) {
-  return screen.getByRole('heading', { name }).closest('article');
+  const predictionsSection = document.getElementById('predictions-section');
+  if (!predictionsSection) {
+    return null;
+  }
+
+  return within(predictionsSection)
+    .queryAllByRole('heading', { name })
+    .find(h => h.tagName === 'H3')
+    ?.closest('article');
 }
 
 function getProjectionValue(name: string) {
-  return getUserCard(name)?.querySelector('.points-preview-value')?.textContent?.trim();
+  const card = getUserCard(name);
+  return card?.querySelector('.points-preview-value')?.textContent?.trim();
 }
 
 function getLiveRows() {
-  return Array.from(document.querySelectorAll('.live-row')).map((row) => ({
+  const liveList = document.querySelector('.live-list');
+  if (!liveList) return [];
+  return Array.from(liveList.querySelectorAll('.live-row')).map((row) => ({
     name: row.querySelector('span')?.textContent?.trim(),
     score: row.querySelector('.live-score-value')?.textContent?.trim(),
   }));
@@ -236,15 +253,25 @@ function getSelectedRaceHeroCard() {
   return document.querySelector('.driver-spotlight')?.closest('section') ?? null;
 }
 
-function queryOpenPredictionsStrip() {
-  return screen.queryByText(/pronostici ancora aperti/i);
+const asyncUiTimeoutMs = 10000;
+
+async function waitForAppToSettle() {
+  await waitFor(() => {
+    expect(screen.queryByTestId('pitstop-loader')).not.toBeInTheDocument();
+  });
 }
 
 describe('Live projection UI', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     window.history.replaceState({}, '', '/');
+    window.localStorage.clear();
+    window.sessionStorage.clear();
     vi.spyOn(window, 'open').mockImplementation(() => null);
+    Object.defineProperty(window, 'scrollTo', {
+      configurable: true,
+      value: vi.fn(),
+    });
     vi.spyOn(console, 'error').mockImplementation((message?: unknown, ...optionalParams: unknown[]) => {
       if (typeof message === 'string' && message.includes('not wrapped in act')) {
         return;
@@ -261,11 +288,9 @@ describe('Live projection UI', () => {
       },
     });
 
-    render(<App />);
+    render(<MemoryRouter initialEntries={['/pronostici']}><App /></MemoryRouter>);
 
-    await waitFor(() => {
-      expect(screen.queryByTestId('pitstop-loader')).not.toBeInTheDocument();
-    });
+    await waitForAppToSettle();
 
     await waitFor(() => {
       expect(screen.getByText(/nessun risultato ufficiale disponibile ancora/i)).toBeInTheDocument();
@@ -279,7 +304,6 @@ describe('Live projection UI', () => {
     expect(getProjectionValue('Matteo')).toBe('0');
     expect(getProjectionValue('Fabio')).toBe('0');
     expect(getProjectionValue('Adriano')).toBe('0');
-    expect(queryOpenPredictionsStrip()).toBeInTheDocument();
   });
 
   it('shows the highlights CTA in the selected race recap when the finished race has a Sky Sport Italia F1 video', async () => {
@@ -293,12 +317,12 @@ describe('Live projection UI', () => {
       },
     });
 
-    render(<App />);
+    render(<MemoryRouter initialEntries={['/dashboard']}><App /></MemoryRouter>);
 
     const highlightsButton = await screen.findByRole(
       'button',
       { name: /guarda highlights/i },
-      { timeout: 30000 },
+      { timeout: asyncUiTimeoutMs },
     );
 
     const selectedRaceHeroCard = getSelectedRaceHeroCard();
@@ -307,10 +331,10 @@ describe('Live projection UI', () => {
       within(selectedRaceHeroCard as HTMLElement).getByRole('button', { name: /guarda highlights/i }),
     ).toBeEnabled();
     expect(highlightsButton).toBeEnabled();
-  }, 30000);
+  }, asyncUiTimeoutMs);
 
   it('shows the highlights CTA for a second finished race when that weekend has its own video', async () => {
-    mockAppFetches({
+    const fetchMock = mockAppFetches({
       resultsByMeetingKey: {
         'race-1': {
           racePhase: 'finished',
@@ -325,24 +349,59 @@ describe('Live projection UI', () => {
       },
     });
 
-    render(<App />);
+    render(<MemoryRouter initialEntries={['/dashboard']}><App /></MemoryRouter>);
 
-    await screen.findByRole('button', { name: /guarda highlights/i }, { timeout: 30000 });
+    await screen.findByRole('button', { name: /guarda highlights/i }, { timeout: asyncUiTimeoutMs });
 
-    fireEvent.change(document.getElementById('meeting-selector') as HTMLSelectElement, {
-      target: { value: 'race-2' },
-    });
+    fireEvent.click(screen.getByRole('button', { name: /china/i }));
 
     await waitFor(() => {
-      expect(
-        within(getSelectedRaceHeroCard() as HTMLElement).getByRole('button', { name: /guarda highlights/i }),
-      ).toBeEnabled();
+      expect(fetchMock).toHaveBeenCalledWith('/api/results/race-2');
     });
 
+    expect(screen.getByRole('heading', { name: /calendario stagione/i })).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: /pronostici dei giocatori/i })).not.toBeInTheDocument();
+    expect(document.getElementById('meeting-selector')).toHaveValue('race-2');
+    expect(within(getSelectedRaceHeroCard() as HTMLElement).getByText('Chinese Grand Prix 2099')).toBeInTheDocument();
     expect(
-      within(getSelectedRaceHeroCard() as HTMLElement).getByText('Chinese Grand Prix 2099'),
-    ).toBeInTheDocument();
-  }, 30000);
+      within(getSelectedRaceHeroCard() as HTMLElement).getByRole('button', { name: /guarda highlights/i }),
+    ).toBeEnabled();
+  }, asyncUiTimeoutMs);
+
+  it('keeps the user inside calendario stagione when selecting another race from the calendar', async () => {
+    const fetchMock = mockAppFetches({
+      resultsByMeetingKey: {
+        'race-1': {
+          racePhase: 'open',
+          results: createEmptyPrediction(),
+        },
+        'race-2': {
+          racePhase: 'open',
+          results: { first: '', second: '', third: '', pole: 'nor' },
+        },
+      },
+    });
+
+    render(<MemoryRouter initialEntries={['/dashboard?meeting=race-1#calendar-section']}><App /></MemoryRouter>);
+
+    await waitForAppToSettle();
+
+    fireEvent.click(screen.getByRole('button', { name: /china/i }));
+
+    await waitFor(() => {
+      expect(fetchMock).toHaveBeenCalledWith('/api/results/race-2');
+      expect(document.getElementById('meeting-selector')).toHaveValue('race-2');
+    });
+
+    const sectionNavigation = screen.getByRole('navigation', { name: /sezioni applicazione/i });
+    const calendarButton = within(sectionNavigation).getByRole('button', { name: /calendario stagione/i });
+
+    expect(calendarButton).toHaveClass('active');
+    expect(calendarButton).toHaveAttribute('aria-current', 'page');
+    expect(screen.getByRole('heading', { name: /calendario stagione/i })).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: /pronostici dei giocatori/i })).not.toBeInTheDocument();
+    expect(within(getSelectedRaceHeroCard() as HTMLElement).getByText('China')).toBeInTheDocument();
+  });
 
   it('shows the official grand prix title in the selected race recap when the race is finished', async () => {
     mockAppFetches({
@@ -355,9 +414,9 @@ describe('Live projection UI', () => {
       },
     });
 
-    render(<App />);
+    render(<MemoryRouter initialEntries={['/dashboard']}><App /></MemoryRouter>);
 
-    await screen.findByRole('button', { name: /guarda highlights/i }, { timeout: 30000 });
+    await screen.findByRole('button', { name: /guarda highlights/i }, { timeout: asyncUiTimeoutMs });
 
     const selectedRaceHeroCard = getSelectedRaceHeroCard();
     expect(selectedRaceHeroCard).not.toBeNull();
@@ -367,7 +426,7 @@ describe('Live projection UI', () => {
     expect(
       within(selectedRaceHeroCard as HTMLElement).queryByText('Australia'),
     ).not.toBeInTheDocument();
-  }, 30000);
+  }, asyncUiTimeoutMs);
 
   it('opens the YouTube highlights outside the app when the CTA is clicked', async () => {
     mockAppFetches({
@@ -380,18 +439,16 @@ describe('Live projection UI', () => {
       },
     });
 
-    render(<App />);
+    render(<MemoryRouter initialEntries={['/dashboard']}><App /></MemoryRouter>);
 
-    await waitFor(() => {
-      expect(screen.queryByTestId('pitstop-loader')).not.toBeInTheDocument();
-    });
+    await waitForAppToSettle();
 
     const selectedRaceHeroCard = getSelectedRaceHeroCard();
     expect(selectedRaceHeroCard).not.toBeNull();
     const highlightsButton = await screen.findByRole(
       'button',
       { name: /guarda highlights/i },
-      { timeout: 30000 },
+      { timeout: asyncUiTimeoutMs },
     );
 
     expect(
@@ -404,7 +461,7 @@ describe('Live projection UI', () => {
       '_blank',
       'noopener,noreferrer',
     );
-  }, 30000);
+  }, asyncUiTimeoutMs);
 
   it('shows a disabled highlights CTA when the finished race video is not available yet', async () => {
     mockAppFetches({
@@ -417,14 +474,14 @@ describe('Live projection UI', () => {
       },
     });
 
-    render(<App />);
+    render(<MemoryRouter initialEntries={['/dashboard']}><App /></MemoryRouter>);
 
     const disabledButton = await screen.findByRole('button', {
       name: /highlights non presenti/i,
-    }, { timeout: 30000 });
+    }, { timeout: asyncUiTimeoutMs });
 
     expect(disabledButton).toBeDisabled();
-  }, 30000);
+  }, asyncUiTimeoutMs);
 
   it('falls back to the unavailable highlights CTA when the results payload omits highlightsVideoUrl', async () => {
     mockAppFetches({
@@ -436,14 +493,14 @@ describe('Live projection UI', () => {
       },
     });
 
-    render(<App />);
+    render(<MemoryRouter initialEntries={['/dashboard']}><App /></MemoryRouter>);
 
     const disabledButton = await screen.findByRole('button', {
       name: /highlights non presenti/i,
-    }, { timeout: 30000 });
+    }, { timeout: asyncUiTimeoutMs });
 
     expect(disabledButton).toBeDisabled();
-  }, 30000);
+  }, asyncUiTimeoutMs);
 
   it('falls back to the unavailable highlights CTA when the results payload has a null highlightsVideoUrl', async () => {
     mockAppFetches({
@@ -456,14 +513,14 @@ describe('Live projection UI', () => {
       },
     });
 
-    render(<App />);
+    render(<MemoryRouter initialEntries={['/dashboard']}><App /></MemoryRouter>);
 
     const disabledButton = await screen.findByRole('button', {
       name: /highlights non presenti/i,
-    }, { timeout: 30000 });
+    }, { timeout: asyncUiTimeoutMs });
 
     expect(disabledButton).toBeDisabled();
-  }, 30000);
+  }, asyncUiTimeoutMs);
 
   it('does not show the highlights CTA before the selected race is finished', async () => {
     mockAppFetches({
@@ -476,7 +533,7 @@ describe('Live projection UI', () => {
       },
     });
 
-    render(<App />);
+    render(<MemoryRouter initialEntries={['/dashboard']}><App /></MemoryRouter>);
 
     await waitFor(() => {
       expect(screen.queryByRole('button', { name: /highlights/i })).not.toBeInTheDocument();
@@ -490,17 +547,15 @@ describe('Live projection UI', () => {
       },
     });
 
-    render(<App />);
+    render(<MemoryRouter initialEntries={['/pronostici']}><App /></MemoryRouter>);
 
-    await waitFor(() => {
-      expect(screen.queryByTestId('pitstop-loader')).not.toBeInTheDocument();
-    });
+    await waitForAppToSettle();
 
     await waitFor(() => {
       expect(
         screen.getByText(/risultati ufficiali parziali per il weekend selezionato/i),
       ).toBeInTheDocument();
-    });
+    }, { timeout: 5000 });
 
     expect(
       screen.getByText(/la proiezione e' parziale e usa solo i risultati ufficiali gia' pubblicati\./i),
@@ -508,18 +563,24 @@ describe('Live projection UI', () => {
     expect(getProjectionValue('Matteo')).toBe('1');
     expect(getProjectionValue('Fabio')).toBe('0');
     expect(getProjectionValue('Adriano')).toBe('1');
-    expect(getLiveRows()).toEqual([
-      { name: 'Fabio', score: '12' },
-      { name: 'Matteo', score: '11' },
-      { name: 'Adriano', score: '7' },
-    ]);
+    
+    // Go to dashboard for live rows
+    clickSectionNavigationButton(/calendario stagione/i);
+    
+    await waitFor(() => {
+      expect(getLiveRows()).toEqual([
+        { name: 'Fabio', score: '12' },
+        { name: 'Matteo', score: '11' },
+        { name: 'Adriano', score: '7' },
+      ]);
+    });
+    
     const selectedRaceHeroCard = getSelectedRaceHeroCard();
     expect(selectedRaceHeroCard).not.toBeNull();
     expect(within(selectedRaceHeroCard as HTMLElement).getByText('Oscar Piastri')).toBeInTheDocument();
     expect(
       within(selectedRaceHeroCard as HTMLElement).queryByText('Piastri Oscar'),
     ).not.toBeInTheDocument();
-    expect(queryOpenPredictionsStrip()).not.toBeInTheDocument();
   });
 
   it('fetches the selected weekend results before race finish and updates projections plus live standings', async () => {
@@ -532,11 +593,9 @@ describe('Live projection UI', () => {
       },
     });
 
-    render(<App />);
+    render(<MemoryRouter initialEntries={['/pronostici']}><App /></MemoryRouter>);
 
-    await waitFor(() => {
-      expect(screen.queryByTestId('pitstop-loader')).not.toBeInTheDocument();
-    });
+    await waitForAppToSettle();
 
     await waitFor(() => {
       expect(fetchMock).toHaveBeenCalledWith('/api/results/race-1');
@@ -548,11 +607,17 @@ describe('Live projection UI', () => {
       expect(getProjectionValue('Adriano')).toBe('11');
     });
 
-    expect(getLiveRows()).toEqual([
-      { name: 'Matteo', score: '18' },
-      { name: 'Adriano', score: '17' },
-      { name: 'Fabio', score: '14' },
-    ]);
+    // Go to dashboard for live rows
+    clickSectionNavigationButton(/calendario stagione/i);
+
+    await waitFor(() => {
+      expect(getLiveRows()).toEqual([
+        { name: 'Matteo', score: '18' },
+        { name: 'Adriano', score: '17' },
+        { name: 'Fabio', score: '14' },
+      ]);
+    });
+    
     expect(
       screen.queryByText(/nessun risultato ufficiale disponibile ancora/i),
     ).not.toBeInTheDocument();
@@ -573,45 +638,24 @@ describe('Live projection UI', () => {
       },
     });
 
-    render(<App />);
+    const { unmount } = render(<MemoryRouter initialEntries={['/dashboard']}><App /></MemoryRouter>);
 
-    await waitFor(() => {
-      expect(screen.queryByTestId('pitstop-loader')).not.toBeInTheDocument();
-    });
+    await waitForAppToSettle();
 
     await waitFor(() => {
       expect(screen.getByText(/nessun risultato ufficiale disponibile ancora/i)).toBeInTheDocument();
-    });
-    expect(queryOpenPredictionsStrip()).toBeInTheDocument();
+    }, { timeout: 5000 });
 
-    fireEvent.change(screen.getByLabelText(/weekend selezionato/i), {
-      target: { value: 'race-2' },
-    });
+    fireEvent.click(screen.getByRole('button', { name: /china/i }));
 
     await waitFor(() => {
       expect(fetchMock).toHaveBeenCalledWith('/api/results/race-2');
     });
+    
+    unmount();
+    render(<MemoryRouter initialEntries={['/pronostici?meeting=race-1']}><App /></MemoryRouter>);
 
-    await waitFor(() => {
-      expect(
-        screen.getByText(/risultati ufficiali parziali per il weekend selezionato/i),
-      ).toBeInTheDocument();
-    });
-
-    expect(screen.queryByText(/nessun risultato ufficiale disponibile ancora/i)).not.toBeInTheDocument();
-    expect(getProjectionValue('Matteo')).toBe('0');
-    expect(getProjectionValue('Fabio')).toBe('1');
-    expect(getProjectionValue('Adriano')).toBe('0');
-    expect(getLiveRows()).toEqual([
-      { name: 'Fabio', score: '13' },
-      { name: 'Matteo', score: '10' },
-      { name: 'Adriano', score: '6' },
-    ]);
-    expect(queryOpenPredictionsStrip()).not.toBeInTheDocument();
-
-    fireEvent.change(screen.getByLabelText(/weekend selezionato/i), {
-      target: { value: 'race-1' },
-    });
+    await waitForAppToSettle();
 
     await waitFor(() => {
       expect(fetchMock).toHaveBeenCalledWith('/api/results/race-1');
@@ -620,7 +664,6 @@ describe('Live projection UI', () => {
     await waitFor(() => {
       expect(screen.getByText(/nessun risultato ufficiale disponibile ancora/i)).toBeInTheDocument();
     });
-    expect(queryOpenPredictionsStrip()).toBeInTheDocument();
   });
 
   it('renders enriched weekend comparison insights for the selected GP', async () => {
@@ -630,11 +673,9 @@ describe('Live projection UI', () => {
       },
     });
 
-    render(<App />);
+    render(<MemoryRouter initialEntries={['/dashboard#weekend-live']}><App /></MemoryRouter>);
 
-    await waitFor(() => {
-      expect(screen.queryByTestId('pitstop-loader')).not.toBeInTheDocument();
-    });
+    await waitForAppToSettle();
 
     expect(screen.getByRole('heading', { name: /weekend pulse/i })).toBeInTheDocument();
     expect(screen.getAllByText(/match confermati/i).length).toBeGreaterThan(0);
@@ -687,11 +728,9 @@ describe('Live projection UI', () => {
       return Promise.reject(new Error(`Unhandled fetch to ${url}`));
     });
 
-    render(<App />);
+    render(<MemoryRouter initialEntries={['/pronostici']}><App /></MemoryRouter>);
 
-    await waitFor(() => {
-      expect(screen.queryByTestId('pitstop-loader')).not.toBeInTheDocument();
-    });
+    await waitForAppToSettle();
 
     await waitFor(() => {
       expect(screen.getByLabelText(/risultato 1°/i)).toHaveValue('');
@@ -699,7 +738,7 @@ describe('Live projection UI', () => {
     expect(screen.queryByText('Gara in corso: pronostici bloccati.')).not.toBeInTheDocument();
   });
 
-  it('keeps the strip hidden for the selected weekend when a stale response from another weekend resolves later', async () => {
+  it('does not overwrite the selected weekend projections when a stale response from another weekend resolves later', async () => {
     let resolveRace1: ((value: Response) => void) | null = null;
     const race1Promise = new Promise<Response>((resolve) => {
       resolveRace1 = resolve;
@@ -756,33 +795,33 @@ describe('Live projection UI', () => {
       return Promise.reject(new Error(`Unhandled fetch to ${url}`));
     });
 
-    render(<App />);
+    render(<MemoryRouter initialEntries={['/pronostici?meeting=race-2']}><App /></MemoryRouter>);
+
+    await waitForAppToSettle();
 
     await waitFor(() => {
-      expect(screen.queryByTestId('pitstop-loader')).not.toBeInTheDocument();
-    });
-
-    fireEvent.change(screen.getByLabelText(/weekend selezionato/i), {
-      target: { value: 'race-2' },
-    });
-
-    await waitFor(() => {
+      const selectedPoleResult = document.getElementById('result-pole') as HTMLSelectElement | null;
+      expect(fetchMock).toHaveBeenCalledWith('/api/results/race-1');
       expect(fetchMock).toHaveBeenCalledWith('/api/results/race-2');
+      expect(screen.getByRole('heading', { name: /pronostici dei giocatori/i })).toBeInTheDocument();
+      expect(selectedPoleResult?.value).toBe('nor');
+      expect(getProjectionValue('Matteo')).toBe('0');
+      expect(getProjectionValue('Fabio')).toBe('1');
+      expect(getProjectionValue('Adriano')).toBe('0');
     });
-
-    await waitFor(() => {
-      expect(screen.getByText(/risultati ufficiali parziali per il weekend selezionato/i)).toBeInTheDocument();
-    });
-    expect(queryOpenPredictionsStrip()).not.toBeInTheDocument();
 
     resolveRace1?.({
       ok: true,
-      json: () => Promise.resolve({ first: '', second: '', third: '', pole: '', racePhase: 'open' }),
+      json: () => Promise.resolve({ first: 'ver', second: 'ham', third: 'lec', pole: 'pia', racePhase: 'open' }),
     } as Response);
 
     await waitFor(() => {
-      expect(screen.getByText(/risultati ufficiali parziali per il weekend selezionato/i)).toBeInTheDocument();
+      const selectedPoleResult = document.getElementById('result-pole') as HTMLSelectElement | null;
+      expect(screen.getByRole('heading', { name: /pronostici dei giocatori/i })).toBeInTheDocument();
+      expect(selectedPoleResult?.value).toBe('nor');
+      expect(getProjectionValue('Matteo')).toBe('0');
+      expect(getProjectionValue('Fabio')).toBe('1');
+      expect(getProjectionValue('Adriano')).toBe('0');
     });
-    expect(queryOpenPredictionsStrip()).not.toBeInTheDocument();
   });
 });

@@ -60,6 +60,11 @@ function buildLauncherEnv({
       targetConfig.startupEnv.MONGODB_DB_NAME_OVERRIDE,
     );
   }
+
+  // Diagnostic log for database connection
+  const maskedUri = (resolvedEnv.MONGODB_URI || '').replace(/:([^@]+)@/, ':****@');
+  console.log(`==> Connessione MongoDB Target: ${maskedUri}`);
+
   assertSafeLocalMongoUri(resolvedEnv.MONGODB_URI, 'Il launcher locale');
 
   return resolvedEnv;

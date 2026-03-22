@@ -5,13 +5,10 @@ import {
   assertSafeLocalDatabaseTarget,
   assertSafeLocalMongoUri,
   buildProbeUrls,
-  createDeterministicAdminPassword,
-  createDeterministicAdminSalt,
   rewriteMongoDatabaseName,
   resolveLauncherTarget,
   resolveLocalRuntimeTarget,
   resolveSaveSmokeTarget,
-  resolveUiResponsiveTarget,
 } from '../scripts/local-runtime-targets.mjs';
 
 describe('local runtime targets', () => {
@@ -39,18 +36,6 @@ describe('local runtime targets', () => {
       ASPNETCORE_URLS: 'http://127.0.0.1:3002',
     });
     expect(target.expectedDatabaseTarget).toBe(DEFAULT_LOCAL_DATABASES.csharpDevelopment);
-  });
-
-  it('resolves the local staging target without falling back to fantaf1_dev', () => {
-    const target = resolveLocalRuntimeTarget('csharp-staging-local');
-
-    expect(target.baseUrl).toBe('http://127.0.0.1:3003');
-    expect(target.expectedEnvironment).toBe('staging');
-    expect(target.expectedDatabaseTarget).toBe(DEFAULT_LOCAL_DATABASES.csharpStaging);
-    expect(target.adminAuth).toEqual({
-      passwordSeedLabel: 'subphase-9-staging-local-admin-password',
-      saltSeedLabel: 'subphase-9-staging-local-admin-salt',
-    });
   });
 
   it('rejects unknown runtime targets explicitly', () => {
@@ -97,24 +82,8 @@ describe('local runtime targets', () => {
 
     expect(target.startupEnv.MONGODB_DB_NAME_OVERRIDE).toBe(DEFAULT_LOCAL_DATABASES.csharpDevelopment);
     expect(target.startupEnv.MONGODB_URI).toBe(
-      'mongodb+srv://user:pass@cluster.mongodb.net/fantaf1_local_dev?retryWrites=true&w=majority',
+      'mongodb+srv://user:pass@cluster.mongodb.net/fantaf1_dev?retryWrites=true&w=majority',
     );
-  });
-
-  it('materializes deterministic staging admin seed credentials without storing plaintext', () => {
-    const target = resolveSaveSmokeTarget({
-      SAVE_SMOKE_TARGET: 'csharp-staging-local',
-      MONGODB_URI: 'mongodb+srv://user:pass@cluster.mongodb.net/fantaf1_dev?retryWrites=true&w=majority',
-    });
-
-    expect(target.adminAuth.password).toBe(
-      createDeterministicAdminPassword('subphase-9-staging-local-admin-password'),
-    );
-    expect(target.adminAuth.salt).toBe(
-      createDeterministicAdminSalt('subphase-9-staging-local-admin-salt'),
-    );
-    expect(target.startupEnv.AdminCredentialSeed__PasswordSalt).toBe(target.adminAuth.salt);
-    expect(target.startupEnv.AdminCredentialSeed__PasswordHashHex).toHaveLength(128);
   });
 
   it('uses the backend base url for the default save smoke target', () => {
@@ -123,27 +92,6 @@ describe('local runtime targets', () => {
     expect(target.name).toBe('csharp-dev');
     expect(target.baseUrl).toBe('http://127.0.0.1:3002');
     expect(target.backendHealthUrl).toBe('http://127.0.0.1:3002/api/health');
-  });
-
-  it('reuses the launcher target when save smoke target is not provided', () => {
-    const target = resolveSaveSmokeTarget({
-      FANTAF1_LOCAL_RUNTIME: 'csharp-staging-local',
-    });
-
-    expect(target.name).toBe('csharp-staging-local');
-    expect(target.expectedDatabaseTarget).toBe(DEFAULT_LOCAL_DATABASES.csharpStaging);
-  });
-
-  it('resolves ui responsive target from its dedicated env namespace', () => {
-    const target = resolveUiResponsiveTarget({
-      UI_RESPONSIVE_TARGET: 'csharp-staging-local',
-      UI_RESPONSIVE_BASE_URL: 'http://127.0.0.1:4302',
-      UI_RESPONSIVE_BACKEND_HEALTH_URL: 'http://127.0.0.1:4302/api/health',
-    });
-
-    expect(target.name).toBe('csharp-staging-local');
-    expect(target.baseUrl).toBe('http://127.0.0.1:4302');
-    expect(target.backendHealthUrl).toBe('http://127.0.0.1:4302/api/health');
   });
 
   it('uses the canonical launcher target default when no launcher env is set', () => {

@@ -63,27 +63,14 @@ public sealed class HealthEnvironmentParityTests
     }
 
     [Fact]
-    public void Resolver_maps_development_to_the_porting_database_by_default()
+    public void Resolver_maps_development_to_the_dev_database_by_default()
     {
         var resolver = CreateResolver("Development");
 
         var profile = resolver.ResolveCurrentProfile();
 
         Assert.Equal("development", profile.Environment);
-        Assert.Equal("fantaf1_staging", profile.DatabaseTarget);
-    }
-
-    [Fact]
-    public void Resolver_allows_the_isolated_local_development_database_when_the_override_declares_it()
-    {
-        var resolver = CreateResolver(
-            "Development",
-            mongoDatabaseNameOverride: "fantaf1_local_dev");
-
-        var profile = resolver.ResolveCurrentProfile();
-
-        Assert.Equal("development", profile.Environment);
-        Assert.Equal("fantaf1_local_dev", profile.DatabaseTarget);
+        Assert.Equal("fantaf1_dev", profile.DatabaseTarget);
     }
 
     [Fact]
@@ -124,19 +111,6 @@ public sealed class HealthEnvironmentParityTests
     }
 
     [Fact]
-    public void Resolver_allows_the_isolated_local_staging_database_when_the_override_declares_it()
-    {
-        var resolver = CreateResolver(
-            "Staging",
-            mongoDatabaseNameOverride: "fantaf1_local_staging");
-
-        var profile = resolver.ResolveCurrentProfile();
-
-        Assert.Equal("staging", profile.Environment);
-        Assert.Equal("fantaf1_local_staging", profile.DatabaseTarget);
-    }
-
-    [Fact]
     public void Resolver_maps_production_to_the_production_database()
     {
         var resolver = CreateResolver("Production");
@@ -157,7 +131,7 @@ public sealed class HealthEnvironmentParityTests
         var profile = resolver.ResolveCurrentProfile();
 
         Assert.Equal("development", profile.Environment);
-        Assert.Equal("fantaf1_staging", profile.DatabaseTarget);
+        Assert.Equal("fantaf1_dev", profile.DatabaseTarget);
     }
 
     [Fact]
@@ -170,7 +144,7 @@ public sealed class HealthEnvironmentParityTests
 
         var profile = resolver.ResolveCurrentProfile();
 
-        Assert.Equal("fantaf1_staging", profile.DatabaseTarget);
+        Assert.Equal("fantaf1_dev", profile.DatabaseTarget);
     }
 
     [Fact]
@@ -178,12 +152,12 @@ public sealed class HealthEnvironmentParityTests
     {
         var resolver = CreateResolver(
             "Development",
-            mongoDatabaseNameOverride: "fantaf1_dev");
+            mongoDatabaseNameOverride: "fantaf1_random");
 
         var exception = Assert.Throws<InvalidOperationException>(() => resolver.ResolveCurrentProfile());
 
         Assert.Equal(
-            "Database target \"fantaf1_dev\" is not allowed for environment \"development\".",
+            "Database target \"fantaf1_random\" is not allowed for environment \"development\".",
             exception.Message);
     }
 

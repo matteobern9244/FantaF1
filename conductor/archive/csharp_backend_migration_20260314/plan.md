@@ -46,7 +46,7 @@
 
 - [x] Task: Verifica Test Coverage
   - [x] Sub-task: Generare i report di Coverlet e assicurarsi che la copertura
-        sia al 100% per C#.
+        sia al 80% per C#.
   - [x] Sub-task: Eseguire la suite Playwright/Vitest (`check viste`) e
         verificare l'assenza di regressioni sulla UI.
 - [x] Task: Smoke Test

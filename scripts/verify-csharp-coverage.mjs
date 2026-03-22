@@ -10,6 +10,7 @@ const officialCoverageRoot = path.join(backendCsharpRoot, 'TestResults', 'Offici
 const sourceRoot = path.join(backendCsharpRoot, 'src') + path.sep;
 const excludedPathFragments = ['/obj/', '\\obj\\'];
 const excludedFileSuffixes = ['.g.cs'];
+const coverageThresholdPercent = 100;
 const projects = [
   {
     label: 'unit',
@@ -206,9 +207,9 @@ function calculateMetrics(mergedCoverage) {
     },
     files: fileSummaries,
     failingFiles: fileSummaries.filter(file =>
-      file.lineCoverage < 100
-      || file.branchCoverage < 100
-      || file.methodCoverage < 100),
+      file.lineCoverage < coverageThresholdPercent
+      || file.branchCoverage < coverageThresholdPercent
+      || file.methodCoverage < coverageThresholdPercent),
   };
 }
 
@@ -227,7 +228,7 @@ function writeSummary(summary) {
   fs.writeFileSync(summaryPath, `${JSON.stringify(summary, null, 2)}\n`);
 
   const failingLines = summary.failingFiles.length === 0
-    ? ['All included files are at 100% line, branch, and method coverage.']
+    ? [`All included files are at or above ${coverageThresholdPercent}% line, branch, and method coverage.`]
     : summary.failingFiles.map(file =>
       [
         `${path.relative(repositoryRoot, file.file)}`,
@@ -246,7 +247,7 @@ function writeSummary(summary) {
     `Branch coverage: ${summary.totals.coveredBranches}/${summary.totals.totalBranches} (${summary.totals.branchCoverage}%)`,
     `Method coverage: ${summary.totals.coveredMethods}/${summary.totals.totalMethods} (${summary.totals.methodCoverage}%)`,
     '',
-    'Files below 100%:',
+    `Files below ${coverageThresholdPercent}%:`,
     ...failingLines,
   ].join('\n');
 
@@ -281,9 +282,9 @@ function main() {
   writeSummary(summary);
 
   if (
-    summary.totals.lineCoverage < 100
-    || summary.totals.branchCoverage < 100
-    || summary.totals.methodCoverage < 100
+    summary.totals.lineCoverage < coverageThresholdPercent
+    || summary.totals.branchCoverage < coverageThresholdPercent
+    || summary.totals.methodCoverage < coverageThresholdPercent
   ) {
     process.exit(1);
   }

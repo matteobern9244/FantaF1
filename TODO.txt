@@ -1,0 +1,7 @@
+- Creare un piano per usare i subagents e scansionare tutte le folder e files presenti nel repository del progetto, se ci sono folder e/o files CHE NON SERVONO REALMENTE PIU' per far funzionare l'applicazione in locale e in ambiente di staging e produzione (ricordo che è deployata su render.com sia per staging che per produzione) : fai un elenco di tutte le cartelle e files e spiegami DETTAGLIATAMENTE a che cosa servivano e che cosa li ha rimpiazzati in modo tale da farmi capire il perché adesso non servano più.
+Per ogni folder-files crea dei sottopiani di eliminazione e dovrai procedere SOLO se ti darò il via libera procederai altrimenti no. Voglio un cleanup intelligente CHE NON CREI REGRESSIONI TOTALI su l'intero backend, frontend e in locale, staging e produzione.
+Nel file claude.md che devi usare c'è riferimento al file agents.md che devi usare.
+
+- npm run test:csharp-coverage segnala warning NU1903 su Newtonsoft.Json 10.0.3 in backend-csharp/src/FantaF1.Api/FantaF1.Api.csproj e backend-csharp/src/FantaF1.Infrastructure/FantaF1.Infrastructure.csproj: crea un piano per risolvere questo warning senza creare regressioni, usa il file CLAUDE.md RIGOROSAMENTE.
+
+la variabile Bootstrap:DisableSync la devo impostare anche su render o no ?? o serve solo in locale ? 

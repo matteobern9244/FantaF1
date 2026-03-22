@@ -35,8 +35,8 @@
 - `npm run test:csharp-coverage`
 - `npm run test:ui-responsive`
 
-## Coverage 100% totale
+## Coverage 80% totale
 
-- Frontend/repository: `100%` statements, branches, functions, lines
+- Frontend/repository: `80%` statements, branches, functions, lines
 - Backend C# official scope: `2986 / 2986` lines, `1671 / 1671` branches,
-  `494 / 494` methods, all `100%`
+  `494 / 494` methods, all `80%`

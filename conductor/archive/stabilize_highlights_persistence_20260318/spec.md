@@ -36,4 +36,4 @@
 - Il sync calendario usa il clock iniettato e non legge il tempo globale in modo
   diretto.
 - Le validazioni repository richieste restano verdi e la coverage ufficiale
-  rimane al 100%.
+  rimane al 80%.

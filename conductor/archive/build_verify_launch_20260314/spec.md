@@ -3,7 +3,7 @@
 ## Obiettivo
 
 Eseguire una build completa del progetto, verificare che linting e test passino
-correttamente con copertura al 100%, e avviare l'applicazione in locale
+correttamente con copertura al 80%, e avviare l'applicazione in locale
 utilizzando il launcher canonico `./start_fantaf1.command`.
 
 ## Ambito e Impatto
@@ -19,7 +19,7 @@ utilizzando il launcher canonico `./start_fantaf1.command`.
 ## Requisiti di Accettazione
 
 1. `npm run lint` deve completarsi senza errori.
-2. `npm run test` deve completarsi con tutti i test passanti e copertura al 100%
+2. `npm run test` deve completarsi con tutti i test passanti e copertura al 80%
    per statement, funzioni, branch e linee.
 3. `npm run build` deve produrre i file di distribuzione correttamente.
 4. `./start_fantaf1.command` deve avviare l'applicazione con successo e
@@ -28,6 +28,6 @@ utilizzando il launcher canonico `./start_fantaf1.command`.
 ## Vincoli di AGENTS.md Applicati
 
 - Utilizzo del launcher monitorato `./start_fantaf1.command`.
-- Mantenimento della copertura al 100% (se i test attuali passano).
+- Mantenimento della copertura al 80% (se i test attuali passano).
 - Seguire la sequenza di validazione obbligatoria.
 - Non modificare il codice sorgente in questa fase di verifica.

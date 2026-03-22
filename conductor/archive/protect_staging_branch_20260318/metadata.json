@@ -8,7 +8,7 @@
   "createdAt": "2026-03-18T10:00:00Z",
   "updatedAt": "2026-03-18T10:00:00Z",
   "archivedAt": null,
-  "path": "conductor/tracks/protect_staging_branch_20260318",
+  "path": "conductor/archive/protect_staging_branch_20260318",
   "relatedTrackIds": [],
   "type": "chore",
   "status": "completed",
@@ -16,4 +16,3 @@
   "updated_at": "2026-03-18T10:00:00Z",
   "description": "proteggere il branch 'staging' a livello di github in modo identico a come è protetto il branch 'main'"
 }
-

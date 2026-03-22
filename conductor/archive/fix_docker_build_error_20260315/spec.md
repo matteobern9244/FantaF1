@@ -16,7 +16,7 @@ instruction and verify the build process.
 
 ## Non-Functional Requirements
 
-- Maintain 100% test coverage (no behavioral changes expected, but build must be
+- Maintain 80% test coverage (no behavioral changes expected, but build must be
   solid).
 - No regressions in the deployment flow.
 

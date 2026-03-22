@@ -12,8 +12,8 @@ resulting branch state.
   docs alignment, and validation completeness.
 - **Strict TDD**: RED -> GREEN -> REFACTOR applied if merge fallout requires
   behavioral fixes.
-- **100% Total Coverage**: frontend/repository and backend C# coverage must
-  remain at 100%.
+- **80% Total Coverage**: frontend/repository and backend C# coverage must
+  remain at 80%.
 - **Behavior Preservation First**: keep the runtime behavior already verified on
   `develop`.
 

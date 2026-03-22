@@ -3,6 +3,7 @@ import type { AppData, UserData, WeekendStateByMeetingKey } from '../src/types';
 import { createEmptyPrediction } from '../src/utils/game';
 import {
   buildWeekendPredictionState,
+  clonePrediction,
   createEmptyWeekendPredictionState,
   getWeekendPredictionState,
   hydrateAppDataForWeekend,
@@ -63,6 +64,10 @@ describe('weekendState utils', () => {
         raceResults: { first: '', second: '', third: '', pole: 'nor' },
       },
     });
+  });
+
+  it('returns an empty map when the weekend state input is absent', () => {
+    expect(normalizeWeekendStateByMeetingKey(undefined)).toEqual({});
   });
 
   it('builds and upserts the selected weekend state', () => {
@@ -142,8 +147,73 @@ describe('weekendState utils', () => {
     expect(hydrated.weekendStateByMeetingKey?.['race-1'].raceResults.pole).toBe('nor');
   });
 
+  it('normalizes legacy weekend entries that still store users arrays', () => {
+    const normalized = normalizeWeekendStateByMeetingKey({
+      'race-1': {
+        users: [
+          {
+            name: 'Player 1',
+            points: 0,
+            predictions: { first: 'ver', second: '', third: '', pole: '' },
+          },
+          {
+            name: 'Player 2',
+            points: 0,
+            predictions: { first: 'ham', second: '', third: '', pole: '' },
+          },
+        ],
+        raceResults: { first: '', second: '', third: 'lec', pole: 'nor' },
+      },
+    } as unknown as WeekendStateByMeetingKey);
+
+    expect(normalized).toEqual({
+      'race-1': {
+        userPredictions: {
+          'Player 1': { first: 'ver', second: '', third: '', pole: '' },
+          'Player 2': { first: 'ham', second: '', third: '', pole: '' },
+        },
+        raceResults: { first: '', second: '', third: 'lec', pole: 'nor' },
+      },
+    });
+  });
+
   it('returns an empty draft for unknown or blank meetings', () => {
     expect(getWeekendPredictionState({}, '')).toEqual(createEmptyWeekendPredictionState());
     expect(getWeekendPredictionState({}, 'missing')).toEqual(createEmptyWeekendPredictionState());
+  });
+
+  it('clones incomplete predictions and preserves only valid string values', () => {
+    expect(clonePrediction({ first: 'ver', second: 12 as unknown as string, pole: null as unknown as string })).toEqual({
+      first: 'ver',
+      second: '',
+      third: '',
+      pole: '',
+    });
+  });
+
+  it('returns normalized state unchanged when upserting with a blank meeting key', () => {
+    const initialState = {
+      'race-1': {
+        users: [
+          {
+            name: 'Player 1',
+            points: 0,
+            predictions: { first: 'ver', second: '', third: '', pole: '' },
+          },
+        ],
+        raceResults: { pole: 'nor' },
+      },
+    } as unknown as WeekendStateByMeetingKey;
+
+    expect(
+      upsertWeekendPredictionState(initialState, '   ', createUsers(), createEmptyPrediction()),
+    ).toEqual({
+      'race-1': {
+        userPredictions: {
+          'Player 1': { first: 'ver', second: '', third: '', pole: '' },
+        },
+        raceResults: { first: '', second: '', third: '', pole: 'nor' },
+      },
+    });
   });
 });

@@ -62,8 +62,8 @@ mobile devices (screens ≤ 768px).
    - Command: `./start_fantaf1.command`
 4. [ ] **Full Validation Suite:** Run all project validations.
    - Commands: `npm run lint`, `npm run test`, `npm run build`
-5. [ ] **Coverage 100% totale:** Verify that code coverage remains at 100% for
-       the entire application.
+5. [ ] **Coverage 80% totale:** Verify that code coverage remains at 80% for the
+       entire application.
    - Command: `npm run test -- --coverage`
 
 ### Phase 4: Finalization
@@ -83,7 +83,7 @@ mobile devices (screens ≤ 768px).
 - **Responsive UI:** `npm run test:ui-responsive` passing.
 - **Manual Check:** Visual confirmation of 60px height, centered text, and no
   stretching on mobile view.
-- **100% Coverage:** Verified via `npm run test -- --coverage`.
+- **80% Coverage:** Verified via `npm run test -- --coverage`.
 
 ## Conductor - User Manual Verification 'Mobile Menu Restyling' (Protocol in workflow.md)
 

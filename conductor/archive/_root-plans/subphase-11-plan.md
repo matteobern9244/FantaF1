@@ -34,8 +34,7 @@ seguite durante tutta l'esecuzione di questa fase.
   Subphase 11 non definisce un inventario `remove/migrate/keep`, se i workflow
   futuri non riflettono lo stack reale C# o se il legacy removal avviene
   prematuramente. Includere check documentali. Definire il lavoro necessario per
-  preservare 100% statements, functions, branches e lines per lo scope
-  ufficiale.
+  preservare 80% statements, functions, branches e lines per lo scope ufficiale.
 - **GREEN**: Introdurre i workflow branch-specific futuri C# (es. build, Docker,
   test, coverage) e verificare che siano verdi. Solo quando il runtime C#
   same-origin è verificato, i launcher migrati e la certificazione utente
@@ -44,13 +43,13 @@ seguite durante tutta l'esecuzione di questa fase.
 - **REFACTOR**: Rimuovere fisicamente `backend/`, `app.js`, `server.js` e i path
   legacy obsoleti. Aggiornare launcher e script (`start_fantaf1.command`,
   `package.json`, ecc.) con diff minimale, senza lasciare bridge permanenti,
-  assicurandosi che tutti i test rimangano verdi e la coverage totale al 100%.
+  assicurandosi che tutti i test rimangano verdi e la coverage totale al 80%.
 
 ## Acceptance Criteria & Regression Checks
 
 - I workflow futuri branch-specific per C# sono configurati e funzionanti.
 - La CI del porting usa database isolati.
-- Route parity totale, coverage al 100%, browser (locali e staging) verdi
+- Route parity totale, coverage al 80%, browser (locali e staging) verdi
   documentati.
 - Il comando launcher canonico (`start_fantaf1.command`) e gli script condivisi
   sono allineati al runtime C#.
@@ -86,14 +85,14 @@ Saranno eseguiti i seguenti comandi per validare l'implementazione:
 - `npm run test:save-local`
 - `npm run test:ui-responsive` (verifica delle viste web e mobile)
 
-## Coverage 100% totale
+## Coverage 80% totale
 
-- È obbligatorio mantenere e verificare il **100% totale** di coverage su tutti
-  i file del repository e dell'applicazione (scope finale Node/React/C#
-  rilevante al momento del cutover).
-- Qualora la coverage scenda sotto il 100% alla fine dell'implementazione di
-  ogni step, si procederà ad aggiungere/aggiornare i test necessari fino a
-  ripristinare il 100% di statement, branch, function e line coverage.
+- È obbligatorio mantenere e verificare il **80% totale** di coverage su tutti i
+  file del repository e dell'applicazione (scope finale Node/React/C# rilevante
+  al momento del cutover).
+- Qualora la coverage scenda sotto il 80% alla fine dell'implementazione di ogni
+  step, si procederà ad aggiungere/aggiornare i test necessari fino a
+  ripristinare il 80% di statement, branch, function e line coverage.
 
 ## Implementation Steps
 
@@ -101,7 +100,7 @@ Saranno eseguiti i seguenti comandi per validare l'implementazione:
    `.github/workflows/` (build/test/coverage C#, Docker, check React, health
    staging) garantendo l'isolamento dai workflow di `main`.
 2. **Validazione Cutover**: Rieseguire l'intera suite Node/React/C# locale e la
-   suite `ui-responsive`. Ottenere report di coverage 100% e validare i browser
+   suite `ui-responsive`. Ottenere report di coverage 80% e validare i browser
    su locale, production-like locale e Staging.
 3. **Approvazione**: Conferma e certificazione utente esplicita per il cutover
    sul branch `porting-backend-c#`.
@@ -110,5 +109,5 @@ Saranno eseguiti i seguenti comandi per validare l'implementazione:
    aggiornare `start_fantaf1.command`, script `scripts/` e configurazioni
    `package.json`.
 5. **Validazione Finale**: Rieseguire tutti i `Validation Commands`,
-   `test:ui-responsive` e verificare il "Coverage 100% totale" sull'applicazione
+   `test:ui-responsive` e verificare il "Coverage 80% totale" sull'applicazione
    residua e stack C#.

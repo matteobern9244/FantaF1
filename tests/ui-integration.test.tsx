@@ -5,6 +5,7 @@ import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import App from '../src/App';
 import React from 'react';
+import { MemoryRouter } from 'react-router-dom';
 
 // Mock matchMedia for responsive UI components
 Object.defineProperty(window, 'matchMedia', {
@@ -74,7 +75,7 @@ describe('App Frontend Integration', () => {
   });
 
   it('renders the initial loading state', async () => {
-    render(<App />);
+    render(<MemoryRouter initialEntries={['/dashboard']}><App /></MemoryRouter>);
     expect(screen.getByTestId('pitstop-loader')).toBeInTheDocument();
     expect(screen.getByAltText('FantaF1 splash logo')).toBeInTheDocument();
     expect(screen.queryByAltText('Pitstop mechanic')).not.toBeInTheDocument();
@@ -82,7 +83,7 @@ describe('App Frontend Integration', () => {
   });
 
   it('renders the app title and hero after data is loaded', async () => {
-    render(<App />);
+    render(<MemoryRouter initialEntries={['/dashboard']}><App /></MemoryRouter>);
     
     await waitFor(() => {
       expect(screen.queryByTestId('pitstop-loader')).not.toBeInTheDocument();
