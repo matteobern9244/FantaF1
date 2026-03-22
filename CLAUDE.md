@@ -19,6 +19,8 @@ the user, subagents must be used strictly and extensively.
 
 ## 2. Claude-Specific Behaviors
 
+- **Git:** NEVER execute Git commands (commit, add, push, etc.) unless explicitly
+  requested by the user during a specific interaction. There are no exceptions to this rule.
 - **Versioning:** When increasing the project version, you MUST update
   `package.json`, `package-lock.json`, `README.md`, and `CHANGELOG.md`
   consistently.
