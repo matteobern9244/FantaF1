@@ -336,15 +336,18 @@ async function finalizeScenarioResult({
   };
 }
 
-function buildResponsiveScenarios({ initialState }) {
+function buildResponsiveScenarios() {
   const scenarios = [
     {
       key: 'default',
-      run: async ({ cli, validateState }) => await finalizeScenarioResult({
-        key: 'default',
-        failures: validateState(initialState, { expectedViewMode: 'admin' }),
-        cli,
-      }),
+      run: async ({ cli, inspectState: inspectStateImpl, switchViewMode: switchViewModeImpl, validateState }) => {
+        const state = await ensureDashboardCalendarContext({ cli, inspectStateImpl, switchViewModeImpl });
+        return await finalizeScenarioResult({
+          key: 'default',
+          failures: validateState(state, { expectedViewMode: 'admin' }),
+          cli,
+        });
+      },
     },
     {
       key: 'public-view',

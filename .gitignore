@@ -33,3 +33,4 @@ backups/
 .claude/*
 !.gemini/skills/
 gha-creds-*.json
+.remember/*

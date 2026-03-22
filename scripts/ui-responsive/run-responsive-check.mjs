@@ -121,10 +121,7 @@ async function runResponsiveCheck({
         targetUrl: targetBaseUrl,
       });
 
-      const initialState = await inspectState({
-        evaluateJsonImpl: cli.evaluateJson,
-      });
-      const scenarios = buildResponsiveScenarios({ initialState });
+      const scenarios = buildResponsiveScenarios();
       const scenarioContext = {
         canSelectSprintWeekend,
         canSwitchWeekend,
