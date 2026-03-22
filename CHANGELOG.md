@@ -4,6 +4,20 @@ Cronologia sintetica delle release documentate del progetto Fanta Formula 1.
 
 ## [Unreleased]
 
+- **Fix Loop Infinito Dropdown Filtro Utente in Storico Gare**: corretto il
+  loop infinito di re-render che si attivava selezionando un valore dal
+  dropdown filtro utente (o digitando nel campo ricerca) nella pagina
+  `/classifiche`. La causa era il pattern `isInternalNavRef` (flag booleano
+  impostato troppo tardi nell'effect body) che causava un ping-pong
+  bidirezionale tra il blocco URL→State e il blocco State→URL dell'effect
+  unificato di sincronizzazione in `App.tsx`. Il fix sostituisce
+  `isInternalNavRef` con due **prev-value refs** (`prevHistoryUserFilterRef`,
+  `prevHistorySearchRef`) che rilevano se l'effect e' stato triggerato da un
+  cambio di stato utente (skip URL→State) vs da un cambio URL
+  back/forward (sync URL→State corretto). Aggiunto test di guardia sul
+  componente `HistoryArchivePanel` per il dispatch singolo dell'evento
+  `onChange` al parent.
+
 - **Track Multi-Route/PWA/Push Riallineato al Runtime Reale del Branch**: il
   branch documenta ora in modo coerente la shell React multi-route con rotte
   `/dashboard`, `/pronostici`, `/gara`, `/classifiche`, `/analisi` e `/admin`,

@@ -615,6 +615,37 @@ describe('route page wrappers', () => {
     expect(screen.getByRole('heading', { name: appText.panels.historyArchive.title })).toBeInTheDocument();
   });
 
+  it('regression Bug B: StandingsPage public view with history-archive section shows HistoryArchivePanel and not PublicStandingsPanel', () => {
+    render(
+      <StandingsPage
+        isPublicView={true}
+        activeSectionId="history-archive"
+        standings={{ constructorStandings: [], driverStandings: [], updatedAt: '' }}
+        editingSession={null}
+        expandedHistoryKey=""
+        filteredHistoryEntries={[{ index: 0, record: historyRecord }]}
+        getHistoryFieldHitLabel={() => 'N/D'}
+        getHistoryKey={() => 'history-0'}
+        historySearch=""
+        historyUserFilter="all"
+        onDeleteHistoryRace={() => {}}
+        onEditHistoryRace={() => {}}
+        onHistorySearchChange={() => {}}
+        onHistoryUserFilterChange={() => {}}
+        onSectionChange={() => {}}
+        onToggleExpanded={() => {}}
+        predictionFieldOrder={predictionFieldOrder}
+        predictionLabels={predictionLabels}
+        resolveHistoryPodium={() => []}
+        userDisplayNameForWinner={() => 'Marco'}
+        users={users}
+      />,
+    );
+
+    expect(screen.getByRole('heading', { name: appText.panels.historyArchive.title })).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: appText.panels.publicStandings.title })).not.toBeInTheDocument();
+  });
+
   it('renders the tooltip-text div and show-tooltip class when showTooltip=true and canAssignPoints=false', () => {
     const sessionState: SessionState = { isAdmin: true, defaultViewMode: 'admin' };
 

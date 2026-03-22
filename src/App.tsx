@@ -236,7 +236,7 @@ function resolveStandingsSectionId(hash: string, viewMode: ViewMode): StandingsS
     return sectionId;
   }
 
-  return viewMode === 'admin' ? 'history-archive' : 'public-standings';
+  return 'history-archive';
 }
 
 function resolveAnalysisSectionId(hash: string): AnalysisSectionId {
@@ -349,6 +349,8 @@ function App() {
   const [pushNotificationEndpoint, setPushNotificationEndpoint] = useState('');
   const [pushNotificationBusy, setPushNotificationBusy] = useState(false);
   const selectedMeetingKeyRef = useRef(selectedMeetingKey);
+  const prevHistoryUserFilterRef = useRef(historyUserFilter);
+  const prevHistorySearchRef = useRef(historySearch);
   const toastTimeoutRef = useRef<number | null>(null);
   const handledHashLocationRef = useRef('');
   const navigationLockTimeoutRef = useRef<number | null>(null);
@@ -1061,16 +1063,27 @@ function App() {
       setViewMode(resolvedUrlViewMode);
     }
 
-    if (urlHistoryUser !== historyUserFilter) {
-      const nextHistoryUser =
-        urlHistoryUser === 'all' || users.some((user) => user.name === urlHistoryUser)
-          ? urlHistoryUser
-          : 'all';
-      setHistoryUserFilter(nextHistoryUser);
-    }
+    // Detect whether this effect run was triggered by a state change (user interaction)
+    // vs a URL change (back/forward). Skip URL→State for history filters when state just
+    // changed — the State→URL block below will write the correct URL value.
+    const historyFilterJustChanged =
+      prevHistoryUserFilterRef.current !== historyUserFilter ||
+      prevHistorySearchRef.current !== historySearch.trim();
+    prevHistoryUserFilterRef.current = historyUserFilter;
+    prevHistorySearchRef.current = historySearch.trim();
 
-    if (urlHistorySearch !== historySearch.trim()) {
-      setHistorySearch(urlHistorySearch);
+    if (!historyFilterJustChanged) {
+      if (urlHistoryUser !== historyUserFilter) {
+        const nextHistoryUser =
+          urlHistoryUser === 'all' || users.some((user) => user.name === urlHistoryUser)
+            ? urlHistoryUser
+            : 'all';
+        setHistoryUserFilter(nextHistoryUser);
+      }
+
+      if (urlHistorySearch !== historySearch.trim()) {
+        setHistorySearch(urlHistorySearch);
+      }
     }
 
     // Sync State -> URL
