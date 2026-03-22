@@ -52,14 +52,14 @@ const sectionNavigationDefinitions: SectionNavigationEntry[] = [
   {
     kind: 'item',
     id: 'results-section',
-    route: '/admin#results-section',
+    route: '/gara#results-section',
     label: appText.shell.navigation.items.results,
     viewModes: ['admin'],
   },
   {
     kind: 'item',
     id: 'weekend-live',
-    route: '/dashboard#weekend-live',
+    route: '/gara#weekend-live',
     label: appText.shell.navigation.items.weekendLive,
     viewModes: ['admin', 'public'],
   },

@@ -10,7 +10,7 @@ const officialCoverageRoot = path.join(backendCsharpRoot, 'TestResults', 'Offici
 const sourceRoot = path.join(backendCsharpRoot, 'src') + path.sep;
 const excludedPathFragments = ['/obj/', '\\obj\\'];
 const excludedFileSuffixes = ['.g.cs'];
-const coverageThresholdPercent = 80;
+const coverageThresholdPercent = 100;
 const projects = [
   {
     label: 'unit',

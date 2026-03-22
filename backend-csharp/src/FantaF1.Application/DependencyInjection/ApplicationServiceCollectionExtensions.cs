@@ -29,6 +29,8 @@ public static class ApplicationServiceCollectionExtensions
         services.AddScoped<ICalendarReadService, CalendarReadService>();
         services.AddScoped<IDriverReadService, DriverReadService>();
         services.AddScoped<IHealthReportService, HealthReportService>();
+        services.AddScoped<IPushNotificationService, PushNotificationService>();
+        services.AddScoped<IPushSubscriptionService, PushSubscriptionService>();
         services.AddScoped<IResultsService, ResultsService>();
         services.AddScoped<ISaveRequestService, SaveRequestService>();
         services.AddScoped<IStandingsReadService, StandingsReadService>();

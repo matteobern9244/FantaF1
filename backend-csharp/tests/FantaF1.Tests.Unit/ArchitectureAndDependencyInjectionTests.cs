@@ -9,6 +9,7 @@ using FantaF1.Infrastructure.Authentication;
 using FantaF1.Infrastructure;
 using FantaF1.Infrastructure.DependencyInjection;
 using FantaF1.Infrastructure.Results;
+using FantaF1.Infrastructure.Mongo;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
@@ -74,6 +75,8 @@ public sealed class ArchitectureAndDependencyInjectionTests
         Assert.NotNull(serviceProvider.GetRequiredService<IDriverReadService>());
         Assert.NotNull(serviceProvider.GetRequiredService<IHealthReportService>());
         Assert.NotNull(serviceProvider.GetRequiredService<IRaceHighlightsLookupService>());
+        Assert.NotNull(serviceProvider.GetRequiredService<IPushSubscriptionRepository>());
+        Assert.NotNull(serviceProvider.GetRequiredService<IPushSubscriptionService>());
         Assert.NotNull(serviceProvider.GetRequiredService<IRequestIdGenerator>());
         Assert.NotNull(serviceProvider.GetRequiredService<IResultsService>());
         Assert.NotNull(serviceProvider.GetRequiredService<IResultsSourceClient>());
@@ -98,6 +101,8 @@ public sealed class ArchitectureAndDependencyInjectionTests
         Assert.IsType<AdminSessionService>(serviceProvider.GetRequiredService<IAdminSessionService>());
         Assert.IsType<ContractAdminCredentialRepository>(serviceProvider.GetRequiredService<IAdminCredentialRepository>());
         Assert.IsType<RaceHighlightsLookupService>(serviceProvider.GetRequiredService<IRaceHighlightsLookupService>());
+        Assert.IsType<MongoPushSubscriptionRepository>(serviceProvider.GetRequiredService<IPushSubscriptionRepository>());
+        Assert.IsType<PushSubscriptionService>(serviceProvider.GetRequiredService<IPushSubscriptionService>());
         Assert.IsType<ResultsService>(serviceProvider.GetRequiredService<IResultsService>());
         Assert.IsType<ResultsSourceClient>(serviceProvider.GetRequiredService<IResultsSourceClient>());
         Assert.IsType<SaveRequestService>(serviceProvider.GetRequiredService<ISaveRequestService>());

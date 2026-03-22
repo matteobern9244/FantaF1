@@ -4,16 +4,16 @@
   "slug": "refactor_spa_to_multi_page_app_pwa_20260321",
   "title": "Refactoring dell'intera applicazione da SPA a App Multi-Pagina (PWA) con routing reale, navigazione mobile ottimizzata (Bottom Tab Bar) e notifiche push",
   "type": "refactor",
-  "status": "in_progress",
-  "phase": "in_progress",
+  "status": "completed",
+  "phase": "completed",
   "createdAt": "2026-03-21T16:00:00Z",
-  "updatedAt": "2026-03-21T14:35:00Z",
+  "updatedAt": "2026-03-22T18:30:00Z",
   "archivedAt": null,
   "path": "conductor/tracks/refactor_spa_to_multi_page_app_pwa_20260321",
   "relatedTrackIds": [
     "track-002-riordinare-il-menu-e-le-voci-dashboard-con-sottomenu-analisi-per-kpi-e-coerenza-desktop-mobile-pwa"
   ],
-  "activeTask": "Stabilizzare routing e layout della Fase 1 e riallineare gli artefatti Conductor del branch.",
+  "activeTask": "Completed",
   "description": "Refactoring dell'intera applicazione da SPA a App Multi-Pagina (PWA) con routing reale, navigazione mobile ottimizzata (Bottom Tab Bar) e notifiche push, mantenendo la logica di business invariata e garantendo il 100% di copertura.",
   "skills": [
     "conductor",
@@ -31,6 +31,9 @@
   "validation_commands": [
     "npm run lint",
     "npm run test",
+    "npm run test:coverage",
+    "npm run test:csharp-coverage",
+    "npm run test:ui-responsive",
     "npm run build"
   ]
 }

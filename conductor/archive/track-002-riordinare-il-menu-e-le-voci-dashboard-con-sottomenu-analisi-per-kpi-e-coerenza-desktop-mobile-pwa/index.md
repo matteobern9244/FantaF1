@@ -1,10 +1,9 @@
 # track-002 - Riordinare il menu e le voci dashboard con sottomenu Analisi per KPI e coerenza desktop/mobile/PWA
 
-- Status: `spec`
-- Phase: `spec`
-- Active task: Draft and confirm the track spec
-- Path:
-  `conductor/tracks/track-002-riordinare-il-menu-e-le-voci-dashboard-con-sottomenu-analisi-per-kpi-e-coerenza-desktop-mobile-pwa`
+- Status: `archived`
+- Phase: `archived`
+- Active task: Archived
+- Path: `conductor/archive/track-002-riordinare-il-menu-e-le-voci-dashboard-con-sottomenu-analisi-per-kpi-e-coerenza-desktop-mobile-pwa`
 
 ## Files
 

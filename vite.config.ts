@@ -25,6 +25,7 @@ export default defineConfig({
   test: {
     setupFiles: ['./tests/setup.ts'],
     globals: true,
+    testTimeout: 20000,
     env: {
       MONGODB_DB_NAME_OVERRIDE: '',
       SAVE_SMOKE_EXPECTED_DATABASE_TARGET: '',

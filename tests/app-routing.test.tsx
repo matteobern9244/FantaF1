@@ -3,7 +3,7 @@
  */
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor, within } from '@testing-library/react';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter, useLocation } from 'react-router-dom';
 import App from '../src/App';
 import { appText } from '../src/uiText';
 import React from 'react';
@@ -32,6 +32,66 @@ Object.defineProperty(window, 'scrollTo', {
   value: vi.fn(),
 });
 
+function installFetchMocks(isAdmin: boolean) {
+  (global.fetch as any).mockImplementation((url: string) => {
+    if (url.includes('/api/session')) {
+      return Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve({ isAdmin, defaultViewMode: isAdmin ? 'admin' : 'public' }),
+      });
+    }
+    if (url.includes('/api/health')) {
+      return Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve({ status: 'ok', environment: 'development' }),
+      });
+    }
+    if (url.includes('/api/data')) {
+      return Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve({
+          users: [],
+          history: [],
+          gpName: '',
+          raceResults: {},
+          selectedMeetingKey: '',
+        }),
+      });
+    }
+    if (url.includes('/api/drivers')) {
+      return Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve([]),
+      });
+    }
+    if (url.includes('/api/calendar')) {
+      return Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve([]),
+      });
+    }
+    if (url.includes('/api/standings')) {
+      return Promise.resolve({
+        ok: true,
+        json: () => Promise.resolve({ driverStandings: [], constructorStandings: [], updatedAt: '' }),
+      });
+    }
+    return Promise.reject(new Error(`Unhandled fetch to ${url}`));
+  });
+}
+
+function LocationProbe() {
+  const location = useLocation();
+
+  return (
+    <output data-testid="location-probe">
+      {location.pathname}
+      {location.search}
+      {location.hash}
+    </output>
+  );
+}
+
 describe('App Routing (MPA-like)', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -39,58 +99,13 @@ describe('App Routing (MPA-like)', () => {
     window.history.replaceState({}, '', '/');
     window.localStorage.clear();
     window.sessionStorage.clear();
-    
-    // Default mocks for API responses
-    (global.fetch as any).mockImplementation((url: string) => {
-      if (url.includes('/api/session')) {
-        return Promise.resolve({
-          ok: true,
-          json: () => Promise.resolve({ isAdmin: true, defaultViewMode: 'admin' }),
-        });
-      }
-      if (url.includes('/api/health')) {
-        return Promise.resolve({
-          ok: true,
-          json: () => Promise.resolve({ status: 'ok', environment: 'development' }),
-        });
-      }
-      if (url.includes('/api/data')) {
-        return Promise.resolve({
-          ok: true,
-          json: () => Promise.resolve({
-            users: [],
-            history: [],
-            gpName: '',
-            raceResults: {},
-            selectedMeetingKey: ''
-          }),
-        });
-      }
-      if (url.includes('/api/drivers')) {
-        return Promise.resolve({
-          ok: true,
-          json: () => Promise.resolve([]),
-        });
-      }
-      if (url.includes('/api/calendar')) {
-        return Promise.resolve({
-          ok: true,
-          json: () => Promise.resolve([]),
-        });
-      }
-      if (url.includes('/api/standings')) {
-        return Promise.resolve({
-          ok: true,
-          json: () => Promise.resolve({ driverStandings: [], constructorStandings: [], updatedAt: '' }),
-        });
-      }
-      return Promise.reject(new Error(`Unhandled fetch to ${url}`));
-    });
+    installFetchMocks(true);
   });
 
   const renderWithRouter = (initialRoute = '/') => {
     return render(
       <MemoryRouter initialEntries={[initialRoute]}>
+        <LocationProbe />
         <App />
       </MemoryRouter>
     );
@@ -138,6 +153,48 @@ describe('App Routing (MPA-like)', () => {
       expect(screen.queryByTestId('pitstop-loader')).not.toBeInTheDocument();
     });
     expect(screen.getByRole('heading', { name: /Stagione attuale/i })).toBeInTheDocument();
+  });
+
+  it('renders the public race page on /gara', async () => {
+    installFetchMocks(false);
+    renderWithRouter('/gara');
+
+    await waitFor(() => {
+      expect(screen.queryByTestId('pitstop-loader')).not.toBeInTheDocument();
+    });
+
+    expect(screen.getByTestId('location-probe')).toHaveTextContent('/gara');
+    expect(screen.getByRole('heading', { name: new RegExp(appText.panels.weekendLive.title, 'i') })).toBeInTheDocument();
+  });
+
+  it('renders the admin race results section on /gara#results-section', async () => {
+    installFetchMocks(true);
+    renderWithRouter('/gara#results-section');
+
+    await waitFor(() => {
+      expect(screen.queryByTestId('pitstop-loader')).not.toBeInTheDocument();
+    });
+
+    expect(screen.getByTestId('location-probe')).toHaveTextContent('/gara');
+    expect(screen.getByTestId('location-probe')).toHaveTextContent('#results-section');
+    expect(screen.getByRole('heading', { name: new RegExp(appConfig.uiText.headings.results, 'i') })).toBeInTheDocument();
+  });
+
+  it('falls back non-admin /gara#results-section to the weekend-live section', async () => {
+    installFetchMocks(false);
+    renderWithRouter('/gara#results-section');
+
+    await waitFor(() => {
+      expect(screen.queryByTestId('pitstop-loader')).not.toBeInTheDocument();
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId('location-probe')).toHaveTextContent('/gara');
+      expect(screen.getByTestId('location-probe')).toHaveTextContent('#weekend-live');
+    });
+
+    expect(screen.getByRole('heading', { name: new RegExp(appText.panels.weekendLive.title, 'i') })).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: new RegExp(appConfig.uiText.headings.results, 'i') })).not.toBeInTheDocument();
   });
 
   it('renders Admin view on /admin', async () => {

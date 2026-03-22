@@ -69,8 +69,6 @@ describe('AppLayout Component', () => {
     items = getSectionNavigationItems('public'),
     isAdmin = false,
     viewMode = 'public',
-    isMobileNavOpen = false,
-    onCloseMobileNav = () => {},
   }: {
     activeId?: string;
     children?: React.ReactNode;
@@ -78,8 +76,6 @@ describe('AppLayout Component', () => {
     items?: ReturnType<typeof getSectionNavigationItems>;
     isAdmin?: boolean;
     viewMode?: 'public' | 'admin';
-    isMobileNavOpen?: boolean;
-    onCloseMobileNav?: () => void;
   }) => {
     return render(
       <MemoryRouter>
@@ -94,9 +90,6 @@ describe('AppLayout Component', () => {
           onLogin={() => {}}
           isSidebarCollapsed={false}
           onCollapseChange={() => {}}
-          isMobileNavOpen={isMobileNavOpen}
-          onOpenMobileNav={() => {}}
-          onCloseMobileNav={onCloseMobileNav}
           onInstall={() => {}}
         >
           {children}
@@ -121,6 +114,7 @@ describe('AppLayout Component', () => {
     expect(bottomTabBar).toBeInTheDocument();
     expect(within(bottomTabBar).getByRole('button', { name: /Calendario stagione/i })).toBeInTheDocument();
     expect(within(bottomTabBar).getByRole('button', { name: /Pronostici dei giocatori/i })).toBeInTheDocument();
+    expect(within(bottomTabBar).getByRole('button', { name: /Weekend pulse/i })).toBeInTheDocument();
     expect(within(bottomTabBar).getByRole('button', { name: /Classifiche reali/i })).toBeInTheDocument();
     expect(within(bottomTabBar).getByRole('button', { name: /^Analisi$/i })).toBeInTheDocument();
 
@@ -156,19 +150,15 @@ describe('AppLayout Component', () => {
     expect(onItemClick).toHaveBeenCalledWith('history-archive');
   });
 
-  it('renders the mobile overlay when the drawer is open', () => {
+  it('renders the mobile utility actions instead of the legacy overlay', () => {
     setMockViewport(600);
-    const onCloseMobileNav = vi.fn();
-    renderWithLayout({
-      isMobileNavOpen: true,
-      onCloseMobileNav,
-    });
+    const { container } = renderWithLayout({});
+    const utilityBar = container.querySelector('.mobile-utility-bar');
 
-    const closeButtons = screen.getAllByRole('button', { name: /chiudi sezioni/i });
-    expect(closeButtons.length).toBeGreaterThanOrEqual(2);
-
-    fireEvent.click(closeButtons[1]);
-    expect(onCloseMobileNav).toHaveBeenCalledTimes(1);
+    expect(container.querySelector('.mobile-menu-trigger')).toBeNull();
+    expect(utilityBar).not.toBeNull();
+    expect(within(utilityBar as HTMLElement).getByRole('button', { name: /installa/i })).toBeInTheDocument();
+    expect(within(utilityBar as HTMLElement).getByRole('button', { name: /accedi/i })).toBeInTheDocument();
   });
 
   it('renders bottom tab bar with no tabs when nav items do not include the expected section ids', () => {
@@ -190,6 +180,37 @@ describe('AppLayout Component', () => {
     expect(within(bottomTabBar).queryByRole('button', { name: /Pronostici/i })).not.toBeInTheDocument();
     expect(within(bottomTabBar).queryByRole('button', { name: /Classifiche/i })).not.toBeInTheDocument();
     expect(within(bottomTabBar).queryByRole('button', { name: /Analisi/i })).not.toBeInTheDocument();
+  });
+
+  it('omits only the missing race tab when the mobile nav lacks race entries', () => {
+    setMockViewport(600);
+    const items = getSectionNavigationItems('public').filter((item) => {
+      if (item.kind === 'group') {
+        return true;
+      }
+
+      return item.id !== 'weekend-live';
+    });
+
+    renderWithLayout({ items });
+
+    const bottomTabBar = screen.getByRole('navigation', { name: /Barra di navigazione mobile/i });
+    expect(within(bottomTabBar).getByRole('button', { name: /Calendario stagione/i })).toBeInTheDocument();
+    expect(within(bottomTabBar).queryByRole('button', { name: /Weekend pulse/i })).not.toBeInTheDocument();
+  });
+
+  it('shows the admin shortcut label when the mobile utility bar is in public mode with an admin session', () => {
+    setMockViewport(600);
+    const { container } = renderWithLayout({
+      isAdmin: true,
+      viewMode: 'public',
+      items: getSectionNavigationItems('admin'),
+    });
+
+    const utilityBar = container.querySelector('.mobile-utility-bar');
+    expect(utilityBar).not.toBeNull();
+    expect(within(utilityBar as HTMLElement).getByRole('button', { name: /admin/i })).toBeInTheDocument();
+    expect(within(utilityBar as HTMLElement).getByRole('button', { name: /esci/i })).toBeInTheDocument();
   });
 
   it('marks no tab as active when activeId does not match any known section', () => {
@@ -222,9 +243,6 @@ describe('AppLayout Component', () => {
           onLogin={() => {}}
           isSidebarCollapsed={true}
           onCollapseChange={() => {}}
-          isMobileNavOpen={false}
-          onOpenMobileNav={() => {}}
-          onCloseMobileNav={() => {}}
           onInstall={() => {}}
         >
           <div>Content</div>

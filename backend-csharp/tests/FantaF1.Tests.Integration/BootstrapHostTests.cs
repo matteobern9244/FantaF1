@@ -71,6 +71,8 @@ public sealed class BootstrapHostTests : IClassFixture<WebApplicationFactory<Pro
         Assert.NotNull(serviceProvider.GetRequiredService<IDriverRepository>());
         Assert.NotNull(serviceProvider.GetRequiredService<IDriverReadService>());
         Assert.NotNull(serviceProvider.GetRequiredService<IHealthReportService>());
+        Assert.NotNull(serviceProvider.GetRequiredService<IPushDeliveryGateway>());
+        Assert.NotNull(serviceProvider.GetRequiredService<IPushNotificationService>());
         Assert.NotNull(serviceProvider.GetRequiredService<IResultsService>());
         Assert.NotNull(serviceProvider.GetRequiredService<IRuntimeEnvironmentProfileResolver>());
         Assert.NotNull(serviceProvider.GetRequiredService<ISaveRequestService>());
@@ -93,7 +95,7 @@ public sealed class BootstrapHostTests : IClassFixture<WebApplicationFactory<Pro
             .Where(endpoint => endpoint.Action is not null)
             .ToArray();
 
-        Assert.Equal(12, controllerEndpoints.Length);
+        Assert.Equal(16, controllerEndpoints.Length);
         Assert.Contains(controllerEndpoints, endpoint => string.Equals(endpoint.Route, "bootstrap-ready", StringComparison.Ordinal));
         Assert.Equal(
             2,
@@ -102,6 +104,11 @@ public sealed class BootstrapHostTests : IClassFixture<WebApplicationFactory<Pro
         Assert.Contains(controllerEndpoints, endpoint => string.Equals(endpoint.Route, "api/drivers", StringComparison.Ordinal));
         Assert.Contains(controllerEndpoints, endpoint => string.Equals(endpoint.Route, "api/calendar", StringComparison.Ordinal));
         Assert.Contains(controllerEndpoints, endpoint => string.Equals(endpoint.Route, "api/results/{meetingKey}", StringComparison.Ordinal));
+        Assert.Equal(
+            2,
+            controllerEndpoints.Count(endpoint => string.Equals(endpoint.Route, "api/push-subscriptions", StringComparison.Ordinal)));
+        Assert.Contains(controllerEndpoints, endpoint => string.Equals(endpoint.Route, "api/push-notifications/config", StringComparison.Ordinal));
+        Assert.Contains(controllerEndpoints, endpoint => string.Equals(endpoint.Route, "api/push-notifications/test-delivery", StringComparison.Ordinal));
         Assert.Contains(controllerEndpoints, endpoint => string.Equals(endpoint.Route, "api/standings", StringComparison.Ordinal));
         Assert.Contains(controllerEndpoints, endpoint => string.Equals(endpoint.Route, "api/health", StringComparison.Ordinal));
         Assert.Contains(controllerEndpoints, endpoint => string.Equals(endpoint.Route, "api/session", StringComparison.Ordinal));

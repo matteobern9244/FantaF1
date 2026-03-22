@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { Menu, CalendarDays, User, Trophy, Gauge } from 'lucide-react';
+import { CalendarDays, User, Trophy, Gauge, Timer, Download, LockKeyhole, LogOut, Smartphone } from 'lucide-react';
 import Sidebar from './Sidebar';
-import MobileOverlay from './MobileOverlay';
 import { SectionNavigationEntry, SectionNavigationId } from '../utils/sectionNavigation';
 import { ViewMode } from '../types';
 import { appText } from '../uiText';
@@ -18,9 +17,6 @@ interface AppLayoutProps {
   onLogin: () => void;
   isSidebarCollapsed: boolean;
   onCollapseChange: (isCollapsed: boolean) => void;
-  isMobileNavOpen: boolean;
-  onOpenMobileNav: () => void;
-  onCloseMobileNav: () => void;
   onInstall: () => void;
 }
 
@@ -34,6 +30,7 @@ interface BottomTabBarItem {
 const bottomTabIconMap: Record<string, React.ComponentType<{ size?: number | string }>> = {
   dashboard: CalendarDays,
   predictions: User,
+  race: Timer,
   standings: Trophy,
   analysis: Gauge,
 };
@@ -45,6 +42,9 @@ function buildBottomTabBarItems(items: SectionNavigationEntry[]): BottomTabBarIt
   );
   const calendarItem = leafItems.find((item) => item.id === 'calendar-section');
   const predictionsItem = leafItems.find((item) => item.id === 'predictions-section');
+  const raceItem =
+    leafItems.find((item) => item.id === 'weekend-live')
+    ?? leafItems.find((item) => item.id === 'results-section');
   const standingsItem =
     leafItems.find((item) => item.id === 'public-standings')
     ?? leafItems.find((item) => item.id === 'history-archive');
@@ -64,6 +64,14 @@ function buildBottomTabBarItems(items: SectionNavigationEntry[]): BottomTabBarIt
           id: 'predictions',
           label: predictionsItem.label,
           targetId: predictionsItem.id,
+        }
+      : null,
+    raceItem
+      ? {
+          icon: bottomTabIconMap.race,
+          id: 'race',
+          label: raceItem.label,
+          targetId: raceItem.id,
         }
       : null,
     standingsItem
@@ -87,10 +95,12 @@ function buildBottomTabBarItems(items: SectionNavigationEntry[]): BottomTabBarIt
   return definitions.filter((item): item is BottomTabBarItem => Boolean(item));
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function isBottomTabBarItemActive(tabId: string, activeId: string) {
   const activeGroups: Record<string, SectionNavigationId[]> = {
-    dashboard: ['calendar-section', 'weekend-live', 'public-guide'],
+    dashboard: ['calendar-section', 'public-guide'],
     predictions: ['predictions-section'],
+    race: ['weekend-live', 'results-section'],
     standings: ['public-standings', 'history-archive'],
     analysis: ['season-analysis', 'user-analytics-section', 'user-kpi-section'],
   };
@@ -110,9 +120,6 @@ const AppLayout: React.FC<AppLayoutProps> = ({
   onLogin,
   isSidebarCollapsed,
   onCollapseChange,
-  isMobileNavOpen,
-  onOpenMobileNav,
-  onCloseMobileNav,
   onInstall,
 }) => {
   const [showBottomTabBar, setShowBottomTabBar] = useState(() =>
@@ -149,53 +156,60 @@ const AppLayout: React.FC<AppLayoutProps> = ({
         onInstall={onInstall}
       />
 
-      {isMobileNavOpen && (
-        <MobileOverlay
-          items={items}
-          activeId={activeId}
-          onItemClick={onItemClick}
-          isAdmin={isAdmin}
-          viewMode={viewMode}
-          onViewModeToggle={onViewModeToggle}
-          onLogout={onLogout}
-          onLogin={onLogin}
-          onClose={onCloseMobileNav}
-          showInstall={true}
-          onInstall={onInstall}
-        />
-      )}
-
-      <button
-        className="mobile-menu-trigger"
-        onClick={onOpenMobileNav}
-        aria-label={appText.shell.navigation.openButton}
-        type="button"
-      >
-        <Menu size={24} />
-      </button>
-
       {showBottomTabBar ? (
-        <nav className="bottom-tab-bar" aria-label={appText.shell.navigation.bottomTabBar}>
-          {bottomTabBarItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = isBottomTabBarItemActive(item.id, activeId);
+        <div className="mobile-navigation-stack">
+          <div className="mobile-utility-bar" aria-label={appText.shell.navigation.items.mobileActions}>
+            <button className="mobile-utility-button" onClick={onInstall} type="button">
+              <Download size={18} />
+              <span>{appText.shell.navigation.items.installAppShort}</span>
+            </button>
 
-            return (
-              <button
-                key={item.id}
-                className={`bottom-tab-item ${isActive ? 'active' : ''}`.trim()}
-                aria-current={isActive ? 'page' : undefined}
-                onClick={() => onItemClick(item.targetId)}
-                type="button"
-              >
-                <span className="bottom-tab-icon" aria-hidden="true">
-                  <Icon size={18} />
-                </span>
-                <span className="bottom-tab-label">{item.label}</span>
+            <button
+              className={`mobile-utility-button ${viewMode === 'admin' ? 'admin-active' : ''}`.trim()}
+              onClick={isAdmin ? onViewModeToggle : onLogin}
+              aria-pressed={viewMode === 'admin'}
+              type="button"
+            >
+              {isAdmin && viewMode === 'admin' ? <Smartphone size={18} /> : <LockKeyhole size={18} />}
+              <span>
+                {isAdmin
+                  ? (viewMode === 'admin'
+                    ? appText.shell.navigation.items.publicViewShort
+                    : appText.shell.navigation.items.adminViewShort)
+                  : appText.shell.navigation.items.adminLoginShort}
+              </span>
+            </button>
+
+            {isAdmin ? (
+              <button className="mobile-utility-button" onClick={onLogout} type="button">
+                <LogOut size={18} />
+                <span>{appText.shell.navigation.items.logoutShort}</span>
               </button>
-            );
-          })}
-        </nav>
+            ) : null}
+          </div>
+
+          <nav className="bottom-tab-bar" aria-label={appText.shell.navigation.bottomTabBar}>
+            {bottomTabBarItems.map((item) => {
+              const Icon = item.icon;
+              const isActive = isBottomTabBarItemActive(item.id, activeId);
+
+              return (
+                <button
+                  key={item.id}
+                  className={`bottom-tab-item ${isActive ? 'active' : ''}`.trim()}
+                  aria-current={isActive ? 'page' : undefined}
+                  onClick={() => onItemClick(item.targetId)}
+                  type="button"
+                >
+                  <span className="bottom-tab-icon" aria-hidden="true">
+                    <Icon size={18} />
+                  </span>
+                  <span className="bottom-tab-label">{item.label}</span>
+                </button>
+              );
+            })}
+          </nav>
+        </div>
       ) : null}
 
       {children}

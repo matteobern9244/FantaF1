@@ -4,6 +4,25 @@ Cronologia sintetica delle release documentate del progetto Fanta Formula 1.
 
 ## [Unreleased]
 
+- **Track Multi-Route/PWA/Push Riallineato al Runtime Reale del Branch**: il
+  branch documenta ora in modo coerente la shell React multi-route con rotte
+  `/dashboard`, `/pronostici`, `/gara`, `/classifiche`, `/analisi` e `/admin`,
+  la rimozione del vecchio overlay mobile dal path runtime attivo, la bottom
+  tab bar con utility bar mobile dedicata e il controllo responsive/browser
+  coerente con queste superfici reali.
+- **Web Push End-to-End Minimo Chiuso su Backend C# e Frontend**: il frontend
+  usa ora il pannello notifiche della dashboard per opt-in, opt-out e invio
+  test; il backend espone `GET /api/push-notifications/config` e
+  `POST /api/push-notifications/test-delivery`, salva le subscription
+  browser-shaped, recupera la public key VAPID e instrada una test notification
+  reale verso il gateway `WebPush`.
+- **TDD Mirato per Push e Controller C# Riallineato**: aggiunti/riallineati i
+  test `tests/push-subscription-client.test.ts`,
+  `tests/push-notifications-panel.test.tsx`,
+  `backend-csharp/tests/FantaF1.Tests.Unit/PushNotificationServiceTests.cs`,
+  `backend-csharp/tests/FantaF1.Tests.Integration/PushSubscriptionsControllerTests.cs`
+  e `backend-csharp/tests/FantaF1.Tests.Integration/PushSubscriptionsEndpointTests.cs`
+  per bloccare regressioni sul contratto push reale del branch.
 - **Responsive Runner In-Process Consolidato e Gate CI Hardened**:
   `npm run test:ui-responsive` usa ora solo il runner Playwright in-process del
   repository, senza dipendere da `playwright-cli`, sessioni residue o cleanup
@@ -35,8 +54,9 @@ Cronologia sintetica delle release documentate del progetto Fanta Formula 1.
   `npm run test:ui-responsive`, `npm run test`, `npm run test:coverage`,
   `npm run build` e `npm run test:csharp-coverage`; l'ultimo snapshot
   verificato resta a `100%` su statements, branches, functions e lines per lo
-  scope frontend/repository e a `3387 / 3387` linee, `1869 / 1869` branch,
-  `567 / 567` metodi sullo scope ufficiale `backend-csharp/src/`.
+  scope frontend/repository e a `3527 / 3527` linee, `1909 / 1909` branch,
+  `606 / 606` metodi su `86` file inclusi nello scope ufficiale
+  `backend-csharp/src/`.
 
 - **Stabilizzazione Suite Test Admin e Routing MPA**: aggiunti timeout espliciti
   ai test `ui-mockup-roadmap` (mobile-nav, navigation, shell) per eliminare
@@ -74,10 +94,10 @@ Cronologia sintetica delle release documentate del progetto Fanta Formula 1.
   verso `/dashboard` e mantiene coerenti query params e navigazione a sezione
   anche quando route e hash cambiano insieme.
 - **Bottom Tab Bar Mobile Resa Operativa e Coerente con la Sidebar**: la shell
-  mobile espone ora una barra fissa in basso per dashboard, pronostici,
+  mobile espone ora una barra fissa in basso per dashboard, pronostici, gara,
   classifiche/storico e analisi, con stato attivo corretto anche per le
-  sottosezioni analytics e senza rompere overlay, toggle admin/public o CTA
-  installazione.
+  sottosezioni analytics, utility bar dedicata e senza reintrodurre il vecchio
+  overlay fullscreen.
 - **Hardening TDD di Routing, Detector Responsive e Test Navigation**: aggiunti
   regression test per redirect root-with-query, submit admin via `Enter`,
   scroll cross-route verso sezioni hashate e detector responsive della vista

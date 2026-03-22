@@ -157,28 +157,27 @@ Il lock e' server-side:
 ### UI
 
 - shell responsive desktop/mobile (F1 Racing Theme)
-- sidebar adattiva desktop (collassabile) e menu mobile overlay a tutto schermo
-- hardening della navigation shell: collapse desktop agganciato allo stato reale
-  della shell, trigger mobile localizzato e scroll lock del body mentre
-  l'overlay e' aperto
-- overlay mobile rifinito per leggibilita' e orientamento: label delle voci in
-  font `Formula1` a `20px`, card piu' alte, contenuto centrato e wrapping meno
-  aggressivo per evitare label schiacciate sui viewport stretti
-- riepilogo sticky della sezione corrente nel menu mobile per mantenere piu'
-  intuitiva la navigazione quando l'utente scrolla o riapre l'overlay
+- shell multi-route con entrypoint reali `/dashboard`, `/pronostici`, `/gara`,
+  `/classifiche`, `/analisi` e `/admin`
+- sidebar adattiva desktop (collassabile), coerente con lo stato route-aware
+- mobile shell senza overlay fullscreen nel path runtime attivo: bottom tab bar
+  fissa per dashboard, pronostici, gara, classifiche/storico e analisi
+- mobile utility bar dedicata a installazione PWA, toggle admin/public e logout
 - branding MenuLogo integrato con accenti hi-contrast
 - hero full-width pulita (controlli admin/public spostati nel menu)
 - stato admin/public coerente in tutte le superfici
 - track map coerente tra hero, recap e pannello risultati
 - CTA highlights coerente per ogni weekend selezionato; se il video non e'
   disponibile la label disabilitata e' `HIGHLIGHTS NON PRESENTI`
+- pannello notifiche push reale sulla dashboard con opt-in, opt-out e invio
+  test verso il backend C#
 
 ## Architettura
 
 ### Frontend
 
 - React 18 + TypeScript + Vite
-- SPA servita anche same-origin dal backend C#
+- shell React route-aware servita same-origin dal backend C#
 - API relative `/api/...`
 - logica condivisa centralizzata in moduli come:
   - [src/utils/gameService.ts](/Users/matteobernardini/code/FantaF1/src/utils/gameService.ts)
@@ -516,19 +515,20 @@ responsive, che continua a essere un controllo esplicito e isolato.
 - gli ingressi legacy su `/` con query string vengono normalizzati a
   `/dashboard` senza perdere lo stato richiesto nell'URL
 - in mobile la shell mostra una bottom tab bar fissa per dashboard,
-  pronostici, area classifiche/storico e analisi; la voce standings usa
-  `Classifiche reali` in public e `Storico gare` in admin, mentre l'overlay
-  resta disponibile per la navigazione completa, il toggle admin/public e la
-  CTA installazione
+  pronostici, gara, area classifiche/storico e analisi; la voce standings usa
+  `Classifiche reali` in public e `Storico gare` in admin
+- il path mobile runtime non usa piu' il vecchio overlay fullscreen: le azioni
+  install/admin-public/logout vivono nella utility bar dedicata sopra la bottom
+  tab bar
 - il gruppo `Analisi` nel menu e nella dashboard contiene ora
   `Stagione attuale`, `Deep-dive KPI dashboard` e `User KPI Dashboard`
 - `Stagione attuale` sostituisce la precedente label `Analisi stagione`
 - la sidebar desktop usa una larghezza leggermente maggiore per evitare clipping
   dei bordi attivi
-- desktop sidebar e mobile overlay mantengono ora uno stacco visivo tra il
-  gruppo `Analisi` e la successiva voce `Storico gare`
-- i bordi delle voci attive restano interamente visibili sia in desktop sia in
-  mobile/PWA
+- desktop sidebar e shell mobile mantengono ora uno stacco visivo tra il gruppo
+  `Analisi` e la successiva voce `Storico gare` nelle superfici storiche
+- i bordi delle voci attive restano interamente visibili sia in desktop sia nel
+  runtime mobile/PWA attuale
 - gli script di verifica responsive/browser sono stati riallineati alla shell
   multi-route, con validazioni route-aware sulle sezioni realmente visibili
 - il runner responsive usa ora Playwright in-process, valida in modo
@@ -536,6 +536,9 @@ responsive, che continua a essere un controllo esplicito e isolato.
   `weekend-switch` e `sprint-tooltip` come scenari obbligatori: se i
   prerequisiti non convergono il check fallisce con diagnostica, non viene
   saltato
+- il pannello notifiche push usa il service worker della PWA, recupera la
+  public key dal backend C#, salva la subscription su MongoDB e puo' inviare un
+  test reale tramite `POST /api/push-notifications/test-delivery`
 
 ### Tool locale di pulizia Chrome
 
@@ -765,10 +768,17 @@ Soglia minima ufficiale su `backend-csharp/src/`:
 - `100%` lines
 - `100%` branches
 - `100%` methods
-- `75` file inclusi
+- `86` file inclusi
 
 Le soglie repository restano a `100%` su statements, branches, functions e
 lines.
+
+Baseline verificata piu' recente:
+
+- frontend/repository: `100%` statements, `100%` functions, `100%` branches,
+  `100%` lines
+- backend `backend-csharp/src/`: `3527 / 3527` lines, `1909 / 1909` branches,
+  `606 / 606` methods su `86` file inclusi
 
 Verifica piu' recente rieseguita localmente:
 

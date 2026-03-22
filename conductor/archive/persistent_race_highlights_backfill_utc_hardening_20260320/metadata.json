@@ -3,19 +3,19 @@
   "track_id": "persistent_race_highlights_backfill_utc_hardening_20260320",
   "slug": "persistent_race_highlights_backfill_utc_hardening_20260320",
   "title": "Persistenza definitiva highlights per gara con backfill ufficiale F1, matching Sky/YouTube e hardening UTC su Render",
-  "status": "completed",
-  "phase": "completed",
+  "status": "archived",
+  "phase": "archived",
   "createdAt": "2026-03-20T19:30:00Z",
-  "updatedAt": "2026-03-20T20:25:00Z",
-  "archivedAt": null,
-  "path": "conductor/tracks/persistent_race_highlights_backfill_utc_hardening_20260320",
+  "updatedAt": "2026-03-22T09:51:02Z",
+  "archivedAt": "2026-03-22T09:51:02Z",
+  "path": "conductor/archive/persistent_race_highlights_backfill_utc_hardening_20260320",
   "relatedTrackIds": [
     "stabilize_highlights_persistence_20260318",
     "investigate_highlights_algorithm_20260317",
     "fix_multi_race_highlights_20260315",
     "windows_startup_script_20260319"
   ],
-  "activeTask": "Track fully complete.",
+  "activeTask": "Archived",
   "type": "feature",
   "description": "Rendere definitiva la persistenza degli highlights per gara, aggiornare il calendario ufficiale da f1.com all'avvio, eseguire il backfill delle gare concluse, migliorare il matching Sky/YouTube e correggere possibili divergenze UTC tra locale e Render.",
   "skills": [
@@ -40,5 +40,6 @@
     "npm run build",
     "npm run test:csharp-coverage",
     "npm run test:ui-responsive"
-  ]
+  ],
+  "directory": "persistent_race_highlights_backfill_utc_hardening_20260320"
 }

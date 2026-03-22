@@ -3,6 +3,7 @@ import { BarChart3 } from 'lucide-react';
 import { UserData, PredictionKey, SeasonAnalyticsSummary, UserAnalyticsSummary, UserKpiSummary, UserFieldAccuracy, UserGpTrendPoint } from '../types';
 import SeasonAnalysisPanel from '../components/SeasonAnalysisPanel';
 import { appConfig } from '../constants';
+import PageSectionTabs from '../components/PageSectionTabs';
 
 const { uiText } = appConfig;
 
@@ -17,6 +18,7 @@ interface AnalysisPageProps {
   users: UserData[];
   onSelectedInsightsUserChange: (userName: string) => void;
   activeSectionId: string;
+  onSectionChange: (sectionId: string) => void;
 }
 
 const AnalysisPage: React.FC<AnalysisPageProps> = ({
@@ -30,6 +32,7 @@ const AnalysisPage: React.FC<AnalysisPageProps> = ({
   users,
   onSelectedInsightsUserChange,
   activeSectionId,
+  onSectionChange,
 }) => {
   const visibleSectionId = activeSectionId === 'user-analytics-section'
     ? 'user-analytics-section'
@@ -39,6 +42,17 @@ const AnalysisPage: React.FC<AnalysisPageProps> = ({
 
   return (
     <>
+      <PageSectionTabs
+        activeId={visibleSectionId}
+        items={[
+          { id: 'season-analysis', label: uiText.navigation.seasonAnalysis },
+          { id: 'user-analytics-section', label: uiText.navigation.userAnalytics },
+          { id: 'user-kpi-section', label: uiText.navigation.userKpi },
+        ]}
+        onSelect={onSectionChange}
+        title={uiText.labels.sectionNavigation}
+      />
+
       {visibleSectionId === 'season-analysis' ? (
         <SeasonAnalysisPanel
           analyticsEmptyLabel={uiText.history.analyticsEmpty}

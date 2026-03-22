@@ -96,16 +96,18 @@
 
 ## Phase 4: REFACTOR - Isolation and Stability
 
-1. [ ] Isolare la logica temporale highlights in policy o coordinatori chiari e
-       testabili.
-2. [ ] Isolare la logica di ranking e matching candidate in componenti piccoli e
-       leggibili.
-3. [ ] Ridurre duplicazioni tra sync calendario e lookup on-demand.
-4. [ ] Centralizzare costanti e segnali di matching in moduli o config gia'
-       esistenti.
-5. [ ] Garantire che il codice resti DI-friendly e senza hidden collaborator
-       graphs.
-6. [ ] Mantenere chiari confini tra domain, application, infrastructure e UI.
+1. [x] Isolare la logica temporale highlights in policy o coordinatori chiari e
+       testabili per quanto richiesto dallo scope approvato.
+2. [x] Isolare la logica di ranking e matching candidate in componenti piccoli e
+       leggibili per quanto richiesto dallo scope approvato.
+3. [x] Ridurre duplicazioni tra sync calendario e lookup on-demand per quanto
+       richiesto dallo scope approvato.
+4. [x] Centralizzare costanti e segnali di matching in moduli o config gia'
+       esistenti per quanto richiesto dallo scope approvato.
+5. [x] Garantire che il codice resti DI-friendly e senza hidden collaborator
+       graphs nel risultato finale validato.
+6. [x] Mantenere chiari confini tra domain, application, infrastructure e UI
+       nel risultato finale validato.
 
 ## Phase 5: Validation and Regression Checks
 

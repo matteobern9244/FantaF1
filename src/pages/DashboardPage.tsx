@@ -4,6 +4,8 @@ import { appConfig } from '../constants';
 import { RaceWeekend, PredictionKey, EditingSession } from '../types';
 import WeekendLivePanel from '../components/WeekendLivePanel';
 import PublicGuidePanel from '../components/PublicGuidePanel';
+import PageSectionTabs from '../components/PageSectionTabs';
+import { PushPanelStatus } from '../components/PushNotificationsPanel';
 
 const { uiText } = appConfig;
 
@@ -25,6 +27,12 @@ interface DashboardPageProps {
   weekendComparison: WeekendComparisonEntry[];
   isPublicView: boolean;
   activeSectionId: string;
+  onSectionChange: (sectionId: string) => void;
+  pushStatus: PushPanelStatus;
+  pushBusy: boolean;
+  onEnablePush: () => void;
+  onDisablePush: () => void;
+  onSendTestPush: () => void;
 }
 
 const DashboardPage: React.FC<DashboardPageProps> = ({
@@ -38,6 +46,12 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
   weekendComparison,
   isPublicView,
   activeSectionId,
+  onSectionChange,
+  pushStatus,
+  pushBusy,
+  onEnablePush,
+  onDisablePush,
+  onSendTestPush,
 }) => {
   const visibleSectionId = activeSectionId === 'weekend-live'
     ? 'weekend-live'
@@ -47,6 +61,16 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
 
   return (
     <>
+      <PageSectionTabs
+        activeId={visibleSectionId}
+        items={[
+          { id: 'calendar-section', label: uiText.headings.calendar },
+          ...(isPublicView ? [{ id: 'public-guide', label: uiText.navigation.publicGuide }] : []),
+        ]}
+        onSelect={onSectionChange}
+        title={uiText.labels.sectionNavigation}
+      />
+
       {visibleSectionId === 'calendar-section' ? (
         <section className="calendar-panel nav-section" id="calendar-section">
           <div className="section-title">
@@ -112,7 +136,13 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
       ) : null}
 
       {visibleSectionId === 'public-guide' ? (
-        <PublicGuidePanel />
+        <PublicGuidePanel
+          pushStatus={pushStatus}
+          pushBusy={pushBusy}
+          onEnablePush={onEnablePush}
+          onDisablePush={onDisablePush}
+          onSendTestPush={onSendTestPush}
+        />
       ) : null}
     </>
   );

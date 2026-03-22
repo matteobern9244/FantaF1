@@ -3,6 +3,7 @@ import { StandingsPayload, UserData, PredictionKey, EditingSession, RaceRecord }
 import PublicStandingsPanel from '../components/PublicStandingsPanel';
 import HistoryArchivePanel from '../components/HistoryArchivePanel';
 import { appConfig } from '../constants';
+import PageSectionTabs from '../components/PageSectionTabs';
 
 const { uiText } = appConfig;
 
@@ -32,6 +33,7 @@ interface StandingsPageProps {
   }>;
   userDisplayNameForWinner: (record: RaceRecord, userName: string) => string;
   users: UserData[];
+  onSectionChange: (sectionId: string) => void;
 }
 
 const StandingsPage: React.FC<StandingsPageProps> = ({
@@ -55,6 +57,7 @@ const StandingsPage: React.FC<StandingsPageProps> = ({
   resolveHistoryPodium,
   userDisplayNameForWinner,
   users,
+  onSectionChange,
 }) => {
   const visibleSectionId = activeSectionId === 'history-archive'
     ? 'history-archive'
@@ -62,6 +65,16 @@ const StandingsPage: React.FC<StandingsPageProps> = ({
 
   return (
     <>
+      <PageSectionTabs
+        activeId={visibleSectionId}
+        items={[
+          ...(isPublicView ? [{ id: 'public-standings', label: uiText.navigation.publicStandings }] : []),
+          { id: 'history-archive', label: uiText.navigation.history },
+        ]}
+        onSelect={onSectionChange}
+        title={uiText.labels.sectionNavigation}
+      />
+
       {isPublicView && visibleSectionId === 'public-standings' ? (
         <PublicStandingsPanel
           constructorStandings={standings.constructorStandings}

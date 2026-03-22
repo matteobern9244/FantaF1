@@ -394,9 +394,12 @@ the repository. Where applicable this includes:
 - The official minimum threshold for the configured application-code scope is
   **100% statements**, **100% functions**, **100% branches**, and **100% lines**,
   aligned with the thresholds currently documented in `README.md`.
-- The official minimum threshold for `backend-csharp/src/` is **80% line
-  coverage**, **80% branch coverage**, and **80% method coverage** across the
+- The official minimum threshold for `backend-csharp/src/` is **100% line
+  coverage**, **100% branch coverage**, and **100% method coverage** across the
   included application files reported by `npm run test:csharp-coverage`.
+- Verified baseline currently documented for `backend-csharp/src/`:
+  **3527 / 3527 lines**, **1909 / 1909 branches**, **606 / 606 methods** across
+  **86 included files**.
 - Whenever a task produces a new verified merged Release coverage result, update
   this baseline in `AGENTS.md` to the new numbers.
 - If a task produces a new verified merged coverage result for the tracked
@@ -639,7 +642,7 @@ After editing:
 - summarize what changed
 - list touched files
 - list tests added or updated
-- list coverage verification executed and the resulting 80% status
+- list coverage verification executed and the resulting 100% status
 - list validation commands executed
 - state residual risks, blockers, or skipped checks if any
 

@@ -7,6 +7,14 @@ async function inspectState({ evaluateJsonImpl }) {
   return await evaluateJsonImpl(inspectStateExpression);
 }
 
+async function waitForShellAfterViewToggle(cli) {
+  await waitForAppShell({
+    getPageInfoImpl: async () => await cli.getPageInfo(),
+    failureMessage: 'Shell UI non pronta dopo il cambio vista responsive.',
+  });
+  await sleep(150);
+}
+
 async function navigateToBase(cli, {
   label = 'navigation',
   remediation = 'Verifica il lifecycle della sessione Playwright e i log raccolti in output/playwright/ui-responsive.',
@@ -342,6 +350,7 @@ function buildResponsiveScenarios({ initialState }) {
       key: 'public-view',
       run: async ({ cli, inspectState: inspectStateImpl, switchViewMode: switchViewModeImpl, validateState }) => {
         await switchViewModeImpl('public');
+        await waitForShellAfterViewToggle(cli);
         const publicState = await inspectStateImpl();
         return await finalizeScenarioResult({
           key: 'public-view',
@@ -354,6 +363,7 @@ function buildResponsiveScenarios({ initialState }) {
       key: 'admin-return',
       run: async ({ cli, inspectState: inspectStateImpl, switchViewMode: switchViewModeImpl, validateState }) => {
         await switchViewModeImpl('admin');
+        await waitForShellAfterViewToggle(cli);
         const adminReturnState = await inspectStateImpl();
         return await finalizeScenarioResult({
           key: 'admin-return',

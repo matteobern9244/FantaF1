@@ -7,6 +7,7 @@ import AdminPage from '../src/pages/AdminPage';
 import AnalysisPage from '../src/pages/AnalysisPage';
 import DashboardPage from '../src/pages/DashboardPage';
 import PredictionsPage from '../src/pages/PredictionsPage';
+import RacePage from '../src/pages/RacePage';
 import StandingsPage from '../src/pages/StandingsPage';
 import { appConfig } from '../src/constants';
 import { appText } from '../src/uiText';
@@ -168,6 +169,151 @@ describe('route page wrappers', () => {
     expect(onCalculateAndApplyPoints).not.toHaveBeenCalled();
   });
 
+  it('renders the public race page weekend-live section', () => {
+    render(
+      <RacePage
+        activeSectionId="weekend-live"
+        canAssignPoints={false}
+        disabledReason={null}
+        editingSession={null}
+        getWeekendLiveDriverName={(field) => `Driver ${field}`}
+        isAdmin={false}
+        onCalculateAndApplyPoints={() => {}}
+        onCancelEditRace={() => {}}
+        onShowTooltipChange={() => {}}
+        onUpdateRaceResult={() => {}}
+        predictionFieldOrder={predictionFieldOrder}
+        predictionLabels={predictionLabels}
+        raceResults={createEmptyPrediction()}
+        renderSelectedRaceTrackMap={() => <div>Track map</div>}
+        resultLabels={resultLabels}
+        selectedRace={null}
+        showTooltip={false}
+        sortedDrivers={drivers}
+        weekendComparison={[
+          {
+            liveTotal: 12,
+            matchedFields: ['first'],
+            projection: 20,
+            userName: 'Marco',
+          },
+        ]}
+      />,
+    );
+
+    expect(screen.getByRole('heading', { name: appText.panels.weekendLive.title })).toBeInTheDocument();
+    expect(screen.getByText('Driver first')).toBeInTheDocument();
+    expect(screen.getByText('Marco')).toBeInTheDocument();
+  });
+
+  it('renders dashboard section tabs and the public guide push controls in public view', () => {
+    const onSectionChange = vi.fn();
+    const onEnablePush = vi.fn();
+
+    render(
+      <DashboardPage
+        activeSectionId="public-guide"
+        editingSession={null}
+        getWeekendLiveDriverName={(field) => `Driver ${field}`}
+        handleRaceSelection={() => {}}
+        isPublicView={true}
+        onDisablePush={() => {}}
+        onEnablePush={onEnablePush}
+        onSectionChange={onSectionChange}
+        onSendTestPush={() => {}}
+        predictionFieldOrder={predictionFieldOrder}
+        predictionLabels={predictionLabels}
+        pushBusy={false}
+        pushStatus="idle"
+        selectedRace={selectedRace}
+        sortedCalendar={[selectedRace]}
+        weekendComparison={[]}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole('tab', { name: uiText.headings.calendar }));
+    fireEvent.click(screen.getAllByRole('button', { name: /attiva notifiche/i })[0]);
+
+    expect(onSectionChange).toHaveBeenCalledWith('calendar-section');
+    expect(onEnablePush).toHaveBeenCalledTimes(1);
+    expect(screen.getByRole('heading', { name: appText.panels.publicGuide.title })).toBeInTheDocument();
+  });
+
+  it('renders the admin race results section, the enabled CTA branch, and the empty race fallback', () => {
+    const onCalculateAndApplyPoints = vi.fn();
+    const onShowTooltipChange = vi.fn();
+
+    render(
+      <RacePage
+        activeSectionId="results-section"
+        canAssignPoints={true}
+        disabledReason={null}
+        editingSession={null}
+        getWeekendLiveDriverName={(field) => `Driver ${field}`}
+        isAdmin={true}
+        onCalculateAndApplyPoints={onCalculateAndApplyPoints}
+        onCancelEditRace={() => {}}
+        onShowTooltipChange={onShowTooltipChange}
+        onUpdateRaceResult={() => {}}
+        predictionFieldOrder={predictionFieldOrder}
+        predictionLabels={predictionLabels}
+        raceResults={createEmptyPrediction()}
+        renderSelectedRaceTrackMap={() => <div>Track map</div>}
+        resultLabels={resultLabels}
+        selectedRace={null}
+        showTooltip={true}
+        sortedDrivers={drivers}
+        weekendComparison={[]}
+      />,
+    );
+
+    expect(screen.getByRole('heading', { name: appText.headings.results })).toBeInTheDocument();
+    expect(screen.getByText(appText.calendar.empty)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: uiText.buttons.confirmResults })).toBeEnabled();
+    expect(screen.queryByText(uiText.history.editingLabel)).not.toBeInTheDocument();
+
+    fireEvent.mouseEnter(screen.getByRole('button', { name: uiText.buttons.confirmResults }).parentElement as HTMLElement);
+    fireEvent.mouseLeave(screen.getByRole('button', { name: uiText.buttons.confirmResults }).parentElement as HTMLElement);
+    fireEvent.click(screen.getByRole('button', { name: uiText.buttons.confirmResults }));
+
+    expect(onShowTooltipChange).toHaveBeenNthCalledWith(1, true);
+    expect(onShowTooltipChange).toHaveBeenNthCalledWith(2, false);
+    expect(onCalculateAndApplyPoints).toHaveBeenCalledTimes(1);
+  });
+
+  it('renders race section tabs and lets admins switch to results', () => {
+    const onSectionChange = vi.fn();
+
+    render(
+      <RacePage
+        activeSectionId="weekend-live"
+        canAssignPoints={false}
+        disabledReason={null}
+        editingSession={null}
+        getWeekendLiveDriverName={(field) => `Driver ${field}`}
+        isAdmin={true}
+        onCalculateAndApplyPoints={() => {}}
+        onCancelEditRace={() => {}}
+        onSectionChange={onSectionChange}
+        onShowTooltipChange={() => {}}
+        onUpdateRaceResult={() => {}}
+        predictionFieldOrder={predictionFieldOrder}
+        predictionLabels={predictionLabels}
+        raceResults={createEmptyPrediction()}
+        renderSelectedRaceTrackMap={() => <div>Track map</div>}
+        resultLabels={resultLabels}
+        selectedRace={selectedRace}
+        showTooltip={false}
+        sortedDrivers={drivers}
+        weekendComparison={[]}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole('tab', { name: uiText.navigation.results }));
+
+    expect(onSectionChange).toHaveBeenCalledWith('results-section');
+  });
+
   it('renders populated analysis analytics and KPI content and propagates the user selector', () => {
     const onSelectedInsightsUserChange = vi.fn();
     const selectedAnalyticsSummary: UserAnalyticsSummary = {
@@ -250,6 +396,37 @@ describe('route page wrappers', () => {
     });
 
     expect(onSelectedInsightsUserChange).toHaveBeenCalledWith('Luca');
+  });
+
+  it('renders analysis section tabs and switches subsection selection', () => {
+    const onSectionChange = vi.fn();
+
+    render(
+      <AnalysisPage
+        activeSectionId="season-analysis"
+        formatAverageValue={(value) => String(value ?? '-')}
+        formatTrendDriver={(id) => id}
+        onSectionChange={onSectionChange}
+        onSelectedInsightsUserChange={() => {}}
+        predictionLabels={predictionLabels}
+        seasonAnalytics={{
+          comparison: [],
+          leaderName: 'Marco',
+          narratives: [],
+          recap: null,
+        }}
+        selectedAnalyticsSummary={null}
+        selectedInsightsUserName="Marco"
+        selectedKpiSummary={null}
+        users={users}
+      />,
+    );
+
+    fireEvent.click(screen.getByRole('tab', { name: uiText.navigation.userAnalytics }));
+    fireEvent.click(screen.getByRole('tab', { name: uiText.navigation.userKpi }));
+
+    expect(onSectionChange).toHaveBeenNthCalledWith(1, 'user-analytics-section');
+    expect(onSectionChange).toHaveBeenNthCalledWith(2, 'user-kpi-section');
   });
 
   it('renders SeasonAnalysisPanel when activeSectionId is season-analysis', () => {
@@ -503,6 +680,135 @@ describe('route page wrappers', () => {
     );
 
     expect(screen.getByText(uiText.labels.calendarSprint)).toBeInTheDocument();
+  });
+
+  it('renders the public race page weekend-live panel and keeps results hidden for non-admin sessions', () => {
+    render(
+      <RacePage
+        activeSectionId="results-section"
+        canAssignPoints={true}
+        disabledReason={null}
+        editingSession={null}
+        getWeekendLiveDriverName={(field) => (field === 'first' ? 'Max Verstappen' : '')}
+        isAdmin={false}
+        onCalculateAndApplyPoints={() => {}}
+        onCancelEditRace={() => {}}
+        onShowTooltipChange={() => {}}
+        onUpdateRaceResult={() => {}}
+        predictionFieldOrder={predictionFieldOrder}
+        predictionLabels={predictionLabels}
+        raceResults={createEmptyPrediction()}
+        renderSelectedRaceTrackMap={() => <div>Track map</div>}
+        resultLabels={resultLabels}
+        selectedRace={selectedRace}
+        showTooltip={false}
+        sortedDrivers={drivers}
+        weekendComparison={[{
+          userName: 'Marco',
+          liveTotal: 18,
+          matchedFields: ['first'],
+          projection: 24,
+        }]}
+      />,
+    );
+
+    expect(screen.getByRole('heading', { name: appText.panels.weekendLive.title })).toBeInTheDocument();
+    expect(screen.getByText('Marco')).toBeInTheDocument();
+    expect(screen.getByText('Max Verstappen')).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: appText.headings.results })).not.toBeInTheDocument();
+  });
+
+  it('renders the admin race results controls and active tooltip states', () => {
+    vi.useFakeTimers();
+    const onUpdateRaceResult = vi.fn();
+    const onCancelEditRace = vi.fn();
+    const onShowTooltipChange = vi.fn();
+    const onCalculateAndApplyPoints = vi.fn();
+
+    render(
+      <RacePage
+        activeSectionId="results-section"
+        canAssignPoints={false}
+        disabledReason="Completa i risultati"
+        editingSession={{ historyIndex: 0, record: historyRecord }}
+        getWeekendLiveDriverName={() => ''}
+        isAdmin={true}
+        onCalculateAndApplyPoints={onCalculateAndApplyPoints}
+        onCancelEditRace={onCancelEditRace}
+        onShowTooltipChange={onShowTooltipChange}
+        onUpdateRaceResult={onUpdateRaceResult}
+        predictionFieldOrder={predictionFieldOrder}
+        predictionLabels={predictionLabels}
+        raceResults={{ first: 'ham', second: '', third: '', pole: '' }}
+        renderSelectedRaceTrackMap={() => <div>Track map</div>}
+        resultLabels={resultLabels}
+        selectedRace={selectedRace}
+        showTooltip={true}
+        sortedDrivers={drivers}
+        weekendComparison={[]}
+      />,
+    );
+
+    expect(screen.getByRole('heading', { name: appText.headings.results })).toBeInTheDocument();
+    expect(screen.getByText(appText.history.editingLabel)).toBeInTheDocument();
+    expect(screen.getByText('Track map')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: uiText.buttons.saveEditedRace })).toBeDisabled();
+    expect(screen.getAllByRole('option', { name: 'Hamilton Lewis' }).length).toBeGreaterThan(0);
+
+    fireEvent.change(screen.getByLabelText('Risultato 1°'), { target: { value: 'ver' } });
+    fireEvent.click(screen.getByRole('button', { name: uiText.buttons.cancelEdit }));
+
+    const tooltipWrapper = screen.getByText('Completa i risultati').closest('.tooltip-wrapper');
+    expect(tooltipWrapper).not.toBeNull();
+    expect(tooltipWrapper!.className).toContain('disabled-wrapper');
+    expect(tooltipWrapper!.className).toContain('show-tooltip');
+
+    fireEvent.mouseEnter(tooltipWrapper as HTMLElement);
+    fireEvent.mouseLeave(tooltipWrapper as HTMLElement);
+    fireEvent.click(tooltipWrapper as HTMLElement);
+    vi.advanceTimersByTime(3000);
+
+    expect(onUpdateRaceResult).toHaveBeenCalledWith('first', 'ver');
+    expect(onCancelEditRace).toHaveBeenCalledTimes(1);
+    expect(onShowTooltipChange).toHaveBeenCalledWith(true);
+    expect(onShowTooltipChange).toHaveBeenLastCalledWith(false);
+    expect(onCalculateAndApplyPoints).not.toHaveBeenCalled();
+  });
+
+  it('renders the empty race selection copy and enables the primary action when points can be assigned', () => {
+    const onCalculateAndApplyPoints = vi.fn();
+
+    render(
+      <RacePage
+        activeSectionId="results-section"
+        canAssignPoints={true}
+        disabledReason={null}
+        editingSession={null}
+        getWeekendLiveDriverName={() => ''}
+        isAdmin={true}
+        onCalculateAndApplyPoints={onCalculateAndApplyPoints}
+        onCancelEditRace={() => {}}
+        onShowTooltipChange={() => {}}
+        onUpdateRaceResult={() => {}}
+        predictionFieldOrder={predictionFieldOrder}
+        predictionLabels={predictionLabels}
+        raceResults={createEmptyPrediction()}
+        renderSelectedRaceTrackMap={() => null}
+        resultLabels={resultLabels}
+        selectedRace={null}
+        showTooltip={false}
+        sortedDrivers={drivers}
+        weekendComparison={[]}
+      />,
+    );
+
+    expect(screen.getByText(uiText.calendar.empty)).toBeInTheDocument();
+    expect(screen.queryByText(uiText.history.editingLabel)).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: uiText.buttons.confirmResults })).toBeEnabled();
+
+    fireEvent.click(screen.getByRole('button', { name: uiText.buttons.confirmResults }));
+
+    expect(onCalculateAndApplyPoints).toHaveBeenCalledTimes(1);
   });
 
   it('renders DashboardPage with selectedRace null covering the ?? branch and fires onChange and onClick handlers', () => {

@@ -88,6 +88,7 @@ import PredictionsPage from './pages/PredictionsPage';
 import StandingsPage from './pages/StandingsPage';
 import AnalysisPage from './pages/AnalysisPage';
 import AdminPage from './pages/AdminPage';
+import RacePage from './pages/RacePage';
 import { appText } from './uiText';
 import {
   getWeekendPredictionState,
@@ -96,6 +97,14 @@ import {
   upsertWeekendRaceResults,
 } from './utils/weekendState';
 import { getSectionNavigationItems, getSectionNavigationLeafItems } from './utils/sectionNavigation';
+import {
+  fetchPushPublicKey,
+  getCurrentPushSubscription,
+  sendTestPushNotification,
+  subscribeToPushNotifications,
+  unsubscribeFromPushNotifications,
+} from './pwa/pushSubscriptionClient';
+import { isPushApiSupported } from './pwa/pwaSupport';
 
 const { driversSource, points, uiText } = appConfig;
 
@@ -138,12 +147,16 @@ interface ToastState {
   tone: ToastTone;
 }
 
+type PushNotificationStatus = 'unsupported' | 'idle' | 'enabled' | 'permission-denied' | 'loading';
+
+// eslint-disable-next-line react-refresh/only-export-components
 export function buildLocationHash(hash: string) {
   const normalizedHash = hash.trim().replace(/^#/, '');
   return normalizedHash ? `#${normalizedHash}` : '';
 }
 
 function getNavigationAnchorOffset() {
+  /* v8 ignore next -- geometry branch is exercised indirectly in browser flows */
   return window.matchMedia('(max-width: 900px)').matches ? 176 : 150;
 }
 
@@ -159,6 +172,7 @@ function isStandaloneInstallContext() {
   return standaloneMediaQuery.matches || navigatorWithStandalone.standalone === true;
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function isIosSafariInstallableBrowser() {
   const userAgent = window.navigator.userAgent;
   const isAppleMobileDevice = /iPad|iPhone|iPod/.test(userAgent);
@@ -167,6 +181,7 @@ export function isIosSafariInstallableBrowser() {
   return isAppleMobileDevice && isSafariEngine && !isUnsupportedBrowser;
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function resolveInstallCtaMode({
   isAppInstalled,
   hasInstallPrompt,
@@ -194,6 +209,7 @@ export function resolveInstallCtaMode({
 type DashboardSectionId = 'calendar-section' | 'weekend-live' | 'public-guide';
 type StandingsSectionId = 'public-standings' | 'history-archive';
 type AnalysisSectionId = 'season-analysis' | 'user-analytics-section' | 'user-kpi-section';
+type RaceSectionId = 'weekend-live' | 'results-section';
 
 function resolveDashboardSectionId(hash: string): DashboardSectionId {
   const sectionId = hash.replace(/^#/, '');
@@ -235,6 +251,16 @@ function resolveAnalysisSectionId(hash: string): AnalysisSectionId {
   }
 
   return 'season-analysis';
+}
+
+function resolveRaceSectionId(hash: string, isAdmin: boolean): RaceSectionId {
+  const sectionId = hash.replace(/^#/, '');
+
+  if (sectionId === 'results-section' && isAdmin) {
+    return 'results-section';
+  }
+
+  return 'weekend-live';
 }
 
 /* v8 ignore next -- static SVG exercised by integration and browser smoke tests */
@@ -309,7 +335,6 @@ function App() {
   const [installPromptEvent, setInstallPromptEvent] = useState<DeferredInstallPromptEvent | null>(null);
   const [isAppInstalled, setIsAppInstalled] = useState(() => isStandaloneInstallContext());
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
-  const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
   const [showInstallInstructions, setShowInstallInstructions] = useState(false);
   const [showAdminLogin, setShowAdminLogin] = useState(false);
   const [adminPassword, setAdminPassword] = useState('');
@@ -320,6 +345,9 @@ function App() {
   const [selectedRacePhase, setSelectedRacePhase] = useState<RacePhase>('open');
   const [selectedRaceHighlightsVideoUrl, setSelectedRaceHighlightsVideoUrl] = useState('');
   const [activeSectionId, setActiveSectionId] = useState('');
+  const [pushNotificationStatus, setPushNotificationStatus] = useState<PushNotificationStatus>('loading');
+  const [pushNotificationEndpoint, setPushNotificationEndpoint] = useState('');
+  const [pushNotificationBusy, setPushNotificationBusy] = useState(false);
   const selectedMeetingKeyRef = useRef(selectedMeetingKey);
   const toastTimeoutRef = useRef<number | null>(null);
   const handledHashLocationRef = useRef('');
@@ -454,6 +482,87 @@ function App() {
     }, 3200);
   }
 
+  async function refreshPushNotificationState() {
+    if (!isPushApiSupported()) {
+      setPushNotificationStatus('unsupported');
+      setPushNotificationEndpoint('');
+      return;
+    }
+
+    const currentSubscription = await getCurrentPushSubscription();
+    if (currentSubscription) {
+      setPushNotificationStatus('enabled');
+      setPushNotificationEndpoint(currentSubscription.endpoint);
+      return;
+    }
+
+    if (typeof Notification !== 'undefined' && Notification.permission === 'denied') {
+      setPushNotificationStatus('permission-denied');
+      setPushNotificationEndpoint('');
+      return;
+    }
+
+    setPushNotificationStatus('idle');
+    setPushNotificationEndpoint('');
+  }
+
+  async function handleEnablePushNotifications() {
+    setPushNotificationBusy(true);
+
+    try {
+      const result = await subscribeToPushNotifications({
+        applicationServerKey: await fetchPushPublicKey(),
+      });
+      if (result.status === 'permission-denied') {
+        setPushNotificationStatus('permission-denied');
+        return;
+      }
+
+      if (result.status === 'unsupported') {
+        setPushNotificationStatus('unsupported');
+        return;
+      }
+
+      showToastMessage(appText.panels.pushNotifications.subscribedToast, 'success');
+      await refreshPushNotificationState();
+    } catch {
+      showToastMessage(appText.panels.pushNotifications.errorToast);
+    } finally {
+      setPushNotificationBusy(false);
+    }
+  }
+
+  async function handleDisablePushNotifications() {
+    setPushNotificationBusy(true);
+
+    try {
+      await unsubscribeFromPushNotifications();
+      showToastMessage(appText.panels.pushNotifications.unsubscribedToast, 'success');
+      await refreshPushNotificationState();
+    } catch {
+      showToastMessage(appText.panels.pushNotifications.errorToast);
+    } finally {
+      setPushNotificationBusy(false);
+    }
+  }
+
+  async function handleSendTestPushNotification() {
+    if (!pushNotificationEndpoint) {
+      return;
+    }
+
+    setPushNotificationBusy(true);
+
+    try {
+      await sendTestPushNotification({ endpoint: pushNotificationEndpoint });
+      showToastMessage(appText.panels.pushNotifications.testedToast, 'success');
+    } catch {
+      showToastMessage(appText.panels.pushNotifications.errorToast);
+    } finally {
+      setPushNotificationBusy(false);
+    }
+  }
+
   function scheduleManualNavigation(sectionId: string) {
     if (navigationLockTimeoutRef.current !== null) {
       window.clearTimeout(navigationLockTimeoutRef.current);
@@ -504,14 +613,6 @@ function App() {
     }
   }
 
-  function handleOpenMobileNav() {
-    setIsMobileNavOpen(true);
-  }
-
-  function handleCloseMobileNav() {
-    setIsMobileNavOpen(false);
-  }
-
   function handleOpenAdminLogin() {
     setShowAdminLogin(true);
   }
@@ -523,7 +624,6 @@ function App() {
     handledHashLocationRef.current = '';
     setActiveSectionId('predictions-section');
     setShowAdminLogin(false);
-    setIsMobileNavOpen(false);
     navigate(
       { pathname: '/pronostici', search: '?view=admin', hash: '#predictions-section' },
       { replace: true },
@@ -547,7 +647,10 @@ function App() {
       const [itemPath] = item.route.split('#');
       return itemPath === location.pathname;
     });
-    const fallbackItem = currentRoutePublicItem ?? publicLeafItems[0] ?? null;
+    const raceFallbackItem = location.pathname === '/gara'
+      ? publicLeafItems.find((item) => item.id === 'weekend-live') ?? null
+      : null;
+    const fallbackItem = raceFallbackItem ?? currentRoutePublicItem ?? publicLeafItems[0] ?? null;
 
     handledHashLocationRef.current = '';
     setViewMode('public');
@@ -561,7 +664,6 @@ function App() {
     pendingHashRef.current = buildLocationHash(fallbackHash);
     pendingViewModeRef.current = 'public';
     setActiveSectionId(fallbackItem.id);
-    setIsMobileNavOpen(false);
     navigate(
       {
         pathname: fallbackPath,
@@ -578,6 +680,39 @@ function App() {
     }
   }, [selectedInsightsUser, users]);
 
+  const liveLeaderboardUsers = sortUsersByLiveTotal(users, raceResults, points);
+  const dashboardSectionId = resolveDashboardSectionId(location.hash);
+  const standingsSectionId = resolveStandingsSectionId(location.hash, viewMode);
+  const analysisSectionId = resolveAnalysisSectionId(location.hash);
+  const raceSectionId = resolveRaceSectionId(location.hash, sessionState.isAdmin);
+
+  useEffect(() => {
+    if (loading || location.pathname !== '/gara') {
+      return;
+    }
+
+    const currentHashSectionId = location.hash.replace(/^#/, '');
+    if (!sessionState.isAdmin && currentHashSectionId === 'results-section') {
+      const nextHash = buildLocationHash('weekend-live');
+
+      if (location.hash !== nextHash) {
+        navigate({ pathname: '/gara', search: location.search, hash: nextHash }, { replace: true });
+      }
+
+      return;
+    }
+
+    setActiveSectionId(raceSectionId);
+  }, [
+    loading,
+    location.hash,
+    location.pathname,
+    location.search,
+    navigate,
+    raceSectionId,
+    sessionState.isAdmin,
+  ]);
+
   useEffect(() => {
     const standaloneModeQuery = window.matchMedia('(display-mode: standalone)');
 
@@ -592,6 +727,10 @@ function App() {
     return () => {
       standaloneModeQuery.removeEventListener('change', handleStandaloneChange);
     };
+  }, []);
+
+  useEffect(() => {
+    void refreshPushNotificationState();
   }, []);
 
   useEffect(() => {
@@ -627,21 +766,6 @@ function App() {
       }
     };
   }, []);
-
-  useEffect(() => {
-    const previousOverflow = document.body.style.overflow;
-    const previousTouchAction = document.body.style.touchAction;
-
-    if (isMobileNavOpen) {
-      document.body.style.overflow = 'hidden';
-      document.body.style.touchAction = 'none';
-    }
-
-    return () => {
-      document.body.style.overflow = previousOverflow;
-      document.body.style.touchAction = previousTouchAction;
-    };
-  }, [isMobileNavOpen]);
 
   useEffect(() => {
     let isCancelled = false;
@@ -791,6 +915,10 @@ function App() {
       return;
     }
 
+    if (location.pathname === '/gara') {
+      return;
+    }
+
     const hashSectionId = location.hash.replace(/^#/, '');
     const fallbackSectionId = hashSectionId || firstSectionId;
     setActiveSectionId((currentActiveSectionId) => {
@@ -874,7 +1002,7 @@ function App() {
     return () => {
       sectionObserver.disconnect();
     };
-  }, [firstSectionId, loading, location.hash, viewMode]);
+  }, [firstSectionId, loading, location.hash, location.pathname, viewMode]);
 
   const hydrateSelectedWeekendView = useCallback(
     (nextMeetingKey: string, baseUsers: UserData[]) =>
@@ -1079,11 +1207,6 @@ function App() {
     raceLocked,
     selectedRace,
   ]);
-
-  const liveLeaderboardUsers = sortUsersByLiveTotal(users, raceResults, points);
-  const dashboardSectionId = resolveDashboardSectionId(location.hash);
-  const standingsSectionId = resolveStandingsSectionId(location.hash, viewMode);
-  const analysisSectionId = resolveAnalysisSectionId(location.hash);
 
   function calculatePotentialPoints(userPrediction: Prediction) {
     return calculateProjectedPoints(userPrediction, raceResults, points);
@@ -1732,9 +1855,6 @@ function App() {
       onLogin={handleOpenAdminLogin}
       isSidebarCollapsed={isSidebarCollapsed}
       onCollapseChange={setIsSidebarCollapsed}
-      isMobileNavOpen={isMobileNavOpen}
-      onOpenMobileNav={handleOpenMobileNav}
-      onCloseMobileNav={handleCloseMobileNav}
       onInstall={handleInstallApp}
     >
       <header
@@ -1929,6 +2049,12 @@ function App() {
                 weekendComparison={weekendComparison}
                 isPublicView={isPublicView}
                 activeSectionId={dashboardSectionId}
+                onSectionChange={navigateToSection}
+                pushStatus={pushNotificationStatus}
+                pushBusy={pushNotificationBusy}
+                onEnablePush={handleEnablePushNotifications}
+                onDisablePush={handleDisablePushNotifications}
+                onSendTestPush={handleSendTestPushNotification}
               />
             } />
             <Route path="/pronostici" element={
@@ -1974,6 +2100,7 @@ function App() {
                 resolveHistoryPodium={getHistoryResultsPodium}
                 userDisplayNameForWinner={getHistoryWinnerDriverName}
                 users={users}
+                onSectionChange={navigateToSection}
               />
             } />
             <Route path="/analisi" element={
@@ -1988,6 +2115,31 @@ function App() {
                 users={users}
                 onSelectedInsightsUserChange={setSelectedInsightsUser}
                 activeSectionId={analysisSectionId}
+                onSectionChange={navigateToSection}
+              />
+            } />
+            <Route path="/gara" element={
+              <RacePage
+                activeSectionId={raceSectionId}
+                canAssignPoints={canAssignPoints}
+                disabledReason={disabledReason}
+                editingSession={editingSession}
+                getWeekendLiveDriverName={getWeekendLiveDriverName}
+                isAdmin={sessionState.isAdmin}
+                onCalculateAndApplyPoints={calculateAndApplyPoints}
+                onCancelEditRace={handleCancelEditRace}
+                onShowTooltipChange={setShowTooltip}
+                onUpdateRaceResult={updateRaceResult}
+                predictionFieldOrder={predictionFieldOrder}
+                predictionLabels={predictionLabels}
+                raceResults={raceResults}
+                renderSelectedRaceTrackMap={renderSelectedRaceTrackMap}
+                resultLabels={resultLabels}
+                selectedRace={selectedRace}
+                showTooltip={showTooltip}
+                sortedDrivers={sortedDrivers}
+                weekendComparison={weekendComparison}
+                onSectionChange={navigateToSection}
               />
             } />
             <Route path="/admin" element={

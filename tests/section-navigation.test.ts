@@ -63,7 +63,7 @@ describe('section navigation', () => {
     expect(publicLeafEntries.map((item) => [item.id, item.route])).toEqual([
       ['calendar-section', '/dashboard#calendar-section'],
       ['predictions-section', '/pronostici#predictions-section'],
-      ['weekend-live', '/dashboard#weekend-live'],
+      ['weekend-live', '/gara#weekend-live'],
       ['season-analysis', '/analisi#season-analysis'],
       ['user-analytics-section', '/analisi#user-analytics-section'],
       ['user-kpi-section', '/analisi#user-kpi-section'],
@@ -75,8 +75,8 @@ describe('section navigation', () => {
     expect(adminLeafEntries.map((item) => [item.id, item.route])).toEqual([
       ['calendar-section', '/dashboard#calendar-section'],
       ['predictions-section', '/pronostici#predictions-section'],
-      ['results-section', '/admin#results-section'],
-      ['weekend-live', '/dashboard#weekend-live'],
+      ['results-section', '/gara#results-section'],
+      ['weekend-live', '/gara#weekend-live'],
       ['season-analysis', '/analisi#season-analysis'],
       ['user-analytics-section', '/analisi#user-analytics-section'],
       ['user-kpi-section', '/analisi#user-kpi-section'],
@@ -84,12 +84,14 @@ describe('section navigation', () => {
     ]);
   });
 
-  it('keeps pronostici as the admin landing target', () => {
+  it('keeps the race surface mapped to the gara route', () => {
     const adminLeafEntries = getSectionNavigationLeafItems('admin');
     const predictionsEntry = adminLeafEntries.find((item) => item.id === 'predictions-section');
     const resultsEntry = adminLeafEntries.find((item) => item.id === 'results-section');
+    const weekendLiveEntry = adminLeafEntries.find((item) => item.id === 'weekend-live');
 
     expect(predictionsEntry?.route).toBe('/pronostici#predictions-section');
-    expect(resultsEntry?.route).toBe('/admin#results-section');
+    expect(resultsEntry?.route).toBe('/gara#results-section');
+    expect(weekendLiveEntry?.route).toBe('/gara#weekend-live');
   });
 });

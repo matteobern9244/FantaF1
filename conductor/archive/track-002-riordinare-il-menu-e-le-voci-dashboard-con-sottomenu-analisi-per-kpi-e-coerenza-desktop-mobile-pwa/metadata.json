@@ -2,14 +2,14 @@
   "id": "track-002",
   "slug": "riordinare-il-menu-e-le-voci-dashboard-con-sottomenu-analisi-per-kpi-e-coerenza-desktop-mobile-pwa",
   "title": "Riordinare il menu e le voci dashboard con sottomenu Analisi per KPI e coerenza desktop/mobile/PWA",
-  "status": "completed",
-  "phase": "completed",
+  "status": "archived",
+  "phase": "archived",
   "createdAt": "2026-03-20T20:37:11Z",
-  "updatedAt": "2026-03-20T22:07:00Z",
-  "archivedAt": null,
-  "path": "conductor/tracks/track-002-riordinare-il-menu-e-le-voci-dashboard-con-sottomenu-analisi-per-kpi-e-coerenza-desktop-mobile-pwa",
+  "updatedAt": "2026-03-22T09:51:02Z",
+  "archivedAt": "2026-03-22T09:51:02Z",
+  "path": "conductor/archive/track-002-riordinare-il-menu-e-le-voci-dashboard-con-sottomenu-analisi-per-kpi-e-coerenza-desktop-mobile-pwa",
   "relatedTrackIds": [],
-  "activeTask": "Track completed with full validation and 80% coverage.",
+  "activeTask": "Archived",
   "branch": "change-menu-options-dashboard",
   "constraints": [
     "Apply all AGENTS.md instructions",
@@ -18,5 +18,6 @@
     "Do not commit",
     "Do not push",
     "Validate desktop, mobile browser, and PWA behavior"
-  ]
+  ],
+  "directory": "track-002-riordinare-il-menu-e-le-voci-dashboard-con-sottomenu-analisi-per-kpi-e-coerenza-desktop-mobile-pwa"
 }

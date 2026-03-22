@@ -32,11 +32,25 @@
 
 ## Decision
 
-- Pending implementation and verification
+- Approved for archive after final document alignment
 
 ## Findings
 
-- None yet
+- UTC-sensitive highlights decisions were hardened around injected clock usage
+  and race completion timing.
+- Persistence now preserves previously found `highlightsVideoUrl` values during
+  later `missing` lookups and official calendar reconciliation.
+- Matching now prioritizes trusted Sky Sport Formula 1 sources before broader
+  fallback discovery, with responsive and production-like validations recorded
+  in `verify.md`.
+
+## Residual Risks
+
+- The approved scope closed without extracting every planned refactor seam into
+  smaller collaborators because behavior, validation, and coverage targets were
+  already satisfied.
+- Future changes in external publisher structures or official calendar fields
+  still require targeted verification in the highlights pipeline.
 
 ## Constraints
 
@@ -45,3 +59,5 @@
 - Apply all `AGENTS.md` programming principles
 - Use strict `RED -> GREEN -> REFACTOR`
 - Do not accept completion below 80% coverage
+
+- Decision: Administrative archive decision recorded to close the track.

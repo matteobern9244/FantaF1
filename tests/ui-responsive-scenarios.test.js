@@ -83,6 +83,43 @@ describe('responsive UI scenarios', () => {
     expect(results[5]).toEqual(expect.objectContaining({ key: 'sprint-tooltip' }));
   }, 40000);
 
+  it('waits for the app shell after switching view modes before validating public and admin return scenarios', async () => {
+    const cli = {
+      getPageInfo: vi.fn(async () => ({
+        loadingShell: false,
+        selectors: {
+          heroPanel: true,
+          heroSummaryGrid: true,
+          appFooter: true,
+          sectionNav: true,
+          calendarPanel: true,
+        },
+      })),
+      captureScreenshot: vi.fn(async () => null),
+    };
+    const shared = {
+      cli,
+      inspectState: vi.fn()
+        .mockResolvedValueOnce({ routePath: '/dashboard', mainSections: { hero: true, summary: true, calendar: true, footer: true } })
+        .mockResolvedValueOnce({ routePath: '/dashboard', mainSections: { hero: true, summary: true, calendar: true, footer: true } }),
+      validateState: vi.fn().mockReturnValue([]),
+      switchViewMode: vi.fn(async () => {}),
+      scrollAwayFromHeader: vi.fn(),
+      switchWeekend: vi.fn(),
+      selectSprintWeekend: vi.fn(),
+      openTooltipIfPresent: vi.fn(async () => false),
+      canSwitchWeekend: vi.fn().mockReturnValue(false),
+      canSelectSprintWeekend: vi.fn().mockReturnValue(false),
+    };
+
+    const scenarios = buildResponsiveScenarios({ initialState: { selectedWeekend: { cardText: 'A', bannerTitle: 'A' } } });
+
+    await scenarios[1].run(shared);
+    await scenarios[2].run(shared);
+
+    expect(cli.getPageInfo).toHaveBeenCalledTimes(2);
+  });
+
   it('fails the weekend-switch scenario when the dashboard calendar has no alternative weekends', async () => {
     const shared = {
       cli: {
