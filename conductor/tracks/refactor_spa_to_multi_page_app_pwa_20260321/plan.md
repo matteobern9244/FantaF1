@@ -13,8 +13,8 @@ durante audit, implementazione e certificazione._
 - [x] Service worker/manifest/PWA runtime riallineati
 - [x] Subscription push frontend/backend implementata
 - [x] Test delivery push reale implementato
-- [x] Responsive runner `npm run test:ui-responsive` reso deterministico e
-      senza skip
+- [x] Responsive runner `npm run test:ui-responsive` reso deterministico e senza
+      skip
 - [x] Riallineamento `PROJECT.md`, `README.md`, `CHANGELOG.md` e artefatti
       Conductor
 - [x] Coverage `100%` frontend/repository
@@ -33,7 +33,8 @@ durante audit, implementazione e certificazione._
 
 - [x] **RED:** test routing/layout/page shells
 - [x] **GREEN:** routing client-side reale e `RacePage`
-- [x] **REFACTOR:** route-aware shell, hash normalization e coerenza admin/public
+- [x] **REFACTOR:** route-aware shell, hash normalization e coerenza
+      admin/public
 
 ### Fase 2. Navigazione mobile finale
 
@@ -44,7 +45,8 @@ durante audit, implementazione e certificazione._
 
 ### Fase 3. PWA e push
 
-- [x] **RED:** test PWA runtime, subscription e controller/service/repository push
+- [x] **RED:** test PWA runtime, subscription e controller/service/repository
+      push
 - [x] **GREEN:** service worker, manifest, bootstrap runtime
 - [x] **GREEN:** backend push subscription + test delivery reale
 - [x] **GREEN:** pannello dashboard per opt-in, opt-out e invio test

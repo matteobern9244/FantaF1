@@ -34,8 +34,7 @@ seguite durante tutta l'esecuzione di questa fase.
   Subphase 11 non definisce un inventario `remove/migrate/keep`, se i workflow
   futuri non riflettono lo stack reale C# o se il legacy removal avviene
   prematuramente. Includere check documentali. Definire il lavoro necessario per
-  preservare 80% statements, functions, branches e lines per lo scope
-  ufficiale.
+  preservare 80% statements, functions, branches e lines per lo scope ufficiale.
 - **GREEN**: Introdurre i workflow branch-specific futuri C# (es. build, Docker,
   test, coverage) e verificare che siano verdi. Solo quando il runtime C#
   same-origin è verificato, i launcher migrati e la certificazione utente
@@ -88,11 +87,11 @@ Saranno eseguiti i seguenti comandi per validare l'implementazione:
 
 ## Coverage 80% totale
 
-- È obbligatorio mantenere e verificare il **80% totale** di coverage su tutti
-  i file del repository e dell'applicazione (scope finale Node/React/C#
-  rilevante al momento del cutover).
-- Qualora la coverage scenda sotto il 80% alla fine dell'implementazione di
-  ogni step, si procederà ad aggiungere/aggiornare i test necessari fino a
+- È obbligatorio mantenere e verificare il **80% totale** di coverage su tutti i
+  file del repository e dell'applicazione (scope finale Node/React/C# rilevante
+  al momento del cutover).
+- Qualora la coverage scenda sotto il 80% alla fine dell'implementazione di ogni
+  step, si procederà ad aggiungere/aggiornare i test necessari fino a
   ripristinare il 80% di statement, branch, function e line coverage.
 
 ## Implementation Steps

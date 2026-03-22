@@ -169,8 +169,8 @@ Il lock e' server-side:
 - track map coerente tra hero, recap e pannello risultati
 - CTA highlights coerente per ogni weekend selezionato; se il video non e'
   disponibile la label disabilitata e' `HIGHLIGHTS NON PRESENTI`
-- pannello notifiche push reale sulla dashboard con opt-in, opt-out e invio
-  test verso il backend C#
+- pannello notifiche push reale sulla dashboard con opt-in, opt-out e invio test
+  verso il backend C#
 
 ## Architettura
 
@@ -435,10 +435,10 @@ Secret opzionali:
 La pipeline normalizza la URI CI e usa `MONGODB_DB_NAME_OVERRIDE=fantaf1_ci` per
 impedire mutazioni dei database condivisi.
 
-Il job `responsive-dev` del workflow PR esegue inoltre `npx playwright install
---with-deps chromium` dopo `npm ci`, cosi' il runner Linux GitHub abbia sempre
-un browser Playwright coerente con `npm run test:ui-responsive` senza
-dipendere da cache o immagini residue.
+Il job `responsive-dev` del workflow PR esegue inoltre
+`npx playwright install --with-deps chromium` dopo `npm ci`, cosi' il runner
+Linux GitHub abbia sempre un browser Playwright coerente con
+`npm run test:ui-responsive` senza dipendere da cache o immagini residue.
 
 Il gate responsive in CI usa lo stesso runner Playwright in-process usato in
 locale e non dipende piu' da wrapper `playwright-cli`, socket residue o cleanup
@@ -487,8 +487,8 @@ responsive, che continua a essere un controllo esplicito e isolato.
   via URL i parametri `meeting`, `view`, `historyUser` e `historySearch`
 - gli ingressi legacy su `/` con query string vengono normalizzati a
   `/dashboard` senza perdere lo stato richiesto nell'URL
-- in mobile la shell mostra una bottom tab bar fissa per dashboard,
-  pronostici, gara, area classifiche/storico e analisi; la voce standings usa
+- in mobile la shell mostra una bottom tab bar fissa per dashboard, pronostici,
+  gara, area classifiche/storico e analisi; la voce standings usa
   `Classifiche reali` in public e `Storico gare` in admin
 - il path mobile runtime non usa piu' il vecchio overlay fullscreen: le azioni
   install/admin-public/logout vivono nella utility bar dedicata sopra la bottom
@@ -509,9 +509,9 @@ responsive, che continua a essere un controllo esplicito e isolato.
   `weekend-switch` e `sprint-tooltip` come scenari obbligatori: se i
   prerequisiti non convergono il check fallisce con diagnostica, non viene
   saltato
-- il pannello notifiche push usa il service worker della PWA, recupera la
-  public key dal backend C#, salva la subscription su MongoDB e puo' inviare un
-  test reale tramite `POST /api/push-notifications/test-delivery`
+- il pannello notifiche push usa il service worker della PWA, recupera la public
+  key dal backend C#, salva la subscription su MongoDB e puo' inviare un test
+  reale tramite `POST /api/push-notifications/test-delivery`
 
 ### Tool locale di pulizia Chrome
 
@@ -545,8 +545,8 @@ Dettagli pratici di `npm run test:ui-responsive`:
 
 - verifica la shell in modalita' admin/public sui breakpoint mobile, tablet e
   desktop
-- puo' riusare uno stack locale gia' attivo oppure bootstrapparne uno
-  temporaneo quando necessario
+- puo' riusare uno stack locale gia' attivo oppure bootstrapparne uno temporaneo
+  quando necessario
 - fallisce esplicitamente se una route, una vista o uno scenario obbligatorio
   non converge
 - produce screenshot, page state, log console e failure summary in

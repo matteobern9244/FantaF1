@@ -1,6 +1,7 @@
 # Conductor Index
 
-This file is the prompt-first navigation index for the Conductor workspace in this repository.
+This file is the prompt-first navigation index for the Conductor workspace in
+this repository.
 
 ## Active Tracks
 
@@ -186,7 +187,8 @@ This file is the prompt-first navigation index for the Conductor workspace in th
 - Status: `archived`
 - Phase: `archived`
 - Active task: Archived
-- Path: `conductor/archive/persistent_race_highlights_backfill_utc_hardening_20260320`
+- Path:
+  `conductor/archive/persistent_race_highlights_backfill_utc_hardening_20260320`
 
 ## porting_csharp_phase_10_20260314 - Docker Render Staging and Atlas Operationalization (Phase 10) for C# Backend Port
 
@@ -234,7 +236,8 @@ This file is the prompt-first navigation index for the Conductor workspace in th
 
 - Status: `completed`
 - Phase: `completed`
-- Active task: Implementation, coverage, responsive verification, and production-like preview checks completed without commit or push.
+- Active task: Implementation, coverage, responsive verification, and
+  production-like preview checks completed without commit or push.
 - Path: `conductor/archive/stabilize_highlights_persistence_20260318`
 
 ## streamline_core_docs_20260318 - Streamline core documentation (GEMINI.md & AGENTS.md)
@@ -256,14 +259,16 @@ This file is the prompt-first navigation index for the Conductor workspace in th
 - Status: `archived`
 - Phase: `archived`
 - Active task: Completed
-- Path: `conductor/archive/track-001-fix-mobile-menu-readability-and-scroll-affordance`
+- Path:
+  `conductor/archive/track-001-fix-mobile-menu-readability-and-scroll-affordance`
 
 ## track-002 - Riordinare il menu e le voci dashboard con sottomenu Analisi per KPI e coerenza desktop/mobile/PWA
 
 - Status: `archived`
 - Phase: `archived`
 - Active task: Archived
-- Path: `conductor/archive/track-002-riordinare-il-menu-e-le-voci-dashboard-con-sottomenu-analisi-per-kpi-e-coerenza-desktop-mobile-pwa`
+- Path:
+  `conductor/archive/track-002-riordinare-il-menu-e-le-voci-dashboard-con-sottomenu-analisi-per-kpi-e-coerenza-desktop-mobile-pwa`
 
 ## ui_menu_rework_20260315 - UI Menu Rework
 
@@ -323,6 +328,9 @@ This file is the prompt-first navigation index for the Conductor workspace in th
 
 ## Notes
 
-- `product.md`, `product-guidelines.md`, and `tech-stack.md` define the shared project context.
-- Each track owns its own `index.md`, `metadata.json`, `spec.md`, `plan.md`, `review.md`, and `verify.md`.
-- `tracks.md` is kept as a compact summary view for compatibility, but `index.md` is the primary workspace index.
+- `product.md`, `product-guidelines.md`, and `tech-stack.md` define the shared
+  project context.
+- Each track owns its own `index.md`, `metadata.json`, `spec.md`, `plan.md`,
+  `review.md`, and `verify.md`.
+- `tracks.md` is kept as a compact summary view for compatibility, but
+  `index.md` is the primary workspace index.

@@ -14,8 +14,7 @@
 
 - Targeted C# regression tests: green (`36/36` in `ResultsInfrastructureTests`)
 - Frontend/repository tests: green (`286/286`)
-- Frontend/repository coverage: `80%` statements, branches, functions, and
-  lines
+- Frontend/repository coverage: `80%` statements, branches, functions, and lines
 - Official backend C# coverage on `backend-csharp/src/`:
   - lines: `2944/2944` (`80%`)
   - branches: `1655/1655` (`80%`)

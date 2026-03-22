@@ -63,7 +63,7 @@ Optional helper commands already supported by the repository:
 ### Development Conventions
 
 - **Extensive and rigorous use of subagents:** For every request received from
-the user, subagents must be used strictly and extensively.
+  the user, subagents must be used strictly and extensively.
 - **Separation Of Concerns:** Keep UI, application orchestration, domain rules,
   infrastructure, and migration glue clearly separated.
 - **Abstraction Naming:** Name adapters, translators, facades, and compatibility
@@ -392,14 +392,14 @@ the repository. Where applicable this includes:
   Testing Library.
 - Coverage provider: V8 (Frontend), coverlet (Backend).
 - The official minimum threshold for the configured application-code scope is
-  **100% statements**, **100% functions**, **100% branches**, and **100% lines**,
-  aligned with the thresholds currently documented in `README.md`.
+  **100% statements**, **100% functions**, **100% branches**, and **100%
+  lines**, aligned with the thresholds currently documented in `README.md`.
 - The official minimum threshold for `backend-csharp/src/` is **100% line
   coverage**, **100% branch coverage**, and **100% method coverage** across the
   included application files reported by `npm run test:csharp-coverage`.
-- Verified baseline currently documented for `backend-csharp/src/`:
-  **3527 / 3527 lines**, **1909 / 1909 branches**, **606 / 606 methods** across
-  **86 included files**.
+- Verified baseline currently documented for `backend-csharp/src/`: **3527 /
+  3527 lines**, **1909 / 1909 branches**, **606 / 606 methods** across **86
+  included files**.
 - Whenever a task produces a new verified merged Release coverage result, update
   this baseline in `AGENTS.md` to the new numbers.
 - If a task produces a new verified merged coverage result for the tracked

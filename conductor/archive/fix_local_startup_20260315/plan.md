@@ -54,8 +54,8 @@ Ensure the entire application meets the 80% coverage threshold.
       coverage on `backend-csharp/src/`.
 - [x] Task: Achieve 80% total coverage across all files in the repository and
       application.
-- [x] Task: Conductor - User Manual Verification 'Coverage 80% totale'
-      (Protocol in workflow.md).
+- [x] Task: Conductor - User Manual Verification 'Coverage 80% totale' (Protocol
+      in workflow.md).
 
 ## Phase 4: Validation & UI Consistency
 

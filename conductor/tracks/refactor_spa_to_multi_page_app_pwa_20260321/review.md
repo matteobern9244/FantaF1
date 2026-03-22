@@ -4,10 +4,12 @@
 
 - Audit del range `ced498c..HEAD` e deduplicazione dei commit `wip`
 - Stabilizzazione del refactor SPA -> shell multi-route client-side
-- Introduzione della route `/gara` e riallineamento della navigazione route-aware
+- Introduzione della route `/gara` e riallineamento della navigazione
+  route-aware
 - Rimozione del fullscreen overlay mobile dal runtime attivo
 - Chiusura PWA runtime + push subscription/test-delivery reale sul backend C#
-- Riallineamento di `PROJECT.md`, `README.md`, `CHANGELOG.md` e artefatti Conductor
+- Riallineamento di `PROJECT.md`, `README.md`, `CHANGELOG.md` e artefatti
+  Conductor
 
 ## Review Focus
 

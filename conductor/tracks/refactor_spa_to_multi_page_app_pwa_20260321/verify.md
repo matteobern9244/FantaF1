@@ -31,8 +31,8 @@
   - Result: `100%` statements, functions, branches, lines
 - `npm run test:csharp-coverage`
   - Status: passed
-  - Result: `3527 / 3527` lines, `1909 / 1909` branches, `606 / 606` methods
-    su `86` file inclusi sotto `backend-csharp/src/`
+  - Result: `3527 / 3527` lines, `1909 / 1909` branches, `606 / 606` methods su
+    `86` file inclusi sotto `backend-csharp/src/`
 - `npm run test:ui-responsive`
   - Status: passed
   - Result: esecuzione completa dei breakpoint mobile, iphone-16-pro-max,

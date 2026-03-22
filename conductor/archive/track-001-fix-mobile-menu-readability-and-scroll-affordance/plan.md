@@ -113,8 +113,8 @@ corrente durante l'uso del menu mobile. La vista desktop va preservata.
   scope frontend/repository.
 - Verificare e mantenere `80%` line, branch e method coverage sullo scope
   ufficiale `backend-csharp/src/`.
-- Se la track fa scendere anche un solo valore sotto il `80%`, aggiungere test
-  e fix fino al ripristino completo.
+- Se la track fa scendere anche un solo valore sotto il `80%`, aggiungere test e
+  fix fino al ripristino completo.
 
 ## Comandi Di Validazione Previsti
 

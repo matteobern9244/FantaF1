@@ -12,26 +12,25 @@ Cronologia sintetica delle release documentate del progetto Fanta Formula 1.
   database via `mongodump`/`mongorestore`. Aggiornata matrice ambiente, test e
   documentazione.
 
-- **Fix Loop Infinito Dropdown Filtro Utente in Storico Gare**: corretto il
-  loop infinito di re-render che si attivava selezionando un valore dal
-  dropdown filtro utente (o digitando nel campo ricerca) nella pagina
-  `/classifiche`. La causa era il pattern `isInternalNavRef` (flag booleano
-  impostato troppo tardi nell'effect body) che causava un ping-pong
-  bidirezionale tra il blocco URL→State e il blocco State→URL dell'effect
-  unificato di sincronizzazione in `App.tsx`. Il fix sostituisce
-  `isInternalNavRef` con due **prev-value refs** (`prevHistoryUserFilterRef`,
-  `prevHistorySearchRef`) che rilevano se l'effect e' stato triggerato da un
-  cambio di stato utente (skip URL→State) vs da un cambio URL
-  back/forward (sync URL→State corretto). Aggiunto test di guardia sul
-  componente `HistoryArchivePanel` per il dispatch singolo dell'evento
+- **Fix Loop Infinito Dropdown Filtro Utente in Storico Gare**: corretto il loop
+  infinito di re-render che si attivava selezionando un valore dal dropdown
+  filtro utente (o digitando nel campo ricerca) nella pagina `/classifiche`. La
+  causa era il pattern `isInternalNavRef` (flag booleano impostato troppo tardi
+  nell'effect body) che causava un ping-pong bidirezionale tra il blocco
+  URL→State e il blocco State→URL dell'effect unificato di sincronizzazione in
+  `App.tsx`. Il fix sostituisce `isInternalNavRef` con due **prev-value refs**
+  (`prevHistoryUserFilterRef`, `prevHistorySearchRef`) che rilevano se l'effect
+  e' stato triggerato da un cambio di stato utente (skip URL→State) vs da un
+  cambio URL back/forward (sync URL→State corretto). Aggiunto test di guardia
+  sul componente `HistoryArchivePanel` per il dispatch singolo dell'evento
   `onChange` al parent.
 
 - **Track Multi-Route/PWA/Push Riallineato al Runtime Reale del Branch**: il
   branch documenta ora in modo coerente la shell React multi-route con rotte
   `/dashboard`, `/pronostici`, `/gara`, `/classifiche`, `/analisi` e `/admin`,
-  la rimozione del vecchio overlay mobile dal path runtime attivo, la bottom
-  tab bar con utility bar mobile dedicata e il controllo responsive/browser
-  coerente con queste superfici reali.
+  la rimozione del vecchio overlay mobile dal path runtime attivo, la bottom tab
+  bar con utility bar mobile dedicata e il controllo responsive/browser coerente
+  con queste superfici reali.
 - **Web Push End-to-End Minimo Chiuso su Backend C# e Frontend**: il frontend
   usa ora il pannello notifiche della dashboard per opt-in, opt-out e invio
   test; il backend espone `GET /api/push-notifications/config` e
@@ -43,7 +42,8 @@ Cronologia sintetica delle release documentate del progetto Fanta Formula 1.
   `tests/push-notifications-panel.test.tsx`,
   `backend-csharp/tests/FantaF1.Tests.Unit/PushNotificationServiceTests.cs`,
   `backend-csharp/tests/FantaF1.Tests.Integration/PushSubscriptionsControllerTests.cs`
-  e `backend-csharp/tests/FantaF1.Tests.Integration/PushSubscriptionsEndpointTests.cs`
+  e
+  `backend-csharp/tests/FantaF1.Tests.Integration/PushSubscriptionsEndpointTests.cs`
   per bloccare regressioni sul contratto push reale del branch.
 - **Responsive Runner In-Process Consolidato e Gate CI Hardened**:
   `npm run test:ui-responsive` usa ora solo il runner Playwright in-process del
@@ -60,25 +60,23 @@ Cronologia sintetica delle release documentate del progetto Fanta Formula 1.
   per `weekend-switch` e `sprint-tooltip`.
 - **README e Gate Documentali Riallineati al Contratto Runtime Corrente**:
   [README.md](/Users/matteobernardini/code/FantaF1/README.md) documenta ora in
-  modo esplicito il runner responsive in-process, il bootstrap/riuso dello
-  stack locale, la diagnostica in `output/playwright/ui-responsive/`, il fatto
-  che il launcher monitorato non includa il browser check nel proprio preflight
-  e l'uso corretto dei secret Render
-  `RENDER_STAGING_HEALTHCHECK_URL` e `RENDER_HEALTHCHECK_URL`. Il gate backend
+  modo esplicito il runner responsive in-process, il bootstrap/riuso dello stack
+  locale, la diagnostica in `output/playwright/ui-responsive/`, il fatto che il
+  launcher monitorato non includa il browser check nel proprio preflight e l'uso
+  corretto dei secret Render `RENDER_STAGING_HEALTHCHECK_URL` e
+  `RENDER_HEALTHCHECK_URL`. Il gate backend
   [PortingDocumentationConsistencyTests.cs](/Users/matteobernardini/code/FantaF1/backend-csharp/tests/FantaF1.Tests.Unit/PortingDocumentationConsistencyTests.cs)
-  e' stato aggiornato per bloccare regressioni documentali sul secret
-  storico di produzione e mantenere coerenti workflow, README e validazioni.
+  e' stato aggiornato per bloccare regressioni documentali sul secret storico di
+  produzione e mantenere coerenti workflow, README e validazioni.
 - **Validazioni Rieseguite con Coverage Totale Confermata**: rieseguiti con
-  esito verde `npx vitest run tests/ui-responsive-*.test.js
-  tests/cicd-workflow-contract.test.js tests/startup-script-parity.test.js
-  tests/dev-launcher-lifecycle.test.js tests/readme-vite-env-docs.test.js`,
+  esito verde
+  `npx vitest run tests/ui-responsive-*.test.js tests/cicd-workflow-contract.test.js tests/startup-script-parity.test.js tests/dev-launcher-lifecycle.test.js tests/readme-vite-env-docs.test.js`,
   `npx playwright install --dry-run chromium`, `npm run lint`,
   `npm run test:ui-responsive`, `npm run test`, `npm run test:coverage`,
-  `npm run build` e `npm run test:csharp-coverage`; l'ultimo snapshot
-  verificato resta a `100%` su statements, branches, functions e lines per lo
-  scope frontend/repository e a `3527 / 3527` linee, `1909 / 1909` branch,
-  `606 / 606` metodi su `86` file inclusi nello scope ufficiale
-  `backend-csharp/src/`.
+  `npm run build` e `npm run test:csharp-coverage`; l'ultimo snapshot verificato
+  resta a `100%` su statements, branches, functions e lines per lo scope
+  frontend/repository e a `3527 / 3527` linee, `1909 / 1909` branch, `606 / 606`
+  metodi su `86` file inclusi nello scope ufficiale `backend-csharp/src/`.
 
 - **Stabilizzazione Suite Test Admin e Routing MPA**: aggiunti timeout espliciti
   ai test `ui-mockup-roadmap` (mobile-nav, navigation, shell) per eliminare
@@ -89,18 +87,19 @@ Cronologia sintetica delle release documentate del progetto Fanta Formula 1.
   stato `aria-current` sui pulsanti di navigazione; aggiunto test per il flusso
   public→admin che controlla l'assenza di flickering e la corretta attivazione
   del tab pronostici. Aggiornato `.gitignore` per escludere `.claude/*`.
-- **Branch Coverage al 100% e Soglie Aggiornate**: raggiunti il 100% su statements,
-  branches, functions e lines nella suite frontend Vitest. Aggiunti test mirati per
-  coprire i branch residui in `resolveInstallCtaMode`, `buildLocationHash`,
-  `isIosSafariInstallableBrowser`, `isBottomTabBarItemActive`, `AppLayout`
-  (isSidebarCollapsed), `AnalysisPage` (SeasonAnalysisPanel, bestWeekend/worstWeekend
-  null), `AdminPage` (canAssignPoints=true). Le soglie globali in `vite.config.ts`,
-  `AGENTS.md`, `README.md` e `GEMINI.md` sono state aggiornate da 80% a 100%.
-- **Launcher Locali e Test di Parita' Rafforzati**: `start_fantaf1.command`
-  usa ora `MONGODB_URI` via ambiente nel preflight MongoDB, mentre
-  `start_fantaf1.bat` preserva correttamente URI contenenti `=`; i test
-  launcher sono stati riallineati per verificare questa parita' senza
-  includere `test:ui-responsive` nel flusso monitorato del launcher.
+- **Branch Coverage al 100% e Soglie Aggiornate**: raggiunti il 100% su
+  statements, branches, functions e lines nella suite frontend Vitest. Aggiunti
+  test mirati per coprire i branch residui in `resolveInstallCtaMode`,
+  `buildLocationHash`, `isIosSafariInstallableBrowser`,
+  `isBottomTabBarItemActive`, `AppLayout` (isSidebarCollapsed), `AnalysisPage`
+  (SeasonAnalysisPanel, bestWeekend/worstWeekend null), `AdminPage`
+  (canAssignPoints=true). Le soglie globali in `vite.config.ts`, `AGENTS.md`,
+  `README.md` e `GEMINI.md` sono state aggiornate da 80% a 100%.
+- **Launcher Locali e Test di Parita' Rafforzati**: `start_fantaf1.command` usa
+  ora `MONGODB_URI` via ambiente nel preflight MongoDB, mentre
+  `start_fantaf1.bat` preserva correttamente URI contenenti `=`; i test launcher
+  sono stati riallineati per verificare questa parita' senza includere
+  `test:ui-responsive` nel flusso monitorato del launcher.
 - **Workspace Conductor Riallineato sui Percorsi Archiviati**: corretti i
   riferimenti residui a track archiviate in `conductor/index.md`,
   `conductor/tracks.md` e nei metadata/piani archiviati, mantenendo il workspace
@@ -110,8 +109,8 @@ Cronologia sintetica delle release documentate del progetto Fanta Formula 1.
   `tests/app-routing.test.tsx` e `tests/ui-mockup-roadmap.test.tsx` sono stati
   riallineati per ridurre bleed tra suite, fragilita' sui branch public/admin e
   instabilita' della navigation shell mobile/route-aware.
-- **Routing Multi-Page Stabilizzato Senza Perdita di Stato URL**: la shell
-  React usa ora rotte client-side dedicate (`/dashboard`, `/pronostici`,
+- **Routing Multi-Page Stabilizzato Senza Perdita di Stato URL**: la shell React
+  usa ora rotte client-side dedicate (`/dashboard`, `/pronostici`,
   `/classifiche`, `/analisi`, `/admin`), normalizza gli ingressi legacy su `/`
   verso `/dashboard` e mantiene coerenti query params e navigazione a sezione
   anche quando route e hash cambiano insieme.
@@ -121,9 +120,9 @@ Cronologia sintetica delle release documentate del progetto Fanta Formula 1.
   sottosezioni analytics, utility bar dedicata e senza reintrodurre il vecchio
   overlay fullscreen.
 - **Hardening TDD di Routing, Detector Responsive e Test Navigation**: aggiunti
-  regression test per redirect root-with-query, submit admin via `Enter`,
-  scroll cross-route verso sezioni hashate e detector responsive della vista
-  admin `/pronostici`; rimossi inoltre il componente morto
+  regression test per redirect root-with-query, submit admin via `Enter`, scroll
+  cross-route verso sezioni hashate e detector responsive della vista admin
+  `/pronostici`; rimossi inoltre il componente morto
   `src/components/AdminLogin.tsx` e la dipendenza obsoleta
   `@types/react-router-dom`.
 - **Deploya Final Branch Reconciliation**: il protocollo `deploya` documenta ora
@@ -252,9 +251,9 @@ Cronologia sintetica delle release documentate del progetto Fanta Formula 1.
 - **TDD Regressivo sui Launcher Locali**: aggiunti test di parita' per garantire
   che i launcher macOS e Windows eseguano la stessa sequenza di validazione e
   utilizzino le stesse variabili d'ambiente core.
-- **Ripristino Certificazione Coverage 80% Full-Stack**: completata la
-  copertura dei nuovi repository MongoDB e dei mapping protetti nel backend C#
-  tramite unit test mirati; riallineate le baseline documentali in `AGENTS.md` e
+- **Ripristino Certificazione Coverage 80% Full-Stack**: completata la copertura
+  dei nuovi repository MongoDB e dei mapping protetti nel backend C# tramite
+  unit test mirati; riallineate le baseline documentali in `AGENTS.md` e
   `README.md` ai valori reali verificati (5489 lines repository-wide, 3088 lines
   backend-only).
 - **Hardening Workspace Conductor**: completata l'archiviazione massiva di tutti
@@ -639,9 +638,9 @@ Cronologia sintetica delle release documentate del progetto Fanta Formula 1.
   viste responsive.
 - **Audit Anti-Regressione del Porting C# (Fase 1-9)**: completata la track
   Conductor dedicata alla verifica delle fasi di migrazione esistenti;
-  confermata la parità API (Contract tests 80%), la corretta sincronizzazione
-  in background (Fase 8) e la parametrizzazione sicura degli strumenti di
-  verifica (Fase 9).
+  confermata la parità API (Contract tests 80%), la corretta sincronizzazione in
+  background (Fase 8) e la parametrizzazione sicura degli strumenti di verifica
+  (Fase 9).
 - **Risoluzione Impedimenti Ambientali C# per la Certificazione**: validata la
   build e i test unitari C# in ambiente .NET 8.0 tramite downgrade temporaneo e
   patch di compatibilità per il resolver database, garantendo la stabilità del
@@ -668,8 +667,8 @@ Cronologia sintetica delle release documentate del progetto Fanta Formula 1.
   `UI_RESPONSIVE_TARGET=node-dev npm run test:ui-responsive`,
   `UI_RESPONSIVE_TARGET=csharp-dev npm run test:ui-responsive` e
   `UI_RESPONSIVE_TARGET=csharp-staging-local npm run test:ui-responsive`,
-  mantenendo invariata la baseline ufficiale di coverage al `80%` per
-  Node/React e backend C#.
+  mantenendo invariata la baseline ufficiale di coverage al `80%` per Node/React
+  e backend C#.
 - **Subphase 8 Formalmente Chiusa**: il ledger canonico marca ora `Subphase 8`
   come `completed`; il backend ASP.NET Core integra bootstrap host, seed admin
   Mongo-backed, sync non bloccante per drivers/calendar/standings, fallback a
@@ -692,13 +691,13 @@ Cronologia sintetica delle release documentate del progetto Fanta Formula 1.
   helper di test esplicitano ora le invarianti di non-null senza suppression
   globali, senza modifiche ai contratti pubblici o al runtime produttivo.
 - **Coverage C# Ufficiale Preservata al 80% Dopo il Cleanup Nullable**: i fix
-  sui test mantengono `npm run test:csharp-coverage` al `80%` su linee, branch
-  e metodi per tutti i `64` file inclusi sotto `backend-csharp/src`, con parity
-  e comportamento applicativo invariati.
-- **Subphase 7 Formalmente Blindata con Coverage C# Ufficiale al 80%**: la
-  slice `GET /api/results/:meetingKey` resta `completed` nel ledger canonico e
-  ora chiude anche il report ufficiale `npm run test:csharp-coverage` al `80%`
-  su linee, branch e metodi per tutti i `64` file inclusi sotto
+  sui test mantengono `npm run test:csharp-coverage` al `80%` su linee, branch e
+  metodi per tutti i `64` file inclusi sotto `backend-csharp/src`, con parity e
+  comportamento applicativo invariati.
+- **Subphase 7 Formalmente Blindata con Coverage C# Ufficiale al 80%**: la slice
+  `GET /api/results/:meetingKey` resta `completed` nel ledger canonico e ora
+  chiude anche il report ufficiale `npm run test:csharp-coverage` al `80%` su
+  linee, branch e metodi per tutti i `64` file inclusi sotto
   `backend-csharp/src/`, senza modifiche al comportamento pubblico della route
   risultati.
 - **TDD Mirato sul Resolver Highlights C# della Results Route**:
@@ -920,8 +919,8 @@ Cronologia sintetica delle release documentate del progetto Fanta Formula 1.
   source of truth per specifiche di prodotto, linee guida, tech stack e workflow
   operativo.
 - **Certificazione Workflow**: completata la validazione dell'integrità del
-  repository con copertura test al 80%, launcher canonico verificato e
-  controlli responsive passanti.
+  repository con copertura test al 80%, launcher canonico verificato e controlli
+  responsive passanti.
 - **Audit Anti-Regressione Porting C#**: certificata l'integrità del porting C#
   fino alla Fase 9, confermando parità API, sincronizzazione background e
   parametri di sicurezza degli strumenti di verifica.
@@ -998,9 +997,9 @@ Cronologia sintetica delle release documentate del progetto Fanta Formula 1.
   nomi/team e test dedicati su parsing, cache fallback ed endpoint API.
 - **Coverage Repository Riallineata al Nuovo Perimetro**: dopo l'introduzione
   delle standings reali e del restyling UI, la coverage V8 ufficiale verificata
-  del repository e' stata riportata e mantenuta al `80%` con baseline
-  aggiornata a `5167 / 5167` statements, `407 / 407` functions, `2093 / 2093`
-  branches e `5167 / 5167` lines.
+  del repository e' stata riportata e mantenuta al `80%` con baseline aggiornata
+  a `5167 / 5167` statements, `407 / 407` functions, `2093 / 2093` branches e
+  `5167 / 5167` lines.
 - **Validazione Completa della Release Applicata**: eseguiti con esito verde
   `npm run test`, `npm run lint`, `npm run build`, `npm run test:ui-responsive`
   e `npm run test:coverage` sullo stato finale della repository.

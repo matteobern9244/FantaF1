@@ -3,7 +3,8 @@
 - Status: `archived`
 - Phase: `archived`
 - Active task: Archived
-- Path: `conductor/archive/persistent_race_highlights_backfill_utc_hardening_20260320`
+- Path:
+  `conductor/archive/persistent_race_highlights_backfill_utc_hardening_20260320`
 
 ## Files
 

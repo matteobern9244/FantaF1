@@ -224,8 +224,8 @@ A task is complete only if:
 - no UI regression is introduced
 - no API contract mismatch is introduced
 - all relevant tests pass
-- browser and responsive checks pass for the affected admin/public flows in
-  both development and production-like conditions when relevant
+- browser and responsive checks pass for the affected admin/public flows in both
+  development and production-like conditions when relevant
 - coverage for the official application-code scope remains at 100% for lines,
   branches, functions, and statements
 - production-sensitive logic remains safe

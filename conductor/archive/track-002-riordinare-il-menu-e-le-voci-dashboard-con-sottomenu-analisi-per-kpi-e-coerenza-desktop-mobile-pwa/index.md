@@ -3,7 +3,8 @@
 - Status: `archived`
 - Phase: `archived`
 - Active task: Archived
-- Path: `conductor/archive/track-002-riordinare-il-menu-e-le-voci-dashboard-con-sottomenu-analisi-per-kpi-e-coerenza-desktop-mobile-pwa`
+- Path:
+  `conductor/archive/track-002-riordinare-il-menu-e-le-voci-dashboard-con-sottomenu-analisi-per-kpi-e-coerenza-desktop-mobile-pwa`
 
 ## Files
 

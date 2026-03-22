@@ -10,8 +10,9 @@ integrando gli standard di `AGENTS.md` e `PROJECT.md`.
 - **Strict TDD:** Ogni modifica comportamentale deve seguire il ciclo **RED ->
   GREEN -> REFACTOR**.
 - **100% Coverage:** La copertura dei test deve essere mantenuta al 100%
-  (Statements, Functions, Branches, Lines) per tutto lo scope frontend/repository
-  e al 100% su line/branch/method coverage per `backend-csharp/src/`.
+  (Statements, Functions, Branches, Lines) per tutto lo scope
+  frontend/repository e al 100% su line/branch/method coverage per
+  `backend-csharp/src/`.
 - **Production-Safe:** Ogni cambiamento deve essere deterministico, testato e
   sicuro per i dati di produzione.
 - **Compliance AGENTS.md:** Tutti i task devono includere e rispettare

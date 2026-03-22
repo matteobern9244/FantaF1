@@ -106,8 +106,8 @@
        esistenti per quanto richiesto dallo scope approvato.
 5. [x] Garantire che il codice resti DI-friendly e senza hidden collaborator
        graphs nel risultato finale validato.
-6. [x] Mantenere chiari confini tra domain, application, infrastructure e UI
-       nel risultato finale validato.
+6. [x] Mantenere chiari confini tra domain, application, infrastructure e UI nel
+       risultato finale validato.
 
 ## Phase 5: Validation and Regression Checks
 

@@ -62,8 +62,8 @@ mobile devices (screens ≤ 768px).
    - Command: `./start_fantaf1.command`
 4. [ ] **Full Validation Suite:** Run all project validations.
    - Commands: `npm run lint`, `npm run test`, `npm run build`
-5. [ ] **Coverage 80% totale:** Verify that code coverage remains at 80% for
-       the entire application.
+5. [ ] **Coverage 80% totale:** Verify that code coverage remains at 80% for the
+       entire application.
    - Command: `npm run test -- --coverage`
 
 ### Phase 4: Finalization
