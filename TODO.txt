@@ -3,3 +3,5 @@ Per ogni folder-files crea dei sottopiani di eliminazione e dovrai procedere SOL
 Nel file claude.md che devi usare c'è riferimento al file agents.md che devi usare.
 
 - npm run test:csharp-coverage segnala warning NU1903 su Newtonsoft.Json 10.0.3 in backend-csharp/src/FantaF1.Api/FantaF1.Api.csproj e backend-csharp/src/FantaF1.Infrastructure/FantaF1.Infrastructure.csproj: crea un piano per risolvere questo warning senza creare regressioni, usa il file CLAUDE.md RIGOROSAMENTE.
+
+la variabile Bootstrap:DisableSync la devo impostare anche su render o no ?? o serve solo in locale ? 

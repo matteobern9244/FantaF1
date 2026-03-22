@@ -12,6 +12,10 @@ This file is the compact summary view of Conductor tracks in this repository.
 
 ## Archived Tracks
 
+- `investigate_local_db_connection_20260322` | Investigate and fix local
+  backend database connection issues | `completed` | phase `completed` | Fixed
+  local database connection and added sync protection |
+  `conductor/archive/investigate_local_db_connection_20260322`
 - `achieve_100_coverage_20260314` | Certificazione Copertura Test 80% (Frontend,
   Node, C#) | `archived` | phase `archived` | Archived |
   `conductor/archive/achieve_100_coverage_20260314`

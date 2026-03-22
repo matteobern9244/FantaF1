@@ -333,6 +333,10 @@ ai database live per il cutover. Eventuali future migrazioni dovranno essere:
   - path del build frontend servito same-origin
 - `VITE_APP_LOCAL_NAME`
   - override visuale del titolo hero, letto a build-time dal frontend
+- `Bootstrap:DisableSync`
+  - Se impostata a `true`, disabilita la sincronizzazione automatica di piloti e
+    calendario all'avvio. Utile per preservare dati importati manualmente o da
+    produzione senza che vengano sovrascritti.
 
 `VITE_APP_LOCAL_NAME` viene letta dal frontend Vite a build-time. Su
 Docker/Render non e' una variabile runtime del backend C#: deve entrare nello

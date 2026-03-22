@@ -4,6 +4,14 @@ Cronologia sintetica delle release documentate del progetto Fanta Formula 1.
 
 ## [Unreleased]
 
+- **Launcher Transparency**: The local launcher now explicitly logs the target
+  MongoDB URI (masked) at startup for better visibility.
+- **Data Protection**: Added 'Bootstrap:DisableSync' configuration option to
+  skip automatic driver and calendar synchronization, allowing developers to use
+  imported production data without it being overwritten.
+- **Backend Hardening**: Background sync service now respects the
+  'Bootstrap:DisableSync' flag and is covered by unit tests.
+
 - **Riorganizzazione Database MongoDB Atlas**: consolidati i database Atlas da 5
   a 4. Rimossi `fantaf1_local_dev` e `fantaf1_local_staging` (legacy). Creato
   `fantaf1_dev` come database di sviluppo locale. Il default Development ora
