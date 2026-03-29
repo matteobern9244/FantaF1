@@ -66,7 +66,7 @@ public sealed class HealthEndpointTests
         var exception = Assert.Throws<InvalidOperationException>(() => factory.CreateClient());
 
         Assert.Equal(
-            "Unsupported ASP.NET Core environment \"Staging\". Expected Development or Production.",
+            "Unsupported ASP.NET Core environment \"Staging\". Expected Development, Production or ProductionLike.",
             exception.Message);
     }
 

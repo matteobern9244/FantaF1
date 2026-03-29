@@ -49,6 +49,8 @@ public sealed class ConfigurationRuntimeEnvironmentProfileResolver : IRuntimeEnv
                 => RuntimeEnvironmentProfileContract.DevelopmentEnvironmentPayload,
             var value when string.Equals(value, RuntimeEnvironmentProfileContract.ProductionEnvironmentName, StringComparison.OrdinalIgnoreCase)
                 => RuntimeEnvironmentProfileContract.ProductionEnvironmentPayload,
+            var value when string.Equals(value, RuntimeEnvironmentProfileContract.ProductionLikeEnvironmentName, StringComparison.OrdinalIgnoreCase)
+                => RuntimeEnvironmentProfileContract.ProductionLikeEnvironmentPayload,
             _ => throw new InvalidOperationException(
                 RuntimeEnvironmentProfileText.UnsupportedEnvironment(environmentName)),
         };
@@ -74,13 +76,21 @@ public sealed class ConfigurationRuntimeEnvironmentProfileResolver : IRuntimeEnv
             return RuntimeEnvironmentProfileContract.DevelopmentDatabaseName;
         }
 
+        if (string.Equals(environment, RuntimeEnvironmentProfileContract.ProductionLikeEnvironmentPayload, StringComparison.Ordinal))
+        {
+            return RuntimeEnvironmentProfileContract.ProductionLikeDatabaseName;
+        }
+
         return RuntimeEnvironmentProfileContract.ProductionDatabaseName;
     }
 
     private static void ValidateAllowedDatabaseTarget(string environment, string databaseTarget)
     {
-        var isAllowed = string.Equals(environment, RuntimeEnvironmentProfileContract.DevelopmentEnvironmentPayload, StringComparison.Ordinal)
-            ? IsAllowedDevelopmentDatabaseTarget(databaseTarget)
+        var isAllowed =
+            string.Equals(environment, RuntimeEnvironmentProfileContract.DevelopmentEnvironmentPayload, StringComparison.Ordinal)
+                ? IsAllowedDevelopmentDatabaseTarget(databaseTarget)
+            : string.Equals(environment, RuntimeEnvironmentProfileContract.ProductionLikeEnvironmentPayload, StringComparison.Ordinal)
+                ? IsAllowedProductionLikeDatabaseTarget(databaseTarget)
             : string.Equals(databaseTarget, RuntimeEnvironmentProfileContract.ProductionDatabaseName, StringComparison.Ordinal);
 
         if (!isAllowed)
@@ -100,6 +110,11 @@ public sealed class ConfigurationRuntimeEnvironmentProfileResolver : IRuntimeEnv
     {
         return string.Equals(databaseTarget, RuntimeEnvironmentProfileContract.DevelopmentDatabaseName, StringComparison.Ordinal)
             || string.Equals(databaseTarget, RuntimeEnvironmentProfileContract.ContinuousIntegrationDatabaseName, StringComparison.Ordinal);
+    }
+
+    private static bool IsAllowedProductionLikeDatabaseTarget(string databaseTarget)
+    {
+        return string.Equals(databaseTarget, RuntimeEnvironmentProfileContract.ProductionLikeDatabaseName, StringComparison.Ordinal);
     }
 
     private static string? ExtractMongoDatabaseName(string? mongoUri)

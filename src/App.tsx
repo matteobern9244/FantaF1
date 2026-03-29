@@ -1697,6 +1697,7 @@ function App() {
         }),
         'success',
       );
+      pendingMeetingKeyRef.current = nextMeetingKey;
       setUsers(nextUsers);
       setHistory(nextHistory);
       setSelectedMeetingKey(nextMeetingKey);

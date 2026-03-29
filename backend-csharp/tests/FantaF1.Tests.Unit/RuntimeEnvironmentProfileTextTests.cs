@@ -35,7 +35,7 @@ public sealed class RuntimeEnvironmentProfileTextTests
         var message = RuntimeEnvironmentProfileText.UnsupportedEnvironment(environmentName);
 
         Assert.Equal(
-            $"Unsupported ASP.NET Core environment \"{expectedLabel}\". Expected Development or Production.",
+            $"Unsupported ASP.NET Core environment \"{expectedLabel}\". Expected Development, Production or ProductionLike.",
             message);
     }
 }

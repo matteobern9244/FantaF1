@@ -131,6 +131,7 @@ public sealed class AdminSessionServiceTests
     [Theory]
     [InlineData("development", false)]
     [InlineData("production", true)]
+    [InlineData("production-like", true)]
     public async Task Login_async_builds_a_wire_compatible_cookie_for_each_environment(string environment, bool expectsSecureFlag)
     {
         var clock = new StubClock(new DateTimeOffset(2026, 03, 12, 09, 30, 00, TimeSpan.Zero));
@@ -167,6 +168,7 @@ public sealed class AdminSessionServiceTests
     [Theory]
     [InlineData("development", false, "admin")]
     [InlineData("production", true, "public")]
+    [InlineData("production-like", true, "public")]
     public void Logout_builds_the_clear_cookie_with_the_expected_environment_flags(
         string environment,
         bool expectsSecureFlag,

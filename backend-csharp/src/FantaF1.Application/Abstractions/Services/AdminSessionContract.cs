@@ -11,13 +11,15 @@ public static class AdminSessionContract
     public const string InvalidPasswordCode = "admin_auth_invalid";
     public const string InvalidPasswordError = "Invalid password";
     public const string ProductionEnvironment = "production";
+    public const string ProductionLikeEnvironment = "production-like";
     public const string ProductionLikeDefaultViewMode = "public";
     public const string SessionSecretEnvironmentVariableName = "ADMIN_SESSION_SECRET";
     public static readonly TimeSpan SessionTtl = TimeSpan.FromDays(7);
 
     public static bool IsProductionLikeEnvironment(string environment)
     {
-        return string.Equals(environment, ProductionEnvironment, StringComparison.Ordinal);
+        return string.Equals(environment, ProductionEnvironment, StringComparison.Ordinal)
+            || string.Equals(environment, ProductionLikeEnvironment, StringComparison.Ordinal);
     }
 
     public static string ResolveDefaultViewMode(string environment)
