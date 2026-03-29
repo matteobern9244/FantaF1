@@ -2,7 +2,7 @@
 
 Cronologia sintetica delle release documentate del progetto Fanta Formula 1.
 
-## [Unreleased]
+## [1.7.2] - 2026-03-29
 
 - **NuGet Hardening per `WebPush`**: aggiunto un override esplicito a
   `Newtonsoft.Json 13.0.4` nello scope `FantaF1.Infrastructure` per eliminare

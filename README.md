@@ -11,7 +11,7 @@ Atlas.
 - Il runtime locale, Docker, produzione Render e CI/CD sono allineati al
   backend C#.
 - Il branch `develop` e' il branch candidato di integrazione corrente.
-- La release candidata corrente del branch `develop` e' `1.7.1`.
+- La release candidata corrente del branch `develop` e' `1.7.2`.
 - `main` resta il target di rilascio protetto e va aggiornato solo dopo cutover
   esplicito.
 - Il flusso admin di `Risultati del weekend` salva ora in modo stabile anche
