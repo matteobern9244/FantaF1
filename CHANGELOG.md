@@ -2,6 +2,28 @@
 
 Cronologia sintetica delle release documentate del progetto Fanta Formula 1.
 
+## [1.7.3] - 2026-03-29
+
+- **Fix Definitivo Conferma Risultati Admin su `/gara`**: il flusso admin di
+  conferma risultati non resta piu' bloccato durante l'avanzamento al weekend
+  successivo. Il frontend marca ora in modo deterministico la transizione di
+  `meetingKey` prima del sync route/state, eliminando freeze e stalli UI
+  osservati in particolare sulla terza gara e riprodotti in browser reale.
+- **Alpha Test Locale Production-Like Sicuro**: introdotto il profilo backend
+  `ProductionLike`, esposto come `production-like` su `GET /api/health` e
+  vincolato al database isolato `fantaf1_dev`, per riprodurre in locale le
+  condizioni di produzione senza permettere runner mutanti verso `fantaf1`.
+- **TDD UI e Routing sul Save Admin**: il test
+  `tests/ui-admin-race-save.test.tsx` copre ora l'avanzamento corretto della
+  route admin dopo il save risultati, inclusi `meeting`, `view=admin`,
+  `#results-section` e fetch coerenti tra weekend corrente e successivo.
+- **Coverage Totale Ripristinata al 100%**: rimossa una branch irraggiungibile
+  in `src/utils/weekendState.ts`, cosi' `npm run test:coverage` torna a
+  `100%` su statements, branches, functions e lines nello scope
+  frontend/repository. Confermata anche la baseline backend C# ufficiale a
+  `3538 / 3538` lines, `1925 / 1925` branches e `607 / 607` methods su `86`
+  file inclusi.
+
 ## [1.7.2] - 2026-03-29
 
 - **NuGet Hardening per `WebPush`**: aggiunto un override esplicito a

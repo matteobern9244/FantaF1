@@ -59,7 +59,7 @@ function normalizeWeekendStateByMeetingKey(
 
   return Object.entries(weekendStateByMeetingKey).reduce<WeekendStateByMeetingKey>(
     (normalizedState, [meetingKey, weekendState]) => {
-      const normalizedMeetingKey = typeof meetingKey === 'string' ? meetingKey.trim() : '';
+      const normalizedMeetingKey = meetingKey.trim();
       if (!normalizedMeetingKey) {
         return normalizedState;
       }
@@ -114,12 +114,12 @@ function upsertWeekendRaceResults(
   const currentWeekendState = getWeekendPredictionState(weekendStateByMeetingKey, meetingKey);
 
   return {
-      ...normalizeWeekendStateByMeetingKey(weekendStateByMeetingKey),
-      [meetingKey]: {
-        userPredictions: currentWeekendState.userPredictions,
-        raceResults: clonePrediction(raceResults),
-      },
-    };
+    ...normalizeWeekendStateByMeetingKey(weekendStateByMeetingKey),
+    [meetingKey]: {
+      userPredictions: currentWeekendState.userPredictions,
+      raceResults: clonePrediction(raceResults),
+    },
+  };
 }
 
 function getWeekendPredictionState(

@@ -94,7 +94,7 @@ public sealed class HealthEnvironmentParityTests
         var exception = Assert.Throws<InvalidOperationException>(() => resolver.ResolveCurrentProfile());
 
         Assert.Equal(
-            "Unsupported ASP.NET Core environment \"Staging\". Expected Development or Production.",
+            "Unsupported ASP.NET Core environment \"Staging\". Expected Development, Production or ProductionLike.",
             exception.Message);
     }
 
@@ -107,6 +107,17 @@ public sealed class HealthEnvironmentParityTests
 
         Assert.Equal("production", profile.Environment);
         Assert.Equal("fantaf1", profile.DatabaseTarget);
+    }
+
+    [Fact]
+    public void Resolver_maps_production_like_to_the_isolated_production_like_database()
+    {
+        var resolver = CreateResolver("ProductionLike");
+
+        var profile = resolver.ResolveCurrentProfile();
+
+        Assert.Equal("production-like", profile.Environment);
+        Assert.Equal("fantaf1_dev", profile.DatabaseTarget);
     }
 
     [Fact]
@@ -185,7 +196,7 @@ public sealed class HealthEnvironmentParityTests
         var exception = Assert.Throws<InvalidOperationException>(() => resolver.ResolveCurrentProfile());
 
         Assert.Equal(
-            "Unsupported ASP.NET Core environment \"QualityAssurance\". Expected Development or Production.",
+            "Unsupported ASP.NET Core environment \"QualityAssurance\". Expected Development, Production or ProductionLike.",
             exception.Message);
     }
 
@@ -197,7 +208,7 @@ public sealed class HealthEnvironmentParityTests
         var exception = Assert.Throws<InvalidOperationException>(() => resolver.ResolveCurrentProfile());
 
         Assert.Equal(
-            "Unsupported ASP.NET Core environment \"unknown\". Expected Development or Production.",
+            "Unsupported ASP.NET Core environment \"unknown\". Expected Development, Production or ProductionLike.",
             exception.Message);
     }
 

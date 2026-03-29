@@ -4,7 +4,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import React from 'react';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter, useLocation } from 'react-router-dom';
 import App from '../src/App';
 
 function createJsonResponse(body: unknown, ok = true, status = ok ? 200 : 500) {
@@ -34,6 +34,18 @@ function createDeferredResponse() {
       resolve?.(value);
     },
   };
+}
+
+function LocationProbe() {
+  const location = useLocation();
+
+  return (
+    <output data-testid="location-probe">
+      {location.pathname}
+      {location.search}
+      {location.hash}
+    </output>
+  );
 }
 
 describe('Admin race results save flow', () => {
@@ -186,6 +198,7 @@ describe('Admin race results save flow', () => {
 
     render(
       <MemoryRouter initialEntries={['/gara?view=admin&meeting=1281#results-section']}>
+        <LocationProbe />
         <App />
       </MemoryRouter>,
     );
@@ -226,6 +239,25 @@ describe('Admin race results save flow', () => {
 
     await waitFor(() => {
       expect(screen.getAllByText('Belgian Grand Prix 2026').length).toBeGreaterThan(0);
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId('location-probe')).toHaveTextContent('/gara');
+      expect(screen.getByTestId('location-probe')).toHaveTextContent('meeting=1282');
+      expect(screen.getByTestId('location-probe')).toHaveTextContent('view=admin');
+      expect(screen.getByTestId('location-probe')).toHaveTextContent('#results-section');
+    });
+
+    await waitFor(() => {
+      const results1281Calls = fetchMock.mock.calls.filter(
+        ([url]) => typeof url === 'string' && url.includes('/api/results/1281'),
+      );
+      const results1282Calls = fetchMock.mock.calls.filter(
+        ([url]) => typeof url === 'string' && url.includes('/api/results/1282'),
+      );
+
+      expect(results1281Calls).toHaveLength(1);
+      expect(results1282Calls).toHaveLength(1);
     });
   });
 

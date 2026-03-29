@@ -11,12 +11,12 @@ Atlas.
 - Il runtime locale, Docker, produzione Render e CI/CD sono allineati al
   backend C#.
 - Il branch `develop` e' il branch candidato di integrazione corrente.
-- La release candidata corrente del branch `develop` e' `1.7.2`.
+- La release candidata corrente del branch `develop` e' `1.7.3`.
 - `main` resta il target di rilascio protetto e va aggiornato solo dopo cutover
   esplicito.
 - Il flusso admin di `Risultati del weekend` salva ora in modo stabile anche
-  con risultati ufficiali gia' presenti, senza doppio submit o rimbalzi tra
-  weekend durante il `POST /api/data`.
+  con risultati ufficiali gia' presenti, senza doppio submit, freeze UI o
+  rimbalzi tra weekend durante il `POST /api/data`.
 - La documentazione operativa canonica del repository vive in questo file; la
   cronologia di rilascio vive in
   [CHANGELOG.md](/Users/matteobernardini/code/FantaF1/CHANGELOG.md).
@@ -313,7 +313,7 @@ ai database live per il cutover. Eventuali future migrazioni dovranno essere:
 ### Runtime C# opzionali
 
 - `ASPNETCORE_ENVIRONMENT`
-  - `Development`, `Production`
+  - `Development`, `Production`, `ProductionLike`
 - `PORT`
   - porta HTTP del runtime
 - `Frontend__BuildPath`
@@ -701,8 +701,8 @@ Baseline verificata piu' recente:
 
 - frontend/repository: `100%` statements, `100%` functions, `100%` branches,
   `100%` lines
-- backend `backend-csharp/src/`: `3529 / 3529` lines, `1917 / 1917` branches,
-  `606 / 606` methods su `86` file inclusi
+- backend `backend-csharp/src/`: `3538 / 3538` lines, `1925 / 1925` branches,
+  `607 / 607` methods su `86` file inclusi
 
 Verifica piu' recente rieseguita localmente:
 
@@ -715,8 +715,8 @@ Verifica piu' recente rieseguita localmente:
 
 Ultimo esito verificato:
 
-- `59` file test verdi
-- `397` test verdi
+- `58` file test verdi
+- `393` test verdi
 
 ## Struttura repository
 

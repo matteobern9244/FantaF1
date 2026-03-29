@@ -397,8 +397,8 @@ the repository. Where applicable this includes:
 - The official minimum threshold for `backend-csharp/src/` is **100% line
   coverage**, **100% branch coverage**, and **100% method coverage** across the
   included application files reported by `npm run test:csharp-coverage`.
-- Verified baseline currently documented for `backend-csharp/src/`: **3529 /
-  3529 lines**, **1917 / 1917 branches**, **606 / 606 methods** across **86
+- Verified baseline currently documented for `backend-csharp/src/`: **3538 /
+  3538 lines**, **1925 / 1925 branches**, **607 / 607 methods** across **86
   included files**.
 - Whenever a task produces a new verified merged Release coverage result, update
   this baseline in `AGENTS.md` to the new numbers.
