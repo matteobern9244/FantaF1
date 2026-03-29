@@ -26,6 +26,6 @@ file serves as your primary routing and configuration entry point.
   `package.json`, `package-lock.json`, `README.md`, and `CHANGELOG.md`
   consistently.
 - **Branch Strategy:** Never merge into `main` or `master` unless explicitly
-  requested. Use `staging` as the release candidate branch.
+  requested. Use `develop` as the release candidate branch for `main`.
 - **Language:** If the user is Italian, your final responses MUST be in Italian
   unless otherwise requested.

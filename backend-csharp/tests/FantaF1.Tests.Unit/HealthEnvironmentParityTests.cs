@@ -15,7 +15,7 @@ public sealed class HealthEnvironmentParityTests
     {
         var clock = new StubClock(new DateTimeOffset(2026, 03, 12, 09, 30, 00, TimeSpan.Zero));
         var resolver = new StubRuntimeEnvironmentProfileResolver(
-            new RuntimeEnvironmentProfile("staging", "fantaf1_staging"));
+            new RuntimeEnvironmentProfile("production", "fantaf1"));
         var service = new HealthReportService(clock, resolver);
 
         var report = service.GetCurrentReport();
@@ -23,15 +23,15 @@ public sealed class HealthEnvironmentParityTests
         Assert.Equal("ok", report.Status);
         Assert.Equal(2026, report.Year);
         Assert.Equal(1, report.DbState);
-        Assert.Equal("staging", report.Environment);
-        Assert.Equal("fantaf1_staging", report.DatabaseTarget);
+        Assert.Equal("production", report.Environment);
+        Assert.Equal("fantaf1", report.DatabaseTarget);
     }
 
     [Fact]
     public void Health_report_service_rejects_a_null_clock()
     {
         var resolver = new StubRuntimeEnvironmentProfileResolver(
-            new RuntimeEnvironmentProfile("development", "fantaf1_staging"));
+            new RuntimeEnvironmentProfile("development", "fantaf1_dev"));
 
         Assert.Throws<ArgumentNullException>(() => new HealthReportService(null!, resolver));
     }
@@ -87,27 +87,15 @@ public sealed class HealthEnvironmentParityTests
     }
 
     [Fact]
-    public void Resolver_maps_staging_to_the_staging_database_by_default()
+    public void Resolver_rejects_staging_as_an_unsupported_host_environment()
     {
         var resolver = CreateResolver("Staging");
 
-        var profile = resolver.ResolveCurrentProfile();
+        var exception = Assert.Throws<InvalidOperationException>(() => resolver.ResolveCurrentProfile());
 
-        Assert.Equal("staging", profile.Environment);
-        Assert.Equal("fantaf1_staging", profile.DatabaseTarget);
-    }
-
-    [Fact]
-    public void Resolver_allows_local_staging_smoke_to_target_the_porting_database_when_the_uri_declares_it()
-    {
-        var resolver = CreateResolver(
-            "Staging",
-            mongoUri: "mongodb+srv://user:pass@cluster.mongodb.net/fantaf1_staging?retryWrites=true&w=majority");
-
-        var profile = resolver.ResolveCurrentProfile();
-
-        Assert.Equal("staging", profile.Environment);
-        Assert.Equal("fantaf1_staging", profile.DatabaseTarget);
+        Assert.Equal(
+            "Unsupported ASP.NET Core environment \"Staging\". Expected Development or Production.",
+            exception.Message);
     }
 
     [Fact]
@@ -165,14 +153,14 @@ public sealed class HealthEnvironmentParityTests
     public void Resolver_rejects_mismatched_uri_and_override_targets()
     {
         var resolver = CreateResolver(
-            "Staging",
-            mongoUri: "mongodb+srv://user:pass@cluster.mongodb.net/fantaf1?retryWrites=true&w=majority",
-            mongoDatabaseNameOverride: "fantaf1_staging");
+            "Development",
+            mongoUri: "mongodb+srv://user:pass@cluster.mongodb.net/fantaf1_ci?retryWrites=true&w=majority",
+            mongoDatabaseNameOverride: "fantaf1_dev");
 
         var exception = Assert.Throws<InvalidOperationException>(() => resolver.ResolveCurrentProfile());
 
         Assert.Equal(
-            "MONGODB_URI targets \"fantaf1\" but the resolved database target is \"fantaf1_staging\".",
+            "MONGODB_URI targets \"fantaf1_ci\" but the resolved database target is \"fantaf1_dev\".",
             exception.Message);
     }
 
@@ -197,7 +185,7 @@ public sealed class HealthEnvironmentParityTests
         var exception = Assert.Throws<InvalidOperationException>(() => resolver.ResolveCurrentProfile());
 
         Assert.Equal(
-            "Unsupported ASP.NET Core environment \"QualityAssurance\". Expected Development, Staging, or Production.",
+            "Unsupported ASP.NET Core environment \"QualityAssurance\". Expected Development or Production.",
             exception.Message);
     }
 
@@ -209,7 +197,7 @@ public sealed class HealthEnvironmentParityTests
         var exception = Assert.Throws<InvalidOperationException>(() => resolver.ResolveCurrentProfile());
 
         Assert.Equal(
-            "Unsupported ASP.NET Core environment \"unknown\". Expected Development, Staging, or Production.",
+            "Unsupported ASP.NET Core environment \"unknown\". Expected Development or Production.",
             exception.Message);
     }
 

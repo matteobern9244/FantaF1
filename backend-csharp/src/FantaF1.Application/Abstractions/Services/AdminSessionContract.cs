@@ -13,12 +13,11 @@ public static class AdminSessionContract
     public const string ProductionEnvironment = "production";
     public const string ProductionLikeDefaultViewMode = "public";
     public const string SessionSecretEnvironmentVariableName = "ADMIN_SESSION_SECRET";
-    public const string StagingEnvironment = "staging";
     public static readonly TimeSpan SessionTtl = TimeSpan.FromDays(7);
 
     public static bool IsProductionLikeEnvironment(string environment)
     {
-        return !string.Equals(environment, DevelopmentEnvironment, StringComparison.Ordinal);
+        return string.Equals(environment, ProductionEnvironment, StringComparison.Ordinal);
     }
 
     public static string ResolveDefaultViewMode(string environment)

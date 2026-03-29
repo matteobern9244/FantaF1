@@ -365,7 +365,7 @@ describe('local save smoke runner', () => {
 
     const result = await runSaveSmoke({
       target: 'csharp-dev',
-      expectedDatabaseTarget: 'fantaf1_staging',
+      expectedDatabaseTarget: 'fantaf1',
       fetchImpl,
     });
 

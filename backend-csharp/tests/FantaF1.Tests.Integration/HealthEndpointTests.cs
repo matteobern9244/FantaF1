@@ -60,16 +60,14 @@ public sealed class HealthEndpointTests
     }
 
     [Fact]
-    public async Task Staging_health_endpoint_defaults_to_the_staging_database()
+    public async Task Unsupported_staging_health_endpoint_is_rejected()
     {
         await using var factory = CreateFactory(environmentName: "Staging");
-        using var client = factory.CreateClient();
+        var exception = Assert.Throws<InvalidOperationException>(() => factory.CreateClient());
 
-        var payload = await client.GetFromJsonAsync<Dictionary<string, object>>("/api/health");
-
-        Assert.NotNull(payload);
-        Assert.Equal("staging", payload["environment"]?.ToString());
-        Assert.Equal("fantaf1_staging", payload["databaseTarget"]?.ToString());
+        Assert.Equal(
+            "Unsupported ASP.NET Core environment \"Staging\". Expected Development or Production.",
+            exception.Message);
     }
 
     [Fact]

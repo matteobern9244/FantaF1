@@ -57,10 +57,17 @@ function normalizeWeekendStateByMeetingKey(
     return {};
   }
 
-  return Object.fromEntries(
-    Object.entries(weekendStateByMeetingKey)
-      .filter(([meetingKey]) => typeof meetingKey === 'string' && meetingKey.trim())
-      .map(([meetingKey, weekendState]) => [meetingKey, cloneWeekendPredictionState(weekendState)]),
+  return Object.entries(weekendStateByMeetingKey).reduce<WeekendStateByMeetingKey>(
+    (normalizedState, [meetingKey, weekendState]) => {
+      const normalizedMeetingKey = typeof meetingKey === 'string' ? meetingKey.trim() : '';
+      if (!normalizedMeetingKey) {
+        return normalizedState;
+      }
+
+      normalizedState[normalizedMeetingKey] = cloneWeekendPredictionState(weekendState);
+      return normalizedState;
+    },
+    {},
   );
 }
 

@@ -20,7 +20,12 @@ public sealed class RaceLockValidator
         var currentPredictions = ExtractSelectedWeekendPredictions(currentData, selectedMeetingKey);
         var newPredictions = ExtractSelectedWeekendPredictions(newData, selectedMeetingKey);
 
-        return !currentPredictions.SequenceEqual(newPredictions, SelectedWeekendPredictionComparer.Instance);
+        if (currentPredictions.SequenceEqual(newPredictions, SelectedWeekendPredictionComparer.Instance))
+        {
+            return false;
+        }
+
+        return !AreAllPredictionsEmpty(newPredictions);
     }
 
     private static string ResolveSelectedMeetingKey(
@@ -102,6 +107,15 @@ public sealed class RaceLockValidator
     private static string? FirstNonEmpty(params string?[] values)
     {
         return values.FirstOrDefault(static value => !string.IsNullOrWhiteSpace(value))?.Trim();
+    }
+
+    private static bool AreAllPredictionsEmpty(IReadOnlyList<PredictionDocument> predictions)
+    {
+        return predictions.All(static prediction =>
+            string.IsNullOrWhiteSpace(prediction.First)
+            && string.IsNullOrWhiteSpace(prediction.Second)
+            && string.IsNullOrWhiteSpace(prediction.Third)
+            && string.IsNullOrWhiteSpace(prediction.Pole));
     }
 
     private sealed class SelectedWeekendPredictionComparer : IEqualityComparer<PredictionDocument>

@@ -2,8 +2,8 @@
 name: fantaf1-deploy
 description:
   Use this skill to execute the full FantaF1 deployment protocol including the
-  final main/staging/develop realignment whenever the 'deploya' command is
-  invoked, using a coordinated sub-agent workflow.
+  develop-to-main release flow whenever the 'deploya' command is invoked, using
+  a coordinated sub-agent workflow.
 ---
 
 # Instructions: FantaF1 Deployment Protocol
@@ -16,7 +16,7 @@ FantaF1 deployment protocol. You MUST delegate each phase to the specialized
 
 - **Authoritative Source:** The protocol steps are defined verbatim in
   `AGENTS.md` (Section 10).
-- **Strict Sequence:** Follow the points from 1 to 27 in exact order. Do not
+- **Strict Sequence:** Follow the points from 1 to 23 in exact order. Do not
   skip or reorder.
 - **Sub-Agent Delegation:** Every phase MUST be executed via a specialized
   sub-agent task.
@@ -25,7 +25,7 @@ FantaF1 deployment protocol. You MUST delegate each phase to the specialized
 
 1.  Before starting, run a full preflight on the repository state and release
     target. Verify there are no unstaged files, `main` is aligned with the stack
-    intended for release, the current branch is exactly `staging`, the branch is
+    intended for release, the current branch is exactly `develop`, the branch is
     synced with its remote, required `git` and `gh` authentication are
     available, the required runtime/toolchain versions are present, the minimum
     required environment variables and deploy secrets exist, and the release
@@ -68,7 +68,7 @@ FantaF1 deployment protocol. You MUST delegate each phase to the specialized
     performed.
 11. Commit all required changes.
 12. Push the current working branch to its remote branch.
-13. Create or update a Pull Request from `staging` into `main`.
+13. Create or update a Pull Request from `develop` into `main`.
 14. Verify that the Pull Request configuration is correct before enabling merge
     automation. Confirm the title, body, labels, base branch, head branch,
     reviewers, assignees, and release metadata are accurate and complete.
@@ -91,24 +91,15 @@ FantaF1 deployment protocol. You MUST delegate each phase to the specialized
     state still matches the validated release candidate.
 19. Read the final commit SHA now pointed to by `main` after the protected Pull
     Request merge has completed successfully.
-20. Temporarily lower the protection on `staging` just enough to allow a direct
-    branch ref update, then force `staging` to that final `main` commit SHA.
-21. Force `develop` to that same final `main` commit SHA so that the release
-    cycle closes with `main == staging == develop`.
-22. Restore the original `staging` protection immediately after the forced
-    branch alignment and verify that the restored policy matches the expected
-    CI/CD gate configuration.
-23. Create a tag on `main` that matches the new version.
-24. Verify that the created tag points to the correct merged commit before
+20. Create a tag on `main` that matches the new version.
+21. Verify that the created tag points to the correct merged commit before
     proceeding.
-25. Create a GitHub Release based on that tag, coherent with the version and
+22. Create a GitHub Release based on that tag, coherent with the version and
     delivered changes.
-26. If tag creation, release creation, the temporary `staging` protection
-    downgrade, the forced branch alignment, or any post-merge release step
+23. If tag creation, release creation, or any post-merge release step
     fails, stop immediately, do not continue with later release actions, and
     report the exact rollback or cleanup actions required to restore a coherent
     release state.
-27. Return to the original branch from which the deployment workflow started.
 
 ## The Coordinated Deployment Workflow
 
@@ -135,13 +126,11 @@ FantaF1 deployment protocol. You MUST delegate each phase to the specialized
 - **Task:** Perform commit, push, PR creation, configuration verification, and
   auto-merge monitoring (Points 10-17).
 
-### Phase D: Release Publisher (Points 18-27)
+### Phase D: Release Publisher (Points 18-23)
 
 - **Sub-agent:** `generalist` (Release Publisher).
-- **Task:** verify the merged `main` SHA, perform the temporary `staging`
-  protection downgrade and final branch alignment, restore the `staging`
-  protection, create/verify Git Tag, create GitHub Release, perform cleanup, and
-  restore branch (Points 18-27).
+- **Task:** verify the merged `main` SHA, create/verify Git Tag, create GitHub
+  Release, perform cleanup, and restore branch (Points 18-23).
 
 ## Verification Commands
 

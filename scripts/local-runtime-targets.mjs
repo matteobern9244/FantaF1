@@ -9,7 +9,7 @@ const DEFAULT_PORTS = Object.freeze({
 const DEFAULT_LOCAL_DATABASES = Object.freeze({
   csharpDevelopment: 'fantaf1_dev',
 });
-const SHARED_DATABASE_TARGETS = new Set(['fantaf1', 'fantaf1_staging']);
+const SHARED_DATABASE_TARGETS = new Set(['fantaf1']);
 
 function buildUrl(port, path = '') {
   return `http://${DEFAULT_HOST}:${port}${path}`;

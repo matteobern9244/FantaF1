@@ -6,7 +6,7 @@ describe('local admin credential helper', () => {
   it('resolves the local mongo uri against the requested database target', () => {
     const mongoUri = resolveLocalMongoUri({
       env: {
-        MONGODB_URI: 'mongodb+srv://user:pass@cluster.mongodb.net/fantaf1_staging?retryWrites=true&w=majority',
+        MONGODB_URI: 'mongodb+srv://user:pass@cluster.mongodb.net/fantaf1?retryWrites=true&w=majority',
       },
       fsImpl: {
         existsSync: () => false,
@@ -31,17 +31,17 @@ describe('local admin credential helper', () => {
     expect(changed).toBe(false);
   });
 
-  it('rejects shared staging for local admin bootstrap', () => {
+  it('rejects the shared production database for local admin bootstrap', () => {
     expect(() => resolveLocalMongoUri({
       env: {
-        MONGODB_URI: 'mongodb+srv://user:pass@cluster.mongodb.net/fantaf1_staging?retryWrites=true&w=majority',
+        MONGODB_URI: 'mongodb+srv://user:pass@cluster.mongodb.net/fantaf1?retryWrites=true&w=majority',
       },
       fsImpl: {
         existsSync: () => false,
       },
-      databaseTarget: 'fantaf1_staging',
+      databaseTarget: 'fantaf1',
     })).toThrow(
-      'Il bootstrap locale delle credenziali admin non puo\' puntare al database condiviso "fantaf1_staging". Usa un database locale isolato.',
+      'Il bootstrap locale delle credenziali admin non puo\' puntare al database condiviso "fantaf1". Usa un database locale isolato.',
     );
   });
 });

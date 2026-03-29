@@ -46,7 +46,7 @@ public sealed class AdminSessionServiceTests
     public async Task Get_session_async_returns_public_defaults_in_production_like_environments_without_a_cookie()
     {
         var repository = new SpyAdminCredentialRepository();
-        var service = CreateService("staging", repository);
+        var service = CreateService("production", repository);
 
         var response = await service.GetSessionAsync(cookieHeader: "theme=dark", CancellationToken.None);
 
@@ -72,7 +72,7 @@ public sealed class AdminSessionServiceTests
     [MemberData(nameof(InvalidCookieHeaders))]
     public async Task Get_session_async_rejects_invalid_cookies(string cookieHeader)
     {
-        var service = CreateService("staging", new SpyAdminCredentialRepository());
+        var service = CreateService("production", new SpyAdminCredentialRepository());
 
         var response = await service.GetSessionAsync(cookieHeader, CancellationToken.None);
 
@@ -85,7 +85,7 @@ public sealed class AdminSessionServiceTests
     {
         var clock = new StubClock(new DateTimeOffset(2026, 03, 12, 09, 30, 00, TimeSpan.Zero));
         var issuedAt = clock.UtcNow - AdminSessionContract.SessionTtl;
-        var service = CreateService("staging", new SpyAdminCredentialRepository(), clock);
+        var service = CreateService("production", new SpyAdminCredentialRepository(), clock);
         var cookieHeader = $"{AdminSessionContract.CookieName}={Uri.EscapeDataString(CreateSignedPayload(issuedAt, role: AdminSessionContract.AdminRole))}";
 
         var response = await service.GetSessionAsync(cookieHeader, CancellationToken.None);
@@ -99,7 +99,7 @@ public sealed class AdminSessionServiceTests
     [InlineData("{\"role\":\"admin\",\"nonce\":\"0123456789abcdef\",\"issuedAt\":\"not-a-number\"}")]
     public async Task Get_session_async_treats_missing_or_non_numeric_issued_at_as_not_expired(string rawJsonPayload)
     {
-        var service = CreateService("staging", new SpyAdminCredentialRepository());
+        var service = CreateService("production", new SpyAdminCredentialRepository());
         var cookieHeader = $"{AdminSessionContract.CookieName}={Uri.EscapeDataString(CreateSignedPayload(rawJsonPayload))}";
 
         var response = await service.GetSessionAsync(cookieHeader, CancellationToken.None);
@@ -130,7 +130,7 @@ public sealed class AdminSessionServiceTests
 
     [Theory]
     [InlineData("development", false)]
-    [InlineData("staging", true)]
+    [InlineData("production", true)]
     public async Task Login_async_builds_a_wire_compatible_cookie_for_each_environment(string environment, bool expectsSecureFlag)
     {
         var clock = new StubClock(new DateTimeOffset(2026, 03, 12, 09, 30, 00, TimeSpan.Zero));
@@ -166,7 +166,7 @@ public sealed class AdminSessionServiceTests
 
     [Theory]
     [InlineData("development", false, "admin")]
-    [InlineData("staging", true, "public")]
+    [InlineData("production", true, "public")]
     public void Logout_builds_the_clear_cookie_with_the_expected_environment_flags(
         string environment,
         bool expectsSecureFlag,

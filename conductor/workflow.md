@@ -53,10 +53,8 @@ Per ogni task, l'agente deve:
   supportata.
 - **Smoke Test:** Utilizzare `npm run test:save-local` per verificare
   l'integrità della persistenza.
-- **Deploy Staging:** Il comando `deploya-staging` avvia il protocollo a 23
-  punti per il merge da `develop` a `staging`.
 - **Deploy Produzione:** Il comando `deploya` avvia il protocollo a 23 punti per
-  il merge da `staging` a `main`.
+  il merge da `develop` a `main`.
 
 ## 4. Gestione Git e Commit
 
@@ -66,33 +64,30 @@ Per ogni task, l'agente deve:
   metadati dei **Git Notes**.
 - **Messaggi di Commit:** Devono essere accurati, in inglese e focalizzati sul
   "perché" oltre che sul "cosa".
-- **Branch Protetti:** `main` e `staging` sono branch protetti. Le modifiche
+- **Branch Protetti:** `main` e' il branch protetto di release. Le modifiche
   devono passare tramite Pull Request, approvazione e superamento dei controlli
   CI.
 
-## 5. Protocollo di Deployment ("deploya" e "deploya-staging")
+## 5. Protocollo di Deployment ("deploya")
 
-Quando l'utente autorizza esplicitamente il deploy (comandi `deploya` o
-`deploya-staging`), seguire questa sequenza:
+Quando l'utente autorizza esplicitamente il deploy (`deploya`), seguire questa
+sequenza:
 
 1.  Verifica stato repository (nessun file non stageato).
 2.  Incremento versione applicativa.
 3.  Aggiornamento `README.md` e `CHANGELOG.md`.
 4.  Esecuzione completa di test, lint, build e validazione UI.
 5.  Commit e Push su branch di lavoro.
-6.  Creazione Pull Request verso il branch target (`main` o `staging`) con
+6.  Creazione Pull Request verso il branch target (`main`) con
     auto-merge abilitato.
     - La descrizione della PR deve essere idonea, specifica e coerente con il
       lavoro realmente svolto nel branch.
     - `matteobern9244` deve essere impostato come assignee della PR.
     - Le label della PR devono riflettere esclusivamente il lavoro
       effettivamente svolto, senza categorie speculative o non pertinenti.
-7.  Solo per `deploya`, dopo il merge riuscito verso `main`, leggere lo SHA
-    finale di `main`, abbassare temporaneamente la protection di `staging`,
-    riallineare `staging` e `develop` allo SHA finale di `main` e ripristinare
-    subito la protection originaria di `staging`.
-8.  Creazione Tag e GitHub Release solo dopo il merge avvenuto con successo e il
-    riallineamento finale dei branch richiesto da `deploya`.
+7.  Dopo il merge riuscito verso `main`, leggere lo SHA finale di `main` e
+    verificare che corrisponda alla release candidata validata.
+8.  Creazione Tag e GitHub Release solo dopo il merge avvenuto con successo.
 
 ## 6. Sicurezza e Privacy
 

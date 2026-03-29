@@ -8,10 +8,10 @@ Atlas.
 
 - Il backend autorevole del repository e' C# sotto
   [backend-csharp/](/Users/matteobernardini/code/FantaF1/backend-csharp).
-- Il runtime locale, Docker, staging Render e CI/CD sono allineati al backend
-  C#.
-- Il branch `staging` e' il branch di certificazione corrente.
-- La release candidata corrente del branch `staging` e' `1.6.3`.
+- Il runtime locale, Docker, produzione Render e CI/CD sono allineati al
+  backend C#.
+- Il branch `develop` e' il branch candidato di integrazione corrente.
+- La release candidata corrente del branch `develop` e' `1.7.0`.
 - `main` resta il target di rilascio protetto e va aggiornato solo dopo cutover
   esplicito.
 - La documentazione operativa canonica del repository vive in questo file; la
@@ -33,32 +33,17 @@ Atlas.
 
 ## Superfici runtime
 
-- Staging Render:
-  [fantaf1-staging.onrender.com](https://fantaf1-staging.onrender.com/)
 - Produzione live:
   [fantaf1-w69n.onrender.com](https://fantaf1-w69n.onrender.com)
 
-Lo staging deve rimanere allineato alla produzione a livello di funzionalita'.
-Differenze di branding, testo o layout sono tollerabili solo se non introducono
-divergenze funzionali.
-
 ## Governance Branch
 
-- `staging` e' il branch candidato di certificazione e il branch sorgente atteso
-  per l'ambiente Render di staging. E' un **branch protetto** con regole
-  identiche a `main`: richiede Pull Request, approvazione, superamento dei
-  controlli CI richiesti (`lint`, `build`, `responsive-dev`, `smoke-ci-db`),
-  risoluzione delle conversazioni ed esecuzione dei controlli anche per gli
-  amministratori.
+- `develop` e' il branch candidato di integrazione e la sorgente attesa delle
+  Pull Request verso `main`.
 - `main` resta il branch protetto di release e il target finale del flusso di
   deploy.
-- Il flusso di certificazione verso staging parte dal branch `develop` ed e'
-  automatizzato dal comando `deploya-staging`.
-- Il flusso di rilascio in produzione parte dal branch `staging` ed e'
+- Il flusso di rilascio in produzione parte dal branch `develop` ed e'
   automatizzato dal comando `deploya`.
-- Il rename operativo da `develop` a `staging` richiede anche il riallineamento
-  fuori repo della configurazione Render, delle branch protection e di eventuali
-  automazioni GitHub/Render che puntavano al vecchio nome branch.
 
 ## Panoramica funzionale
 
@@ -114,8 +99,8 @@ Il lock e' server-side:
   successivo transitorio o da un bootstrap calendario successivo che non riesce
   a risolverlo.
 - Il bootstrap calendario usa gating `UTC` uniforme per evitare divergenze tra
-  locale, staging e produzione nella decisione su quando una gara e' davvero
-  conclusa e candidabile al backfill highlights.
+  locale e produzione nella decisione su quando una gara e' davvero conclusa e
+  candidabile al backfill highlights.
 - Se `f1.com` riallinea slug o URL di una gara ufficiale, il backend conserva
   l'associazione degli highlights gia' persistiti quando round e date restano
   coerenti con la stessa gara.
@@ -295,9 +280,8 @@ transitorio.
 
 ## Database e migrazioni
 
-L'analisi corrente del branch mostra che `fantaf1` e `fantaf1_staging` sono
-allineati sulle collection principali, sugli indici e sulla shape dei documenti
-campionati per:
+L'analisi corrente del branch mostra che `fantaf1` resta coerente sulle
+collection principali, sugli indici e sulla shape dei documenti campionati per:
 
 - `appdatas`
 - `drivers`
@@ -311,7 +295,7 @@ ai database live per il cutover. Eventuali future migrazioni dovranno essere:
 - esplicite
 - idempotenti
 - testate solo su clone locale o database isolato
-- mai eseguite direttamente su `fantaf1` o `fantaf1_staging` durante l'audit
+- mai eseguite direttamente su `fantaf1` durante l'audit
 
 ## Variabili di ambiente
 
@@ -326,7 +310,7 @@ ai database live per il cutover. Eventuali future migrazioni dovranno essere:
 ### Runtime C# opzionali
 
 - `ASPNETCORE_ENVIRONMENT`
-  - `Development`, `Staging`, `Production`
+  - `Development`, `Production`
 - `PORT`
   - porta HTTP del runtime
 - `Frontend__BuildPath`
@@ -347,7 +331,7 @@ diventare visibile.
 
 - `MONGODB_DB_NAME_OVERRIDE`
   - usata dai runner locali e dalla CI per forzare un database isolato
-  - non va usata per puntare a `fantaf1` o `fantaf1_staging`
+  - non va usata per puntare a `fantaf1`
 
 ## Matrice ambiente esplicita
 
@@ -375,30 +359,6 @@ Contratto operativo del browser check responsive:
 - scrive diagnostica in `output/playwright/ui-responsive/` quando una
   navigazione o una validazione fallisce
 
-### Render staging
-
-Impostare esplicitamente:
-
-- `MONGODB_URI=<uri che punta a fantaf1_staging>`
-- `ADMIN_SESSION_SECRET=<secret lungo e casuale>`
-- `ASPNETCORE_ENVIRONMENT=Staging`
-- `Frontend__BuildPath=./dist`
-- `PORT=3001`
-- `VITE_APP_LOCAL_NAME=<opzionale; solo se serve un titolo hero differenziato>`
-
-Non impostare:
-
-- `MONGODB_DB_NAME_OVERRIDE`
-- `AdminCredentialSeed__PasswordSalt`
-- `AdminCredentialSeed__PasswordHashHex`
-
-Note operative:
-
-- `VITE_APP_LOCAL_NAME` agisce solo sul titolo visuale frontend buildato
-- se viene modificata su Render staging, richiede un rebuild/redeploy del
-  servizio per diventare visibile
-- non modifica `GET /api/health` o il runtime environment del backend
-
 ### Render produzione
 
 Impostare esplicitamente:
@@ -408,6 +368,7 @@ Impostare esplicitamente:
 - `ASPNETCORE_ENVIRONMENT=Production`
 - `Frontend__BuildPath=./dist`
 - `PORT=3001`
+- `VITE_APP_LOCAL_NAME=<opzionale; solo se serve un titolo hero differenziato>`
 - `VITE_APP_LOCAL_NAME=<opzionale; normalmente da lasciare vuota>`
 
 Non impostare:
@@ -433,7 +394,6 @@ Secret richiesti:
 
 Secret opzionali:
 
-- `RENDER_STAGING_HEALTHCHECK_URL`
 - `RENDER_HEALTHCHECK_URL`
 
 La pipeline normalizza la URI CI e usa `MONGODB_DB_NAME_OVERRIDE=fantaf1_ci` per
@@ -558,7 +518,7 @@ Dettagli pratici di `npm run test:ui-responsive`:
 
 ### Guardrail sui database locali
 
-I runner locali mutanti non devono mai toccare `fantaf1` o `fantaf1_staging`.
+I runner locali mutanti non devono mai toccare `fantaf1`.
 
 Target supportati:
 
@@ -567,8 +527,7 @@ Target supportati:
 Se `MONGODB_URI` contiene un database condiviso, i runner locali:
 
 - lo riscrivono sul database isolato previsto quando il target e' consentito
-- falliscono esplicitamente se qualcuno tenta di usarli verso `fantaf1` o
-  `fantaf1_staging`
+- falliscono esplicitamente se qualcuno tenta di usarli verso `fantaf1`
 
 ## Docker
 
@@ -599,13 +558,10 @@ Configurazione servizio:
 - Dockerfile path: `./Dockerfile`
 - build toolchain frontend installata via `npm install`
 
-Lo staging corrente usa `fantaf1_staging`; la produzione usa `fantaf1`.
-
 ### Runbook di switch produzione post-merge
 
 Obiettivo del cutover:
 
-- usare in produzione lo stesso modello di deploy Docker gia' attivo su staging
 - servire frontend buildato e backend C# dallo stesso servizio same-origin
 - puntare il runtime di produzione al database `fantaf1`
 - esporre `GET /api/health` con `environment=production` e
@@ -616,7 +572,7 @@ Procedura operativa:
 1. eseguire il merge del branch certificato su `main`
 2. aprire il servizio Render di produzione attuale
 3. verificare se il servizio usa ancora il runtime Node legacy
-4. riallineare il servizio produzione al modello staging:
+4. riallineare il servizio produzione al modello Docker ufficiale:
    - Environment type: `Docker`
    - Docker context: root repository
    - Dockerfile path: `./Dockerfile`
@@ -650,7 +606,7 @@ Procedura operativa:
 - `GET /api/standings`
 
 11. verificare login admin e save flow
-12. confrontare staging e produzione per confermare allineamento funzionale
+12. verificare i flussi utente e admin sul runtime di produzione
 
 Condizioni di stop:
 
@@ -671,7 +627,7 @@ Workflow principali:
 - [pr-auto-merge.yml](/Users/matteobernardini/code/FantaF1/.github/workflows/pr-auto-merge.yml)
 - [post-merge-health.yml](/Users/matteobernardini/code/FantaF1/.github/workflows/post-merge-health.yml)
 
-Job eseguiti dal workflow PR su PR verso `main` e `staging`:
+Job eseguiti dal workflow PR su PR verso `main`:
 
 - `lint`
 - `build`
@@ -692,8 +648,7 @@ Dettagli operativi del job `responsive-dev`:
 - in caso di failure stampa `backend.log` e `frontend.log`
 - arresta sempre lo stack locale nel blocco `always()`
 
-Status checks attualmente richiesti dalla branch protection remota su `main` e
-`staging`:
+Status checks attualmente richiesti dalla branch protection remota su `main`:
 
 - `lint`
 - `build`
@@ -702,31 +657,21 @@ Status checks attualmente richiesti dalla branch protection remota su `main` e
 
 Healthcheck post-merge:
 
-- `post-merge-health.yml` gira su push a `staging` e `main`
-- usa `RENDER_STAGING_HEALTHCHECK_URL` quando il merge atterra su `staging`
+- `post-merge-health.yml` gira su push a `main`
 - usa `RENDER_HEALTHCHECK_URL` quando il merge atterra su `main`
 - `RENDER_HEALTHCHECK_URL` resta il secret storico di produzione e non va
   rinominato
 - se il secret dell'ambiente relativo non e' configurato, il job salta in modo
   esplicito senza mascherare l'assenza del controllo
-- `RENDER_STAGING_HEALTHCHECK_URL` deve contenere l'endpoint health completo
-  dello staging, ad esempio `https://fantaf1-staging.onrender.com/api/health`
 
 Trigger operativi documentati:
 
-- `deploya-staging`: valido solo dal branch corrente `develop`, crea/aggiorna la
-  PR `develop -> staging`, richiede una descrizione idonea e coerente con il
-  lavoro svolto, `matteobern9244` come assignee e label aderenti alle modifiche
-  reali, e dipende dai gate `pr-ci`, `pr-auto-merge` e dal healthcheck
-  post-merge dello staging
-- `deploya`: valido solo dal branch corrente `staging`, crea/aggiorna la PR
-  `staging -> main`, richiede una descrizione idonea e coerente con il lavoro
+- `deploya`: valido solo dal branch corrente `develop`, crea/aggiorna la PR
+  `develop -> main`, richiede una descrizione idonea e coerente con il lavoro
   svolto, `matteobern9244` come assignee e label aderenti alle modifiche reali,
-  dipende dagli stessi gate verso produzione e, dopo il merge con check verdi,
-  legge lo SHA finale di `main`, abbassa temporaneamente la protection di
-  `staging`, forza `staging` e `develop` allo SHA finale di `main` e poi
-  ripristina la protection di `staging`
-- entrambi i trigger restano invalidi se il workspace non e' pulito, se il
+  dipende dai gate `pr-ci`, `pr-auto-merge` e dal healthcheck post-merge di
+  produzione
+- il trigger resta invalido se il workspace non e' pulito, se il
   branch non e' quello atteso o se i secret/controlli richiesti non sono
   disponibili
 
@@ -753,7 +698,7 @@ Baseline verificata piu' recente:
 
 - frontend/repository: `100%` statements, `100%` functions, `100%` branches,
   `100%` lines
-- backend `backend-csharp/src/`: `3527 / 3527` lines, `1909 / 1909` branches,
+- backend `backend-csharp/src/`: `3529 / 3529` lines, `1917 / 1917` branches,
   `606 / 606` methods su `86` file inclusi
 
 Verifica piu' recente rieseguita localmente:

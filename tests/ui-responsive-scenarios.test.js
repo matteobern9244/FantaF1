@@ -62,6 +62,7 @@ describe('responsive UI scenarios', () => {
     }
 
     expect(calls).toEqual([
+      'view:admin',
       'view:public',
       'view:admin',
       'sticky-navigation',

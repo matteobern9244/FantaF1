@@ -23,7 +23,7 @@ async function run() {
 
     console.log('Database trovati:', dbNames.join(', '));
 
-    const databasesToDelete = ['fantaf1_local_dev', 'fantaf1_local_staging'];
+    const databasesToDelete = ['fantaf1_local_dev'];
 
     for (const dbName of databasesToDelete) {
       if (dbNames.includes(dbName)) {
@@ -35,10 +35,10 @@ async function run() {
       }
     }
 
-    if (dbNames.includes('fantaf1_staging')) {
-      console.log('Database fantaf1_staging trovato e pronto all\'uso.');
+    if (dbNames.includes('fantaf1')) {
+      console.log('Database fantaf1 trovato e pronto all\'uso.');
     } else {
-      console.warn('ATTENZIONE: Database fantaf1_staging non trovato. Verrà creato al primo inserimento.');
+      console.warn('ATTENZIONE: Database fantaf1 non trovato. Verifica la configurazione dell\'ambiente condiviso.');
     }
 
   } catch (error) {

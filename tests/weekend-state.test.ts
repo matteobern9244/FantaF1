@@ -70,6 +70,32 @@ describe('weekendState utils', () => {
     expect(normalizeWeekendStateByMeetingKey(undefined)).toEqual({});
   });
 
+  it('trims and collapses duplicate meeting keys to a single normalized entry', () => {
+    const normalized = normalizeWeekendStateByMeetingKey({
+      ' race-1 ': {
+        userPredictions: {
+          'Player 1': { first: 'ver' },
+        },
+        raceResults: { pole: 'nor' },
+      },
+      'race-1': {
+        userPredictions: {
+          'Player 1': { first: 'ham' },
+        },
+        raceResults: { pole: 'pia' },
+      },
+    } as unknown as WeekendStateByMeetingKey);
+
+    expect(normalized).toEqual({
+      'race-1': {
+        userPredictions: {
+          'Player 1': { first: 'ham', second: '', third: '', pole: '' },
+        },
+        raceResults: { first: '', second: '', third: '', pole: 'pia' },
+      },
+    });
+  });
+
   it('builds and upserts the selected weekend state', () => {
     const users = createUsers();
     const weekendState = buildWeekendPredictionState(users, {

@@ -2,6 +2,23 @@
 
 Cronologia sintetica delle release documentate del progetto Fanta Formula 1.
 
+## [Unreleased]
+
+- **Fix Save Risultati Admin**: il flusso frontend di conferma risultati gara
+  ora ripristina lo stato precedente se `POST /api/data` fallisce, evitando che
+  la UI admin perda i risultati appena inseriti o entri in uno stato incoerente
+  dopo un errore di persistenza.
+- **Test di Regressione Save Admin**: aggiunto un test UI dedicato che
+  riproduce il fallimento del save risultati admin e verifica il rollback dello
+  stato del form.
+- **Rimozione Supporto `staging` dal Runtime Attivo**: il resolver ambiente C#
+  supporta ora solo `Development` e `Production`; `Staging` viene rifiutato in
+  modo esplicito gia' in bootstrap, con test unitari e integration aggiornati.
+- **CI/CD e Documentazione Riallineati a `develop -> main`**: workflow GitHub,
+  `README.md`, `AGENTS.md`, documentazione operativa e test di coerenza sono
+  stati aggiornati per rimuovere il flusso attivo `staging` e mantenere come
+  percorso di rilascio ufficiale `develop -> main`.
+
 ## [1.7.0] - 2026-03-22
 
 - **Launcher Transparency**: The local launcher now explicitly logs the target

@@ -206,10 +206,12 @@ public sealed class AppDataSanitizer
 
     private WeekendPredictionStateDocument SanitizeWeekendState(WeekendPredictionStateDocument? value)
     {
-        var safeUserPredictions = (value?.UserPredictions ?? new Dictionary<string, PredictionDocument>())
-            .ToDictionary(
-                static pair => pair.Key,
-                pair => SanitizePrediction(pair.Value));
+        var safeUserPredictions = new Dictionary<string, PredictionDocument>(StringComparer.Ordinal);
+
+        foreach (var pair in value?.UserPredictions ?? new Dictionary<string, PredictionDocument>())
+        {
+            safeUserPredictions[pair.Key] = SanitizePrediction(pair.Value);
+        }
 
         return new WeekendPredictionStateDocument(
             safeUserPredictions,
@@ -224,12 +226,20 @@ public sealed class AppDataSanitizer
             return new Dictionary<string, WeekendPredictionStateDocument>();
         }
 
-        return value
-            .Where(pair => !string.IsNullOrWhiteSpace(pair.Key))
-            .ToDictionary(
-                pair => pair.Key.Trim(),
-                pair => SanitizeWeekendState(pair.Value),
-                StringComparer.Ordinal);
+        var sanitizedWeekendStateByMeetingKey = new Dictionary<string, WeekendPredictionStateDocument>(StringComparer.Ordinal);
+
+        foreach (var pair in value)
+        {
+            var normalizedMeetingKey = pair.Key.Trim();
+            if (string.IsNullOrWhiteSpace(normalizedMeetingKey))
+            {
+                continue;
+            }
+
+            sanitizedWeekendStateByMeetingKey[normalizedMeetingKey] = SanitizeWeekendState(pair.Value);
+        }
+
+        return sanitizedWeekendStateByMeetingKey;
     }
 
     private WeekendPredictionStateDocument BuildWeekendStateFromUsers(

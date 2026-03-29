@@ -14,8 +14,8 @@ public sealed class HealthPayloadContractTests
             Status: "ok",
             Year: 2026,
             DbState: 1,
-            Environment: "staging",
-            DatabaseTarget: "fantaf1_porting");
+            Environment: "production",
+            DatabaseTarget: "fantaf1");
 
         var payload = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(
             JsonSerializer.Serialize(report, WebJsonOptions),
@@ -29,7 +29,7 @@ public sealed class HealthPayloadContractTests
         Assert.Equal("ok", payload["status"].GetString());
         Assert.Equal(2026, payload["year"].GetInt32());
         Assert.Equal(1, payload["dbState"].GetInt32());
-        Assert.Equal("staging", payload["environment"].GetString());
-        Assert.Equal("fantaf1_porting", payload["databaseTarget"].GetString());
+        Assert.Equal("production", payload["environment"].GetString());
+        Assert.Equal("fantaf1", payload["databaseTarget"].GetString());
     }
 }

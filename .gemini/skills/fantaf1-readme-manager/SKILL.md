@@ -25,7 +25,7 @@ You are the **Readme Custodian**. You MUST delegate the maintenance of
 - **Sub-agent:** `generalist` (README Editor).
 - **Task:**
   1.  **Update Version:** Locate the line
-      `- La release candidata corrente del branch staging e' <version>.` and
+      `- La release candidata corrente del branch develop e' <version>.` and
       update it.
   2.  **Update Context:** If new architectural components or scripts are added,
       update the relevant sections (`Architettura`, `Avvio locale`, etc.).

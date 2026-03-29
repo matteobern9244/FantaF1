@@ -246,6 +246,77 @@ public sealed class SaveValidationTests
     }
 
     [Fact]
+    public void Race_lock_validator_allows_controlled_flows_that_clear_selected_weekend_predictions_after_lock()
+    {
+        var validator = new RaceLockValidator();
+        var selectedRace = CreateWeekend("race-1");
+        var currentData = new AppDataDocument(
+            Users:
+            [
+                new AppDataUserDocument("Adriano", new PredictionDocument("ver", "", "", ""), 0),
+                new AppDataUserDocument("Fabio", new PredictionDocument("lec", "", "", ""), 0),
+                new AppDataUserDocument("Matteo", new PredictionDocument("", "", "", ""), 0),
+            ],
+            History: [],
+            GpName: "Race 1",
+            RaceResults: new PredictionDocument("nor", "ver", "lec", "pia"),
+            SelectedMeetingKey: "race-1",
+            WeekendStateByMeetingKey: new Dictionary<string, WeekendPredictionStateDocument>
+            {
+                ["race-1"] = new(
+                    new Dictionary<string, PredictionDocument>
+                    {
+                        ["Adriano"] = new("ver", "", "", ""),
+                        ["Fabio"] = new("lec", "", "", ""),
+                        ["Matteo"] = new("", "", "", ""),
+                    },
+                    new PredictionDocument("nor", "ver", "lec", "pia")),
+            });
+        var clearedPredictions = new PredictionDocument("", "", "", "");
+        var newData = new AppDataDocument(
+            Users:
+            [
+                new AppDataUserDocument("Adriano", clearedPredictions, 0),
+                new AppDataUserDocument("Fabio", clearedPredictions, 0),
+                new AppDataUserDocument("Matteo", clearedPredictions, 0),
+            ],
+            History:
+            [
+                new AppDataHistoryRecordDocument(
+                    "Race 1",
+                    "race-1",
+                    "01/03/2026",
+                    new PredictionDocument("nor", "ver", "lec", "pia"),
+                    new Dictionary<string, AppDataHistoryUserPredictionDocument>
+                    {
+                        ["Adriano"] = new(new PredictionDocument("ver", "", "", ""), 10),
+                        ["Fabio"] = new(new PredictionDocument("lec", "", "", ""), 8),
+                        ["Matteo"] = new(new PredictionDocument("", "", "", ""), 0),
+                    }),
+            ],
+            GpName: "Race 1",
+            RaceResults: clearedPredictions,
+            SelectedMeetingKey: "race-1",
+            WeekendStateByMeetingKey: new Dictionary<string, WeekendPredictionStateDocument>
+            {
+                ["race-1"] = new(
+                    new Dictionary<string, PredictionDocument>
+                    {
+                        ["Adriano"] = clearedPredictions,
+                        ["Fabio"] = clearedPredictions,
+                        ["Matteo"] = clearedPredictions,
+                    },
+                    clearedPredictions),
+            });
+
+        Assert.False(validator.IsRaceLocked(
+            selectedRace,
+            newData,
+            currentData,
+            new DateTimeOffset(2026, 03, 01, 15, 00, 00, TimeSpan.Zero)));
+    }
+
+    [Fact]
     public void Race_lock_validator_uses_the_weekend_state_when_available_and_falls_back_to_the_selected_race_key()
     {
         var validator = new RaceLockValidator();
@@ -414,6 +485,9 @@ public sealed class SaveValidationTests
             BindingFlags.NonPublic | BindingFlags.Static)!;
         var firstNonEmpty = (string?)firstNonEmptyMethod.Invoke(null, [new string?[] { "", "  value  ", null }]);
         var noNonEmpty = (string?)firstNonEmptyMethod.Invoke(null, [new string?[] { "", " ", null }]);
+        var areAllPredictionsEmptyMethod = typeof(RaceLockValidator).GetMethod(
+            "AreAllPredictionsEmpty",
+            BindingFlags.NonPublic | BindingFlags.Static)!;
 
         var tryResolveRaceStartTimeMethod = typeof(RaceLockValidator).GetMethod(
             "TryResolveRaceStartTime",
@@ -458,6 +532,15 @@ public sealed class SaveValidationTests
         Assert.Equal(string.Empty, sanitizedWeekendState.RaceResults!.First);
         Assert.Equal("value", firstNonEmpty);
         Assert.Null(noNonEmpty);
+        Assert.True((bool)areAllPredictionsEmptyMethod.Invoke(null, [new[]
+        {
+            new PredictionDocument("", "", "", ""),
+            new PredictionDocument(null, null, null, null),
+        }])!);
+        Assert.False((bool)areAllPredictionsEmptyMethod.Invoke(null, [new[]
+        {
+            new PredictionDocument("ver", "", "", ""),
+        }])!);
         Assert.False(invalidStartTimeResolved);
         Assert.Equal(default, Assert.IsType<DateTimeOffset>(invalidStartTimeArgs[1]!));
         Assert.True(validStartTimeResolved);
