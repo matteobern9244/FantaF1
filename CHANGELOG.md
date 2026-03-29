@@ -2,7 +2,7 @@
 
 Cronologia sintetica delle release documentate del progetto Fanta Formula 1.
 
-## [Unreleased]
+## [1.7.1] - 2026-03-29
 
 - **Fix Save Risultati Admin**: il flusso frontend di conferma risultati gara
   ora ripristina lo stato precedente se `POST /api/data` fallisce, evitando che
