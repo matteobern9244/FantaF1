@@ -36,9 +36,9 @@ public sealed class SessionEndpointTests
     }
 
     [Fact]
-    public async Task Staging_session_endpoint_returns_the_public_default_view_without_a_cookie()
+    public async Task Production_session_endpoint_returns_the_public_default_view_without_a_cookie()
     {
-        await using var factory = CreateFactory("Staging");
+        await using var factory = CreateFactory("Production");
         using var client = factory.CreateClient();
 
         var payload = await client.GetFromJsonAsync<Dictionary<string, object>>("/api/session");
@@ -115,10 +115,10 @@ public sealed class SessionEndpointTests
     }
 
     [Fact]
-    public async Task Staging_login_returns_a_secure_cookie_and_supports_a_session_roundtrip()
+    public async Task Production_login_returns_a_secure_cookie_and_supports_a_session_roundtrip()
     {
-        var password = CreatePassword("subphase-4-staging-login");
-        await using var factory = CreateFactory("Staging", CreateAdminCredentialSeedConfiguration(password, "subphase-4-staging-salt"));
+        var password = CreatePassword("subphase-4-production-login");
+        await using var factory = CreateFactory("Production", CreateAdminCredentialSeedConfiguration(password, "subphase-4-production-salt"));
         using var client = factory.CreateClient();
 
         var loginResponse = await client.PostAsJsonAsync("/api/admin/session", new { password });
@@ -141,9 +141,9 @@ public sealed class SessionEndpointTests
     }
 
     [Fact]
-    public async Task Staging_logout_returns_the_public_default_view_and_a_clearing_secure_cookie()
+    public async Task Production_logout_returns_the_public_default_view_and_a_clearing_secure_cookie()
     {
-        await using var factory = CreateFactory("Staging");
+        await using var factory = CreateFactory("Production");
         using var client = factory.CreateClient();
 
         var response = await client.DeleteAsync("/api/admin/session");

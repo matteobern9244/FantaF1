@@ -193,6 +193,52 @@ public sealed class AppDataSanitizerTests
     }
 
     [Fact]
+    public void Sanitize_collapses_duplicate_weekend_keys_after_trimming_instead_of_throwing()
+    {
+        var sanitizer = new AppDataSanitizer();
+        var appData = new AppDataDocument(
+            Users:
+            [
+                new AppDataUserDocument("Player 1", new PredictionDocument("ver", null, null, null), 1),
+                new AppDataUserDocument("Player 2", null, 2),
+                new AppDataUserDocument("Player 3", null, 3),
+            ],
+            History: [],
+            GpName: "Imola",
+            RaceResults: new PredictionDocument(null, null, null, "pia"),
+            SelectedMeetingKey: "race-1",
+            WeekendStateByMeetingKey: new Dictionary<string, WeekendPredictionStateDocument>
+            {
+                [" race-1 "] = new(
+                    new Dictionary<string, PredictionDocument>
+                    {
+                        ["Player 1"] = new("ver", null, null, null),
+                    },
+                    new PredictionDocument(null, null, null, "nor")),
+                ["race-1"] = new(
+                    new Dictionary<string, PredictionDocument>
+                    {
+                        ["Player 1"] = new("ham", null, null, null),
+                    },
+                    new PredictionDocument(null, null, null, "pia")),
+            });
+
+        var result = sanitizer.Sanitize(
+            appData,
+            [CreateWeekendDocument("race-1", "Imola", "Imola Grand Prix", 7, "2026-05-18", "2026-05-18")],
+            new DateTimeOffset(2026, 03, 12, 10, 00, 00, TimeSpan.Zero),
+            new AppDataSanitizationOptions(
+                PreferPayloadSelectedWeekend: false,
+                ParticipantRoster: ["Player 1", "Player 2", "Player 3"]));
+
+        Assert.Equal("race-1", result.SelectedMeetingKey);
+        Assert.NotNull(result.WeekendStateByMeetingKey);
+        Assert.Equal(["race-1"], result.WeekendStateByMeetingKey.Keys.ToArray());
+        Assert.Equal("ham", result.WeekendStateByMeetingKey["race-1"].UserPredictions!["Player 1"].First);
+        Assert.Equal("pia", result.WeekendStateByMeetingKey["race-1"].RaceResults!.Pole);
+    }
+
+    [Fact]
     public void Sanitize_null_payload_uses_default_meeting_name_when_the_calendar_entry_has_no_grand_prix_title()
     {
         var sanitizer = new AppDataSanitizer();

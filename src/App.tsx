@@ -1615,6 +1615,15 @@ function App() {
       ...user,
       predictions: createEmptyPrediction(),
     }));
+    const previousState = {
+      users,
+      history,
+      selectedMeetingKey,
+      gpName,
+      raceResults,
+      weekendStateByMeetingKey,
+      editingSession,
+    };
 
     let nextHistory = history;
     let nextMeetingKey = selectedMeetingKey;
@@ -1689,6 +1698,13 @@ function App() {
         'success',
       );
     } catch (error) {
+      setUsers(previousState.users);
+      setHistory(previousState.history);
+      setSelectedMeetingKey(previousState.selectedMeetingKey);
+      setGpName(previousState.gpName);
+      setRaceResults(previousState.raceResults);
+      setWeekendStateByMeetingKey(previousState.weekendStateByMeetingKey);
+      setEditingSession(previousState.editingSession);
       handleSaveFailure('Save race error:', error);
     }
   }

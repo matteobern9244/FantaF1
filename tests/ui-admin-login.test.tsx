@@ -53,7 +53,7 @@ describe('Admin login UI', () => {
       }
 
       if (url.includes('/api/health')) {
-        return Promise.resolve(createJsonResponse({ status: 'ok', environment: 'staging' }));
+        return Promise.resolve(createJsonResponse({ status: 'ok', environment: 'production' }));
       }
 
       if (url.includes('/api/data')) {

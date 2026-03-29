@@ -38,10 +38,10 @@ public sealed class PortingDocumentationConsistencyTests
         Assert.Contains("`README.md` is the canonical operational document", agents, StringComparison.Ordinal);
         Assert.Contains("`CHANGELOG.md` is the canonical release and audit history.", agents, StringComparison.Ordinal);
         Assert.Contains(
-            "Before starting, also verify that `main` is already the branch that represents the current releasable stack and that the current working branch is `staging`.",
+            "Before starting, also verify that `main` is already the branch that represents the current releasable stack and that the current working branch is `develop`.",
             agents,
             StringComparison.Ordinal);
-        Assert.Contains("Il branch `staging` e' il branch di certificazione corrente.", readme, StringComparison.Ordinal);
+        Assert.Contains("Il branch `develop` e' il branch candidato di integrazione corrente.", readme, StringComparison.Ordinal);
     }
 
     [Fact]
@@ -59,7 +59,7 @@ public sealed class PortingDocumentationConsistencyTests
         Assert.Contains("cache standings piloti/costruttori (`standingscaches`)", readme, StringComparison.Ordinal);
         Assert.Contains("credenziali admin hashate e metadata auth (`admincredentials`)", readme, StringComparison.Ordinal);
         Assert.Contains("fantaf1_dev", readme, StringComparison.Ordinal);
-        Assert.Contains("I runner locali mutanti non devono mai toccare `fantaf1` o `fantaf1_staging`.", readme, StringComparison.Ordinal);
+        Assert.Contains("I runner locali mutanti non devono mai toccare `fantaf1`.", readme, StringComparison.Ordinal);
         Assert.Contains("local mutating runners must never target shared databases", project, StringComparison.Ordinal);
     }
 
@@ -69,19 +69,15 @@ public sealed class PortingDocumentationConsistencyTests
         var readme = NormalizeWhitespace(ReadRepositoryFile("README.md"));
         var envExample = NormalizeWhitespace(ReadRepositoryFile(".env.example"));
 
-        Assert.Contains("`MONGODB_URI=<uri che punta a fantaf1_staging>`", readme, StringComparison.Ordinal);
         Assert.Contains("`ADMIN_SESSION_SECRET=<secret lungo e casuale>`", readme, StringComparison.Ordinal);
-        Assert.Contains("`ASPNETCORE_ENVIRONMENT=Staging`", readme, StringComparison.Ordinal);
         Assert.Contains("`ASPNETCORE_ENVIRONMENT=Production`", readme, StringComparison.Ordinal);
         Assert.Contains("`Frontend__BuildPath=./dist`", readme, StringComparison.Ordinal);
         Assert.Contains("`PORT=3001`", readme, StringComparison.Ordinal);
         Assert.Contains("`VITE_APP_LOCAL_NAME=<opzionale; solo se serve un titolo hero differenziato>`", readme, StringComparison.Ordinal);
-        Assert.Contains("`VITE_APP_LOCAL_NAME=<opzionale; normalmente da lasciare vuota>`", readme, StringComparison.Ordinal);
         Assert.Contains("`VITE_APP_LOCAL_NAME` viene letta dal frontend Vite a build-time", readme, StringComparison.Ordinal);
         Assert.Contains("richiede un rebuild/redeploy per diventare visibile", readme, StringComparison.Ordinal);
         Assert.Contains("`MONGODB_URI_CI`", readme, StringComparison.Ordinal);
         Assert.Contains("`ADMIN_SESSION_SECRET_CI`", readme, StringComparison.Ordinal);
-        Assert.Contains("`RENDER_STAGING_HEALTHCHECK_URL`", readme, StringComparison.Ordinal);
         Assert.Contains("`RENDER_HEALTHCHECK_URL`", readme, StringComparison.Ordinal);
         Assert.Contains("ASPNETCORE_ENVIRONMENT=Development", envExample, StringComparison.Ordinal);
         Assert.Contains("MONGODB_DB_NAME_OVERRIDE=", envExample, StringComparison.Ordinal);
@@ -119,12 +115,8 @@ public sealed class PortingDocumentationConsistencyTests
         Assert.Contains("`smoke-ci-db`", readme, StringComparison.Ordinal);
         Assert.Contains("GitHub Actions workflows under `.github/workflows/` must stay aligned", agents, StringComparison.Ordinal);
         Assert.Contains("dotnet format backend-csharp/FantaF1.Backend.sln --verify-no-changes", packageJson, StringComparison.Ordinal);
-        Assert.Contains("`deploya-staging`", readme, StringComparison.Ordinal);
-        Assert.Contains("`develop -> staging`", readme, StringComparison.Ordinal);
         Assert.Contains("`deploya`", readme, StringComparison.Ordinal);
-        Assert.Contains("`staging -> main`", readme, StringComparison.Ordinal);
-        Assert.Contains("abbassa temporaneamente la protection di `staging`", readme, StringComparison.Ordinal);
-        Assert.Contains("forza `staging` e `develop` allo SHA finale di `main`", readme, StringComparison.Ordinal);
+        Assert.Contains("`develop -> main`", readme, StringComparison.Ordinal);
         Assert.DoesNotContain("workflow aggiuntivi `gemini-*`", readme, StringComparison.Ordinal);
     }
 

@@ -24,8 +24,6 @@ specialized instructions:
   baseline.
 - `activate_skill("fantaf1-deploy")`: To execute the 23-point deployment
   protocol ("deploya").
-- `activate_skill("fantaf1_deploy_staging")`: To execute the 23-point staging
-  deployment protocol ("deploya-staging").
 - `activate_skill("fantaf1-browser-verification")`: To perform UI and responsive
   checks ("check viste").
 - `activate_skill("markdown-formatter")`: To ensure documentation quality and
@@ -44,7 +42,7 @@ specialized instructions:
   `package.json`, `package-lock.json`, `README.md`, and `CHANGELOG.md`
   consistently.
 - **Branch Strategy:** Never merge into `main` or `master` unless explicitly
-  requested. Use `staging` as the release candidate branch.
+  requested. Use `develop` as the release candidate branch for `main`.
 - **Language:** If the user is Italian, your final responses MUST be in Italian
   unless otherwise requested.
 

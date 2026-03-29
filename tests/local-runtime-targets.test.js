@@ -74,7 +74,7 @@ describe('local runtime targets', () => {
     expect(target.baseUrl).toBe('http://127.0.0.1:4301');
   });
 
-  it('rewrites the csharp runtime mongo uri to the explicit staging database target', () => {
+  it('keeps the csharp runtime mongo uri aligned to the canonical development database target', () => {
     const target = resolveSaveSmokeTarget({
       SAVE_SMOKE_TARGET: 'csharp-dev',
       MONGODB_URI: 'mongodb+srv://user:pass@cluster.mongodb.net/fantaf1_dev?retryWrites=true&w=majority',
@@ -105,15 +105,15 @@ describe('local runtime targets', () => {
     expect(
       rewriteMongoDatabaseName(
         'mongodb+srv://user:pass@cluster.mongodb.net/fantaf1_dev?retryWrites=true&w=majority',
-        'fantaf1_staging',
+        'fantaf1_ci',
       ),
-    ).toBe('mongodb+srv://user:pass@cluster.mongodb.net/fantaf1_staging?retryWrites=true&w=majority');
-    expect(rewriteMongoDatabaseName('', 'fantaf1_staging')).toBe('');
+    ).toBe('mongodb+srv://user:pass@cluster.mongodb.net/fantaf1_ci?retryWrites=true&w=majority');
+    expect(rewriteMongoDatabaseName('', 'fantaf1_ci')).toBe('');
   });
 
-  it('rejects shared staging as a local mutable database target', () => {
-    expect(() => assertSafeLocalDatabaseTarget('fantaf1_staging', 'test target')).toThrow(
-      'test target non puo\' puntare al database condiviso "fantaf1_staging". Usa un database locale isolato.',
+  it('rejects the shared production database as a local mutable database target', () => {
+    expect(() => assertSafeLocalDatabaseTarget('fantaf1', 'test target')).toThrow(
+      'test target non puo\' puntare al database condiviso "fantaf1". Usa un database locale isolato.',
     );
     expect(() => assertSafeLocalMongoUri(
       'mongodb+srv://user:pass@cluster.mongodb.net/fantaf1?retryWrites=true&w=majority',
@@ -126,12 +126,12 @@ describe('local runtime targets', () => {
   it('ignores shared database overrides coming from ambient local env and keeps the canonical isolated target', () => {
     const saveTarget = resolveSaveSmokeTarget({
       SAVE_SMOKE_TARGET: 'csharp-dev',
-      SAVE_SMOKE_EXPECTED_DATABASE_TARGET: 'fantaf1_staging',
+      SAVE_SMOKE_EXPECTED_DATABASE_TARGET: 'fantaf1',
       MONGODB_URI: 'mongodb+srv://user:pass@cluster.mongodb.net/fantaf1_dev?retryWrites=true&w=majority',
     });
     const launcherTarget = resolveLauncherTarget({
       FANTAF1_LOCAL_RUNTIME: 'csharp-dev',
-      FANTAF1_EXPECTED_DATABASE_TARGET: 'fantaf1_staging',
+      FANTAF1_EXPECTED_DATABASE_TARGET: 'fantaf1',
       MONGODB_URI: 'mongodb+srv://user:pass@cluster.mongodb.net/fantaf1_dev?retryWrites=true&w=majority',
     });
 

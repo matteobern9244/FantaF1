@@ -15,6 +15,6 @@ internal static class RuntimeEnvironmentProfileText
     internal static string UnsupportedEnvironment(string? environmentName)
     {
         var label = string.IsNullOrWhiteSpace(environmentName) ? "unknown" : environmentName.Trim();
-        return $"Unsupported ASP.NET Core environment \"{label}\". Expected Development, Staging, or Production.";
+        return $"Unsupported ASP.NET Core environment \"{label}\". Expected Development or Production.";
     }
 }

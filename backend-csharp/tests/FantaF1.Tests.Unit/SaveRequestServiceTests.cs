@@ -157,14 +157,14 @@ public sealed class SaveRequestServiceTests
     }
 
     [Fact]
-    public async Task Save_data_async_allows_an_active_admin_session_in_staging()
+    public async Task Save_data_async_allows_an_active_admin_session_in_production()
     {
         var repository = new StubAppDataRepository(persistedParticipantRoster: null);
         var now = new DateTimeOffset(2026, 03, 12, 09, 30, 00, TimeSpan.Zero);
         var service = CreateService(
             repository,
-            environment: "staging",
-            databaseTarget: "fantaf1_porting",
+            environment: "production",
+            databaseTarget: "fantaf1",
             now: now);
 
         var outcome = await service.SaveDataAsync(
@@ -214,13 +214,13 @@ public sealed class SaveRequestServiceTests
     }
 
     [Fact]
-    public async Task Save_data_async_requires_admin_authentication_in_staging()
+    public async Task Save_data_async_requires_admin_authentication_in_production()
     {
         var repository = new StubAppDataRepository();
         var service = CreateService(
             repository,
-            environment: "staging",
-            databaseTarget: "fantaf1_porting");
+            environment: "production",
+            databaseTarget: "fantaf1");
 
         var outcome = await service.SaveDataAsync(CreatePayload(), null, CancellationToken.None);
 
@@ -229,6 +229,105 @@ public sealed class SaveRequestServiceTests
         Assert.Equal(SaveRouteContract.AdminAuthRequiredCode, errorOutcome.Payload.Code);
         Assert.Null(errorOutcome.Payload.RequestId);
         Assert.False(repository.WriteCalled);
+    }
+
+    [Fact]
+    public async Task Save_data_async_allows_a_controlled_results_confirmation_flow_after_race_lock()
+    {
+        var currentPayload = new AppDataDocument(
+            Users:
+            [
+                new AppDataUserDocument("Adriano", new PredictionDocument("ver", "", "", ""), 0),
+                new AppDataUserDocument("Fabio", new PredictionDocument("lec", "", "", ""), 0),
+                new AppDataUserDocument("Matteo", new PredictionDocument("", "", "", ""), 0),
+            ],
+            History: [],
+            GpName: "Race 1",
+            RaceResults: new PredictionDocument("nor", "ver", "lec", "pia"),
+            SelectedMeetingKey: "race-1",
+            WeekendStateByMeetingKey: new Dictionary<string, WeekendPredictionStateDocument>
+            {
+                ["race-1"] = new(
+                    new Dictionary<string, PredictionDocument>
+                    {
+                        ["Adriano"] = new("ver", "", "", ""),
+                        ["Fabio"] = new("lec", "", "", ""),
+                        ["Matteo"] = new("", "", "", ""),
+                    },
+                    new PredictionDocument("nor", "ver", "lec", "pia")),
+            });
+        var repository = new StubAppDataRepository(
+            persistedParticipantRoster: ["Adriano", "Fabio", "Matteo"],
+            latestDocument: currentPayload);
+        var service = CreateService(
+            repository,
+            weekends:
+            [
+                new WeekendDocument(
+                    "race-1",
+                    "Race 1",
+                    "Race 1",
+                    1,
+                    null,
+                    null,
+                    null,
+                    null,
+                    false,
+                    "2026-03-01",
+                    "2026-03-01",
+                    "2026-03-01T14:00:00Z",
+                    [],
+                    string.Empty,
+                    string.Empty,
+                    string.Empty,
+                    string.Empty),
+            ],
+            now: new DateTimeOffset(2026, 03, 01, 15, 00, 00, TimeSpan.Zero),
+            environment: "production",
+            databaseTarget: "fantaf1");
+
+        var clearedPredictions = new PredictionDocument("", "", "", "");
+        var outcome = await service.SaveDataAsync(
+            new AppDataDocument(
+                Users:
+                [
+                    new AppDataUserDocument("Adriano", clearedPredictions, 10),
+                    new AppDataUserDocument("Fabio", clearedPredictions, 8),
+                    new AppDataUserDocument("Matteo", clearedPredictions, 0),
+                ],
+                History:
+                [
+                    new AppDataHistoryRecordDocument(
+                        "Race 1",
+                        "race-1",
+                        "01/03/2026",
+                        new PredictionDocument("nor", "ver", "lec", "pia"),
+                        new Dictionary<string, AppDataHistoryUserPredictionDocument>
+                        {
+                            ["Adriano"] = new(new PredictionDocument("ver", "", "", ""), 10),
+                            ["Fabio"] = new(new PredictionDocument("lec", "", "", ""), 8),
+                            ["Matteo"] = new(new PredictionDocument("", "", "", ""), 0),
+                        }),
+                ],
+                GpName: "Race 1",
+                RaceResults: clearedPredictions,
+                SelectedMeetingKey: "race-1",
+                WeekendStateByMeetingKey: new Dictionary<string, WeekendPredictionStateDocument>
+                {
+                    ["race-1"] = new(
+                        new Dictionary<string, PredictionDocument>
+                        {
+                            ["Adriano"] = clearedPredictions,
+                            ["Fabio"] = clearedPredictions,
+                            ["Matteo"] = clearedPredictions,
+                        },
+                        clearedPredictions),
+                }),
+            CreateAdminCookieHeader(new DateTimeOffset(2026, 03, 01, 14, 30, 00, TimeSpan.Zero)),
+            CancellationToken.None);
+
+        Assert.IsType<SaveSuccessOutcome>(outcome);
+        Assert.True(repository.WriteCalled);
     }
 
     [Fact]

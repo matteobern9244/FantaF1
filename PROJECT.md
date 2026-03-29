@@ -147,8 +147,7 @@ Rules:
 - secrets must not be committed
 - the targeted database/environment must always be explicitly identified when
   running locally
-- local mutating runners must never target shared databases such as `fantaf1` or
-  `fantaf1_staging`
+- local mutating runners must never target shared databases such as `fantaf1`
 - local C# runtime targets must use the isolated development database
   (`fantaf1_dev`) through explicit overrides
 - local fixes must not introduce production-only or local-only scoring

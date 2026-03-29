@@ -47,8 +47,6 @@ public sealed class ConfigurationRuntimeEnvironmentProfileResolver : IRuntimeEnv
         {
             var value when string.Equals(value, RuntimeEnvironmentProfileContract.DevelopmentEnvironmentName, StringComparison.OrdinalIgnoreCase)
                 => RuntimeEnvironmentProfileContract.DevelopmentEnvironmentPayload,
-            var value when string.Equals(value, RuntimeEnvironmentProfileContract.StagingEnvironmentName, StringComparison.OrdinalIgnoreCase)
-                => RuntimeEnvironmentProfileContract.StagingEnvironmentPayload,
             var value when string.Equals(value, RuntimeEnvironmentProfileContract.ProductionEnvironmentName, StringComparison.OrdinalIgnoreCase)
                 => RuntimeEnvironmentProfileContract.ProductionEnvironmentPayload,
             _ => throw new InvalidOperationException(
@@ -76,11 +74,6 @@ public sealed class ConfigurationRuntimeEnvironmentProfileResolver : IRuntimeEnv
             return RuntimeEnvironmentProfileContract.DevelopmentDatabaseName;
         }
 
-        if (string.Equals(environment, RuntimeEnvironmentProfileContract.StagingEnvironmentPayload, StringComparison.Ordinal))
-        {
-            return RuntimeEnvironmentProfileContract.StagingDatabaseName;
-        }
-
         return RuntimeEnvironmentProfileContract.ProductionDatabaseName;
     }
 
@@ -88,9 +81,7 @@ public sealed class ConfigurationRuntimeEnvironmentProfileResolver : IRuntimeEnv
     {
         var isAllowed = string.Equals(environment, RuntimeEnvironmentProfileContract.DevelopmentEnvironmentPayload, StringComparison.Ordinal)
             ? IsAllowedDevelopmentDatabaseTarget(databaseTarget)
-            : string.Equals(environment, RuntimeEnvironmentProfileContract.StagingEnvironmentPayload, StringComparison.Ordinal)
-                ? IsAllowedStagingDatabaseTarget(databaseTarget)
-                : string.Equals(databaseTarget, RuntimeEnvironmentProfileContract.ProductionDatabaseName, StringComparison.Ordinal);
+            : string.Equals(databaseTarget, RuntimeEnvironmentProfileContract.ProductionDatabaseName, StringComparison.Ordinal);
 
         if (!isAllowed)
         {
@@ -109,11 +100,6 @@ public sealed class ConfigurationRuntimeEnvironmentProfileResolver : IRuntimeEnv
     {
         return string.Equals(databaseTarget, RuntimeEnvironmentProfileContract.DevelopmentDatabaseName, StringComparison.Ordinal)
             || string.Equals(databaseTarget, RuntimeEnvironmentProfileContract.ContinuousIntegrationDatabaseName, StringComparison.Ordinal);
-    }
-
-    private static bool IsAllowedStagingDatabaseTarget(string databaseTarget)
-    {
-        return string.Equals(databaseTarget, RuntimeEnvironmentProfileContract.StagingDatabaseName, StringComparison.Ordinal);
     }
 
     private static string? ExtractMongoDatabaseName(string? mongoUri)

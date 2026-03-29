@@ -78,9 +78,9 @@ public sealed class WriteRouteEndpointTests
     }
 
     [Fact]
-    public async Task Staging_post_data_requires_an_admin_session()
+    public async Task Production_post_data_requires_an_admin_session()
     {
-        await using var factory = CreateFactory("Staging");
+        await using var factory = CreateFactory("Production");
         using var client = factory.CreateClient();
 
         var response = await client.PostAsJsonAsync("/api/data", CreatePayload());
@@ -93,12 +93,12 @@ public sealed class WriteRouteEndpointTests
     }
 
     [Fact]
-    public async Task Staging_post_predictions_accepts_a_valid_admin_session_cookie()
+    public async Task Production_post_predictions_accepts_a_valid_admin_session_cookie()
     {
         var repository = new StubAppDataRepository(persistedParticipantRoster: ["Adriano", "Fabio", "Matteo"]);
-        var password = CreatePassword("subphase-6-staging-login");
+        var password = CreatePassword("subphase-6-production-login");
         await using var factory = CreateFactory(
-            "Staging",
+            "Production",
             services =>
             {
                 services.RemoveAll<IAppDataRepository>();
@@ -108,7 +108,7 @@ public sealed class WriteRouteEndpointTests
                 services.AddSingleton<IWeekendRepository>(new StubWeekendRepository([]));
                 services.AddSingleton<IClock>(new StubClock(new DateTimeOffset(2026, 03, 12, 09, 30, 00, TimeSpan.Zero)));
             },
-            CreateAdminCredentialSeedConfiguration(password, "subphase-6-staging-salt"));
+            CreateAdminCredentialSeedConfiguration(password, "subphase-6-production-salt"));
         using var client = factory.CreateClient();
 
         var loginResponse = await client.PostAsJsonAsync("/api/admin/session", new { password });
@@ -159,7 +159,7 @@ public sealed class WriteRouteEndpointTests
         Action<IServiceCollection>? configureServices = null,
         IReadOnlyDictionary<string, string?>? configurationValues = null)
     {
-        var dbName = environmentName == "Staging" ? "fantaf1_staging" : "fantaf1_dev";
+        var dbName = environmentName == "Production" ? "fantaf1" : "fantaf1_dev";
 
         return new WebApplicationFactory<Program>()
             .WithWebHostBuilder(builder =>
