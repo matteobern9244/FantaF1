@@ -22,6 +22,7 @@ interface AdminPageProps {
   sortedDrivers: Driver[];
   onCancelEditRace: () => void;
   canAssignPoints: boolean;
+  isSavingRaceResults: boolean;
   showTooltip: boolean;
   onShowTooltipChange: (show: boolean) => void;
   disabledReason: string | null;
@@ -44,6 +45,7 @@ const AdminPage: React.FC<AdminPageProps> = ({
   sortedDrivers,
   onCancelEditRace,
   canAssignPoints,
+  isSavingRaceResults,
   showTooltip,
   onShowTooltipChange,
   disabledReason,
@@ -143,7 +145,12 @@ const AdminPage: React.FC<AdminPageProps> = ({
             {!canAssignPoints && (
               <div className="tooltip-text">{disabledReason}</div>
             )}
-            <button className="primary-button" onClick={onCalculateAndApplyPoints} type="button" disabled={!canAssignPoints}>
+            <button
+              className="primary-button"
+              onClick={onCalculateAndApplyPoints}
+              type="button"
+              disabled={isSavingRaceResults || !canAssignPoints}
+            >
               {editingSession ? uiText.buttons.saveEditedRace : uiText.buttons.confirmResults}
             </button>
           </div>
