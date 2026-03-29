@@ -147,6 +147,18 @@ public sealed class PortingDocumentationConsistencyTests
         Assert.Contains("Dotnet Format Formalizzato Come Gate Reale", changelog, StringComparison.Ordinal);
     }
 
+    [Fact]
+    public void Backend_project_assets_do_not_pin_the_vulnerable_newtonsoft_json_package()
+    {
+        var infrastructureAssets = ReadRepositoryFile("backend-csharp", "src", "FantaF1.Infrastructure", "obj", "project.assets.json");
+        var apiAssets = ReadRepositoryFile("backend-csharp", "src", "FantaF1.Api", "obj", "project.assets.json");
+
+        Assert.DoesNotContain("\"Newtonsoft.Json/10.0.3\"", infrastructureAssets, StringComparison.Ordinal);
+        Assert.DoesNotContain("\"Newtonsoft.Json/10.0.3\"", apiAssets, StringComparison.Ordinal);
+        Assert.DoesNotContain("GHSA-5crp-9r3c-p9vr", infrastructureAssets, StringComparison.Ordinal);
+        Assert.DoesNotContain("GHSA-5crp-9r3c-p9vr", apiAssets, StringComparison.Ordinal);
+    }
+
     private static string StripAllWhitespace(string input)
     {
         return System.Text.RegularExpressions.Regex.Replace(input, @"\s+", "");

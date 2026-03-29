@@ -2,6 +2,25 @@
 
 Cronologia sintetica delle release documentate del progetto Fanta Formula 1.
 
+## [Unreleased]
+
+- **NuGet Hardening per `WebPush`**: aggiunto un override esplicito a
+  `Newtonsoft.Json 13.0.4` nello scope `FantaF1.Infrastructure` per eliminare
+  il warning `NU1903` introdotto dalla dipendenza transitiva di `WebPush 1.0.10`
+  senza alterare il resto del package graph runtime.
+- **Test Repo-Grounded sul Grafo NuGet Backend**: aggiunto un controllo
+  automatico sui `project.assets.json` di `FantaF1.Infrastructure` e
+  `FantaF1.Api` che blocca la ricomparsa di `Newtonsoft.Json 10.0.3`.
+- **Fix Strutturale Save Admin in `Risultati del weekend`**: il click su
+  `Conferma risultati e assegna i punti` e' ora idempotente, non applica piu'
+  cambi ottimistici di weekend/state prima del completamento del save e
+  schermatura gli effetti automatici dei risultati ufficiali durante la
+  persistenza, evitando sfarfallii, loop di render e crash su qualunque weekend.
+- **Regressione UI sul Save Pending Admin**: il test dedicato copre ora il caso
+  `/gara?view=admin&meeting=1281#results-section` con save pending e verifica
+  un solo `POST /api/data`, stabilita' della vista admin e assenza di rimbalzi
+  tra weekend o sezioni.
+
 ## [1.7.1] - 2026-03-29
 
 - **Fix Save Risultati Admin**: il flusso frontend di conferma risultati gara

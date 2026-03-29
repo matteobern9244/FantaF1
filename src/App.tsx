@@ -345,10 +345,12 @@ function App() {
   const [selectedRacePhase, setSelectedRacePhase] = useState<RacePhase>('open');
   const [selectedRaceHighlightsVideoUrl, setSelectedRaceHighlightsVideoUrl] = useState('');
   const [activeSectionId, setActiveSectionId] = useState('');
+  const [isSavingRaceResults, setIsSavingRaceResults] = useState(false);
   const [pushNotificationStatus, setPushNotificationStatus] = useState<PushNotificationStatus>('loading');
   const [pushNotificationEndpoint, setPushNotificationEndpoint] = useState('');
   const [pushNotificationBusy, setPushNotificationBusy] = useState(false);
   const selectedMeetingKeyRef = useRef(selectedMeetingKey);
+  const isSavingRaceResultsRef = useRef(false);
   const prevHistoryUserFilterRef = useRef(historyUserFilter);
   const prevHistorySearchRef = useRef(historySearch);
   const toastTimeoutRef = useRef<number | null>(null);
@@ -1152,7 +1154,7 @@ function App() {
   }, [location.pathname, location.hash, loading, viewMode, activeSectionId]);
 
   useEffect(() => {
-    if (!selectedRace || editingSession) {
+    if (!selectedRace || editingSession || isSavingRaceResults) {
       return;
     }
 
@@ -1217,6 +1219,7 @@ function App() {
   }, [
     allLiveResultsFilled,
     editingSession,
+    isSavingRaceResults,
     raceLocked,
     selectedRace,
   ]);
@@ -1590,6 +1593,10 @@ function App() {
   }
 
   async function calculateAndApplyPoints() {
+    if (isSavingRaceResultsRef.current) {
+      return;
+    }
+
     if (!selectedRace) {
       window.alert(uiText.alerts.missingRace);
       return;
@@ -1624,6 +1631,8 @@ function App() {
       weekendStateByMeetingKey,
       editingSession,
     };
+    isSavingRaceResultsRef.current = true;
+    setIsSavingRaceResults(true);
 
     let nextHistory = history;
     let nextMeetingKey = selectedMeetingKey;
@@ -1631,6 +1640,7 @@ function App() {
     let nextUsers: UserData[] = clearedUsers;
     let nextRaceResults = createEmptyPrediction();
     let nextWeekendStateByMeetingKey = weekendStateByMeetingKey;
+    let nextEditingSession = editingSession;
 
     if (editingSession) {
       const updatedHistory = [...history];
@@ -1641,13 +1651,10 @@ function App() {
       } = hydrateSelectedWeekendView(selectedRace.meetingKey, updatedUsers);
       nextHistory = updatedHistory;
       nextUsers = currentWeekendView.users;
+      nextMeetingKey = selectedRace.meetingKey;
+      nextGpName = selectedRace.grandPrixTitle ?? selectedRace.meetingName ?? '';
       nextRaceResults = currentWeekendView.raceResults;
-      setUsers(currentWeekendView.users);
-      setHistory(updatedHistory);
-      setSelectedMeetingKey(selectedRace.meetingKey);
-      setGpName(selectedRace.grandPrixTitle ?? selectedRace.meetingName ?? '');
-      setRaceResults(currentWeekendView.raceResults);
-      setEditingSession(null);
+      nextEditingSession = null;
     } else {
       const nextRace = getNextRaceAfter(sortedCalendar, selectedRace);
       nextWeekendStateByMeetingKey = upsertWeekendPredictionState(
@@ -1673,13 +1680,6 @@ function App() {
 
       nextUsers = nextWeekendView.users;
       nextRaceResults = nextWeekendView.raceResults;
-
-      setUsers(nextWeekendView.users);
-      setHistory((currentHistory) => [record, ...currentHistory]);
-      setSelectedMeetingKey(nextMeetingKey);
-      setGpName(nextGpName);
-      setRaceResults(nextWeekendView.raceResults);
-      setWeekendStateByMeetingKey(nextWeekendStateByMeetingKey);
     }
 
     try {
@@ -1697,6 +1697,13 @@ function App() {
         }),
         'success',
       );
+      setUsers(nextUsers);
+      setHistory(nextHistory);
+      setSelectedMeetingKey(nextMeetingKey);
+      setGpName(nextGpName);
+      setRaceResults(nextRaceResults);
+      setWeekendStateByMeetingKey(nextWeekendStateByMeetingKey);
+      setEditingSession(nextEditingSession);
     } catch (error) {
       setUsers(previousState.users);
       setHistory(previousState.history);
@@ -1706,6 +1713,9 @@ function App() {
       setWeekendStateByMeetingKey(previousState.weekendStateByMeetingKey);
       setEditingSession(previousState.editingSession);
       handleSaveFailure('Save race error:', error);
+    } finally {
+      isSavingRaceResultsRef.current = false;
+      setIsSavingRaceResults(false);
     }
   }
 
@@ -2155,6 +2165,7 @@ function App() {
                 editingSession={editingSession}
                 getWeekendLiveDriverName={getWeekendLiveDriverName}
                 isAdmin={sessionState.isAdmin}
+                isSavingRaceResults={isSavingRaceResults}
                 onCalculateAndApplyPoints={calculateAndApplyPoints}
                 onCancelEditRace={handleCancelEditRace}
                 onShowTooltipChange={setShowTooltip}
@@ -2188,6 +2199,7 @@ function App() {
                 sortedDrivers={sortedDrivers}
                 onCancelEditRace={handleCancelEditRace}
                 canAssignPoints={canAssignPoints}
+                isSavingRaceResults={isSavingRaceResults}
                 showTooltip={showTooltip}
                 onShowTooltipChange={setShowTooltip}
                 disabledReason={disabledReason}

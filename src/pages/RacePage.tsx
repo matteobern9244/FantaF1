@@ -32,6 +32,7 @@ interface RacePageProps {
   onCancelEditRace: () => void;
   onShowTooltipChange: (show: boolean) => void;
   onUpdateRaceResult: (field: PredictionKey, value: string) => void;
+  isSavingRaceResults: boolean;
   predictionFieldOrder: PredictionKey[];
   predictionLabels: Record<PredictionKey, string>;
   raceResults: Prediction;
@@ -55,6 +56,7 @@ function RacePage({
   onCancelEditRace,
   onShowTooltipChange,
   onUpdateRaceResult,
+  isSavingRaceResults,
   predictionFieldOrder,
   predictionLabels,
   raceResults,
@@ -153,7 +155,12 @@ function RacePage({
               {!canAssignPoints && (
                 <div className="tooltip-text">{disabledReason}</div>
               )}
-              <button className="primary-button" onClick={onCalculateAndApplyPoints} type="button" disabled={!canAssignPoints}>
+              <button
+                className="primary-button"
+                onClick={onCalculateAndApplyPoints}
+                type="button"
+                disabled={isSavingRaceResults || !canAssignPoints}
+              >
                 {editingSession ? uiText.buttons.saveEditedRace : uiText.buttons.confirmResults}
               </button>
             </div>
